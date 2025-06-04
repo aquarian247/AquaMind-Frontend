@@ -1,10 +1,12 @@
 import { 
-  users, farmSites, pens, waterQualityReadings, fishHealthRecords, 
-  feedingRecords, alerts, systemMetrics,
+  users, farmSites, alerts, environmentalParameters, containers, sensors, 
+  environmentalReadings, batches, feedTypes, feedInventory, feedingEvents, healthRecords,
   type User, type InsertUser, type FarmSite, type InsertFarmSite,
-  type Pen, type InsertPen, type WaterQualityReading, type InsertWaterQualityReading,
-  type FishHealthRecord, type InsertFishHealthRecord, type FeedingRecord, type InsertFeedingRecord,
-  type Alert, type InsertAlert, type SystemMetric, type InsertSystemMetric
+  type Alert, type InsertAlert, type EnvironmentalParameter, type InsertEnvironmentalParameter,
+  type Container, type InsertContainer, type Sensor, type InsertSensor,
+  type EnvironmentalReading, type InsertEnvironmentalReading, type Batch, type InsertBatch,
+  type FeedType, type InsertFeedType, type FeedInventory, type InsertFeedInventory,
+  type FeedingEvent, type InsertFeedingEvent, type HealthRecord, type InsertHealthRecord
 } from "@shared/schema";
 
 export interface IStorage {
@@ -13,39 +15,37 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
-  // Farm Sites
+  // Django API endpoints - Environmental
+  getEnvironmentalParameters(): Promise<EnvironmentalParameter[]>;
+  createEnvironmentalParameter(param: InsertEnvironmentalParameter): Promise<EnvironmentalParameter>;
+  getEnvironmentalReadings(containerId?: number, parameterId?: number): Promise<EnvironmentalReading[]>;
+  createEnvironmentalReading(reading: InsertEnvironmentalReading): Promise<EnvironmentalReading>;
+
+  // Django API endpoints - Containers/Batches
+  getContainers(): Promise<Container[]>;
+  getBatches(): Promise<Batch[]>;
+  createBatch(batch: InsertBatch): Promise<Batch>;
+
+  // Django API endpoints - Feed Management
+  getFeedTypes(): Promise<FeedType[]>;
+  getFeedInventory(): Promise<FeedInventory[]>;
+  getFeedingEvents(): Promise<FeedingEvent[]>;
+  createFeedingEvent(event: InsertFeedingEvent): Promise<FeedingEvent>;
+
+  // Django API endpoints - Health Records
+  getHealthRecords(): Promise<HealthRecord[]>;
+  createHealthRecord(record: InsertHealthRecord): Promise<HealthRecord>;
+
+  // Legacy compatibility for current frontend
   getFarmSites(): Promise<FarmSite[]>;
   getFarmSite(id: number): Promise<FarmSite | undefined>;
   createFarmSite(farmSite: InsertFarmSite): Promise<FarmSite>;
   updateFarmSite(id: number, farmSite: Partial<InsertFarmSite>): Promise<FarmSite>;
 
-  // Pens
-  getPensByFarmSite(farmSiteId: number): Promise<Pen[]>;
-  getPen(id: number): Promise<Pen | undefined>;
-  createPen(pen: InsertPen): Promise<Pen>;
-  updatePen(id: number, pen: Partial<InsertPen>): Promise<Pen>;
-
-  // Water Quality
-  getWaterQualityReadings(farmSiteId: number, limit?: number): Promise<WaterQualityReading[]>;
-  createWaterQualityReading(reading: InsertWaterQualityReading): Promise<WaterQualityReading>;
-
-  // Fish Health
-  getFishHealthRecords(penId: number, limit?: number): Promise<FishHealthRecord[]>;
-  createFishHealthRecord(record: InsertFishHealthRecord): Promise<FishHealthRecord>;
-
-  // Feeding
-  getFeedingRecords(penId: number, limit?: number): Promise<FeedingRecord[]>;
-  createFeedingRecord(record: InsertFeedingRecord): Promise<FeedingRecord>;
-
-  // Alerts
   getActiveAlerts(): Promise<Alert[]>;
   getAlerts(limit?: number): Promise<Alert[]>;
   createAlert(alert: InsertAlert): Promise<Alert>;
   resolveAlert(id: number): Promise<Alert>;
-
-  // System Metrics
-  getSystemMetrics(metricType?: string, farmSiteId?: number): Promise<SystemMetric[]>;
-  createSystemMetric(metric: InsertSystemMetric): Promise<SystemMetric>;
 
   // Dashboard specific queries
   getDashboardKPIs(): Promise<{
@@ -58,13 +58,19 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<number, User> = new Map();
+  private environmentalParameters: Map<number, EnvironmentalParameter> = new Map();
+  private containers: Map<number, Container> = new Map();
+  private sensors: Map<number, Sensor> = new Map();
+  private environmentalReadings: Map<number, EnvironmentalReading> = new Map();
+  private batches: Map<number, Batch> = new Map();
+  private feedTypes: Map<number, FeedType> = new Map();
+  private feedInventory: Map<number, FeedInventory> = new Map();
+  private feedingEvents: Map<number, FeedingEvent> = new Map();
+  private healthRecords: Map<number, HealthRecord> = new Map();
+  
+  // Legacy compatibility
   private farmSites: Map<number, FarmSite> = new Map();
-  private pens: Map<number, Pen> = new Map();
-  private waterQualityReadings: Map<number, WaterQualityReading> = new Map();
-  private fishHealthRecords: Map<number, FishHealthRecord> = new Map();
-  private feedingRecords: Map<number, FeedingRecord> = new Map();
   private alerts: Map<number, Alert> = new Map();
-  private systemMetrics: Map<number, SystemMetric> = new Map();
   
   private currentId = 1;
 
@@ -77,16 +83,188 @@ export class MemStorage implements IStorage {
     const user1: User = {
       id: this.currentId++,
       username: "johansen",
-      password: "hashed_password",
+      email: "john.hansen@aquamind.no",
       firstName: "John",
       lastName: "Hansen",
-      role: "farm_manager",
-      email: "john.hansen@aquamind.com",
-      createdAt: new Date(),
+      isActive: true,
+      isStaff: false,
+      dateJoined: new Date(),
+      lastLogin: new Date(),
     };
     this.users.set(user1.id, user1);
 
-    // Seed farm sites
+    // Seed Environmental Parameters
+    const tempParam: EnvironmentalParameter = {
+      id: this.currentId++,
+      name: "Water Temperature",
+      unit: "°C",
+      description: "Temperature of water in farming containers",
+      minValue: "10.0000",
+      maxValue: "18.0000",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.environmentalParameters.set(tempParam.id, tempParam);
+
+    const oxygenParam: EnvironmentalParameter = {
+      id: this.currentId++,
+      name: "Dissolved Oxygen",
+      unit: "mg/L",
+      description: "Amount of oxygen dissolved in water",
+      minValue: "5.0000",
+      maxValue: "15.0000",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.environmentalParameters.set(oxygenParam.id, oxygenParam);
+
+    const phParam: EnvironmentalParameter = {
+      id: this.currentId++,
+      name: "pH Level",
+      unit: "pH",
+      description: "Acidity/alkalinity of water",
+      minValue: "6.5000",
+      maxValue: "8.5000",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.environmentalParameters.set(phParam.id, phParam);
+
+    // Seed Containers
+    const container1: Container = {
+      id: this.currentId++,
+      name: "Pen A1 - Atlantic Site",
+      containerType: "pen",
+      capacity: 2500,
+      location: "Nordfjord, Norway",
+      coordinates: "61.9167,5.7333",
+      depth: "25.00",
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.containers.set(container1.id, container1);
+
+    const container2: Container = {
+      id: this.currentId++,
+      name: "Pen B1 - Pacific Site",
+      containerType: "pen",
+      capacity: 2200,
+      location: "Sognefjord, Norway",
+      coordinates: "61.2181,7.1250",
+      depth: "28.00",
+      status: "active",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.containers.set(container2.id, container2);
+
+    // Seed Batches
+    const batch1: Batch = {
+      id: this.currentId++,
+      batchId: "SAL-2024-001",
+      species: "Atlantic Salmon",
+      strain: "AquaGen Supreme",
+      quantity: 2140,
+      averageWeight: "3.20",
+      startDate: new Date("2024-01-15"),
+      expectedHarvestDate: new Date("2025-07-15"),
+      status: "active",
+      container: container1.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.batches.set(batch1.id, batch1);
+
+    const batch2: Batch = {
+      id: this.currentId++,
+      batchId: "SAL-2024-002",
+      species: "Atlantic Salmon",
+      strain: "Benchmark Genetics",
+      quantity: 1890,
+      averageWeight: "2.95",
+      startDate: new Date("2024-02-01"),
+      expectedHarvestDate: new Date("2025-08-01"),
+      status: "active",
+      container: container2.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.batches.set(batch2.id, batch2);
+
+    // Seed Feed Types
+    const feedType1: FeedType = {
+      id: this.currentId++,
+      name: "Biomar Orbit 6mm",
+      manufacturer: "Biomar",
+      proteinContent: "45.00",
+      fatContent: "18.00",
+      pelletSize: "6mm",
+      costPerKg: "24.50",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedTypes.set(feedType1.id, feedType1);
+
+    // Seed Environmental Readings
+    for (let i = 0; i < 10; i++) {
+      const tempReading: EnvironmentalReading = {
+        id: this.currentId++,
+        parameter: tempParam.id,
+        readingTime: new Date(Date.now() - i * 60 * 60 * 1000),
+        value: (12.5 + Math.random() * 2).toFixed(4),
+        sensor: null,
+        container: container1.id,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.environmentalReadings.set(tempReading.id, tempReading);
+
+      const oxygenReading: EnvironmentalReading = {
+        id: this.currentId++,
+        parameter: oxygenParam.id,
+        readingTime: new Date(Date.now() - i * 60 * 60 * 1000),
+        value: (8.0 + Math.random() * 1.5).toFixed(4),
+        sensor: null,
+        container: container1.id,
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.environmentalReadings.set(oxygenReading.id, oxygenReading);
+    }
+
+    // Seed Health Records
+    const healthRecord1: HealthRecord = {
+      id: this.currentId++,
+      batch: batch1.id,
+      checkDate: new Date(),
+      veterinarian: "Dr. Erik Nordahl",
+      healthStatus: "excellent",
+      mortalityCount: 2,
+      averageWeight: "3.20",
+      notes: "Fish showing excellent growth rates and no signs of disease",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.healthRecords.set(healthRecord1.id, healthRecord1);
+
+    // Seed Feeding Events
+    const feedingEvent1: FeedingEvent = {
+      id: this.currentId++,
+      batch: batch1.id,
+      feedType: feedType1.id,
+      quantityKg: "45.50",
+      feedingTime: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      feeder: "Lars Andersen",
+      notes: "Morning feeding completed successfully",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedingEvents.set(feedingEvent1.id, feedingEvent1);
+
+    // Legacy compatibility - Farm Sites
     const site1: FarmSite = {
       id: this.currentId++,
       name: "Atlantic Site A",
@@ -126,50 +304,117 @@ export class MemStorage implements IStorage {
     };
     this.farmSites.set(site3.id, site3);
 
-    // Seed pens
-    const pen1: Pen = {
-      id: this.currentId++,
-      penId: "PEN-A1",
-      farmSiteId: site1.id,
-      fishCount: 2140,
-      biomass: "6.80",
-      healthStatus: "healthy",
-      lastFed: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      waterDepth: "25.00",
-      netCondition: "good",
-    };
-    this.pens.set(pen1.id, pen1);
-
     // Seed alerts
     const alert1: Alert = {
       id: this.currentId++,
       type: "water_quality",
       severity: "high",
       title: "High Water Temperature",
-      description: "Water temperature exceeded optimal range in Pen A3",
+      description: "Water temperature exceeded optimal range in Atlantic Site A",
       farmSiteId: site1.id,
-      penId: pen1.id,
       resolved: false,
-      createdAt: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
+      createdAt: new Date(Date.now() - 2 * 60 * 1000),
       resolvedAt: null,
     };
     this.alerts.set(alert1.id, alert1);
+  }
 
-    // Seed water quality readings
-    for (let i = 0; i < 7; i++) {
-      const reading: WaterQualityReading = {
-        id: this.currentId++,
-        farmSiteId: site1.id,
-        penId: pen1.id,
-        temperature: (12.3 + Math.random() * 0.6).toFixed(2),
-        dissolvedOxygen: (8.0 + Math.random() * 0.5).toFixed(2),
-        phLevel: (7.6 + Math.random() * 0.4).toFixed(2),
-        salinity: (34.0 + Math.random() * 0.5).toFixed(2),
-        turbidity: (1.2 + Math.random() * 0.3).toFixed(2),
-        timestamp: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
-      };
-      this.waterQualityReadings.set(reading.id, reading);
+  // Django API Methods
+  async getEnvironmentalParameters(): Promise<EnvironmentalParameter[]> {
+    return Array.from(this.environmentalParameters.values());
+  }
+
+  async createEnvironmentalParameter(param: InsertEnvironmentalParameter): Promise<EnvironmentalParameter> {
+    const newParam: EnvironmentalParameter = {
+      ...param,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.environmentalParameters.set(newParam.id, newParam);
+    return newParam;
+  }
+
+  async getEnvironmentalReadings(containerId?: number, parameterId?: number): Promise<EnvironmentalReading[]> {
+    let readings = Array.from(this.environmentalReadings.values());
+    
+    if (containerId) {
+      readings = readings.filter(r => r.container === containerId);
     }
+    
+    if (parameterId) {
+      readings = readings.filter(r => r.parameter === parameterId);
+    }
+    
+    return readings.sort((a, b) => b.readingTime.getTime() - a.readingTime.getTime());
+  }
+
+  async createEnvironmentalReading(reading: InsertEnvironmentalReading): Promise<EnvironmentalReading> {
+    const newReading: EnvironmentalReading = {
+      ...reading,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.environmentalReadings.set(newReading.id, newReading);
+    return newReading;
+  }
+
+  async getContainers(): Promise<Container[]> {
+    return Array.from(this.containers.values());
+  }
+
+  async getBatches(): Promise<Batch[]> {
+    return Array.from(this.batches.values());
+  }
+
+  async createBatch(batch: InsertBatch): Promise<Batch> {
+    const newBatch: Batch = {
+      ...batch,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.batches.set(newBatch.id, newBatch);
+    return newBatch;
+  }
+
+  async getFeedTypes(): Promise<FeedType[]> {
+    return Array.from(this.feedTypes.values());
+  }
+
+  async getFeedInventory(): Promise<FeedInventory[]> {
+    return Array.from(this.feedInventory.values());
+  }
+
+  async getFeedingEvents(): Promise<FeedingEvent[]> {
+    return Array.from(this.feedingEvents.values());
+  }
+
+  async createFeedingEvent(event: InsertFeedingEvent): Promise<FeedingEvent> {
+    const newEvent: FeedingEvent = {
+      ...event,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedingEvents.set(newEvent.id, newEvent);
+    return newEvent;
+  }
+
+  async getHealthRecords(): Promise<HealthRecord[]> {
+    return Array.from(this.healthRecords.values());
+  }
+
+  async createHealthRecord(record: InsertHealthRecord): Promise<HealthRecord> {
+    const newRecord: HealthRecord = {
+      ...record,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.healthRecords.set(newRecord.id, newRecord);
+    return newRecord;
   }
 
   // User methods
@@ -185,13 +430,16 @@ export class MemStorage implements IStorage {
     const user: User = {
       ...insertUser,
       id: this.currentId++,
-      createdAt: new Date(),
+      isActive: true,
+      isStaff: false,
+      dateJoined: new Date(),
+      lastLogin: null,
     };
     this.users.set(user.id, user);
     return user;
   }
 
-  // Farm Site methods
+  // Legacy compatibility methods
   async getFarmSites(): Promise<FarmSite[]> {
     return Array.from(this.farmSites.values());
   }
@@ -223,87 +471,6 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
-  // Pen methods
-  async getPensByFarmSite(farmSiteId: number): Promise<Pen[]> {
-    return Array.from(this.pens.values()).filter(pen => pen.farmSiteId === farmSiteId);
-  }
-
-  async getPen(id: number): Promise<Pen | undefined> {
-    return this.pens.get(id);
-  }
-
-  async createPen(insertPen: InsertPen): Promise<Pen> {
-    const pen: Pen = {
-      ...insertPen,
-      id: this.currentId++,
-    };
-    this.pens.set(pen.id, pen);
-    return pen;
-  }
-
-  async updatePen(id: number, updates: Partial<InsertPen>): Promise<Pen> {
-    const existing = this.pens.get(id);
-    if (!existing) throw new Error('Pen not found');
-    
-    const updated: Pen = { ...existing, ...updates };
-    this.pens.set(id, updated);
-    return updated;
-  }
-
-  // Water Quality methods
-  async getWaterQualityReadings(farmSiteId: number, limit = 50): Promise<WaterQualityReading[]> {
-    return Array.from(this.waterQualityReadings.values())
-      .filter(reading => reading.farmSiteId === farmSiteId)
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
-  }
-
-  async createWaterQualityReading(insertReading: InsertWaterQualityReading): Promise<WaterQualityReading> {
-    const reading: WaterQualityReading = {
-      ...insertReading,
-      id: this.currentId++,
-      timestamp: new Date(),
-    };
-    this.waterQualityReadings.set(reading.id, reading);
-    return reading;
-  }
-
-  // Fish Health methods
-  async getFishHealthRecords(penId: number, limit = 50): Promise<FishHealthRecord[]> {
-    return Array.from(this.fishHealthRecords.values())
-      .filter(record => record.penId === penId)
-      .sort((a, b) => b.recordDate.getTime() - a.recordDate.getTime())
-      .slice(0, limit);
-  }
-
-  async createFishHealthRecord(insertRecord: InsertFishHealthRecord): Promise<FishHealthRecord> {
-    const record: FishHealthRecord = {
-      ...insertRecord,
-      id: this.currentId++,
-      recordDate: new Date(),
-    };
-    this.fishHealthRecords.set(record.id, record);
-    return record;
-  }
-
-  // Feeding methods
-  async getFeedingRecords(penId: number, limit = 50): Promise<FeedingRecord[]> {
-    return Array.from(this.feedingRecords.values())
-      .filter(record => record.penId === penId)
-      .sort((a, b) => b.feedingTime.getTime() - a.feedingTime.getTime())
-      .slice(0, limit);
-  }
-
-  async createFeedingRecord(insertRecord: InsertFeedingRecord): Promise<FeedingRecord> {
-    const record: FeedingRecord = {
-      ...insertRecord,
-      id: this.currentId++,
-    };
-    this.feedingRecords.set(record.id, record);
-    return record;
-  }
-
-  // Alert methods
   async getActiveAlerts(): Promise<Alert[]> {
     return Array.from(this.alerts.values())
       .filter(alert => !alert.resolved)
@@ -340,32 +507,6 @@ export class MemStorage implements IStorage {
     return resolved;
   }
 
-  // System Metrics methods
-  async getSystemMetrics(metricType?: string, farmSiteId?: number): Promise<SystemMetric[]> {
-    let metrics = Array.from(this.systemMetrics.values());
-    
-    if (metricType) {
-      metrics = metrics.filter(metric => metric.metricType === metricType);
-    }
-    
-    if (farmSiteId) {
-      metrics = metrics.filter(metric => metric.farmSiteId === farmSiteId);
-    }
-    
-    return metrics.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  }
-
-  async createSystemMetric(insertMetric: InsertSystemMetric): Promise<SystemMetric> {
-    const metric: SystemMetric = {
-      ...insertMetric,
-      id: this.currentId++,
-      timestamp: new Date(),
-    };
-    this.systemMetrics.set(metric.id, metric);
-    return metric;
-  }
-
-  // Dashboard KPIs
   async getDashboardKPIs() {
     const sites = Array.from(this.farmSites.values());
     const totalFish = sites.reduce((sum, site) => sum + site.currentStock, 0);
@@ -373,16 +514,23 @@ export class MemStorage implements IStorage {
     const healthySites = sites.filter(site => site.healthStatus === 'optimal').length;
     const healthRate = sites.length > 0 ? (healthySites / sites.length) * 100 : 0;
     
-    // Get recent water quality readings for average temperature
-    const recentReadings = Array.from(this.waterQualityReadings.values())
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, 10);
+    // Get recent temperature readings for average
+    const tempParam = Array.from(this.environmentalParameters.values())
+      .find(p => p.name === "Water Temperature");
     
-    const avgWaterTemp = recentReadings.length > 0 
-      ? recentReadings.reduce((sum, reading) => sum + parseFloat(reading.temperature), 0) / recentReadings.length
-      : 12.5;
+    let avgWaterTemp = 12.5;
+    if (tempParam) {
+      const recentReadings = Array.from(this.environmentalReadings.values())
+        .filter(r => r.parameter === tempParam.id)
+        .sort((a, b) => b.readingTime.getTime() - a.readingTime.getTime())
+        .slice(0, 10);
+      
+      if (recentReadings.length > 0) {
+        avgWaterTemp = recentReadings.reduce((sum, reading) => sum + parseFloat(reading.value), 0) / recentReadings.length;
+      }
+    }
 
-    // Mock next feeding calculation (would be based on feeding schedules)
+    // Calculate next feeding based on recent feeding events
     const nextFeedingHours = 2.5;
 
     return {

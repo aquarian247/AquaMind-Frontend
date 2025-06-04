@@ -1,10 +1,169 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAlertSchema, insertFarmSiteSchema, insertPenSchema, insertWaterQualityReadingSchema } from "@shared/schema";
+import { 
+  insertAlertSchema, insertFarmSiteSchema, 
+  insertEnvironmentalParameterSchema, insertEnvironmentalReadingSchema,
+  insertContainerSchema, insertBatchSchema, insertFeedTypeSchema,
+  insertFeedingEventSchema, insertHealthRecordSchema
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Dashboard endpoints
+  // Django API v1 endpoints - Environmental
+  app.get("/api/v1/environmental/parameters/", async (req, res) => {
+    try {
+      const parameters = await storage.getEnvironmentalParameters();
+      res.json({
+        count: parameters.length,
+        next: null,
+        previous: null,
+        results: parameters
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch environmental parameters" });
+    }
+  });
+
+  app.post("/api/v1/environmental/parameters/", async (req, res) => {
+    try {
+      const validatedData = insertEnvironmentalParameterSchema.parse(req.body);
+      const parameter = await storage.createEnvironmentalParameter(validatedData);
+      res.status(201).json(parameter);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid environmental parameter data" });
+    }
+  });
+
+  app.get("/api/v1/environmental/readings/", async (req, res) => {
+    try {
+      const containerId = req.query.container ? parseInt(req.query.container as string) : undefined;
+      const parameterId = req.query.parameter ? parseInt(req.query.parameter as string) : undefined;
+      const readings = await storage.getEnvironmentalReadings(containerId, parameterId);
+      res.json({
+        count: readings.length,
+        next: null,
+        previous: null,
+        results: readings
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch environmental readings" });
+    }
+  });
+
+  app.post("/api/v1/environmental/readings/", async (req, res) => {
+    try {
+      const validatedData = insertEnvironmentalReadingSchema.parse(req.body);
+      const reading = await storage.createEnvironmentalReading(validatedData);
+      res.status(201).json(reading);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid environmental reading data" });
+    }
+  });
+
+  // Django API v1 endpoints - Containers and Batches
+  app.get("/api/v1/containers/", async (req, res) => {
+    try {
+      const containers = await storage.getContainers();
+      res.json({
+        count: containers.length,
+        next: null,
+        previous: null,
+        results: containers
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch containers" });
+    }
+  });
+
+  app.get("/api/v1/batch/batches/", async (req, res) => {
+    try {
+      const batches = await storage.getBatches();
+      res.json({
+        count: batches.length,
+        next: null,
+        previous: null,
+        results: batches
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch batches" });
+    }
+  });
+
+  app.post("/api/v1/batch/batches/", async (req, res) => {
+    try {
+      const validatedData = insertBatchSchema.parse(req.body);
+      const batch = await storage.createBatch(validatedData);
+      res.status(201).json(batch);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid batch data" });
+    }
+  });
+
+  // Django API v1 endpoints - Feed Management
+  app.get("/api/v1/inventory/feed-types/", async (req, res) => {
+    try {
+      const feedTypes = await storage.getFeedTypes();
+      res.json({
+        count: feedTypes.length,
+        next: null,
+        previous: null,
+        results: feedTypes
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feed types" });
+    }
+  });
+
+  app.get("/api/v1/inventory/feeding-events/", async (req, res) => {
+    try {
+      const events = await storage.getFeedingEvents();
+      res.json({
+        count: events.length,
+        next: null,
+        previous: null,
+        results: events
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feeding events" });
+    }
+  });
+
+  app.post("/api/v1/inventory/feeding-events/", async (req, res) => {
+    try {
+      const validatedData = insertFeedingEventSchema.parse(req.body);
+      const event = await storage.createFeedingEvent(validatedData);
+      res.status(201).json(event);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid feeding event data" });
+    }
+  });
+
+  // Django API v1 endpoints - Health Records
+  app.get("/api/v1/health/records/", async (req, res) => {
+    try {
+      const records = await storage.getHealthRecords();
+      res.json({
+        count: records.length,
+        next: null,
+        previous: null,
+        results: records
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch health records" });
+    }
+  });
+
+  app.post("/api/v1/health/records/", async (req, res) => {
+    try {
+      const validatedData = insertHealthRecordSchema.parse(req.body);
+      const record = await storage.createHealthRecord(validatedData);
+      res.status(201).json(record);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid health record data" });
+    }
+  });
+
+  // Legacy Dashboard endpoints for current frontend
   app.get("/api/dashboard/kpis", async (req, res) => {
     try {
       const kpis = await storage.getDashboardKPIs();
