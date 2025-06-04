@@ -33,31 +33,31 @@
   }
 
   .dark {
-    /* Ocean Depths Theme - Dark */
-    --background: 210 50% 6%; /* #0A1118 */
-    --foreground: 210 20% 90%; /* #E1E8ED */
-    --card: 210 45% 8%; /* #0F1922 */
-    --card-foreground: 210 20% 88%; /* #DDE5EA */
-    --popover: 210 45% 8%; /* #0F1922 */
-    --popover-foreground: 210 20% 88%; /* #DDE5EA */
-    --primary: 210 100% 60%; /* #3399FF */
-    --primary-foreground: 210 50% 8%; /* #0F1922 */
-    --secondary: 210 40% 15%; /* #1E3A4A */
-    --secondary-foreground: 210 15% 80%; /* #C7D1D9 */
-    --muted: 210 40% 12%; /* #1A2B36 */
-    --muted-foreground: 210 15% 65%; /* #9EAAB5 */
-    --accent: 195 100% 55%; /* #1A9FFF */
-    --accent-foreground: 210 50% 8%; /* #0F1922 */
-    --destructive: 0 75% 55%; /* #E53E3E */
+    /* Ocean Depths Theme - Dark - Matching design system preview */
+    --background: 200 40% 12%; /* #1A2332 - Rich deep blue-gray */
+    --foreground: 210 25% 88%; /* #DBE1E8 */
+    --card: 200 35% 15%; /* #212B3D - Deeper card background */
+    --card-foreground: 210 20% 85%; /* #D1D8DF */
+    --popover: 200 35% 15%; /* #212B3D */
+    --popover-foreground: 210 20% 85%; /* #D1D8DF */
+    --primary: 210 100% 65%; /* #3D9FFF - Brighter ocean blue */
+    --primary-foreground: 200 40% 8%; /* #0F1419 */
+    --secondary: 200 30% 22%; /* #2D3748 - Warmer secondary */
+    --secondary-foreground: 210 15% 78%; /* #BFC7CF */
+    --muted: 200 25% 18%; /* #252E3A - Subtle muted background */
+    --muted-foreground: 210 12% 68%; /* #A0A8B0 */
+    --accent: 195 90% 58%; /* #26B5D6 - Vibrant teal accent */
+    --accent-foreground: 200 40% 8%; /* #0F1419 */
+    --destructive: 0 70% 58%; /* #E85D5D */
     --destructive-foreground: 0 0% 98%; /* #FAFAFA */
-    --border: 210 35% 20%; /* #2A4A5C */
-    --input: 210 35% 18%; /* #25424F */
-    --ring: 210 100% 60%; /* #3399FF */
-    --chart-1: 210 100% 60%; /* Light Ocean Blue */
-    --chart-2: 195 100% 55%; /* Bright Teal */
-    --chart-3: 180 85% 45%; /* Bright Sea Green */
-    --chart-4: 165 70% 50%; /* Bright Aqua Marine */
-    --chart-5: 220 90% 65%; /* Bright Navy Blue */
+    --border: 200 25% 25%; /* #364150 - Subtle borders */
+    --input: 200 25% 20%; /* #2C3440 - Input backgrounds */
+    --ring: 210 100% 65%; /* #3D9FFF */
+    --chart-1: 210 100% 65%; /* Bright Ocean Blue */
+    --chart-2: 195 90% 58%; /* Vibrant Teal */
+    --chart-3: 175 75% 48%; /* Sea Green */
+    --chart-4: 160 65% 52%; /* Aqua Marine */
+    --chart-5: 220 85% 68%; /* Navy Blue */
   }
 
   [data-theme="warm-earth"] {

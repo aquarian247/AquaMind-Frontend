@@ -44,16 +44,16 @@ export default function Sidebar() {
   const [location] = useLocation();
 
   return (
-    <div className="bg-white shadow-lg w-64 fixed h-full z-10">
+    <div className="bg-card border-r shadow-lg w-64 fixed h-full z-10">
       {/* Sidebar Header */}
-      <div className="p-6 border-b border-gray-200">
+      <div className="p-6 border-b">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-lg flex items-center justify-center">
-            <i className="fas fa-fish text-white text-lg"></i>
+          <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
+            <i className="fas fa-fish text-primary-foreground text-lg"></i>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">AquaMind</h1>
-            <p className="text-sm text-gray-500">Farm Management</p>
+            <h1 className="text-xl font-bold">AquaMind</h1>
+            <p className="text-sm text-muted-foreground">Farm Management</p>
           </div>
         </div>
       </div>
