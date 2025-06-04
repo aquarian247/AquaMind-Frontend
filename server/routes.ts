@@ -356,33 +356,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Chart data endpoints for dashboard
+  // Chart data endpoints for dashboard using Django API data
   app.get("/api/charts/water-quality", async (req, res) => {
     try {
-      const farmSiteId = parseInt(req.query.farmSiteId as string) || 1;
-      const readings = await storage.getWaterQualityReadings(farmSiteId, 7);
+      const containerId = parseInt(req.query.farmSiteId as string) || 1;
+      
+      // Get temperature readings
+      const tempParam = (await storage.getEnvironmentalParameters())
+        .find(p => p.name === "Water Temperature");
+      const oxygenParam = (await storage.getEnvironmentalParameters())
+        .find(p => p.name === "Dissolved Oxygen");
+      const phParam = (await storage.getEnvironmentalParameters())
+        .find(p => p.name === "pH Level");
+      
+      if (!tempParam || !oxygenParam || !phParam) {
+        return res.status(500).json({ error: "Environmental parameters not found" });
+      }
+
+      const tempReadings = await storage.getEnvironmentalReadings(containerId, tempParam.id);
+      const oxygenReadings = await storage.getEnvironmentalReadings(containerId, oxygenParam.id);
+      const phReadings = await storage.getEnvironmentalReadings(containerId, phParam.id);
+      
+      // Take last 7 readings and reverse for chronological order
+      const recentTempReadings = tempReadings.slice(0, 7).reverse();
+      const recentOxygenReadings = oxygenReadings.slice(0, 7).reverse();
+      const recentPhReadings = phReadings.slice(0, 7).reverse();
       
       // Transform data for Chart.js
       const chartData = {
-        labels: readings.reverse().map(reading => 
-          reading.timestamp.toLocaleDateString('en-US', { weekday: 'short' })
+        labels: recentTempReadings.map(reading => 
+          reading.readingTime.toLocaleDateString('en-US', { weekday: 'short' })
         ),
         datasets: [
           {
             label: 'Temperature (°C)',
-            data: readings.map(r => parseFloat(r.temperature)),
+            data: recentTempReadings.map(r => parseFloat(r.value)),
             borderColor: '#1976D2',
             backgroundColor: 'rgba(25, 118, 210, 0.1)',
           },
           {
             label: 'Dissolved O2 (mg/L)',
-            data: readings.map(r => parseFloat(r.dissolvedOxygen)),
+            data: recentOxygenReadings.map(r => parseFloat(r.value)),
             borderColor: '#00ACC1',
             backgroundColor: 'rgba(0, 172, 193, 0.1)',
           },
           {
             label: 'pH Level',
-            data: readings.map(r => parseFloat(r.phLevel)),
+            data: recentPhReadings.map(r => parseFloat(r.value)),
             borderColor: '#4CAF50',
             backgroundColor: 'rgba(76, 175, 80, 0.1)',
           }
@@ -391,6 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(chartData);
     } catch (error) {
+      console.error("Water quality chart error:", error);
       res.status(500).json({ error: "Failed to fetch water quality chart data" });
     }
   });
