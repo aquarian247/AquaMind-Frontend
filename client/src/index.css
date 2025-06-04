@@ -2,67 +2,175 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 210 11% 98%; /* #F5F7FA */
-  --foreground: 210 18% 17%; /* #263238 */
-  --muted: 210 11% 96%; /* #F1F3F5 */
-  --muted-foreground: 210 12% 47%; /* #6B7280 */
-  --popover: 0 0% 100%; /* #FFFFFF */
-  --popover-foreground: 210 18% 17%; /* #263238 */
-  --card: 0 0% 100%; /* #FFFFFF */
-  --card-foreground: 210 18% 17%; /* #263238 */
-  --border: 210 11% 91%; /* #E5E7EB */
-  --input: 210 11% 91%; /* #E5E7EB */
-  --primary: 207 90% 35%; /* #1976D2 */
-  --primary-foreground: 0 0% 100%; /* #FFFFFF */
-  --secondary: 210 11% 96%; /* #F1F3F5 */
-  --secondary-foreground: 210 18% 17%; /* #263238 */
-  --accent: 184 91% 38%; /* #00ACC1 */
-  --accent-foreground: 0 0% 100%; /* #FFFFFF */
-  --destructive: 4 90% 58%; /* #F44336 */
-  --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-  --ring: 207 90% 35%; /* #1976D2 */
-  --radius: 0.5rem;
+@layer base {
+  :root {
+    /* Ocean Depths Theme - Light (Default) */
+    --background: 210 20% 98%; /* #F8FAFB */
+    --foreground: 210 40% 8%; /* #0C1419 */
+    --card: 210 25% 95%; /* #EFF4F7 */
+    --card-foreground: 210 40% 12%; /* #14242D */
+    --popover: 210 25% 95%; /* #EFF4F7 */
+    --popover-foreground: 210 40% 12%; /* #14242D */
+    --primary: 210 100% 50%; /* #0080FF */
+    --primary-foreground: 0 0% 98%; /* #FAFAFA */
+    --secondary: 210 30% 85%; /* #C7D7E5 */
+    --secondary-foreground: 210 40% 15%; /* #1E3A4A */
+    --muted: 210 25% 90%; /* #DDE8EF */
+    --muted-foreground: 210 20% 45%; /* #6B8394 */
+    --accent: 195 100% 45%; /* #0073E6 */
+    --accent-foreground: 0 0% 98%; /* #FAFAFA */
+    --destructive: 0 84% 60%; /* #EF4444 */
+    --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+    --border: 210 20% 85%; /* #CADAE8 */
+    --input: 210 20% 90%; /* #DCE7F0 */
+    --ring: 210 100% 50%; /* #0080FF */
+    --chart-1: 210 100% 50%; /* Ocean Blue */
+    --chart-2: 195 100% 45%; /* Deep Teal */
+    --chart-3: 180 85% 35%; /* Sea Green */
+    --chart-4: 165 70% 40%; /* Aqua Marine */
+    --chart-5: 220 90% 55%; /* Navy Blue */
+    --radius: 0.75rem;
+  }
 
-  /* AquaMind specific colors */
-  --ocean-blue: 207 90% 35%; /* #1976D2 */
-  --aqua-teal: 184 100% 38%; /* #00695C */
-  --salmon-orange: 24 100% 50%; /* #FF6F00 */
-  --healthy-green: 122 39% 49%; /* #4CAF50 */
-  --alert-orange: 36 100% 50%; /* #FF9800 */
-  --critical-red: 4 90% 58%; /* #F44336 */
-  --professional-gray: 210 18% 17%; /* #263238 */
-}
+  .dark {
+    /* Ocean Depths Theme - Dark */
+    --background: 210 50% 6%; /* #0A1118 */
+    --foreground: 210 20% 90%; /* #E1E8ED */
+    --card: 210 45% 8%; /* #0F1922 */
+    --card-foreground: 210 20% 88%; /* #DDE5EA */
+    --popover: 210 45% 8%; /* #0F1922 */
+    --popover-foreground: 210 20% 88%; /* #DDE5EA */
+    --primary: 210 100% 60%; /* #3399FF */
+    --primary-foreground: 210 50% 8%; /* #0F1922 */
+    --secondary: 210 40% 15%; /* #1E3A4A */
+    --secondary-foreground: 210 15% 80%; /* #C7D1D9 */
+    --muted: 210 40% 12%; /* #1A2B36 */
+    --muted-foreground: 210 15% 65%; /* #9EAAB5 */
+    --accent: 195 100% 55%; /* #1A9FFF */
+    --accent-foreground: 210 50% 8%; /* #0F1922 */
+    --destructive: 0 75% 55%; /* #E53E3E */
+    --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+    --border: 210 35% 20%; /* #2A4A5C */
+    --input: 210 35% 18%; /* #25424F */
+    --ring: 210 100% 60%; /* #3399FF */
+    --chart-1: 210 100% 60%; /* Light Ocean Blue */
+    --chart-2: 195 100% 55%; /* Bright Teal */
+    --chart-3: 180 85% 45%; /* Bright Sea Green */
+    --chart-4: 165 70% 50%; /* Bright Aqua Marine */
+    --chart-5: 220 90% 65%; /* Bright Navy Blue */
+  }
 
-.dark {
-  --background: 210 18% 7%; /* #0F1419 */
-  --foreground: 210 11% 96%; /* #F1F3F5 */
-  --muted: 210 18% 12%; /* #1A1F2E */
-  --muted-foreground: 210 11% 64%; /* #9CA3AF */
-  --popover: 210 18% 12%; /* #1A1F2E */
-  --popover-foreground: 210 11% 96%; /* #F1F3F5 */
-  --card: 210 18% 12%; /* #1A1F2E */
-  --card-foreground: 210 11% 96%; /* #F1F3F5 */
-  --border: 210 18% 18%; /* #334155 */
-  --input: 210 18% 18%; /* #334155 */
-  --primary: 207 90% 54%; /* #2196F3 */
-  --primary-foreground: 0 0% 100%; /* #FFFFFF */
-  --secondary: 210 18% 18%; /* #334155 */
-  --secondary-foreground: 210 11% 96%; /* #F1F3F5 */
-  --accent: 184 91% 45%; /* #26C6DA */
-  --accent-foreground: 0 0% 100%; /* #FFFFFF */
-  --destructive: 4 84% 60%; /* #EF4444 */
-  --destructive-foreground: 0 0% 100%; /* #FFFFFF */
-  --ring: 207 90% 54%; /* #2196F3 */
+  [data-theme="warm-earth"] {
+    /* Warm Earth Theme - Light */
+    --background: 30 25% 96%; /* #F7F3F0 */
+    --foreground: 20 30% 15%; /* #3D2E26 */
+    --card: 30 20% 92%; /* #EFEBE6 */
+    --card-foreground: 20 30% 18%; /* #473529 */
+    --popover: 30 20% 92%; /* #EFEBE6 */
+    --popover-foreground: 20 30% 18%; /* #473529 */
+    --primary: 25 85% 55%; /* #D97706 */
+    --primary-foreground: 0 0% 98%; /* #FAFAFA */
+    --secondary: 35 25% 80%; /* #D4C4B0 */
+    --secondary-foreground: 20 25% 25%; /* #524033 */
+    --muted: 30 20% 85%; /* #DAD0C4 */
+    --muted-foreground: 25 15% 50%; /* #857566 */
+    --accent: 15 80% 50%; /* #DC2626 */
+    --accent-foreground: 0 0% 98%; /* #FAFAFA */
+    --destructive: 0 84% 60%; /* #EF4444 */
+    --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+    --border: 30 15% 80%; /* #CFC2B5 */
+    --input: 30 15% 85%; /* #DDD2C7 */
+    --ring: 25 85% 55%; /* #D97706 */
+    --chart-1: 25 85% 55%; /* Warm Orange */
+    --chart-2: 15 80% 50%; /* Earth Red */
+    --chart-3: 45 75% 45%; /* Golden Brown */
+    --chart-4: 35 65% 40%; /* Terracotta */
+    --chart-5: 55 70% 50%; /* Olive Gold */
+  }
 
-  /* Dark mode AquaMind colors */
-  --ocean-blue: 207 90% 54%; /* #2196F3 */
-  --aqua-teal: 184 91% 45%; /* #26C6DA */
-  --salmon-orange: 24 100% 60%; /* #FF8C00 */
-  --healthy-green: 122 39% 55%; /* #66BB6A */
-  --alert-orange: 36 100% 60%; /* #FFB74D */
-  --critical-red: 4 84% 60%; /* #EF4444 */
-  --professional-gray: 210 11% 96%; /* #F1F3F5 */
+  [data-theme="warm-earth"].dark {
+    /* Warm Earth Theme - Dark */
+    --background: 20 40% 8%; /* #1A0F0A */
+    --foreground: 30 20% 85%; /* #D4C4B0 */
+    --card: 20 35% 12%; /* #241712 */
+    --card-foreground: 30 18% 82%; /* #CFBFA8 */
+    --popover: 20 35% 12%; /* #241712 */
+    --popover-foreground: 30 18% 82%; /* #CFBFA8 */
+    --primary: 25 90% 65%; /* #F59E0B */
+    --primary-foreground: 20 40% 10%; /* #1F120C */
+    --secondary: 25 30% 25%; /* #524033 */
+    --secondary-foreground: 30 15% 75%; /* #BFB3A3 */
+    --muted: 20 30% 18%; /* #332419 */
+    --muted-foreground: 25 12% 55%; /* #948771 */
+    --accent: 15 85% 60%; /* #EF4444 */
+    --accent-foreground: 20 40% 10%; /* #1F120C */
+    --destructive: 0 75% 55%; /* #E53E3E */
+    --destructive-foreground: 0 0% 98%; /* #FAFAFA */
+    --border: 25 25% 30%; /* #5C4A3A */
+    --input: 25 25% 25%; /* #52412F */
+    --ring: 25 90% 65%; /* #F59E0B */
+    --chart-1: 25 90% 65%; /* Bright Orange */
+    --chart-2: 15 85% 60%; /* Bright Red */
+    --chart-3: 45 80% 55%; /* Bright Golden */
+    --chart-4: 35 70% 50%; /* Bright Terracotta */
+    --chart-5: 55 75% 60%; /* Bright Olive */
+  }
+
+  [data-theme="solarized"] {
+    /* Solarized Theme - Light */
+    --background: 44 87% 94%; /* #FDF6E3 */
+    --foreground: 192 81% 14%; /* #073642 */
+    --card: 44 87% 90%; /* #F7EFCB */
+    --card-foreground: 192 81% 16%; /* #0A3F4F */
+    --popover: 44 87% 90%; /* #F7EFCB */
+    --popover-foreground: 192 81% 16%; /* #0A3F4F */
+    --primary: 18 89% 47%; /* #D33682 */
+    --primary-foreground: 44 87% 94%; /* #FDF6E3 */
+    --secondary: 45 100% 71%; /* #EEE8D5 */
+    --secondary-foreground: 192 81% 18%; /* #0C4A5C */
+    --muted: 44 80% 85%; /* #E8D5B7 */
+    --muted-foreground: 194 25% 46%; /* #657B83 */
+    --accent: 175 74% 31%; /* #2AA198 */
+    --accent-foreground: 44 87% 94%; /* #FDF6E3 */
+    --destructive: 1 71% 52%; /* #DC322F */
+    --destructive-foreground: 44 87% 94%; /* #FDF6E3 */
+    --border: 44 70% 80%; /* #DDD2B8 */
+    --input: 44 70% 85%; /* #E8DCC6 */
+    --ring: 18 89% 47%; /* #D33682 */
+    --chart-1: 18 89% 47%; /* Magenta */
+    --chart-2: 175 74% 31%; /* Cyan */
+    --chart-3: 68 100% 30%; /* Green */
+    --chart-4: 45 100% 35%; /* Yellow */
+    --chart-5: 237 45% 49%; /* Blue */
+  }
+
+  [data-theme="solarized"].dark {
+    /* Solarized Theme - Dark */
+    --background: 192 100% 11%; /* #002B36 */
+    --foreground: 44 87% 94%; /* #FDF6E3 */
+    --card: 192 90% 15%; /* #073642 */
+    --card-foreground: 44 80% 90%; /* #F4EEDB */
+    --popover: 192 90% 15%; /* #073642 */
+    --popover-foreground: 44 80% 90%; /* #F4EEDB */
+    --primary: 18 89% 55%; /* #D33682 */
+    --primary-foreground: 192 100% 11%; /* #002B36 */
+    --secondary: 194 25% 46%; /* #586E75 */
+    --secondary-foreground: 44 75% 85%; /* #E6DCC2 */
+    --muted: 192 70% 20%; /* #194752 */
+    --muted-foreground: 186 8% 55%; /* #839496 */
+    --accent: 175 74% 41%; /* #2AA198 */
+    --accent-foreground: 192 100% 11%; /* #002B36 */
+    --destructive: 1 71% 62%; /* #DC322F */
+    --destructive-foreground: 44 87% 94%; /* #FDF6E3 */
+    --border: 192 60% 25%; /* #2A5A68 */
+    --input: 192 55% 22%; /* #245158 */
+    --ring: 18 89% 55%; /* #D33682 */
+    --chart-1: 18 89% 65%; /* Bright Magenta */
+    --chart-2: 175 74% 51%; /* Bright Cyan */
+    --chart-3: 68 100% 40%; /* Bright Green */
+    --chart-4: 45 100% 45%; /* Bright Yellow */
+    --chart-5: 237 45% 59%; /* Bright Blue */
+  }
 }
 
 @layer base {
@@ -73,6 +181,7 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -86,15 +195,15 @@
   }
   
   .sidebar-nav-item.active {
-    @apply bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300;
+    @apply bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary;
   }
   
   .sidebar-nav-item:not(.active) {
-    @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100;
+    @apply text-muted-foreground hover:bg-muted hover:text-foreground;
   }
 
   .kpi-card {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6;
+    @apply bg-card rounded-xl shadow-sm border p-6;
   }
 
   .status-indicator {
@@ -102,15 +211,15 @@
   }
   
   .status-optimal {
-    @apply bg-green-500;
+    @apply bg-chart-3;
   }
   
   .status-attention {
-    @apply bg-orange-500;
+    @apply bg-chart-4;
   }
   
   .status-critical {
-    @apply bg-red-500;
+    @apply bg-destructive;
   }
 
   .alert-card {
@@ -118,15 +227,23 @@
   }
   
   .alert-high {
-    @apply bg-red-50 border-l-4 border-red-500 dark:bg-red-900/20;
+    @apply bg-destructive/10 border-l-4 border-destructive;
   }
   
   .alert-medium {
-    @apply bg-orange-50 border-l-4 border-orange-500 dark:bg-orange-900/20;
+    @apply bg-chart-4/10 border-l-4 border-chart-4;
   }
   
   .alert-low {
-    @apply bg-blue-50 border-l-4 border-blue-500 dark:bg-blue-900/20;
+    @apply bg-primary/10 border-l-4 border-primary;
+  }
+
+  .theme-selector {
+    @apply flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer;
+  }
+
+  .theme-selector.active {
+    @apply bg-primary/10 text-primary;
   }
 }
 
@@ -138,7 +255,7 @@ canvas {
 /* Custom scrollbar */
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.5) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -150,10 +267,10 @@ canvas {
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.5);
+  background-color: hsl(var(--muted-foreground) / 0.5);
   border-radius: 3px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.7);
+  background-color: hsl(var(--muted-foreground) / 0.7);
 }
