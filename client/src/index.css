@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 11% 98%; /* #F5F7FA */
+  --foreground: 210 18% 17%; /* #263238 */
+  --muted: 210 11% 96%; /* #F1F3F5 */
+  --muted-foreground: 210 12% 47%; /* #6B7280 */
+  --popover: 0 0% 100%; /* #FFFFFF */
+  --popover-foreground: 210 18% 17%; /* #263238 */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 210 18% 17%; /* #263238 */
+  --border: 210 11% 91%; /* #E5E7EB */
+  --input: 210 11% 91%; /* #E5E7EB */
+  --primary: 207 90% 35%; /* #1976D2 */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  --secondary: 210 11% 96%; /* #F1F3F5 */
+  --secondary-foreground: 210 18% 17%; /* #263238 */
+  --accent: 184 91% 38%; /* #00ACC1 */
+  --accent-foreground: 0 0% 100%; /* #FFFFFF */
+  --destructive: 4 90% 58%; /* #F44336 */
+  --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+  --ring: 207 90% 35%; /* #1976D2 */
+  --radius: 0.5rem;
+
+  /* AquaMind specific colors */
+  --ocean-blue: 207 90% 35%; /* #1976D2 */
+  --aqua-teal: 184 100% 38%; /* #00695C */
+  --salmon-orange: 24 100% 50%; /* #FF6F00 */
+  --healthy-green: 122 39% 49%; /* #4CAF50 */
+  --alert-orange: 36 100% 50%; /* #FF9800 */
+  --critical-red: 4 90% 58%; /* #F44336 */
+  --professional-gray: 210 18% 17%; /* #263238 */
+}
+
+.dark {
+  --background: 210 18% 7%; /* #0F1419 */
+  --foreground: 210 11% 96%; /* #F1F3F5 */
+  --muted: 210 18% 12%; /* #1A1F2E */
+  --muted-foreground: 210 11% 64%; /* #9CA3AF */
+  --popover: 210 18% 12%; /* #1A1F2E */
+  --popover-foreground: 210 11% 96%; /* #F1F3F5 */
+  --card: 210 18% 12%; /* #1A1F2E */
+  --card-foreground: 210 11% 96%; /* #F1F3F5 */
+  --border: 210 18% 18%; /* #334155 */
+  --input: 210 18% 18%; /* #334155 */
+  --primary: 207 90% 54%; /* #2196F3 */
+  --primary-foreground: 0 0% 100%; /* #FFFFFF */
+  --secondary: 210 18% 18%; /* #334155 */
+  --secondary-foreground: 210 11% 96%; /* #F1F3F5 */
+  --accent: 184 91% 45%; /* #26C6DA */
+  --accent-foreground: 0 0% 100%; /* #FFFFFF */
+  --destructive: 4 84% 60%; /* #EF4444 */
+  --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+  --ring: 207 90% 54%; /* #2196F3 */
+
+  /* Dark mode AquaMind colors */
+  --ocean-blue: 207 90% 54%; /* #2196F3 */
+  --aqua-teal: 184 91% 45%; /* #26C6DA */
+  --salmon-orange: 24 100% 60%; /* #FF8C00 */
+  --healthy-green: 122 39% 55%; /* #66BB6A */
+  --alert-orange: 36 100% 60%; /* #FFB74D */
+  --critical-red: 4 84% 60%; /* #EF4444 */
+  --professional-gray: 210 11% 96%; /* #F1F3F5 */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+  }
+}
+
+@layer components {
+  .sidebar-nav-item {
+    @apply flex items-center px-4 py-3 text-sm font-medium transition-colors rounded-lg;
+  }
+  
+  .sidebar-nav-item.active {
+    @apply bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300;
+  }
+  
+  .sidebar-nav-item:not(.active) {
+    @apply text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100;
+  }
+
+  .kpi-card {
+    @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6;
+  }
+
+  .status-indicator {
+    @apply w-2 h-2 rounded-full;
+  }
+  
+  .status-optimal {
+    @apply bg-green-500;
+  }
+  
+  .status-attention {
+    @apply bg-orange-500;
+  }
+  
+  .status-critical {
+    @apply bg-red-500;
+  }
+
+  .alert-card {
+    @apply flex items-start space-x-3 p-3 rounded-lg;
+  }
+  
+  .alert-high {
+    @apply bg-red-50 border-l-4 border-red-500 dark:bg-red-900/20;
+  }
+  
+  .alert-medium {
+    @apply bg-orange-50 border-l-4 border-orange-500 dark:bg-orange-900/20;
+  }
+  
+  .alert-low {
+    @apply bg-blue-50 border-l-4 border-blue-500 dark:bg-blue-900/20;
+  }
+}
+
+/* Chart.js canvas styling */
+canvas {
+  max-height: 400px !important;
+}
+
+/* Custom scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
