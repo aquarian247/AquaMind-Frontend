@@ -288,7 +288,7 @@ export default function MortalityReporting() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {MORTALITY_CAUSES.map((cause) => (
                           <SelectItem key={cause.value} value={cause.value}>
                             {cause.label}
