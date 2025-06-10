@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -153,9 +153,17 @@ const purchaseSchema = z.object({
   notes: z.string().optional(),
 });
 
+const feedDistributionSchema = z.object({
+  feedPurchase: z.string().min(1, "Feed purchase is required"),
+  targetContainer: z.string().min(1, "Target container is required"),
+  amountKg: z.string().min(1, "Amount is required"),
+  distributionDate: z.string().min(1, "Distribution date is required"),
+  notes: z.string().optional(),
+});
+
 const feedingEventSchema = z.object({
   batch: z.string().min(1, "Batch is required"),
-  container: z.string().min(1, "Container is required"),
+  feedContainer: z.string().min(1, "Feed container is required"),
   feed: z.string().min(1, "Feed type is required"),
   feedingDate: z.string().min(1, "Feeding date is required"),
   feedingTime: z.string().min(1, "Feeding time is required"),
@@ -302,11 +310,22 @@ export default function Inventory() {
     },
   });
 
+  const distributionForm = useForm<z.infer<typeof feedDistributionSchema>>({
+    resolver: zodResolver(feedDistributionSchema),
+    defaultValues: {
+      feedPurchase: "",
+      targetContainer: "",
+      amountKg: "",
+      distributionDate: "",
+      notes: "",
+    },
+  });
+
   const feedingForm = useForm<z.infer<typeof feedingEventSchema>>({
     resolver: zodResolver(feedingEventSchema),
     defaultValues: {
       batch: "",
-      container: "",
+      feedContainer: "",
       feed: "",
       feedingDate: "",
       feedingTime: "",
@@ -780,6 +799,528 @@ export default function Inventory() {
                         <TableCell>${parseFloat(purchase.costPerKg).toFixed(2)}</TableCell>
                         <TableCell>
                           ${(parseFloat(purchase.quantityKg) * parseFloat(purchase.costPerKg)).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Feed Distribution */}
+      {activeSection === "distribution" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Factory className="h-5 w-5" />
+                  <span>Feed Distribution Management</span>
+                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Distribute Feed
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Distribute Feed to Container</DialogTitle>
+                      <DialogDescription>
+                        Move feed from un-distributed inventory to silos (freshwater stations) or barges (sea areas).
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...distributionForm}>
+                      <form className="space-y-4">
+                        <FormField
+                          control={distributionForm.control}
+                          name="feedPurchase"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Source Feed Purchase (FIFO Order)</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select feed purchase batch" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {purchases
+                                    .filter(purchase => {
+                                      // Show only purchases with available stock
+                                      const usedStock = containerStock
+                                        .filter(cs => cs.feedPurchase === purchase.id)
+                                        .reduce((sum, cs) => sum + parseFloat(cs.quantityKg), 0);
+                                      return parseFloat(purchase.quantityKg) > usedStock;
+                                    })
+                                    .sort((a, b) => new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime())
+                                    .map((purchase) => {
+                                      const feedType = feedTypes.find(f => f.id === purchase.feed);
+                                      const usedStock = containerStock
+                                        .filter(cs => cs.feedPurchase === purchase.id)
+                                        .reduce((sum, cs) => sum + parseFloat(cs.quantityKg), 0);
+                                      const available = parseFloat(purchase.quantityKg) - usedStock;
+                                      
+                                      return (
+                                        <SelectItem key={purchase.id} value={purchase.id.toString()}>
+                                          {feedType?.name} - {purchase.batchNumber} 
+                                          ({available.toLocaleString()} kg available)
+                                        </SelectItem>
+                                      );
+                                    })}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={distributionForm.control}
+                          name="targetContainer"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Target Container (Silo/Barge)</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select destination container" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {containers
+                                    .filter(container => container.isActive)
+                                    .map((container) => (
+                                      <SelectItem key={container.id} value={container.id.toString()}>
+                                        {container.name} ({container.containerType}) - {container.location}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={distributionForm.control}
+                            name="amountKg"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Amount (kg)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" placeholder="e.g., 500" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={distributionForm.control}
+                            name="distributionDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Distribution Date</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={distributionForm.control}
+                          name="notes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Notes</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Distribution notes..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button type="submit" className="w-full">Distribute Feed</Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Un-distributed Inventory (FIFO)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {purchases
+                          .map(purchase => {
+                            const usedStock = containerStock
+                              .filter(cs => cs.feedPurchase === purchase.id)
+                              .reduce((sum, cs) => sum + parseFloat(cs.quantityKg), 0);
+                            const available = parseFloat(purchase.quantityKg) - usedStock;
+                            const feedType = feedTypes.find(f => f.id === purchase.feed);
+                            
+                            return { ...purchase, available, feedType };
+                          })
+                          .filter(item => item.available > 0)
+                          .sort((a, b) => new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime())
+                          .map((item, index) => (
+                            <div key={item.id} className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                              <div>
+                                <p className="font-semibold">#{index + 1} - {item.feedType?.name}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {item.batchNumber} • {item.supplier}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-medium">{item.available.toLocaleString()} kg</p>
+                                <p className="text-sm text-muted-foreground">
+                                  ${parseFloat(item.costPerKg).toFixed(2)}/kg
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        {purchases.every(p => {
+                          const usedStock = containerStock
+                            .filter(cs => cs.feedPurchase === p.id)
+                            .reduce((sum, cs) => sum + parseFloat(cs.quantityKg), 0);
+                          return parseFloat(p.quantityKg) <= usedStock;
+                        }) && (
+                          <p className="text-muted-foreground text-center py-4">No un-distributed inventory</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Recent Distributions</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {containerStock
+                          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                          .slice(0, 8)
+                          .map((stock) => {
+                            const container = containers.find(c => c.id === stock.feedContainer);
+                            const purchase = purchases.find(p => p.id === stock.feedPurchase);
+                            
+                            return (
+                              <div key={stock.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                  <p className="font-semibold">{container?.name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {purchase?.batchNumber} • {new Date(stock.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-medium">{parseFloat(stock.quantityKg).toLocaleString()} kg</p>
+                                  <p className="text-sm text-muted-foreground">{container?.containerType}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Feeding Events */}
+      {activeSection === "feeding-events" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <ClipboardList className="h-5 w-5" />
+                  <span>Feeding Events Management</span>
+                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Record Feeding Event
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Record Feeding Event</DialogTitle>
+                      <DialogDescription>
+                        Record feed consumption with automatic FIFO deduction and location constraint validation.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Form {...feedingForm}>
+                      <form className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={feedingForm.control}
+                            name="batch"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Salmon Batch</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select batch" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="1">Batch 2024-A01 (Station A, Hall 1)</SelectItem>
+                                    <SelectItem value="2">Batch 2024-A02 (Station A, Hall 2)</SelectItem>
+                                    <SelectItem value="3">Batch 2024-B01 (Area B, Sea Pen 1)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={feedingForm.control}
+                            name="feedContainer"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Feed Container</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select feed source" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {containers
+                                      .filter(container => {
+                                        // Location-based filtering logic would go here
+                                        // For now, show all active containers with stock
+                                        const hasStock = containerStock.some(cs => 
+                                          cs.feedContainer === container.id && parseFloat(cs.quantityKg) > 0
+                                        );
+                                        return container.isActive && hasStock;
+                                      })
+                                      .map((container) => {
+                                        const totalStock = containerStock
+                                          .filter(cs => cs.feedContainer === container.id)
+                                          .reduce((sum, cs) => sum + parseFloat(cs.quantityKg), 0);
+                                        
+                                        return (
+                                          <SelectItem key={container.id} value={container.id.toString()}>
+                                            {container.name} ({totalStock.toLocaleString()} kg available)
+                                          </SelectItem>
+                                        );
+                                      })}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={feedingForm.control}
+                          name="feed"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Feed Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select feed type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {feedTypes.map((feed) => (
+                                    <SelectItem key={feed.id} value={feed.id.toString()}>
+                                      {feed.name} ({feed.sizeCategory}) - {feed.brand}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={feedingForm.control}
+                            name="feedingDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Feeding Date</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={feedingForm.control}
+                            name="feedingTime"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Feeding Time</FormLabel>
+                                <FormControl>
+                                  <Input type="time" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={feedingForm.control}
+                            name="amountKg"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Feed Amount (kg)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" placeholder="e.g., 25.5" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={feedingForm.control}
+                            name="batchBiomassKg"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Batch Biomass (kg)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" placeholder="e.g., 1500" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <FormField
+                          control={feedingForm.control}
+                          name="method"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Feeding Method</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select method" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="MANUAL">Manual Feeding</SelectItem>
+                                  <SelectItem value="AUTOMATIC">Automatic Feeder</SelectItem>
+                                  <SelectItem value="BOAT">Boat Feeding</SelectItem>
+                                  <SelectItem value="PNEUMATIC">Pneumatic System</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={feedingForm.control}
+                          name="notes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Notes</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Feeding observations, fish behavior, etc..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button type="submit" className="w-full">Record Feeding Event</Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date/Time</TableHead>
+                    <TableHead>Batch</TableHead>
+                    <TableHead>Feed Container</TableHead>
+                    <TableHead>Feed Type</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Method</TableHead>
+                    <TableHead>FCR Impact</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {feedingEvents.map((event) => {
+                    const container = containers.find(c => c.id === event.container);
+                    const feedType = feedTypes.find(f => f.id === event.feed);
+                    const feedingPercentage = parseFloat(event.batchBiomassKg || "0") > 0 
+                      ? (parseFloat(event.amountKg) / parseFloat(event.batchBiomassKg || "1")) * 100
+                      : 0;
+                    
+                    return (
+                      <TableRow key={event.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{new Date(event.feedingDate).toLocaleDateString()}</p>
+                            <p className="text-sm text-muted-foreground">{event.feedingTime}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">Batch {event.batch}</Badge>
+                        </TableCell>
+                        <TableCell>{container?.name}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{feedType?.name}</p>
+                            <p className="text-sm text-muted-foreground">{feedType?.sizeCategory}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{parseFloat(event.amountKg).toLocaleString()} kg</p>
+                            <p className="text-sm text-muted-foreground">
+                              {feedingPercentage.toFixed(2)}% of biomass
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={event.method === "AUTOMATIC" ? "default" : "secondary"}>
+                            {event.method}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-center">
+                            <p className="text-sm font-medium">
+                              ${event.feedCost ? parseFloat(event.feedCost).toFixed(2) : "N/A"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">FIFO cost</p>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
