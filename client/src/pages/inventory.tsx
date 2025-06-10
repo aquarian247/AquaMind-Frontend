@@ -593,6 +593,9 @@ export default function Inventory() {
                   <DialogContent className="max-w-[95vw] sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Add New Feed Type</DialogTitle>
+                      <DialogDescription>
+                        Create a new feed type with specifications for your aquaculture operation.
+                      </DialogDescription>
                     </DialogHeader>
                     <Form {...feedForm}>
                       <form className="space-y-4 sm:space-y-6">

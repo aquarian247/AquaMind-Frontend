@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ThemeSelector } from "@/components/theme-selector";
 
 const navigationItems = [
   {
@@ -86,7 +87,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Header with Hamburger Menu */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
             <i className="fas fa-fish text-white text-sm"></i>
@@ -97,13 +98,16 @@ export default function Sidebar() {
           </div>
         </div>
         
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm" className="p-2 h-10 w-10">
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-80 p-0">
+        <div className="flex items-center gap-2">
+          <ThemeSelector />
+          
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="p-2 h-10 w-10">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80 p-0">
             <div className="flex flex-col h-full">
               <div className="p-6 border-b">
                 <div className="flex items-center space-x-3">
@@ -120,9 +124,18 @@ export default function Sidebar() {
               <div className="flex-1 px-4 py-6">
                 <NavigationMenu onItemClick={() => setMobileMenuOpen(false)} />
               </div>
+              
+              {/* Theme Controls in Mobile Menu */}
+              <div className="px-4 py-4 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Theme</span>
+                  <ThemeSelector />
+                </div>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
+        </div>
       </div>
 
       {/* Desktop Sidebar */}
