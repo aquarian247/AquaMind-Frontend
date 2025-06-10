@@ -94,7 +94,7 @@ export default function Sidebar() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-blue-600">AquaMind</h1>
-            <p className="text-xs text-gray-500">Farm Management</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Farm Management</p>
           </div>
         </div>
         
@@ -108,33 +108,33 @@ export default function Sidebar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 p-0">
-            <div className="flex flex-col h-full">
-              <div className="p-6 border-b">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                    <i className="fas fa-fish text-white text-lg"></i>
+              <div className="flex flex-col h-full">
+                <div className="p-6 border-b">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                      <i className="fas fa-fish text-white text-lg"></i>
+                    </div>
+                    <div>
+                      <h1 className="text-xl font-bold text-blue-600">AquaMind</h1>
+                      <p className="text-sm text-gray-500">Farm Management</p>
+                    </div>
                   </div>
-                  <div>
-                    <h1 className="text-xl font-bold text-blue-600">AquaMind</h1>
-                    <p className="text-sm text-gray-500">Farm Management</p>
+                </div>
+                
+                <div className="flex-1 px-4 py-6">
+                  <NavigationMenu onItemClick={() => setMobileMenuOpen(false)} />
+                </div>
+                
+                {/* Theme Controls in Mobile Menu */}
+                <div className="px-4 py-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Theme</span>
+                    <ThemeSelector />
                   </div>
                 </div>
               </div>
-              
-              <div className="flex-1 px-4 py-6">
-                <NavigationMenu onItemClick={() => setMobileMenuOpen(false)} />
-              </div>
-              
-              {/* Theme Controls in Mobile Menu */}
-              <div className="px-4 py-4 border-t">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Theme</span>
-                  <ThemeSelector />
-                </div>
-              </div>
-            </div>
-          </SheetContent>
-        </Sheet>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 
