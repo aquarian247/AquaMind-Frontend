@@ -20,9 +20,13 @@ function Router() {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden ml-64">
-        <Header />
-        <main className="flex-1 overflow-auto p-6">
+      {/* Responsive main content area */}
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-64 pt-16 lg:pt-0">
+        {/* Header only shows on desktop */}
+        <div className="hidden lg:block">
+          <Header />
+        </div>
+        <main className="flex-1 overflow-auto p-3 lg:p-6">
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/monitoring" component={Monitoring} />

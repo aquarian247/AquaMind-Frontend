@@ -1,5 +1,9 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navigationItems = [
   {
@@ -52,42 +56,97 @@ const navigationItems = [
   },
 ];
 
-export default function Sidebar() {
+// Navigation items component for reuse
+function NavigationMenu({ onItemClick }: { onItemClick?: () => void }) {
   const [location] = useLocation();
 
   return (
-    <div className="bg-card border-r shadow-lg w-64 fixed h-full z-10">
-      {/* Sidebar Header */}
-      <div className="p-6 border-b">
+    <div className="space-y-2">
+      {navigationItems.map((item) => (
+        <Link key={item.id} href={item.path}>
+          <div
+            onClick={onItemClick}
+            className={cn(
+              "sidebar-nav-item touch-manipulation",
+              location === item.path && "active"
+            )}
+          >
+            <i className={cn(item.icon, "mr-3 w-5 text-center")}></i>
+            {item.label}
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+export default function Sidebar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  return (
+    <>
+      {/* Mobile Header with Hamburger Menu */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-            <i className="fas fa-fish text-primary-foreground text-lg"></i>
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+            <i className="fas fa-fish text-white text-sm"></i>
           </div>
           <div>
-            <h1 className="text-xl font-bold">AquaMind</h1>
-            <p className="text-sm text-muted-foreground">Farm Management</p>
+            <h1 className="text-lg font-bold text-blue-600">AquaMind</h1>
+            <p className="text-xs text-gray-500">Farm Management</p>
           </div>
         </div>
+        
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="p-2 h-10 w-10">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 p-0">
+            <div className="flex flex-col h-full">
+              <div className="p-6 border-b">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
+                    <i className="fas fa-fish text-white text-lg"></i>
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-blue-600">AquaMind</h1>
+                    <p className="text-sm text-gray-500">Farm Management</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex-1 px-4 py-6">
+                <NavigationMenu onItemClick={() => setMobileMenuOpen(false)} />
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
-      {/* Navigation Menu */}
-      <nav className="mt-6">
-        <div className="px-4 space-y-2">
-          {navigationItems.map((item) => (
-            <Link key={item.id} href={item.path}>
-              <div
-                className={cn(
-                  "sidebar-nav-item",
-                  location === item.path && "active"
-                )}
-              >
-                <i className={cn(item.icon, "mr-3 w-5 text-center")}></i>
-                {item.label}
-              </div>
-            </Link>
-          ))}
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block bg-card border-r shadow-lg w-64 fixed h-full z-10">
+        {/* Sidebar Header */}
+        <div className="p-6 border-b">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
+              <i className="fas fa-fish text-primary-foreground text-lg"></i>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">AquaMind</h1>
+              <p className="text-sm text-muted-foreground">Farm Management</p>
+            </div>
+          </div>
         </div>
-      </nav>
-    </div>
+
+        {/* Navigation Menu */}
+        <nav className="mt-6">
+          <div className="px-4">
+            <NavigationMenu />
+          </div>
+        </nav>
+      </div>
+    </>
   );
 }
