@@ -34,14 +34,30 @@ import {
   Factory
 } from "lucide-react";
 
+// Types based on Django data model section 3.3
+interface Feed {
+  id: number;
+  name: string;
+  brand: string;
+  sizeCategory: 'MICRO' | 'SMALL' | 'MEDIUM' | 'LARGE';
+  pelletSizeMm?: number;
+  proteinPercentage?: number;
+  fatPercentage?: number;
+  carbohydratePercentage?: number;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface FeedPurchase {
   id: number;
   feed: number;
-  supplier: string;
-  batchNumber: string;
+  purchaseDate: string;
   quantityKg: string;
   costPerKg: string;
-  purchaseDate: string;
+  supplier: string;
+  batchNumber?: string;
   expiryDate?: string;
   notes?: string;
   createdAt: string;
@@ -52,9 +68,37 @@ interface FeedContainer {
   id: number;
   name: string;
   capacity: string;
-  location: string;
+  location?: string;
   containerType: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FeedStock {
+  id: number;
+  feed: number;
+  feedContainer: number;
+  currentQuantityKg: string;
+  reorderThresholdKg: string;
+  updatedAt: string;
+  notes?: string;
+}
+
+interface FeedingEvent {
+  id: number;
+  batch: number;
+  container: number;
+  feed: number;
+  feedingDate: string;
+  feedingTime: string;
+  amountKg: string;
+  batchBiomassKg: string;
+  feedingPercentage?: string;
+  feedCost?: string;
+  method: string;
+  notes?: string;
+  recordedBy?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,16 +120,58 @@ interface BatchFeedingSummary {
   periodStart: string;
   periodEnd: string;
   totalFeedKg: string;
-  totalFeedConsumedKg: string;
-  totalBiomassGainKg: string;
-  fcr: string;
-  averageFeedingPercentage: string;
-  feedingEventsCount: number;
+  averageBiomassKg?: string;
+  averageFeedingPercentage?: string;
+  feedConversionRatio?: string;
+  totalFeedConsumedKg?: string;
+  totalBiomassGainKg?: string;
+  fcr?: string;
   createdAt: string;
   updatedAt: string;
 }
 
+// Form validation schemas
+const feedSchema = z.object({
+  name: z.string().min(1, "Feed name is required"),
+  brand: z.string().min(1, "Brand is required"),
+  sizeCategory: z.enum(["MICRO", "SMALL", "MEDIUM", "LARGE"]),
+  pelletSizeMm: z.string().optional(),
+  proteinPercentage: z.string().optional(),
+  fatPercentage: z.string().optional(),
+  carbohydratePercentage: z.string().optional(),
+  description: z.string().optional(),
+});
+
+const purchaseSchema = z.object({
+  feed: z.string().min(1, "Feed type is required"),
+  purchaseDate: z.string().min(1, "Purchase date is required"),
+  quantityKg: z.string().min(1, "Quantity is required"),
+  costPerKg: z.string().min(1, "Cost per kg is required"),
+  supplier: z.string().min(1, "Supplier is required"),
+  batchNumber: z.string().optional(),
+  expiryDate: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+const feedingEventSchema = z.object({
+  batch: z.string().min(1, "Batch is required"),
+  container: z.string().min(1, "Container is required"),
+  feed: z.string().min(1, "Feed type is required"),
+  feedingDate: z.string().min(1, "Feeding date is required"),
+  feedingTime: z.string().min(1, "Feeding time is required"),
+  amountKg: z.string().min(1, "Amount is required"),
+  batchBiomassKg: z.string().min(1, "Batch biomass is required"),
+  method: z.string().min(1, "Feeding method is required"),
+  notes: z.string().optional(),
+});
+
 const api = {
+  async getFeedTypes(): Promise<{ results: Feed[] }> {
+    const response = await fetch("/api/v1/inventory/feed-types/");
+    if (!response.ok) throw new Error("Failed to fetch feed types");
+    return response.json();
+  },
+
   async getFeedPurchases(): Promise<{ results: FeedPurchase[] }> {
     const response = await fetch("/api/v1/inventory/feed-purchases/");
     if (!response.ok) throw new Error("Failed to fetch feed purchases");
@@ -95,6 +181,18 @@ const api = {
   async getFeedContainers(): Promise<{ results: FeedContainer[] }> {
     const response = await fetch("/api/v1/inventory/feed-containers/");
     if (!response.ok) throw new Error("Failed to fetch feed containers");
+    return response.json();
+  },
+
+  async getFeedStock(): Promise<{ results: FeedStock[] }> {
+    const response = await fetch("/api/v1/inventory/feed-stock/");
+    if (!response.ok) throw new Error("Failed to fetch feed stock");
+    return response.json();
+  },
+
+  async getFeedingEvents(): Promise<{ results: FeedingEvent[] }> {
+    const response = await fetch("/api/v1/inventory/feeding-events/");
+    if (!response.ok) throw new Error("Failed to fetch feeding events");
     return response.json();
   },
 
@@ -112,7 +210,15 @@ const api = {
 };
 
 export default function Inventory() {
-  const [selectedContainer, setSelectedContainer] = useState<number | null>(null);
+  const [activeSection, setActiveSection] = useState<string>("dashboard");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Data queries
+  const { data: feedTypesData, isLoading: feedTypesLoading } = useQuery({
+    queryKey: ["/api/v1/inventory/feed-types/"],
+    queryFn: api.getFeedTypes,
+  });
 
   const { data: purchasesData, isLoading: purchasesLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feed-purchases/"],
@@ -125,6 +231,16 @@ export default function Inventory() {
   });
 
   const { data: stockData, isLoading: stockLoading } = useQuery({
+    queryKey: ["/api/v1/inventory/feed-stock/"],
+    queryFn: api.getFeedStock,
+  });
+
+  const { data: feedingEventsData, isLoading: feedingEventsLoading } = useQuery({
+    queryKey: ["/api/v1/inventory/feeding-events/"],
+    queryFn: api.getFeedingEvents,
+  });
+
+  const { data: containerStockData, isLoading: containerStockLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feed-container-stock/"],
     queryFn: api.getFeedContainerStock,
   });
@@ -134,32 +250,78 @@ export default function Inventory() {
     queryFn: api.getBatchFeedingSummaries,
   });
 
+  const feedTypes = feedTypesData?.results || [];
   const purchases = purchasesData?.results || [];
   const containers = containersData?.results || [];
-  const stock = stockData?.results || [];
+  const feedStock = stockData?.results || [];
+  const feedingEvents = feedingEventsData?.results || [];
+  const containerStock = containerStockData?.results || [];
   const summaries = summariesData?.results || [];
 
-  // Calculate inventory metrics
-  const totalInventoryValue = stock.reduce((sum, item) => 
+  // Calculate dashboard metrics
+  const totalInventoryValue = containerStock.reduce((sum, item) => 
     sum + (parseFloat(item.quantityKg) * parseFloat(item.costPerKg)), 0
   );
 
-  const totalQuantity = stock.reduce((sum, item) => sum + parseFloat(item.quantityKg), 0);
+  const totalQuantity = containerStock.reduce((sum, item) => sum + parseFloat(item.quantityKg), 0);
 
   const averageFCR = summaries.length > 0 
-    ? summaries.reduce((sum, s) => sum + parseFloat(s.fcr), 0) / summaries.length
+    ? summaries.reduce((sum, s) => parseFloat(s.fcr || "0"), 0) / summaries.length
     : 0;
 
-  // Get container utilization
-  const getContainerUtilization = (containerId: number) => {
-    const container = containers.find(c => c.id === containerId);
-    const containerStock = stock.filter(s => s.feedContainer === containerId);
-    const currentStock = containerStock.reduce((sum, s) => sum + parseFloat(s.quantityKg), 0);
-    const capacity = container ? parseFloat(container.capacity) : 0;
-    return capacity > 0 ? (currentStock / capacity) * 100 : 0;
-  };
+  const recentFeedingEvents = feedingEvents
+    .sort((a, b) => new Date(b.feedingDate).getTime() - new Date(a.feedingDate).getTime())
+    .slice(0, 10);
 
-  if (purchasesLoading || containersLoading || stockLoading || summariesLoading) {
+  // Form handling
+  const feedForm = useForm<z.infer<typeof feedSchema>>({
+    resolver: zodResolver(feedSchema),
+    defaultValues: {
+      name: "",
+      brand: "",
+      sizeCategory: "SMALL",
+      pelletSizeMm: "",
+      proteinPercentage: "",
+      fatPercentage: "",
+      carbohydratePercentage: "",
+      description: "",
+    },
+  });
+
+  const purchaseForm = useForm<z.infer<typeof purchaseSchema>>({
+    resolver: zodResolver(purchaseSchema),
+    defaultValues: {
+      feed: "",
+      purchaseDate: "",
+      quantityKg: "",
+      costPerKg: "",
+      supplier: "",
+      batchNumber: "",
+      expiryDate: "",
+      notes: "",
+    },
+  });
+
+  const feedingForm = useForm<z.infer<typeof feedingEventSchema>>({
+    resolver: zodResolver(feedingEventSchema),
+    defaultValues: {
+      batch: "",
+      container: "",
+      feed: "",
+      feedingDate: "",
+      feedingTime: "",
+      amountKg: "",
+      batchBiomassKg: "",
+      method: "MANUAL",
+      notes: "",
+    },
+  });
+
+  // Check if any data is still loading
+  const isLoading = feedTypesLoading || purchasesLoading || containersLoading || 
+                   stockLoading || feedingEventsLoading || containerStockLoading || summariesLoading;
+
+  if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         <div className="text-center">
@@ -170,6 +332,17 @@ export default function Inventory() {
     );
   }
 
+  // Navigation menu items based on Django model and slides inspiration
+  const navigationSections = [
+    { id: "dashboard", label: "Feedstock Dashboard", icon: BarChart3 },
+    { id: "feed-types", label: "Feed Types", icon: Settings },
+    { id: "purchases", label: "Purchase Registration", icon: Truck },
+    { id: "distribution", label: "Feed Distribution", icon: Factory },
+    { id: "feeding-events", label: "Feeding Events", icon: ClipboardList },
+    { id: "container-stock", label: "Container/Barge Stock", icon: Boxes },
+    { id: "fcr-analysis", label: "Batch FCR Analysis", icon: TrendingUp },
+  ];
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-6">
       <div className="text-center">
@@ -177,226 +350,533 @@ export default function Inventory() {
         <p className="text-gray-600 mt-2">FIFO tracking, cost optimization, and FCR monitoring</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalInventoryValue.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">FIFO calculated value</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Feed Stock</CardTitle>
-            <Scale className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalQuantity.toLocaleString()} kg</div>
-            <p className="text-xs text-muted-foreground">Across all containers</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average FCR</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{averageFCR.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Feed Conversion Ratio</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{containers.filter(c => c.isActive).length}</div>
-            <p className="text-xs text-muted-foreground">Feed storage locations</p>
-          </CardContent>
-        </Card>
+      {/* Navigation Pills */}
+      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg">
+        {navigationSections.map((section) => {
+          const Icon = section.icon;
+          return (
+            <Button
+              key={section.id}
+              variant={activeSection === section.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setActiveSection(section.id)}
+              className="flex items-center space-x-2"
+            >
+              <Icon className="h-4 w-4" />
+              <span>{section.label}</span>
+            </Button>
+          );
+        })}
       </div>
 
-      <Tabs defaultValue="containers" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="containers">Feed Containers</TabsTrigger>
-          <TabsTrigger value="purchases">Purchase History</TabsTrigger>
-          <TabsTrigger value="stock">Stock Overview</TabsTrigger>
-          <TabsTrigger value="fcr">FCR Analysis</TabsTrigger>
-        </TabsList>
+      {/* Dashboard Overview */}
+      {activeSection === "dashboard" && (
+        <div className="space-y-6">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalInventoryValue.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">FIFO calculated value</p>
+              </CardContent>
+            </Card>
 
-        <TabsContent value="containers" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {containers.map((container) => {
-              const utilization = getContainerUtilization(container.id);
-              const containerStock = stock.filter(s => s.feedContainer === container.id);
-              const currentStock = containerStock.reduce((sum, s) => sum + parseFloat(s.quantityKg), 0);
-              
-              return (
-                <Card key={container.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-                      onClick={() => setSelectedContainer(container.id)}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <span>{container.name}</span>
-                      <Badge variant={container.isActive ? "default" : "secondary"}>
-                        {container.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{container.location}</span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Capacity Usage</span>
-                        <span>{utilization.toFixed(1)}%</span>
-                      </div>
-                      <Progress value={utilization} className="h-2" />
-                      <div className="text-xs text-muted-foreground">
-                        {currentStock.toLocaleString()} / {parseFloat(container.capacity).toLocaleString()} kg
-                      </div>
-                    </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Feed Stock</CardTitle>
+                <Scale className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalQuantity.toLocaleString()} kg</div>
+                <p className="text-xs text-muted-foreground">Across all containers</p>
+              </CardContent>
+            </Card>
 
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">FIFO Batches</span>
-                      <Badge variant="outline">{containerStock.length}</Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average FCR</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{averageFCR.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">Feed Conversion Ratio</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{containers.filter(c => c.isActive).length}</div>
+                <p className="text-xs text-muted-foreground">Feed storage locations</p>
+              </CardContent>
+            </Card>
           </div>
-        </TabsContent>
 
-        <TabsContent value="purchases" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Truck className="h-5 w-5" />
-                <span>Feed Purchase History</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {purchases.map((purchase) => (
-                  <div key={purchase.id} className="border rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between items-start">
+          {/* Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <ClipboardList className="h-5 w-5" />
+                  <span>Recent Feeding Events</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {recentFeedingEvents.slice(0, 5).map((event) => (
+                    <div key={event.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <h4 className="font-semibold">{purchase.batchNumber}</h4>
-                        <p className="text-sm text-muted-foreground">{purchase.supplier}</p>
-                      </div>
-                      <Badge variant="outline">
-                        ${parseFloat(purchase.costPerKg).toFixed(2)}/kg
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Quantity:</span>
-                        <p className="font-medium">{parseFloat(purchase.quantityKg).toLocaleString()} kg</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Total Value:</span>
-                        <p className="font-medium">
-                          ${(parseFloat(purchase.quantityKg) * parseFloat(purchase.costPerKg)).toLocaleString()}
+                        <p className="font-semibold">Batch {event.batch}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {parseFloat(event.amountKg).toLocaleString()} kg • {event.method}
                         </p>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground">Purchase Date:</span>
-                        <p className="font-medium">{new Date(purchase.purchaseDate).toLocaleDateString()}</p>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Expiry:</span>
-                        <p className="font-medium">
-                          {purchase.expiryDate ? new Date(purchase.expiryDate).toLocaleDateString() : "N/A"}
-                        </p>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{new Date(event.feedingDate).toLocaleDateString()}</p>
+                        <p className="text-xs text-muted-foreground">{event.feedingTime}</p>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-                    {purchase.notes && (
-                      <p className="text-sm text-muted-foreground italic">{purchase.notes}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="stock" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>FIFO Stock Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {stock
-                  .sort((a, b) => new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime())
-                  .map((stockItem) => {
-                    const container = containers.find(c => c.id === stockItem.feedContainer);
-                    const purchase = purchases.find(p => p.id === stockItem.feedPurchase);
-                    const isOldStock = new Date(stockItem.purchaseDate) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-                    
-                    return (
-                      <div key={stockItem.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center space-x-2">
-                            <h4 className="font-semibold">{container?.name}</h4>
-                            {isOldStock && <AlertTriangle className="h-4 w-4 text-amber-500" />}
-                          </div>
-                          <Badge variant={isOldStock ? "destructive" : "default"}>
-                            FIFO Position: {stock.findIndex(s => s.id === stockItem.id) + 1}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span>Low Stock Alerts</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {feedStock
+                    .filter(stock => parseFloat(stock.currentQuantityKg) <= parseFloat(stock.reorderThresholdKg))
+                    .slice(0, 5)
+                    .map((stock) => {
+                      const container = containers.find(c => c.id === stock.feedContainer);
+                      const feedType = feedTypes.find(f => f.id === stock.feed);
+                      return (
+                        <div key={stock.id} className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
                           <div>
-                            <span className="text-muted-foreground">Batch:</span>
-                            <p className="font-medium">{purchase?.batchNumber}</p>
+                            <p className="font-semibold">{container?.name}</p>
+                            <p className="text-sm text-muted-foreground">{feedType?.name}</p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Quantity:</span>
-                            <p className="font-medium">{parseFloat(stockItem.quantityKg).toLocaleString()} kg</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Cost/kg:</span>
-                            <p className="font-medium">${parseFloat(stockItem.costPerKg).toFixed(2)}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Purchase Date:</span>
-                            <p className="font-medium">{new Date(stockItem.purchaseDate).toLocaleDateString()}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Stock Value:</span>
-                            <p className="font-medium">
-                              ${(parseFloat(stockItem.quantityKg) * parseFloat(stockItem.costPerKg)).toLocaleString()}
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-red-600">
+                              {parseFloat(stock.currentQuantityKg).toLocaleString()} kg
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Threshold: {parseFloat(stock.reorderThresholdKg).toLocaleString()} kg
                             </p>
                           </div>
                         </div>
-                      </div>
+                      );
+                    })}
+                  {feedStock.filter(stock => parseFloat(stock.currentQuantityKg) <= parseFloat(stock.reorderThresholdKg)).length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">No low stock alerts</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Feed Types Management */}
+      {activeSection === "feed-types" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Settings className="h-5 w-5" />
+                  <span>Feed Types & Specifications</span>
+                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Feed Type
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add New Feed Type</DialogTitle>
+                    </DialogHeader>
+                    <Form {...feedForm}>
+                      <form className="space-y-4">
+                        <FormField
+                          control={feedForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Feed Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="e.g., Salmon Starter Pro" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={feedForm.control}
+                            name="brand"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Brand</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., EWOS" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={feedForm.control}
+                            name="sizeCategory"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Size Category</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select size" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="MICRO">Micro</SelectItem>
+                                    <SelectItem value="SMALL">Small</SelectItem>
+                                    <SelectItem value="MEDIUM">Medium</SelectItem>
+                                    <SelectItem value="LARGE">Large</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={feedForm.control}
+                            name="pelletSizeMm"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Pellet Size (mm)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.1" placeholder="e.g., 3.5" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={feedForm.control}
+                            name="proteinPercentage"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Protein %</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.1" placeholder="e.g., 45.0" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <FormField
+                          control={feedForm.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Description</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Feed specifications and notes..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full">Add Feed Type</Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Brand</TableHead>
+                    <TableHead>Size Category</TableHead>
+                    <TableHead>Protein %</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {feedTypes.map((feed) => (
+                    <TableRow key={feed.id}>
+                      <TableCell className="font-medium">{feed.name}</TableCell>
+                      <TableCell>{feed.brand}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{feed.sizeCategory}</Badge>
+                      </TableCell>
+                      <TableCell>{feed.proteinPercentage}%</TableCell>
+                      <TableCell>
+                        <Badge variant={feed.isActive ? "default" : "secondary"}>
+                          {feed.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Purchase Registration */}
+      {activeSection === "purchases" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Truck className="h-5 w-5" />
+                  <span>Feed Purchase Registration</span>
+                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Register Purchase
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Register Feed Purchase</DialogTitle>
+                    </DialogHeader>
+                    <Form {...purchaseForm}>
+                      <form className="space-y-4">
+                        <FormField
+                          control={purchaseForm.control}
+                          name="feed"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Feed Type</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select feed type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {feedTypes.map((feed) => (
+                                    <SelectItem key={feed.id} value={feed.id.toString()}>
+                                      {feed.name} - {feed.brand}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={purchaseForm.control}
+                            name="purchaseDate"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Purchase Date</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={purchaseForm.control}
+                            name="supplier"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Supplier</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g., Marine Harvest" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <FormField
+                            control={purchaseForm.control}
+                            name="quantityKg"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Quantity (kg)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" placeholder="e.g., 1000" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={purchaseForm.control}
+                            name="costPerKg"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Cost per kg ($)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" placeholder="e.g., 1.25" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        <Button type="submit" className="w-full">Register Purchase</Button>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Feed Type</TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Cost/kg</TableHead>
+                    <TableHead>Total Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {purchases.map((purchase) => {
+                    const feedType = feedTypes.find(f => f.id === purchase.feed);
+                    return (
+                      <TableRow key={purchase.id}>
+                        <TableCell>{new Date(purchase.purchaseDate).toLocaleDateString()}</TableCell>
+                        <TableCell>{feedType?.name}</TableCell>
+                        <TableCell>{purchase.supplier}</TableCell>
+                        <TableCell>{parseFloat(purchase.quantityKg).toLocaleString()} kg</TableCell>
+                        <TableCell>${parseFloat(purchase.costPerKg).toFixed(2)}</TableCell>
+                        <TableCell>
+                          ${(parseFloat(purchase.quantityKg) * parseFloat(purchase.costPerKg)).toLocaleString()}
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Container/Barge Stock */}
+      {activeSection === "container-stock" && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Boxes className="h-5 w-5" />
+                <span>Feed Container & Barge Stock</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {containers.map((container) => {
+                  const containerStockItems = containerStock.filter(s => s.feedContainer === container.id);
+                  const totalStock = containerStockItems.reduce((sum, s) => sum + parseFloat(s.quantityKg), 0);
+                  const utilization = parseFloat(container.capacity) > 0 ? (totalStock / parseFloat(container.capacity)) * 100 : 0;
+                  
+                  return (
+                    <Card key={container.id} className="relative">
+                      <CardHeader>
+                        <CardTitle className="flex items-center justify-between">
+                          <span>{container.name}</span>
+                          <Badge variant={container.isActive ? "default" : "secondary"}>
+                            {container.containerType}
+                          </Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {container.location && (
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{container.location}</span>
+                          </div>
+                        )}
+                        
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>Capacity Usage</span>
+                            <span>{utilization.toFixed(1)}%</span>
+                          </div>
+                          <Progress value={utilization} className="h-2" />
+                          <div className="text-xs text-muted-foreground">
+                            {totalStock.toLocaleString()} / {parseFloat(container.capacity).toLocaleString()} kg
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">FIFO Stock Batches</h4>
+                          {containerStockItems
+                            .sort((a, b) => new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime())
+                            .slice(0, 3)
+                            .map((stock, index) => (
+                              <div key={stock.id} className="text-xs bg-gray-50 p-2 rounded">
+                                <div className="flex justify-between">
+                                  <span>#{index + 1} - {parseFloat(stock.quantityKg).toLocaleString()} kg</span>
+                                  <span>${parseFloat(stock.costPerKg).toFixed(2)}/kg</span>
+                                </div>
+                                <div className="text-muted-foreground">
+                                  {new Date(stock.purchaseDate).toLocaleDateString()}
+                                </div>
+                              </div>
+                            ))}
+                          {containerStockItems.length > 3 && (
+                            <div className="text-xs text-muted-foreground">
+                              +{containerStockItems.length - 3} more batches
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        <TabsContent value="fcr" className="space-y-6">
+      {/* FCR Analysis */}
+      {activeSection === "fcr-analysis" && (
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <TrendingUp className="h-5 w-5" />
-                <span>Feed Conversion Ratio Analysis</span>
+                <span>Batch Feed Conversion Ratio Analysis</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -410,26 +890,32 @@ export default function Inventory() {
                           {new Date(summary.periodStart).toLocaleDateString()} - {new Date(summary.periodEnd).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge variant={parseFloat(summary.fcr) <= 1.5 ? "default" : parseFloat(summary.fcr) <= 2.0 ? "secondary" : "destructive"}>
-                        FCR: {summary.fcr}
+                      <Badge variant={parseFloat(summary.fcr || "0") <= 1.5 ? "default" : parseFloat(summary.fcr || "0") <= 2.0 ? "secondary" : "destructive"}>
+                        FCR: {summary.fcr || "N/A"}
                       </Badge>
                     </div>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-600">{parseFloat(summary.totalFeedConsumedKg).toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {summary.totalFeedConsumedKg ? parseFloat(summary.totalFeedConsumedKg).toLocaleString() : "N/A"}
+                        </p>
                         <p className="text-sm text-muted-foreground">Feed Consumed (kg)</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-green-600">{parseFloat(summary.totalBiomassGainKg).toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {summary.totalBiomassGainKg ? parseFloat(summary.totalBiomassGainKg).toLocaleString() : "N/A"}
+                        </p>
                         <p className="text-sm text-muted-foreground">Biomass Gain (kg)</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-purple-600">{summary.feedingEventsCount}</p>
-                        <p className="text-sm text-muted-foreground">Feeding Events</p>
+                        <p className="text-2xl font-bold text-purple-600">{parseFloat(summary.totalFeedKg).toLocaleString()}</p>
+                        <p className="text-sm text-muted-foreground">Total Feed (kg)</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-orange-600">{summary.averageFeedingPercentage}%</p>
+                        <p className="text-2xl font-bold text-orange-600">
+                          {summary.averageFeedingPercentage ? parseFloat(summary.averageFeedingPercentage).toFixed(1) : "N/A"}%
+                        </p>
                         <p className="text-sm text-muted-foreground">Avg Feeding %</p>
                       </div>
                     </div>
@@ -437,9 +923,9 @@ export default function Inventory() {
                     <div className="mt-4 p-4 bg-gray-50 rounded-lg">
                       <h5 className="font-medium mb-2">FCR Performance Analysis</h5>
                       <p className="text-sm text-muted-foreground">
-                        {parseFloat(summary.fcr) <= 1.5 
+                        {summary.fcr && parseFloat(summary.fcr) <= 1.5 
                           ? "Excellent feed conversion efficiency. Fish are utilizing feed optimally."
-                          : parseFloat(summary.fcr) <= 2.0
+                          : summary.fcr && parseFloat(summary.fcr) <= 2.0
                           ? "Good feed conversion. Consider optimizing feeding schedule or water conditions."
                           : "Feed conversion needs attention. Review feeding practices and environmental conditions."
                         }
@@ -450,8 +936,8 @@ export default function Inventory() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }
