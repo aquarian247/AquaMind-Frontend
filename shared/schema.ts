@@ -98,7 +98,46 @@ export const feedTypes = pgTable("feed_types", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Feed Inventory
+// Feed Purchases - FIFO tracking
+export const feedPurchases = pgTable("feed_purchases", {
+  id: serial("id").primaryKey(),
+  feed: integer("feed").references(() => feedTypes.id).notNull(),
+  supplier: text("supplier").notNull(),
+  batchNumber: text("batch_number").notNull().unique(),
+  quantityKg: decimal("quantity_kg", { precision: 10, scale: 3 }).notNull(),
+  costPerKg: decimal("cost_per_kg", { precision: 10, scale: 2 }).notNull(),
+  purchaseDate: date("purchase_date").notNull(),
+  expiryDate: date("expiry_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Feed Containers - Storage locations for feed
+export const feedContainers = pgTable("feed_containers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  capacity: decimal("capacity", { precision: 10, scale: 3 }).notNull(),
+  location: text("location"),
+  containerType: text("container_type").notNull().default("silo"), // silo, bin, bag
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Feed Container Stock - FIFO tracking of feed in containers
+export const feedContainerStock = pgTable("feed_container_stock", {
+  id: serial("id").primaryKey(),
+  feedContainer: integer("feed_container").references(() => feedContainers.id).notNull(),
+  feedPurchase: integer("feed_purchase").references(() => feedPurchases.id).notNull(),
+  quantityKg: decimal("quantity_kg", { precision: 10, scale: 3 }).notNull(),
+  costPerKg: decimal("cost_per_kg", { precision: 10, scale: 2 }).notNull(),
+  purchaseDate: date("purchase_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Feed Inventory (Legacy - keeping for compatibility)
 export const feedInventory = pgTable("feed_inventory", {
   id: serial("id").primaryKey(),
   feedType: integer("feed_type").references(() => feedTypes.id).notNull(),
@@ -109,15 +148,36 @@ export const feedInventory = pgTable("feed_inventory", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Feeding Events
+// Feeding Events - Enhanced with cost tracking
 export const feedingEvents = pgTable("feeding_events", {
   id: serial("id").primaryKey(),
   batch: integer("batch").references(() => batches.id).notNull(),
-  feedType: integer("feed_type").references(() => feedTypes.id).notNull(),
-  quantityKg: decimal("quantity_kg", { precision: 8, scale: 2 }).notNull(),
-  feedingTime: timestamp("feeding_time").notNull(),
-  feeder: text("feeder").notNull(),
+  container: integer("container").references(() => containers.id).notNull(),
+  feed: integer("feed").references(() => feedTypes.id).notNull(),
+  feedingDate: date("feeding_date").notNull(),
+  feedingTime: text("feeding_time").notNull(), // Time as HH:MM:SS
+  amountKg: decimal("amount_kg", { precision: 8, scale: 2 }).notNull(),
+  batchBiomassKg: decimal("batch_biomass_kg", { precision: 10, scale: 2 }),
+  feedCost: decimal("feed_cost", { precision: 10, scale: 2 }), // Auto-calculated via FIFO
+  method: text("method").notNull().default("MANUAL"), // MANUAL, AUTOMATIC
   notes: text("notes"),
+  recordedBy: integer("recorded_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Batch Feeding Summaries - FCR calculations
+export const batchFeedingSummaries = pgTable("batch_feeding_summaries", {
+  id: serial("id").primaryKey(),
+  batch: integer("batch").references(() => batches.id).notNull(),
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  totalFeedKg: decimal("total_feed_kg", { precision: 10, scale: 3 }).notNull(),
+  totalFeedConsumedKg: decimal("total_feed_consumed_kg", { precision: 10, scale: 3 }).notNull(),
+  totalBiomassGainKg: decimal("total_biomass_gain_kg", { precision: 10, scale: 3 }).notNull(),
+  fcr: decimal("fcr", { precision: 5, scale: 3 }).notNull(), // Feed Conversion Ratio
+  averageFeedingPercentage: decimal("average_feeding_percentage", { precision: 5, scale: 2 }),
+  feedingEventsCount: integer("feeding_events_count").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -198,6 +258,31 @@ export const insertFeedTypeSchema = createInsertSchema(feedTypes).omit({
   updatedAt: true,
 });
 
+// New FIFO inventory schemas
+export const insertFeedPurchaseSchema = createInsertSchema(feedPurchases).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFeedContainerSchema = createInsertSchema(feedContainers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFeedContainerStockSchema = createInsertSchema(feedContainerStock).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBatchFeedingSummarySchema = createInsertSchema(batchFeedingSummaries).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertFeedInventorySchema = createInsertSchema(feedInventory).omit({
   id: true,
   updatedAt: true,
@@ -207,6 +292,7 @@ export const insertFeedingEventSchema = createInsertSchema(feedingEvents).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  feedCost: true, // Auto-calculated via FIFO
 });
 
 export const insertHealthRecordSchema = createInsertSchema(healthRecords).omit({
@@ -251,6 +337,19 @@ export type InsertBatch = z.infer<typeof insertBatchSchema>;
 
 export type FeedType = typeof feedTypes.$inferSelect;
 export type InsertFeedType = z.infer<typeof insertFeedTypeSchema>;
+
+// New FIFO inventory types
+export type FeedPurchase = typeof feedPurchases.$inferSelect;
+export type InsertFeedPurchase = z.infer<typeof insertFeedPurchaseSchema>;
+
+export type FeedContainer = typeof feedContainers.$inferSelect;
+export type InsertFeedContainer = z.infer<typeof insertFeedContainerSchema>;
+
+export type FeedContainerStock = typeof feedContainerStock.$inferSelect;
+export type InsertFeedContainerStock = z.infer<typeof insertFeedContainerStockSchema>;
+
+export type BatchFeedingSummary = typeof batchFeedingSummaries.$inferSelect;
+export type InsertBatchFeedingSummary = z.infer<typeof insertBatchFeedingSummarySchema>;
 
 export type FeedInventory = typeof feedInventory.$inferSelect;
 export type InsertFeedInventory = z.infer<typeof insertFeedInventorySchema>;
