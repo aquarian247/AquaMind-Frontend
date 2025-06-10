@@ -38,6 +38,12 @@ const navigationItems = [
     icon: "fas fa-cog",
     path: "/settings",
   },
+  {
+    id: 7,
+    label: "Mortality Report",
+    icon: "fas fa-clipboard-list",
+    path: "/mortality-reporting",
+  },
 ];
 
 export default function Sidebar() {

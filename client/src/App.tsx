@@ -9,6 +9,7 @@ import Dashboard from "@/pages/dashboard";
 import Monitoring from "@/pages/monitoring";
 import FarmManagement from "@/pages/farm-management";
 import Analytics from "@/pages/analytics";
+import MortalityReporting from "@/pages/mortality-reporting";
 import NotFound from "@/pages/not-found";
 
 import Sidebar from "@/components/layout/sidebar";
@@ -26,6 +27,7 @@ function Router() {
             <Route path="/monitoring" component={Monitoring} />
             <Route path="/farm-management" component={FarmManagement} />
             <Route path="/analytics" component={Analytics} />
+            <Route path="/mortality-reporting" component={MortalityReporting} />
             <Route component={NotFound} />
           </Switch>
         </main>
