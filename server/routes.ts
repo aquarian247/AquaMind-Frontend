@@ -5,7 +5,9 @@ import {
   insertAlertSchema, insertFarmSiteSchema, 
   insertEnvironmentalParameterSchema, insertEnvironmentalReadingSchema,
   insertContainerSchema, insertBatchSchema, insertFeedTypeSchema,
-  insertFeedingEventSchema, insertHealthRecordSchema
+  insertFeedingEventSchema, insertHealthRecordSchema,
+  insertFeedPurchaseSchema, insertFeedContainerSchema, insertFeedContainerStockSchema,
+  insertBatchFeedingSummarySchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {

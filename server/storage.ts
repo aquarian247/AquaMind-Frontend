@@ -1,12 +1,15 @@
 import { 
   users, farmSites, alerts, environmentalParameters, containers, sensors, 
   environmentalReadings, batches, feedTypes, feedInventory, feedingEvents, healthRecords,
+  feedPurchases, feedContainers, feedContainerStock, batchFeedingSummaries,
   type User, type InsertUser, type FarmSite, type InsertFarmSite,
   type Alert, type InsertAlert, type EnvironmentalParameter, type InsertEnvironmentalParameter,
   type Container, type InsertContainer, type Sensor, type InsertSensor,
   type EnvironmentalReading, type InsertEnvironmentalReading, type Batch, type InsertBatch,
   type FeedType, type InsertFeedType, type FeedInventory, type InsertFeedInventory,
-  type FeedingEvent, type InsertFeedingEvent, type HealthRecord, type InsertHealthRecord
+  type FeedingEvent, type InsertFeedingEvent, type HealthRecord, type InsertHealthRecord,
+  type FeedPurchase, type InsertFeedPurchase, type FeedContainer, type InsertFeedContainer,
+  type FeedContainerStock, type InsertFeedContainerStock, type BatchFeedingSummary, type InsertBatchFeedingSummary
 } from "@shared/schema";
 
 export interface IStorage {
@@ -31,6 +34,17 @@ export interface IStorage {
   getFeedInventory(): Promise<FeedInventory[]>;
   getFeedingEvents(): Promise<FeedingEvent[]>;
   createFeedingEvent(event: InsertFeedingEvent): Promise<FeedingEvent>;
+
+  // FIFO Feed Management System
+  getFeedPurchases(): Promise<FeedPurchase[]>;
+  createFeedPurchase(purchase: InsertFeedPurchase): Promise<FeedPurchase>;
+  getFeedContainers(): Promise<FeedContainer[]>;
+  createFeedContainer(container: InsertFeedContainer): Promise<FeedContainer>;
+  getFeedContainerStock(containerId?: number): Promise<FeedContainerStock[]>;
+  getFeedContainerStockInFifoOrder(containerId: number): Promise<FeedContainerStock[]>;
+  addFeedToContainer(containerId: number, purchaseId: number, quantityKg: number): Promise<FeedContainerStock>;
+  getBatchFeedingSummaries(batchId?: number): Promise<BatchFeedingSummary[]>;
+  generateBatchFeedingSummary(batchId: number, periodStart: string, periodEnd: string): Promise<BatchFeedingSummary>;
 
   // Django API endpoints - Health Records
   getHealthRecords(): Promise<HealthRecord[]>;
@@ -67,6 +81,12 @@ export class MemStorage implements IStorage {
   private feedInventory: Map<number, FeedInventory> = new Map();
   private feedingEvents: Map<number, FeedingEvent> = new Map();
   private healthRecords: Map<number, HealthRecord> = new Map();
+  
+  // FIFO Feed Management System
+  private feedPurchases: Map<number, FeedPurchase> = new Map();
+  private feedContainers: Map<number, FeedContainer> = new Map();
+  private feedContainerStock: Map<number, FeedContainerStock> = new Map();
+  private batchFeedingSummaries: Map<number, BatchFeedingSummary> = new Map();
   
   // Legacy compatibility
   private farmSites: Map<number, FarmSite> = new Map();
@@ -250,15 +270,100 @@ export class MemStorage implements IStorage {
     };
     this.healthRecords.set(healthRecord1.id, healthRecord1);
 
-    // Seed Feeding Events
+    // Seed FIFO Feed System Data
+    const feedPurchase1: FeedPurchase = {
+      id: this.currentId++,
+      feed: feedType1.id,
+      supplier: "Biomar Norway AS",
+      batchNumber: "BM-2024-Q2-001",
+      quantityKg: "5000.000",
+      costPerKg: "24.50",
+      purchaseDate: "2024-05-01",
+      expiryDate: "2025-05-01",
+      notes: "Premium grade feed for Atlantic salmon",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedPurchases.set(feedPurchase1.id, feedPurchase1);
+
+    const feedPurchase2: FeedPurchase = {
+      id: this.currentId++,
+      feed: feedType1.id,
+      supplier: "Biomar Norway AS",
+      batchNumber: "BM-2024-Q2-002", 
+      quantityKg: "3500.000",
+      costPerKg: "25.20",
+      purchaseDate: "2024-05-15",
+      expiryDate: "2025-05-15",
+      notes: "Second batch with slight price increase",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedPurchases.set(feedPurchase2.id, feedPurchase2);
+
+    const feedContainer1: FeedContainer = {
+      id: this.currentId++,
+      name: "Silo A1",
+      capacity: "8000.000",
+      location: "Site A - North Shore",
+      containerType: "silo",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedContainers.set(feedContainer1.id, feedContainer1);
+
+    const feedContainer2: FeedContainer = {
+      id: this.currentId++,
+      name: "Silo A2", 
+      capacity: "8000.000",
+      location: "Site A - North Shore",
+      containerType: "silo",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedContainers.set(feedContainer2.id, feedContainer2);
+
+    // Feed Container Stock (FIFO tracking)
+    const stock1: FeedContainerStock = {
+      id: this.currentId++,
+      feedContainer: feedContainer1.id,
+      feedPurchase: feedPurchase1.id,
+      quantityKg: "2500.000",
+      costPerKg: "24.50",
+      purchaseDate: "2024-05-01",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedContainerStock.set(stock1.id, stock1);
+
+    const stock2: FeedContainerStock = {
+      id: this.currentId++,
+      feedContainer: feedContainer1.id,
+      feedPurchase: feedPurchase2.id,
+      quantityKg: "1800.000",
+      costPerKg: "25.20",
+      purchaseDate: "2024-05-15",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedContainerStock.set(stock2.id, stock2);
+
+    // Seed Feeding Events with enhanced fields
     const feedingEvent1: FeedingEvent = {
       id: this.currentId++,
       batch: batch1.id,
-      feedType: feedType1.id,
-      quantityKg: "45.50",
-      feedingTime: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      feeder: "Lars Andersen",
+      container: container1.id,
+      feed: feedType1.id,
+      feedingDate: "2024-06-10",
+      feedingTime: "08:00:00",
+      amountKg: "45.50",
+      batchBiomassKg: "6848.00",
+      feedCost: "1114.75", // Auto-calculated: 45.50 * 24.50
+      method: "MANUAL",
       notes: "Morning feeding completed successfully",
+      recordedBy: user1.id,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -505,6 +610,115 @@ export class MemStorage implements IStorage {
     };
     this.alerts.set(id, resolved);
     return resolved;
+  }
+
+  // FIFO Feed Management System Implementation
+  async getFeedPurchases(): Promise<FeedPurchase[]> {
+    return Array.from(this.feedPurchases.values());
+  }
+
+  async createFeedPurchase(purchase: InsertFeedPurchase): Promise<FeedPurchase> {
+    const newPurchase: FeedPurchase = {
+      id: this.currentId++,
+      ...purchase,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedPurchases.set(newPurchase.id, newPurchase);
+    return newPurchase;
+  }
+
+  async getFeedContainers(): Promise<FeedContainer[]> {
+    return Array.from(this.feedContainers.values());
+  }
+
+  async createFeedContainer(container: InsertFeedContainer): Promise<FeedContainer> {
+    const newContainer: FeedContainer = {
+      id: this.currentId++,
+      ...container,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedContainers.set(newContainer.id, newContainer);
+    return newContainer;
+  }
+
+  async getFeedContainerStock(containerId?: number): Promise<FeedContainerStock[]> {
+    const allStock = Array.from(this.feedContainerStock.values());
+    if (containerId) {
+      return allStock.filter(stock => stock.feedContainer === containerId);
+    }
+    return allStock;
+  }
+
+  async getFeedContainerStockInFifoOrder(containerId: number): Promise<FeedContainerStock[]> {
+    const containerStock = await this.getFeedContainerStock(containerId);
+    return containerStock.sort((a, b) => 
+      new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime()
+    );
+  }
+
+  async addFeedToContainer(containerId: number, purchaseId: number, quantityKg: number): Promise<FeedContainerStock> {
+    const purchase = this.feedPurchases.get(purchaseId);
+    if (!purchase) throw new Error('Feed purchase not found');
+
+    const newStock: FeedContainerStock = {
+      id: this.currentId++,
+      feedContainer: containerId,
+      feedPurchase: purchaseId,
+      quantityKg: quantityKg.toString(),
+      costPerKg: purchase.costPerKg,
+      purchaseDate: purchase.purchaseDate,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.feedContainerStock.set(newStock.id, newStock);
+    return newStock;
+  }
+
+  async getBatchFeedingSummaries(batchId?: number): Promise<BatchFeedingSummary[]> {
+    const allSummaries = Array.from(this.batchFeedingSummaries.values());
+    if (batchId) {
+      return allSummaries.filter(summary => summary.batch === batchId);
+    }
+    return allSummaries;
+  }
+
+  async generateBatchFeedingSummary(batchId: number, periodStart: string, periodEnd: string): Promise<BatchFeedingSummary> {
+    // Get feeding events for the batch in the period
+    const feedingEvents = Array.from(this.feedingEvents.values())
+      .filter(event => 
+        event.batch === batchId &&
+        event.feedingDate >= periodStart &&
+        event.feedingDate <= periodEnd
+      );
+
+    const totalFeedKg = feedingEvents.reduce((sum, event) => sum + parseFloat(event.amountKg), 0);
+    const totalFeedConsumedKg = totalFeedKg; // Assuming all feed is consumed
+    
+    // Calculate biomass gain (simplified calculation)
+    const totalBiomassGainKg = totalFeedConsumedKg * 0.8; // Assume 80% conversion efficiency
+    
+    // Calculate FCR (Feed Conversion Ratio)
+    const fcr = totalBiomassGainKg > 0 ? totalFeedConsumedKg / totalBiomassGainKg : 0;
+
+    const newSummary: BatchFeedingSummary = {
+      id: this.currentId++,
+      batch: batchId,
+      periodStart,
+      periodEnd,
+      totalFeedKg: totalFeedKg.toString(),
+      totalFeedConsumedKg: totalFeedConsumedKg.toString(),
+      totalBiomassGainKg: totalBiomassGainKg.toString(),
+      fcr: fcr.toFixed(3),
+      averageFeedingPercentage: "2.1",
+      feedingEventsCount: feedingEvents.length,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.batchFeedingSummaries.set(newSummary.id, newSummary);
+    return newSummary;
   }
 
   async getDashboardKPIs() {
