@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -363,77 +364,140 @@ export default function Inventory() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Feed Inventory Management</h1>
-        <p className="text-gray-600 mt-2">FIFO tracking, cost optimization, and FCR monitoring</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Feed Inventory Management</h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-2">FIFO tracking, cost optimization, and FCR monitoring</p>
       </div>
 
-      {/* Navigation Pills */}
-      <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg">
-        {navigationSections.map((section) => {
-          const Icon = section.icon;
-          return (
-            <Button
-              key={section.id}
-              variant={activeSection === section.id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveSection(section.id)}
-              className="flex items-center space-x-2"
-            >
-              <Icon className="h-4 w-4" />
-              <span>{section.label}</span>
-            </Button>
-          );
-        })}
+      {/* Mobile-optimized Navigation */}
+      <div className="space-y-4">
+        {/* Mobile Dropdown Navigation */}
+        <div className="md:hidden">
+          <Select value={activeSection} onValueChange={setActiveSection}>
+            <SelectTrigger className="w-full h-12 text-left">
+              <SelectValue>
+                <div className="flex items-center space-x-2">
+                  {navigationSections.find(s => s.id === activeSection)?.icon && 
+                    React.createElement(navigationSections.find(s => s.id === activeSection)!.icon, { className: "h-4 w-4" })
+                  }
+                  <span>{navigationSections.find(s => s.id === activeSection)?.label}</span>
+                </div>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {navigationSections.map((section) => {
+                const Icon = section.icon;
+                return (
+                  <SelectItem key={section.id} value={section.id}>
+                    <div className="flex items-center space-x-2">
+                      <Icon className="h-4 w-4" />
+                      <span>{section.label}</span>
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop Navigation Pills */}
+        <div className="hidden md:flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg">
+          {navigationSections.map((section) => {
+            const Icon = section.icon;
+            return (
+              <Button
+                key={section.id}
+                variant={activeSection === section.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveSection(section.id)}
+                className="flex items-center space-x-2"
+              >
+                <Icon className="h-4 w-4" />
+                <span className="hidden lg:inline">{section.label}</span>
+                <span className="lg:hidden">{section.label.split(' ')[0]}</span>
+              </Button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Dashboard Overview */}
       {activeSection === "dashboard" && (
         <div className="space-y-6">
-          {/* KPI Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
+          {/* Mobile-Optimized KPI Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+            <Card className="touch-manipulation">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
+                  <span className="hidden sm:inline">Total Inventory Value</span>
+                  <span className="sm:hidden">Inventory</span>
+                </CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">${totalInventoryValue.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">FIFO calculated value</p>
+              <CardContent className="pb-3">
+                <div className="text-lg lg:text-2xl font-bold">
+                  <span className="hidden sm:inline">${totalInventoryValue.toLocaleString()}</span>
+                  <span className="sm:hidden">${(totalInventoryValue / 1000).toFixed(0)}k</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="hidden sm:inline">FIFO calculated value</span>
+                  <span className="sm:hidden">FIFO value</span>
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="touch-manipulation">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Feed Stock</CardTitle>
-                <Scale className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
+                  <span className="hidden sm:inline">Total Feed Stock</span>
+                  <span className="sm:hidden">Stock</span>
+                </CardTitle>
+                <Scale className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalQuantity.toLocaleString()} kg</div>
-                <p className="text-xs text-muted-foreground">Across all containers</p>
+              <CardContent className="pb-3">
+                <div className="text-lg lg:text-2xl font-bold">
+                  <span className="hidden sm:inline">{totalQuantity.toLocaleString()} kg</span>
+                  <span className="sm:hidden">{(totalQuantity / 1000).toFixed(1)}t</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="hidden sm:inline">Across all containers</span>
+                  <span className="sm:hidden">All containers</span>
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="touch-manipulation">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Average FCR</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
+                  <span className="hidden sm:inline">Average FCR</span>
+                  <span className="sm:hidden">FCR</span>
+                </CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{averageFCR.toFixed(2)}</div>
-                <p className="text-xs text-muted-foreground">Feed Conversion Ratio</p>
+              <CardContent className="pb-3">
+                <div className="text-lg lg:text-2xl font-bold">{averageFCR.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="hidden sm:inline">Feed Conversion Ratio</span>
+                  <span className="sm:hidden">Conversion</span>
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="touch-manipulation">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
+                  <span className="hidden sm:inline">Active Containers</span>
+                  <span className="sm:hidden">Active</span>
+                </CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{containers.filter(c => c.isActive).length}</div>
-                <p className="text-xs text-muted-foreground">Feed storage locations</p>
+              <CardContent className="pb-3">
+                <div className="text-lg lg:text-2xl font-bold">{containers.filter(c => c.isActive).length}</div>
+                <p className="text-xs text-muted-foreground">
+                  <span className="hidden sm:inline">Feed storage locations</span>
+                  <span className="sm:hidden">Containers</span>
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -526,20 +590,24 @@ export default function Inventory() {
                       Add Feed Type
                     </Button>
                   </DialogTrigger>
-                  <DialogContent>
+                  <DialogContent className="max-w-[95vw] sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Add New Feed Type</DialogTitle>
                     </DialogHeader>
                     <Form {...feedForm}>
-                      <form className="space-y-4">
+                      <form className="space-y-4 sm:space-y-6">
                         <FormField
                           control={feedForm.control}
                           name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Feed Name</FormLabel>
+                              <FormLabel className="text-base">Feed Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="e.g., Salmon Starter Pro" {...field} />
+                                <Input 
+                                  placeholder="e.g., Salmon Starter Pro" 
+                                  className="h-12 text-base"
+                                  {...field} 
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -632,34 +700,56 @@ export default function Inventory() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Brand</TableHead>
-                    <TableHead>Size Category</TableHead>
-                    <TableHead>Protein %</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {feedTypes.map((feed) => (
-                    <TableRow key={feed.id}>
-                      <TableCell className="font-medium">{feed.name}</TableCell>
-                      <TableCell>{feed.brand}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{feed.sizeCategory}</Badge>
-                      </TableCell>
-                      <TableCell>{feed.proteinPercentage}%</TableCell>
-                      <TableCell>
-                        <Badge variant={feed.isActive ? "default" : "secondary"}>
-                          {feed.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                      </TableCell>
+              {/* Mobile-optimized feed types list */}
+              <div className="block sm:hidden space-y-4">
+                {feedTypes.map((feed) => (
+                  <Card key={feed.id} className="p-4 bg-gray-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-base">{feed.name}</h4>
+                      <Badge variant={feed.isActive ? "default" : "secondary"}>
+                        {feed.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1 text-sm">
+                      <p><span className="font-medium">Brand:</span> {feed.brand}</p>
+                      <p><span className="font-medium">Size:</span> <Badge variant="outline" className="ml-1">{feed.sizeCategory}</Badge></p>
+                      <p><span className="font-medium">Protein:</span> {feed.proteinPercentage}%</p>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop table */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Brand</TableHead>
+                      <TableHead>Size Category</TableHead>
+                      <TableHead>Protein %</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {feedTypes.map((feed) => (
+                      <TableRow key={feed.id}>
+                        <TableCell className="font-medium">{feed.name}</TableCell>
+                        <TableCell>{feed.brand}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{feed.sizeCategory}</Badge>
+                        </TableCell>
+                        <TableCell>{feed.proteinPercentage}%</TableCell>
+                        <TableCell>
+                          <Badge variant={feed.isActive ? "default" : "secondary"}>
+                            {feed.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -1343,23 +1433,23 @@ export default function Inventory() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                 {containers.map((container) => {
                   const containerStockItems = containerStock.filter(s => s.feedContainer === container.id);
                   const totalStock = containerStockItems.reduce((sum, s) => sum + parseFloat(s.quantityKg), 0);
                   const utilization = parseFloat(container.capacity) > 0 ? (totalStock / parseFloat(container.capacity)) * 100 : 0;
                   
                   return (
-                    <Card key={container.id} className="relative">
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <span>{container.name}</span>
-                          <Badge variant={container.isActive ? "default" : "secondary"}>
+                    <Card key={container.id} className="relative touch-manipulation">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center justify-between text-sm sm:text-base">
+                          <span className="truncate mr-2">{container.name}</span>
+                          <Badge variant={container.isActive ? "default" : "secondary"} className="text-xs">
                             {container.containerType}
                           </Badge>
                         </CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-3 sm:space-y-4">
                         {container.location && (
                           <div className="flex items-center space-x-2">
                             <MapPin className="h-4 w-4 text-muted-foreground" />
