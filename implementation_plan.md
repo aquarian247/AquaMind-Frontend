@@ -2,21 +2,25 @@
 # AquaMind Implementation Plan
 
 ## Project Overview
-Web-based aquaculture management system built with React, TypeScript, and Node.js/Express backend. The application focuses on monitoring fish farms, tracking mortality, and providing analytics for aquaculture operations.
+**Frontend development effort** for a web-based aquaculture management system built with React and TypeScript. This is **NOT the full application** - it's a frontend prototype using stubbed backend APIs to validate UX/UI concepts and integration patterns before merging with the actual Django backend system.
+
+The application focuses on monitoring fish farms, tracking mortality, and providing analytics for aquaculture operations.
 
 ## Technology Stack
 - **Frontend**: React 18 + TypeScript, Tailwind CSS, Radix UI components
 - **State Management**: TanStack Query (server state) + Zustand (recommended for client state)
-- **Backend**: Node.js/Express with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
+- **Stub Backend**: Node.js/Express with TypeScript (for frontend development only)
+- **Target Backend**: Django (the actual production system)
+- **Mock Database**: In-memory storage with Drizzle ORM schemas (matching Django models)
 - **Charts**: Chart.js
-- **Deployment**: Replit (on-premise Docker deployment planned)
+- **Deployment**: Replit (frontend prototype only)
 
 ## Current Architecture
 - Responsive web application (mobile-friendly, not native mobile app)
 - Desktop dashboard for management + mobile-optimized forms for field workers
-- RESTful API with Express backend serving mock data
+- **Stubbed RESTful API** with Express backend serving mock data that mimics Django API structure
 - Component-based architecture with shadcn/ui design system
+- **Integration Strategy**: Frontend branch will be merged with actual Django backend once UI/UX is validated
 
 ---
 
