@@ -165,6 +165,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // FIFO Feed Management System API endpoints
+  app.get("/api/v1/inventory/feed-purchases/", async (req, res) => {
+    try {
+      const purchases = await storage.getFeedPurchases();
+      res.json({
+        count: purchases.length,
+        next: null,
+        previous: null,
+        results: purchases
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feed purchases" });
+    }
+  });
+
+  app.post("/api/v1/inventory/feed-purchases/", async (req, res) => {
+    try {
+      const validatedData = insertFeedPurchaseSchema.parse(req.body);
+      const purchase = await storage.createFeedPurchase(validatedData);
+      res.status(201).json(purchase);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid feed purchase data" });
+    }
+  });
+
+  app.get("/api/v1/inventory/feed-containers/", async (req, res) => {
+    try {
+      const containers = await storage.getFeedContainers();
+      res.json({
+        count: containers.length,
+        next: null,
+        previous: null,
+        results: containers
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feed containers" });
+    }
+  });
+
+  app.post("/api/v1/inventory/feed-containers/", async (req, res) => {
+    try {
+      const validatedData = insertFeedContainerSchema.parse(req.body);
+      const container = await storage.createFeedContainer(validatedData);
+      res.status(201).json(container);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid feed container data" });
+    }
+  });
+
+  app.get("/api/v1/inventory/feed-container-stock/", async (req, res) => {
+    try {
+      const containerId = req.query.container_id ? parseInt(req.query.container_id as string) : undefined;
+      const stock = await storage.getFeedContainerStock(containerId);
+      res.json({
+        count: stock.length,
+        next: null,
+        previous: null,
+        results: stock
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feed container stock" });
+    }
+  });
+
+  app.get("/api/v1/inventory/feed-container-stock/fifo_order/", async (req, res) => {
+    try {
+      const containerId = parseInt(req.query.container_id as string);
+      if (!containerId) {
+        return res.status(400).json({ error: "container_id parameter is required" });
+      }
+      const stock = await storage.getFeedContainerStockInFifoOrder(containerId);
+      res.json({
+        count: stock.length,
+        next: null,
+        previous: null,
+        results: stock
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch FIFO ordered stock" });
+    }
+  });
+
+  app.post("/api/v1/inventory/feed-container-stock/add_to_container/", async (req, res) => {
+    try {
+      const { feed_container, feed_purchase, quantity_kg } = req.body;
+      const stock = await storage.addFeedToContainer(feed_container, feed_purchase, quantity_kg);
+      res.status(201).json(stock);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to add feed to container" });
+    }
+  });
+
+  app.get("/api/v1/inventory/batch-feeding-summaries/", async (req, res) => {
+    try {
+      const batchId = req.query.batch ? parseInt(req.query.batch as string) : undefined;
+      const summaries = await storage.getBatchFeedingSummaries(batchId);
+      res.json({
+        count: summaries.length,
+        next: null,
+        previous: null,
+        results: summaries
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch batch feeding summaries" });
+    }
+  });
+
+  app.post("/api/v1/inventory/batch-feeding-summaries/generate/", async (req, res) => {
+    try {
+      const { batch, period_start, period_end } = req.body;
+      const summary = await storage.generateBatchFeedingSummary(batch, period_start, period_end);
+      res.status(201).json(summary);
+    } catch (error) {
+      res.status(400).json({ error: "Failed to generate batch feeding summary" });
+    }
+  });
+
   // Legacy Dashboard endpoints for current frontend
   app.get("/api/dashboard/kpis", async (req, res) => {
     try {

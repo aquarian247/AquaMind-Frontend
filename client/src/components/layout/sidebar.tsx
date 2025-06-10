@@ -22,24 +22,30 @@ const navigationItems = [
   },
   {
     id: 4,
+    label: "Inventory",
+    icon: "fas fa-boxes",
+    path: "/inventory",
+  },
+  {
+    id: 5,
     label: "Analytics",
     icon: "fas fa-chart-line",
     path: "/analytics",
   },
   {
-    id: 5,
+    id: 6,
     label: "Reports",
     icon: "fas fa-file-alt",
     path: "/reports",
   },
   {
-    id: 6,
+    id: 7,
     label: "Settings",
     icon: "fas fa-cog",
     path: "/settings",
   },
   {
-    id: 7,
+    id: 8,
     label: "Mortality Report",
     icon: "fas fa-clipboard-list",
     path: "/mortality-reporting",
