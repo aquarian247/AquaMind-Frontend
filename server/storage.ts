@@ -1,10 +1,11 @@
 import { 
-  users, farmSites, alerts, environmentalParameters, containers, sensors, 
+  users, farmSites, pens, alerts, environmentalParameters, containers, sensors, 
   environmentalReadings, batches, feedTypes, feedInventory, feedingEvents, healthRecords,
   feedPurchases, feedContainers, feedContainerStock, batchFeedingSummaries,
   species, stages, labSamples, healthAssessments, weatherData,
   type User, type InsertUser, type FarmSite, type InsertFarmSite,
-  type Alert, type InsertAlert, type EnvironmentalParameter, type InsertEnvironmentalParameter,
+  type Pen, type InsertPen, type Alert, type InsertAlert, 
+  type EnvironmentalParameter, type InsertEnvironmentalParameter,
   type Container, type InsertContainer, type Sensor, type InsertSensor,
   type EnvironmentalReading, type InsertEnvironmentalReading, type Batch, type InsertBatch,
   type FeedType, type InsertFeedType, type FeedInventory, type InsertFeedInventory,
@@ -76,6 +77,11 @@ export interface IStorage {
   createFarmSite(farmSite: InsertFarmSite): Promise<FarmSite>;
   updateFarmSite(id: number, farmSite: Partial<InsertFarmSite>): Promise<FarmSite>;
 
+  // Pen management
+  getPensByFarmSite(farmSiteId: number): Promise<Pen[]>;
+  getPen(id: number): Promise<Pen | undefined>;
+  createPen(pen: InsertPen): Promise<Pen>;
+
   getActiveAlerts(): Promise<Alert[]>;
   getAlerts(limit?: number): Promise<Alert[]>;
   createAlert(alert: InsertAlert): Promise<Alert>;
@@ -117,6 +123,7 @@ export class MemStorage implements IStorage {
   
   // Legacy compatibility
   private farmSites: Map<number, FarmSite> = new Map();
+  private pens: Map<number, Pen> = new Map();
   private alerts: Map<number, Alert> = new Map();
   
   private currentId = 1;

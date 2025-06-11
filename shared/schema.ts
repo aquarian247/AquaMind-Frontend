@@ -271,6 +271,22 @@ export const healthRecords = pgTable("health_records", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Pens - Individual containment units within farm sites
+export const pens = pgTable("pens", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  farmSiteId: integer("farm_site_id").notNull(),
+  capacity: integer("capacity").notNull(),
+  currentStock: integer("current_stock").notNull().default(0),
+  depth: decimal("depth", { precision: 5, scale: 2 }),
+  coordinates: text("coordinates"),
+  status: text("status").notNull().default("active"),
+  healthStatus: text("health_status").notNull().default("optimal"),
+  lastInspection: timestamp("last_inspection"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Legacy compatibility tables for current frontend
 export const farmSites = pgTable("farm_sites", {
   id: serial("id").primaryKey(),
@@ -419,6 +435,12 @@ export const insertFarmSiteSchema = createInsertSchema(farmSites).omit({
   lastUpdate: true,
 });
 
+export const insertPenSchema = createInsertSchema(pens).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertAlertSchema = createInsertSchema(alerts).omit({
   id: true,
   createdAt: true,
@@ -488,6 +510,9 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type FarmSite = typeof farmSites.$inferSelect;
 export type InsertFarmSite = z.infer<typeof insertFarmSiteSchema>;
+
+export type Pen = typeof pens.$inferSelect;
+export type InsertPen = z.infer<typeof insertPenSchema>;
 
 export type Alert = typeof alerts.$inferSelect;
 export type InsertAlert = z.infer<typeof insertAlertSchema>;
