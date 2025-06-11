@@ -210,3 +210,44 @@ The system focuses on FIFO inventory management, real-time monitoring, mortality
 - **Responsive design** working across all device types
 
 The system successfully demonstrates enterprise-level aquaculture management capabilities with a focus on Norwegian salmon farming operations, providing both desktop management interfaces and mobile-optimized field worker tools.
+
+---
+
+## Mobile Responsiveness Best Practices
+
+### What's Mobile-Friendly by Default ✅
+The system has been built with mobile-first design principles, so most new features will automatically work well on mobile:
+
+1. **Navigation System**: The hamburger menu system (in `client/src/components/layout/sidebar.tsx`) automatically handles new menu items - just add them to the `NavigationMenu` component and they'll appear in both desktop sidebar and mobile drawer.
+
+2. **Layout System**: The app uses Tailwind CSS with responsive classes throughout, so standard layouts will adapt automatically.
+
+3. **UI Components**: All Shadcn/ui components (buttons, cards, forms, etc.) are already responsive and touch-friendly.
+
+4. **Theme Support**: New pages automatically inherit the multi-theme system and dark/light mode support.
+
+### What Needs Special Attention ⚠️
+When adding new features, developers should consider:
+
+1. **Data Tables**: Need horizontal scroll on mobile (like existing inventory tables)
+2. **Complex Forms**: May need mobile-specific layouts with stacked fields instead of side-by-side
+3. **Charts/Graphs**: Need to be responsive and touch-friendly (existing Chart.js implementations are good examples)
+4. **Modal Dialogs**: Should be full-screen or near-full-screen on mobile devices
+
+### Development Guidelines 📱
+For new features to maintain mobile compatibility:
+
+- **Follow Existing Patterns**: Use component patterns from inventory and dashboard pages
+- **Test Mobile Breakpoint**: Test with the mobile breakpoint (`MOBILE_BREAKPOINT = 768` from `use-mobile.tsx`)
+- **Responsive Grid Patterns**: Follow the established responsive grid patterns
+- **Consistent Spacing**: Use existing spacing and sizing conventions
+- **Touch-Friendly Interfaces**: Ensure buttons and interactive elements are appropriately sized for touch input
+
+### Mobile Infrastructure Status ✅
+The mobile infrastructure is solid - new features will largely "just work" if developers follow the existing patterns in the codebase. The system uses:
+
+- Mobile-first responsive design with Tailwind CSS
+- Touch-optimized form inputs and buttons
+- Hamburger navigation for screens < 1024px
+- Responsive KPI cards and data tables
+- Mobile-friendly modal dialogs and sheets
