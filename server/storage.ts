@@ -328,7 +328,7 @@ export class MemStorage implements IStorage {
     const healthRecord1: HealthRecord = {
       id: this.currentId++,
       batch: batch1.id,
-      checkDate: new Date(),
+      checkDate: "2024-06-10",
       veterinarian: "Dr. Erik Nordahl",
       healthStatus: "excellent",
       mortalityCount: 2,
@@ -477,6 +477,56 @@ export class MemStorage implements IStorage {
       lastUpdate: new Date(),
     };
     this.farmSites.set(site3.id, site3);
+
+    // Seed Pens - Add containment units to farm sites
+    const pen1: Pen = {
+      id: this.currentId++,
+      name: "Pen A1",
+      farmSiteId: site1.id,
+      capacity: 15000,
+      currentStock: 14250,
+      depth: "18.5",
+      coordinates: "61.9167,5.7333",
+      status: "active",
+      healthStatus: "optimal",
+      lastInspection: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const pen2: Pen = {
+      id: this.currentId++,
+      name: "Pen A2",
+      farmSiteId: site1.id,
+      capacity: 15000,
+      currentStock: 13800,
+      depth: "20.0",
+      coordinates: "61.9170,5.7330",
+      status: "active",
+      healthStatus: "good",
+      lastInspection: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const pen3: Pen = {
+      id: this.currentId++,
+      name: "Pen B1",
+      farmSiteId: site2.id,
+      capacity: 20000,
+      currentStock: 19500,
+      depth: "22.5",
+      coordinates: "61.2181,7.1250",
+      status: "active",
+      healthStatus: "optimal",
+      lastInspection: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.pens.set(pen1.id, pen1);
+    this.pens.set(pen2.id, pen2);
+    this.pens.set(pen3.id, pen3);
 
     // Seed alerts
     const alert1: Alert = {
@@ -905,6 +955,26 @@ export class MemStorage implements IStorage {
     };
     this.weatherData.set(weather.id, weather);
     return weather;
+  }
+
+  // Pen management methods
+  async getPensByFarmSite(farmSiteId: number): Promise<Pen[]> {
+    return Array.from(this.pens.values()).filter(pen => pen.farmSiteId === farmSiteId);
+  }
+
+  async getPen(id: number): Promise<Pen | undefined> {
+    return this.pens.get(id);
+  }
+
+  async createPen(insertPen: InsertPen): Promise<Pen> {
+    const pen: Pen = {
+      id: this.currentId++,
+      ...insertPen,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.pens.set(pen.id, pen);
+    return pen;
   }
 }
 
