@@ -7,7 +7,8 @@ import {
   insertContainerSchema, insertBatchSchema, insertFeedTypeSchema,
   insertFeedingEventSchema, insertHealthRecordSchema,
   insertFeedPurchaseSchema, insertFeedContainerSchema, insertFeedContainerStockSchema,
-  insertBatchFeedingSummarySchema
+  insertBatchFeedingSummarySchema, insertSpeciesSchema, insertStageSchema,
+  insertLabSampleSchema, insertHealthAssessmentSchema, insertWeatherDataSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -279,6 +280,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(summary);
     } catch (error) {
       res.status(400).json({ error: "Failed to generate batch feeding summary" });
+    }
+  });
+
+  // Django API v1 endpoints - Species and Stages
+  app.get("/api/v1/species/", async (req, res) => {
+    try {
+      const species = await storage.getSpecies();
+      res.json({
+        count: species.length,
+        next: null,
+        previous: null,
+        results: species
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch species" });
+    }
+  });
+
+  app.post("/api/v1/species/", async (req, res) => {
+    try {
+      const validatedData = insertSpeciesSchema.parse(req.body);
+      const species = await storage.createSpecies(validatedData);
+      res.status(201).json(species);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid species data" });
+    }
+  });
+
+  app.get("/api/v1/stages/", async (req, res) => {
+    try {
+      const speciesId = req.query.species ? parseInt(req.query.species as string) : undefined;
+      const stages = await storage.getStages(speciesId);
+      res.json({
+        count: stages.length,
+        next: null,
+        previous: null,
+        results: stages
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stages" });
+    }
+  });
+
+  app.post("/api/v1/stages/", async (req, res) => {
+    try {
+      const validatedData = insertStageSchema.parse(req.body);
+      const stage = await storage.createStage(validatedData);
+      res.status(201).json(stage);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid stage data" });
+    }
+  });
+
+  // Django API v1 endpoints - Health Management
+  app.get("/api/v1/health/lab-samples/", async (req, res) => {
+    try {
+      const batchId = req.query.batch ? parseInt(req.query.batch as string) : undefined;
+      const samples = await storage.getLabSamples(batchId);
+      res.json({
+        count: samples.length,
+        next: null,
+        previous: null,
+        results: samples
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch lab samples" });
+    }
+  });
+
+  app.post("/api/v1/health/lab-samples/", async (req, res) => {
+    try {
+      const validatedData = insertLabSampleSchema.parse(req.body);
+      const sample = await storage.createLabSample(validatedData);
+      res.status(201).json(sample);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid lab sample data" });
+    }
+  });
+
+  app.get("/api/v1/health/assessments/", async (req, res) => {
+    try {
+      const batchId = req.query.batch ? parseInt(req.query.batch as string) : undefined;
+      const assessments = await storage.getHealthAssessments(batchId);
+      res.json({
+        count: assessments.length,
+        next: null,
+        previous: null,
+        results: assessments
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch health assessments" });
+    }
+  });
+
+  app.post("/api/v1/health/assessments/", async (req, res) => {
+    try {
+      const validatedData = insertHealthAssessmentSchema.parse(req.body);
+      const assessment = await storage.createHealthAssessment(validatedData);
+      res.status(201).json(assessment);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid health assessment data" });
+    }
+  });
+
+  // Django API v1 endpoints - Environmental Weather
+  app.get("/api/v1/environmental/weather/", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const weatherData = await storage.getWeatherData(limit);
+      res.json({
+        count: weatherData.length,
+        next: null,
+        previous: null,
+        results: weatherData
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch weather data" });
+    }
+  });
+
+  app.post("/api/v1/environmental/weather/", async (req, res) => {
+    try {
+      const validatedData = insertWeatherDataSchema.parse(req.body);
+      const weather = await storage.createWeatherData(validatedData);
+      res.status(201).json(weather);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid weather data" });
     }
   });
 

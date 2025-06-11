@@ -816,6 +816,89 @@ export class MemStorage implements IStorage {
       nextFeedingHours,
     };
   }
+
+  // Django API implementations - Species and Stages
+  async getSpecies(): Promise<Species[]> {
+    return Array.from(this.species.values());
+  }
+
+  async createSpecies(insertSpecies: InsertSpecies): Promise<Species> {
+    const species: Species = {
+      id: this.currentId++,
+      ...insertSpecies,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.species.set(species.id, species);
+    return species;
+  }
+
+  async getStages(speciesId?: number): Promise<Stage[]> {
+    const stages = Array.from(this.stages.values());
+    return speciesId ? stages.filter(s => s.species === speciesId) : stages;
+  }
+
+  async createStage(insertStage: InsertStage): Promise<Stage> {
+    const stage: Stage = {
+      id: this.currentId++,
+      ...insertStage,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.stages.set(stage.id, stage);
+    return stage;
+  }
+
+  // Django API implementations - Health Management
+  async getLabSamples(batchId?: number): Promise<LabSample[]> {
+    const samples = Array.from(this.labSamples.values());
+    return batchId ? samples.filter(s => s.batch === batchId) : samples;
+  }
+
+  async createLabSample(insertSample: InsertLabSample): Promise<LabSample> {
+    const sample: LabSample = {
+      id: this.currentId++,
+      ...insertSample,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.labSamples.set(sample.id, sample);
+    return sample;
+  }
+
+  async getHealthAssessments(batchId?: number): Promise<HealthAssessment[]> {
+    const assessments = Array.from(this.healthAssessments.values());
+    return batchId ? assessments.filter(a => a.batch === batchId) : assessments;
+  }
+
+  async createHealthAssessment(insertAssessment: InsertHealthAssessment): Promise<HealthAssessment> {
+    const assessment: HealthAssessment = {
+      id: this.currentId++,
+      ...insertAssessment,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.healthAssessments.set(assessment.id, assessment);
+    return assessment;
+  }
+
+  // Django API implementations - Environmental Weather
+  async getWeatherData(limit = 50): Promise<WeatherData[]> {
+    return Array.from(this.weatherData.values())
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+      .slice(0, limit);
+  }
+
+  async createWeatherData(insertWeather: InsertWeatherData): Promise<WeatherData> {
+    const weather: WeatherData = {
+      id: this.currentId++,
+      ...insertWeather,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.weatherData.set(weather.id, weather);
+    return weather;
+  }
 }
 
 export const storage = new MemStorage();
