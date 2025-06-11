@@ -2,6 +2,7 @@ import {
   users, farmSites, alerts, environmentalParameters, containers, sensors, 
   environmentalReadings, batches, feedTypes, feedInventory, feedingEvents, healthRecords,
   feedPurchases, feedContainers, feedContainerStock, batchFeedingSummaries,
+  species, stages, labSamples, healthAssessments, weatherData,
   type User, type InsertUser, type FarmSite, type InsertFarmSite,
   type Alert, type InsertAlert, type EnvironmentalParameter, type InsertEnvironmentalParameter,
   type Container, type InsertContainer, type Sensor, type InsertSensor,
@@ -9,7 +10,10 @@ import {
   type FeedType, type InsertFeedType, type FeedInventory, type InsertFeedInventory,
   type FeedingEvent, type InsertFeedingEvent, type HealthRecord, type InsertHealthRecord,
   type FeedPurchase, type InsertFeedPurchase, type FeedContainer, type InsertFeedContainer,
-  type FeedContainerStock, type InsertFeedContainerStock, type BatchFeedingSummary, type InsertBatchFeedingSummary
+  type FeedContainerStock, type InsertFeedContainerStock, type BatchFeedingSummary, type InsertBatchFeedingSummary,
+  type Species, type InsertSpecies, type Stage, type InsertStage,
+  type LabSample, type InsertLabSample, type HealthAssessment, type InsertHealthAssessment,
+  type WeatherData, type InsertWeatherData
 } from "@shared/schema";
 
 export interface IStorage {
@@ -50,6 +54,22 @@ export interface IStorage {
   getHealthRecords(): Promise<HealthRecord[]>;
   createHealthRecord(record: InsertHealthRecord): Promise<HealthRecord>;
 
+  // Django API endpoints - Species and Stages
+  getSpecies(): Promise<Species[]>;
+  createSpecies(species: InsertSpecies): Promise<Species>;
+  getStages(speciesId?: number): Promise<Stage[]>;
+  createStage(stage: InsertStage): Promise<Stage>;
+
+  // Django API endpoints - Health Management
+  getLabSamples(batchId?: number): Promise<LabSample[]>;
+  createLabSample(sample: InsertLabSample): Promise<LabSample>;
+  getHealthAssessments(batchId?: number): Promise<HealthAssessment[]>;
+  createHealthAssessment(assessment: InsertHealthAssessment): Promise<HealthAssessment>;
+
+  // Django API endpoints - Environmental Weather
+  getWeatherData(limit?: number): Promise<WeatherData[]>;
+  createWeatherData(weather: InsertWeatherData): Promise<WeatherData>;
+
   // Legacy compatibility for current frontend
   getFarmSites(): Promise<FarmSite[]>;
   getFarmSite(id: number): Promise<FarmSite | undefined>;
@@ -87,6 +107,13 @@ export class MemStorage implements IStorage {
   private feedContainers: Map<number, FeedContainer> = new Map();
   private feedContainerStock: Map<number, FeedContainerStock> = new Map();
   private batchFeedingSummaries: Map<number, BatchFeedingSummary> = new Map();
+  
+  // Django API Models
+  private species: Map<number, Species> = new Map();
+  private stages: Map<number, Stage> = new Map();
+  private labSamples: Map<number, LabSample> = new Map();
+  private healthAssessments: Map<number, HealthAssessment> = new Map();
+  private weatherData: Map<number, WeatherData> = new Map();
   
   // Legacy compatibility
   private farmSites: Map<number, FarmSite> = new Map();
@@ -179,18 +206,50 @@ export class MemStorage implements IStorage {
     };
     this.containers.set(container2.id, container2);
 
-    // Seed Batches
+    // Seed Species first
+    const atlanticSalmon: Species = {
+      id: this.currentId++,
+      name: "Atlantic Salmon",
+      scientificName: "Salmo salar",
+      description: "Primary aquaculture species in Norwegian fjords",
+      averageWeightAtHarvest: "4000.00",
+      typicalGrowthCycle: 540,
+      optimalTemperatureMin: "8.00",
+      optimalTemperatureMax: "16.00",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.species.set(atlanticSalmon.id, atlanticSalmon);
+
+    // Seed Stages
+    const juvenileStage: Stage = {
+      id: this.currentId++,
+      name: "Juvenile",
+      description: "Post-smolt stage in sea water",
+      species: atlanticSalmon.id,
+      durationDays: 180,
+      feedingFrequency: 4,
+      feedPercentage: "2.50",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.stages.set(juvenileStage.id, juvenileStage);
+
+    // Seed Batches with proper foreign keys
     const batch1: Batch = {
       id: this.currentId++,
-      batchId: "SAL-2024-001",
-      species: "Atlantic Salmon",
-      strain: "AquaGen Supreme",
-      quantity: 2140,
-      averageWeight: "3.20",
+      name: "Batch 2024-001",
+      species: atlanticSalmon.id,
       startDate: "2024-01-15",
-      expectedHarvestDate: "2025-07-15",
-      status: "active",
+      initialCount: 2500,
+      initialBiomassKg: "5000.00",
+      currentCount: 2140,
+      currentBiomassKg: "6848.00",
       container: container1.id,
+      stage: juvenileStage.id,
+      status: "active",
+      expectedHarvestDate: "2025-07-15",
+      notes: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -198,15 +257,18 @@ export class MemStorage implements IStorage {
 
     const batch2: Batch = {
       id: this.currentId++,
-      batchId: "SAL-2024-002",
-      species: "Atlantic Salmon",
-      strain: "Benchmark Genetics",
-      quantity: 1890,
-      averageWeight: "2.95",
+      name: "Batch 2024-002",
+      species: atlanticSalmon.id,
       startDate: "2024-02-01",
-      expectedHarvestDate: "2025-08-01",
-      status: "active",
+      initialCount: 2200,
+      initialBiomassKg: "4400.00",
+      currentCount: 1890,
+      currentBiomassKg: "5565.50",
       container: container2.id,
+      stage: juvenileStage.id,
+      status: "active",
+      expectedHarvestDate: "2025-08-01",
+      notes: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
