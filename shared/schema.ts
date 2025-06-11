@@ -72,15 +72,18 @@ export const environmentalReadings = pgTable("environmental_readings", {
 // Batches - Fish groups
 export const batches = pgTable("batches", {
   id: serial("id").primaryKey(),
-  batchId: text("batch_id").notNull().unique(),
-  species: text("species").notNull(),
-  strain: text("strain"),
-  quantity: integer("quantity").notNull(),
-  averageWeight: decimal("average_weight", { precision: 5, scale: 2 }),
+  name: text("name").notNull(),
+  species: integer("species").references(() => species.id).notNull(),
   startDate: date("start_date").notNull(),
-  expectedHarvestDate: date("expected_harvest_date"),
-  status: text("status").notNull().default("active"), // 'active', 'harvested', 'transferred'
+  initialCount: integer("initial_count").notNull(),
+  initialBiomassKg: decimal("initial_biomass_kg", { precision: 10, scale: 2 }).notNull(),
+  currentCount: integer("current_count").notNull(),
+  currentBiomassKg: decimal("current_biomass_kg", { precision: 10, scale: 2 }).notNull(),
   container: integer("container").references(() => containers.id),
+  stage: integer("stage").references(() => stages.id),
+  status: text("status").notNull().default("active"), // 'active', 'harvested', 'transferred'
+  expectedHarvestDate: date("expected_harvest_date"),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -182,7 +185,79 @@ export const batchFeedingSummaries = pgTable("batch_feeding_summaries", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Health Records
+// Species - Fish species information
+export const species = pgTable("species", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  scientificName: text("scientific_name"),
+  description: text("description"),
+  averageWeightAtHarvest: decimal("average_weight_at_harvest", { precision: 8, scale: 2 }),
+  typicalGrowthCycle: integer("typical_growth_cycle"), // days
+  optimalTemperatureMin: decimal("optimal_temperature_min", { precision: 4, scale: 2 }),
+  optimalTemperatureMax: decimal("optimal_temperature_max", { precision: 4, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Life Stages - Fish development stages
+export const stages = pgTable("stages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  species: integer("species").references(() => species.id).notNull(),
+  durationDays: integer("duration_days"),
+  feedingFrequency: integer("feeding_frequency"), // times per day
+  feedPercentage: decimal("feed_percentage", { precision: 4, scale: 2 }), // % of body weight
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Lab Samples - Laboratory testing
+export const labSamples = pgTable("lab_samples", {
+  id: serial("id").primaryKey(),
+  batch: integer("batch").references(() => batches.id).notNull(),
+  sampleDate: timestamp("sample_date").notNull(),
+  sampleType: text("sample_type").notNull(), // 'Water', 'Fish', 'Feed'
+  labId: text("lab_id").notNull(),
+  results: text("results").notNull(), // JSON string
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Health Assessments - Detailed health evaluations
+export const healthAssessments = pgTable("health_assessments", {
+  id: serial("id").primaryKey(),
+  batch: integer("batch").references(() => batches.id).notNull(),
+  assessmentDate: timestamp("assessment_date").notNull(),
+  veterinarian: text("veterinarian").notNull(),
+  healthScore: decimal("health_score", { precision: 3, scale: 1 }), // 0.0 - 10.0
+  mortalityRate: decimal("mortality_rate", { precision: 5, scale: 2 }), // percentage
+  growthRate: decimal("growth_rate", { precision: 5, scale: 2 }), // percentage
+  behavior: text("behavior"),
+  physicalCondition: text("physical_condition"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Weather Data - Environmental conditions
+export const weatherData = pgTable("weather_data", {
+  id: serial("id").primaryKey(),
+  timestamp: timestamp("timestamp").notNull(),
+  temperature: decimal("temperature", { precision: 4, scale: 1 }),
+  humidity: decimal("humidity", { precision: 4, scale: 1 }),
+  pressure: decimal("pressure", { precision: 6, scale: 1 }),
+  windSpeed: decimal("wind_speed", { precision: 4, scale: 1 }),
+  windDirection: text("wind_direction"),
+  precipitation: decimal("precipitation", { precision: 4, scale: 1 }),
+  cloudCover: decimal("cloud_cover", { precision: 4, scale: 1 }),
+  weatherStation: integer("weather_station"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Health Records (keeping existing structure for compatibility)
 export const healthRecords = pgTable("health_records", {
   id: serial("id").primaryKey(),
   batch: integer("batch").references(() => batches.id).notNull(),
@@ -301,6 +376,37 @@ export const insertHealthRecordSchema = createInsertSchema(healthRecords).omit({
   updatedAt: true,
 });
 
+// New Django API model schemas
+export const insertSpeciesSchema = createInsertSchema(species).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStageSchema = createInsertSchema(stages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLabSampleSchema = createInsertSchema(labSamples).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertHealthAssessmentSchema = createInsertSchema(healthAssessments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWeatherDataSchema = createInsertSchema(weatherData).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Legacy compatibility schemas
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -359,6 +465,22 @@ export type InsertFeedingEvent = z.infer<typeof insertFeedingEventSchema>;
 
 export type HealthRecord = typeof healthRecords.$inferSelect;
 export type InsertHealthRecord = z.infer<typeof insertHealthRecordSchema>;
+
+// New Django API model types
+export type Species = typeof species.$inferSelect;
+export type InsertSpecies = z.infer<typeof insertSpeciesSchema>;
+
+export type Stage = typeof stages.$inferSelect;
+export type InsertStage = z.infer<typeof insertStageSchema>;
+
+export type LabSample = typeof labSamples.$inferSelect;
+export type InsertLabSample = z.infer<typeof insertLabSampleSchema>;
+
+export type HealthAssessment = typeof healthAssessments.$inferSelect;
+export type InsertHealthAssessment = z.infer<typeof insertHealthAssessmentSchema>;
+
+export type WeatherData = typeof weatherData.$inferSelect;
+export type InsertWeatherData = z.infer<typeof insertWeatherDataSchema>;
 
 // Legacy compatibility types
 export type User = typeof users.$inferSelect;
