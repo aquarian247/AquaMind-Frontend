@@ -506,7 +506,7 @@ export default function BatchManagement() {
                     
                     <div>
                       <div className="text-2xl font-bold text-green-600">
-                        {typeof batch.currentBiomassKg === 'string' ? parseFloat(batch.currentBiomassKg).toFixed(1) : batch.currentBiomassKg.toFixed(1)}kg
+                        {parseFloat(batch.currentBiomassKg.toString()).toFixed(1)}kg
                       </div>
                       <div className="text-xs text-muted-foreground">Biomass</div>
                     </div>

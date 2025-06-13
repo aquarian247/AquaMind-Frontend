@@ -228,11 +228,63 @@ export class MemStorage implements IStorage {
     };
     this.species.set(atlanticSalmon.id, atlanticSalmon);
 
-    // Seed Stages
-    const juvenileStage: Stage = {
+    // Seed Stages - Complete Atlantic Salmon lifecycle
+    const eggStage: Stage = {
       id: this.currentId++,
-      name: "Juvenile",
-      description: "Post-smolt stage in sea water",
+      name: "Egg",
+      description: "Fertilized eggs in incubation",
+      species: atlanticSalmon.id,
+      durationDays: 90,
+      feedingFrequency: 0,
+      feedPercentage: "0.00",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.stages.set(eggStage.id, eggStage);
+
+    const fryStage: Stage = {
+      id: this.currentId++,
+      name: "Fry",
+      description: "Newly hatched salmon with yolk sac",
+      species: atlanticSalmon.id,
+      durationDays: 60,
+      feedingFrequency: 8,
+      feedPercentage: "8.00",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.stages.set(fryStage.id, fryStage);
+
+    const parrStage: Stage = {
+      id: this.currentId++,
+      name: "Parr",
+      description: "Juvenile salmon in freshwater",
+      species: atlanticSalmon.id,
+      durationDays: 365,
+      feedingFrequency: 6,
+      feedPercentage: "4.00",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.stages.set(parrStage.id, parrStage);
+
+    const smoltStage: Stage = {
+      id: this.currentId++,
+      name: "Smolt",
+      description: "Juvenile salmon ready for seawater",
+      species: atlanticSalmon.id,
+      durationDays: 90,
+      feedingFrequency: 4,
+      feedPercentage: "3.50",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.stages.set(smoltStage.id, smoltStage);
+
+    const postSmoltStage: Stage = {
+      id: this.currentId++,
+      name: "Post-Smolt",
+      description: "Young salmon in seawater",
       species: atlanticSalmon.id,
       durationDays: 180,
       feedingFrequency: 4,
@@ -240,7 +292,20 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.stages.set(juvenileStage.id, juvenileStage);
+    this.stages.set(postSmoltStage.id, postSmoltStage);
+
+    const adultStage: Stage = {
+      id: this.currentId++,
+      name: "Adult",
+      description: "Mature salmon ready for harvest",
+      species: atlanticSalmon.id,
+      durationDays: 365,
+      feedingFrequency: 3,
+      feedPercentage: "1.50",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.stages.set(adultStage.id, adultStage);
 
     // Seed Batches with proper foreign keys
     const batch1: Batch = {
@@ -253,7 +318,7 @@ export class MemStorage implements IStorage {
       currentCount: 2140,
       currentBiomassKg: "6848.00",
       container: container1.id,
-      stage: juvenileStage.id,
+      stage: postSmoltStage.id,
       status: "active",
       expectedHarvestDate: "2025-07-15",
       notes: null,
@@ -272,7 +337,7 @@ export class MemStorage implements IStorage {
       currentCount: 1890,
       currentBiomassKg: "5565.50",
       container: container2.id,
-      stage: juvenileStage.id,
+      stage: smoltStage.id,
       status: "active",
       expectedHarvestDate: "2025-08-01",
       notes: null,
