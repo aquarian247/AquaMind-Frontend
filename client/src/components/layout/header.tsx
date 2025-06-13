@@ -12,7 +12,7 @@ export default function Header() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">AquaMind Dashboard</h2>
-          <p className="text-muted-foreground mt-1">Norwegian Salmon Farming Intelligence</p>
+          <p className="text-muted-foreground mt-1">Bakkafrost Salmon Farming Intelligence</p>
         </div>
         <div className="flex items-center space-x-4">
           <ThemeSelector />
