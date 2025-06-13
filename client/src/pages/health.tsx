@@ -317,7 +317,7 @@ export default function Health() {
         </div>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
             {/* Recent Journal Entries */}
             <Card>
               <CardHeader>
@@ -328,19 +328,19 @@ export default function Health() {
                 <CardDescription>Latest health observations and assessments</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-64">
+                <ScrollArea className="h-48 md:h-64">
                   <div className="space-y-3">
                     {recentJournalEntries.map((entry) => (
-                      <div key={entry.id} className="flex items-start space-x-3 p-3 border rounded-lg">
-                        <div className={`w-3 h-3 rounded-full mt-1 ${getHealthStatusColor(entry.healthStatus)}`} />
+                      <div key={entry.id} className="flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-3 p-3 border rounded-lg">
+                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${getHealthStatusColor(entry.healthStatus)}`} />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 space-y-1 sm:space-y-0">
                             <p className="font-medium text-sm">Batch {entry.batch}</p>
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className="text-xs w-fit">
                               {getHealthStatusText(entry.healthStatus)}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className="text-sm text-muted-foreground break-words">
                             {entry.observations}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
@@ -364,20 +364,20 @@ export default function Health() {
                 <CardDescription>Ongoing medical treatments and interventions</CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-64">
+                <ScrollArea className="h-48 md:h-64">
                   <div className="space-y-3">
                     {activeTreatments.map((treatment) => (
                       <div key={treatment.id} className="p-3 border rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-1 sm:space-y-0">
                           <p className="font-medium text-sm">Batch {treatment.batch}</p>
-                          <Badge className="bg-blue-100 text-blue-800 text-xs">
+                          <Badge className="bg-blue-100 text-blue-800 text-xs w-fit">
                             {treatment.treatmentType}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-1">
+                        <p className="text-sm text-muted-foreground mb-1 break-words">
                           {treatment.medication} - {treatment.dosage}
                         </p>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground space-y-1 sm:space-y-0">
                           <span>Started: {new Date(treatment.startDate).toLocaleDateString()}</span>
                           <span>{treatment.veterinarian}</span>
                         </div>
@@ -401,20 +401,20 @@ export default function Health() {
             <CardContent>
               <div className="space-y-3">
                 {recentMortality.map((mortality) => (
-                  <div key={mortality.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm">
+                  <div key={mortality.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg space-y-2 sm:space-y-0">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm break-words">
                         Batch {mortality.batch} - Container {mortality.container}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground break-words">
                         {mortality.count} fish • {mortality.reason || "Unknown cause"}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(mortality.date).toLocaleDateString()} • {mortality.reportedBy}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <Badge variant={mortality.veterinarianReview ? "default" : "destructive"}>
+                    <div className="sm:text-right">
+                      <Badge variant={mortality.veterinarianReview ? "default" : "destructive"} className="w-fit">
                         {mortality.veterinarianReview ? "Reviewed" : "Pending Review"}
                       </Badge>
                     </div>
