@@ -87,6 +87,23 @@ export interface IStorage {
   createAlert(alert: InsertAlert): Promise<Alert>;
   resolveAlert(id: number): Promise<Alert>;
 
+  // Health Management API
+  getHealthSummary(): Promise<{
+    totalBatches: number;
+    healthyBatches: number;
+    batchesUnderTreatment: number;
+    averageHealthScore: number;
+    recentMortality: number;
+    activeTreatments: number;
+    pendingReviews: number;
+    avgLiceCount: number;
+  }>;
+  getHealthJournalEntries(limit?: number): Promise<any[]>;
+  getCriticalHealthAlerts(): Promise<any[]>;
+  getActiveTreatments(): Promise<any[]>;
+  getRecentMortalityRecords(): Promise<any[]>;
+  getRecentLiceCounts(): Promise<any[]>;
+
   // Dashboard specific queries
   getDashboardKPIs(): Promise<{
     totalFish: number;

@@ -12,6 +12,7 @@ import Inventory from "@/pages/inventory";
 import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
 import BatchManagement from "@/pages/batch-management";
+import Health from "@/pages/health";
 import NotFound from "@/pages/not-found";
 
 import Sidebar from "@/components/layout/sidebar";
@@ -33,6 +34,7 @@ function Router() {
             <Route path="/monitoring" component={Monitoring} />
             <Route path="/farm-management" component={FarmManagement} />
             <Route path="/batch-management" component={BatchManagement} />
+            <Route path="/health" component={Health} />
             <Route path="/inventory" component={Inventory} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/mortality-reporting" component={MortalityReporting} />

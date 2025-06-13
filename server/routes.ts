@@ -59,6 +59,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health Management API endpoints
+  app.get("/api/health/summary", async (req, res) => {
+    try {
+      const summary = await storage.getHealthSummary();
+      res.json(summary);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch health summary" });
+    }
+  });
+
+  app.get("/api/health/journal", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+      const journalEntries = await storage.getHealthJournalEntries(limit);
+      res.json(journalEntries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch journal entries" });
+    }
+  });
+
+  app.get("/api/health/alerts/critical", async (req, res) => {
+    try {
+      const criticalAlerts = await storage.getCriticalHealthAlerts();
+      res.json(criticalAlerts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch critical alerts" });
+    }
+  });
+
+  app.get("/api/health/treatments/active", async (req, res) => {
+    try {
+      const activeTreatments = await storage.getActiveTreatments();
+      res.json(activeTreatments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch active treatments" });
+    }
+  });
+
+  app.get("/api/health/mortality/recent", async (req, res) => {
+    try {
+      const recentMortality = await storage.getRecentMortalityRecords();
+      res.json(recentMortality);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch mortality records" });
+    }
+  });
+
+  app.get("/api/health/lice/recent", async (req, res) => {
+    try {
+      const liceCounts = await storage.getRecentLiceCounts();
+      res.json(liceCounts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch lice counts" });
+    }
+  });
+
   // Django API v1 endpoints - Environmental
   app.get("/api/v1/environmental/parameters/", async (req, res) => {
     try {
