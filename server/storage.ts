@@ -138,6 +138,13 @@ export class MemStorage implements IStorage {
   private healthAssessments: Map<number, HealthAssessment> = new Map();
   private weatherData: Map<number, WeatherData> = new Map();
   
+  // Health Management data stores
+  private healthJournalEntries: Map<number, any> = new Map();
+  private healthParameters: Map<number, any> = new Map();
+  private mortalityRecords: Map<number, any> = new Map();
+  private liceCounts: Map<number, any> = new Map();
+  private treatments: Map<number, any> = new Map();
+  
   // Legacy compatibility
   private farmSites: Map<number, FarmSite> = new Map();
   private pens: Map<number, Pen> = new Map();
@@ -623,6 +630,102 @@ export class MemStorage implements IStorage {
       resolvedAt: null,
     };
     this.alerts.set(alert1.id, alert1);
+
+    // Seed Health Parameters
+    const finConditionParam = {
+      id: this.currentId++,
+      name: "Fin Condition",
+      description: "Assessment of fin integrity and damage",
+      minValue: 1,
+      maxValue: 5,
+      unit: "score",
+      category: "physical",
+    };
+    this.healthParameters.set(finConditionParam.id, finConditionParam);
+
+    const skinConditionParam = {
+      id: this.currentId++,
+      name: "Skin Condition", 
+      description: "Assessment of skin lesions and pigmentation",
+      minValue: 1,
+      maxValue: 5,
+      unit: "score",
+      category: "physical",
+    };
+    this.healthParameters.set(skinConditionParam.id, skinConditionParam);
+
+    // Seed Health Journal Entries
+    const journalEntry1 = {
+      id: this.currentId++,
+      batch: batch1.id,
+      container: container1.id,
+      entryDate: "2024-06-10",
+      observations: "Fish showing good appetite and normal swimming behavior. Minor fin damage observed in 5% of population.",
+      veterinarian: "Dr. Emma Nordström",
+      healthStatus: "good",
+      flaggedForReview: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.healthJournalEntries.set(journalEntry1.id, journalEntry1);
+
+    const journalEntry2 = {
+      id: this.currentId++,
+      batch: batch2.id,
+      container: container2.id,
+      entryDate: "2024-06-12",
+      observations: "Excellent growth rates observed. All health parameters within normal ranges. Recommending continuation of current feeding protocol.",
+      veterinarian: "Dr. Lars Andersen",
+      healthStatus: "excellent",
+      flaggedForReview: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.healthJournalEntries.set(journalEntry2.id, journalEntry2);
+
+    // Seed Mortality Records
+    const mortalityRecord1 = {
+      id: this.currentId++,
+      batch: batch1.id,
+      container: container1.id,
+      date: "2024-06-08",
+      count: 12,
+      reason: "Natural mortality",
+      notes: "Within expected range for this stage",
+      reportedBy: "Field Operator Hansen",
+      veterinarianReview: true,
+    };
+    this.mortalityRecords.set(mortalityRecord1.id, mortalityRecord1);
+
+    // Seed Lice Counts
+    const liceCount1 = {
+      id: this.currentId++,
+      batch: batch1.id,
+      container: container1.id,
+      countDate: "2024-06-10",
+      adultFemale: 1,
+      adultMale: 1,
+      juvenile: 3,
+      countedBy: "QA Specialist Johansen",
+    };
+    this.liceCounts.set(liceCount1.id, liceCount1);
+
+    // Seed Treatments
+    const treatment1 = {
+      id: this.currentId++,
+      batch: batch2.id,
+      container: container2.id,
+      treatmentType: "Preventive",
+      medication: "Slice (emamectin benzoate)",
+      dosage: "50 μg/kg",
+      startDate: "2024-06-01",
+      endDate: "2024-06-08",
+      veterinarian: "Dr. Emma Nordström",
+      reason: "Preventive lice treatment",
+      effectiveness: "excellent",
+      notes: "Treatment completed successfully with no adverse effects",
+    };
+    this.treatments.set(treatment1.id, treatment1);
   }
 
   // Django API Methods
@@ -1057,6 +1160,56 @@ export class MemStorage implements IStorage {
     };
     this.pens.set(pen.id, pen);
     return pen;
+  }
+
+  // Health Management API implementation
+  async getHealthSummary() {
+    const totalBatches = this.batches.size;
+    const healthyBatches = Math.floor(totalBatches * 0.87); // 87% healthy
+    const batchesUnderTreatment = this.treatments.size;
+    const averageHealthScore = 4.2;
+    const recentMortality = 1.2;
+    const activeTreatments = this.treatments.size;
+    const pendingReviews = Math.floor(this.healthJournalEntries.size * 0.1);
+    const avgLiceCount = 2.3;
+
+    return {
+      totalBatches,
+      healthyBatches,
+      batchesUnderTreatment,
+      averageHealthScore,
+      recentMortality,
+      activeTreatments,
+      pendingReviews,
+      avgLiceCount,
+    };
+  }
+
+  async getHealthJournalEntries(limit = 50): Promise<any[]> {
+    const entries = Array.from(this.healthJournalEntries.values());
+    return entries.slice(0, limit);
+  }
+
+  async getCriticalHealthAlerts(): Promise<any[]> {
+    return Array.from(this.mortalityRecords.values()).filter(
+      (record: any) => record.count > 20 && !record.veterinarianReview
+    );
+  }
+
+  async getActiveTreatments(): Promise<any[]> {
+    return Array.from(this.treatments.values()).filter(
+      (treatment: any) => !treatment.endDate
+    );
+  }
+
+  async getRecentMortalityRecords(): Promise<any[]> {
+    const recent = Array.from(this.mortalityRecords.values());
+    return recent.slice(0, 5);
+  }
+
+  async getRecentLiceCounts(): Promise<any[]> {
+    const recent = Array.from(this.liceCounts.values());
+    return recent.slice(0, 5);
   }
 }
 
