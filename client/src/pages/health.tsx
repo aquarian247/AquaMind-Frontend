@@ -284,14 +284,37 @@ export default function Health() {
 
       {/* Main Content Tabs */}
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="journal">Medical Journal</TabsTrigger>
-          <TabsTrigger value="treatments">Treatments</TabsTrigger>
-          <TabsTrigger value="mortality">Mortality</TabsTrigger>
-          <TabsTrigger value="lice">Lice Management</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-        </TabsList>
+        <div className="w-full">
+          <div className="hidden lg:block">
+            <TabsList className="grid w-full grid-cols-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="journal">Medical Journal</TabsTrigger>
+              <TabsTrigger value="treatments">Treatments</TabsTrigger>
+              <TabsTrigger value="mortality">Mortality</TabsTrigger>
+              <TabsTrigger value="lice">Lice Management</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <div className="lg:hidden">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="journal">Journal</TabsTrigger>
+            </TabsList>
+            <div className="mt-2">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="treatments">Treatments</TabsTrigger>
+                <TabsTrigger value="mortality">Mortality</TabsTrigger>
+              </TabsList>
+            </div>
+            <div className="mt-2">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="lice">Lice Mgmt</TabsTrigger>
+                <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
+        </div>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-2">

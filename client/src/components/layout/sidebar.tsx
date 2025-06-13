@@ -101,14 +101,23 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Header with Hamburger Menu */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-            <i className="fas fa-fish text-white text-sm"></i>
+          <div>
+            <img 
+              src={bakkafrostLogoLight} 
+              alt="Bakkafrost Logo" 
+              className="h-6 w-auto block dark:hidden"
+            />
+            <img 
+              src={bakkafrostLogoDark} 
+              alt="Bakkafrost Logo" 
+              className="h-6 w-auto hidden dark:block"
+            />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-blue-600">AquaMind</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Farm Management</p>
+            <h1 className="text-lg font-bold">AquaMind</h1>
+            <p className="text-xs text-muted-foreground">Farm Management</p>
           </div>
         </div>
         
@@ -166,7 +175,7 @@ export default function Sidebar() {
         {/* Sidebar Header */}
         <div className="p-6 border-b">
           <div className="flex items-center space-x-3">
-            <>
+            <div>
               <img 
                 src={bakkafrostLogoLight} 
                 alt="Bakkafrost Logo" 
@@ -177,7 +186,7 @@ export default function Sidebar() {
                 alt="Bakkafrost Logo" 
                 className="h-8 w-auto hidden dark:block"
               />
-            </>
+            </div>
             <div>
               <h1 className="text-xl font-bold">AquaMind</h1>
               <p className="text-sm text-muted-foreground">Farm Management</p>
