@@ -100,13 +100,13 @@ export default function Inventory() {
 
   // Navigation menu items
   const navigationSections = [
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+    { id: "dashboard", label: "Overview", icon: BarChart3 },
     { id: "feed-types", label: "Feed Types", icon: Settings },
     { id: "purchases", label: "Purchases", icon: Truck },
     { id: "distribution", label: "Distribution", icon: Factory },
     { id: "feeding-events", label: "Feeding Events", icon: ClipboardList },
-    { id: "container-stock", label: "Container Stock", icon: Boxes },
-    { id: "fcr-analysis", label: "FCR Analysis", icon: TrendingUp },
+    { id: "container-stock", label: "Stock Levels", icon: Boxes },
+    { id: "fcr-analysis", label: "Analytics", icon: TrendingUp },
   ];
 
   const handleFilterChange = (newFilters: any) => {
@@ -210,60 +210,34 @@ export default function Inventory() {
           <Select value={activeSection} onValueChange={setActiveSection}>
             <SelectTrigger className="w-full">
               <SelectValue>
-                <div className="flex items-center space-x-2">
-                  {navigationSections.find(s => s.id === activeSection)?.icon && 
-                    (() => {
-                      const Icon = navigationSections.find(s => s.id === activeSection)!.icon;
-                      return <Icon className="h-4 w-4" />;
-                    })()
-                  }
-                  <span>{navigationSections.find(s => s.id === activeSection)?.label}</span>
-                </div>
+                <span>{navigationSections.find(s => s.id === activeSection)?.label}</span>
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {navigationSections.map((section) => {
-                const Icon = section.icon;
-                return (
-                  <SelectItem key={section.id} value={section.id}>
-                    <div className="flex items-center space-x-2">
-                      <Icon className="h-4 w-4" />
-                      <span>{section.label}</span>
-                    </div>
-                  </SelectItem>
-                );
-              })}
+              {navigationSections.map((section) => (
+                <SelectItem key={section.id} value={section.id}>
+                  {section.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-          {navigationSections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <Card
-                key={section.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                  activeSection === section.id 
-                    ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20" 
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                }`}
-                onClick={() => setActiveSection(section.id)}
-              >
-                <CardContent className="p-4 text-center">
-                  <Icon className={`h-6 w-6 mx-auto mb-2 ${
-                    activeSection === section.id ? "text-blue-600" : "text-gray-600"
-                  }`} />
-                  <p className={`text-sm font-medium ${
-                    activeSection === section.id ? "text-blue-900 dark:text-blue-100" : "text-gray-900 dark:text-gray-100"
-                  }`}>
-                    {section.label}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
+        {/* Desktop Navigation - Health Module Style */}
+        <div className="hidden md:flex bg-gray-50 dark:bg-gray-800 rounded-lg p-1">
+          {navigationSections.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => setActiveSection(section.id)}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                activeSection === section.id
+                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              }`}
+            >
+              {section.label}
+            </button>
+          ))}
         </div>
       </div>
 
