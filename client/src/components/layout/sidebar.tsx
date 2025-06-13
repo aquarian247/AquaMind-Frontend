@@ -5,7 +5,8 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeSelector } from "@/components/theme-selector";
-import bakkafrostLogo from "@assets/image_1749821987657.png";
+import bakkafrostLogoDark from "@assets/image_1749821987657.png";
+import bakkafrostLogoLight from "@assets/image_1749822137551.png";
 
 const navigationItems = [
   {
@@ -124,12 +125,21 @@ export default function Sidebar() {
               <div className="flex flex-col h-full">
                 <div className="p-6 border-b">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                      <i className="fas fa-fish text-white text-lg"></i>
-                    </div>
+                    <>
+                      <img 
+                        src={bakkafrostLogoLight} 
+                        alt="Bakkafrost Logo" 
+                        className="h-8 w-auto block dark:hidden"
+                      />
+                      <img 
+                        src={bakkafrostLogoDark} 
+                        alt="Bakkafrost Logo" 
+                        className="h-8 w-auto hidden dark:block"
+                      />
+                    </>
                     <div>
-                      <h1 className="text-xl font-bold text-blue-600">AquaMind</h1>
-                      <p className="text-sm text-gray-500">Farm Management</p>
+                      <h1 className="text-xl font-bold">AquaMind</h1>
+                      <p className="text-sm text-muted-foreground">Farm Management</p>
                     </div>
                   </div>
                 </div>
@@ -156,11 +166,18 @@ export default function Sidebar() {
         {/* Sidebar Header */}
         <div className="p-6 border-b">
           <div className="flex items-center space-x-3">
-            <img 
-              src={bakkafrostLogo} 
-              alt="Bakkafrost Logo" 
-              className="h-8 w-auto"
-            />
+            <>
+              <img 
+                src={bakkafrostLogoLight} 
+                alt="Bakkafrost Logo" 
+                className="h-8 w-auto block dark:hidden"
+              />
+              <img 
+                src={bakkafrostLogoDark} 
+                alt="Bakkafrost Logo" 
+                className="h-8 w-auto hidden dark:block"
+              />
+            </>
             <div>
               <h1 className="text-xl font-bold">AquaMind</h1>
               <p className="text-sm text-muted-foreground">Farm Management</p>
