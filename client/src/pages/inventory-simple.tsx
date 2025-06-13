@@ -123,6 +123,44 @@ export default function Inventory() {
       {/* Operations Overview for Large Scale */}
       <OperationsOverview />
 
+      {/* Navigation Menu - Health Module Style */}
+      <div className="space-y-4">
+        {/* Mobile Navigation */}
+        <div className="md:hidden">
+          <Select value={activeSection} onValueChange={setActiveSection}>
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                <span>{navigationSections.find(s => s.id === activeSection)?.label}</span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {navigationSections.map((section) => (
+                <SelectItem key={section.id} value={section.id}>
+                  {section.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop Navigation - Health Module Style */}
+        <div className="hidden md:flex bg-muted rounded-lg p-1">
+          {navigationSections.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => setActiveSection(section.id)}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                activeSection === section.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {section.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Hierarchical Filtering for Large Scale Operations */}
       <HierarchicalFilter onFilterChange={handleFilterChange} showBatches={true} />
 
@@ -203,43 +241,7 @@ export default function Inventory() {
         </Card>
       </div>
 
-      {/* Navigation Menu - Health Style */}
-      <div className="space-y-4">
-        {/* Mobile Navigation */}
-        <div className="md:hidden">
-          <Select value={activeSection} onValueChange={setActiveSection}>
-            <SelectTrigger className="w-full">
-              <SelectValue>
-                <span>{navigationSections.find(s => s.id === activeSection)?.label}</span>
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {navigationSections.map((section) => (
-                <SelectItem key={section.id} value={section.id}>
-                  {section.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        {/* Desktop Navigation - Health Module Style */}
-        <div className="hidden md:flex bg-gray-50 dark:bg-gray-800 rounded-lg p-1">
-          {navigationSections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                activeSection === section.id
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              {section.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Dashboard Overview */}
       {activeSection === "dashboard" && (
