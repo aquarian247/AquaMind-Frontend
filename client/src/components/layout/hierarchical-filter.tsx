@@ -72,12 +72,20 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
   const updateFilter = (key: keyof FilterState, value: string | undefined) => {
-    const newFilters = { ...filters, [key]: value };
+    const newFilters = { ...filters };
+    
+    // Handle "all" values as undefined (clear filter)
+    if (value === "all" || !value) {
+      delete newFilters[key];
+    } else {
+      newFilters[key] = value;
+    }
     
     // Reset dependent filters when parent changes
     if (key === 'region') {
       delete newFilters.site;
-      setSelectedRegion(SAMPLE_REGIONS.find(r => r.id === value) || null);
+      const region = value && value !== "all" ? SAMPLE_REGIONS.find(r => r.id === value) : null;
+      setSelectedRegion(region || null);
     }
     
     setFilters(newFilters);
@@ -119,7 +127,7 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {SAMPLE_REGIONS.map(region => (
                     <SelectItem key={region.id} value={region.id}>
                       <div className="flex items-center space-x-2">
@@ -139,7 +147,7 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="seawater">
                     <div className="flex items-center space-x-2">
                       <Fish className="h-4 w-4" />
@@ -167,7 +175,7 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
                   <SelectValue placeholder={selectedRegion ? "Select Site" : "Choose Region First"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Sites</SelectItem>
+                  <SelectItem value="all">All Sites</SelectItem>
                   {(selectedRegion?.sites || [])
                     .filter(site => !filters.siteType || site.type === filters.siteType)
                     .map(site => (
@@ -208,7 +216,7 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="preparing">Preparing</SelectItem>
                     <SelectItem value="harvesting">Harvesting</SelectItem>
