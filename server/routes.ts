@@ -12,6 +12,53 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Batch Management endpoints
+  app.get("/api/batches", async (req, res) => {
+    try {
+      const batches = await storage.getBatches();
+      res.json(batches);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch batches" });
+    }
+  });
+
+  app.post("/api/batches", async (req, res) => {
+    try {
+      const validatedData = insertBatchSchema.parse(req.body);
+      const batch = await storage.createBatch(validatedData);
+      res.status(201).json(batch);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid batch data" });
+    }
+  });
+
+  app.get("/api/species", async (req, res) => {
+    try {
+      const species = await storage.getSpecies();
+      res.json(species);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch species" });
+    }
+  });
+
+  app.get("/api/stages", async (req, res) => {
+    try {
+      const stages = await storage.getStages();
+      res.json(stages);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stages" });
+    }
+  });
+
+  app.get("/api/containers", async (req, res) => {
+    try {
+      const containers = await storage.getContainers();
+      res.json(containers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch containers" });
+    }
+  });
+
   // Django API v1 endpoints - Environmental
   app.get("/api/v1/environmental/parameters/", async (req, res) => {
     try {
