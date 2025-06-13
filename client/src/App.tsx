@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Dashboard from "@/pages/dashboard";
 import Monitoring from "@/pages/monitoring";
 import FarmManagement from "@/pages/farm-management";
-import Inventory from "@/pages/inventory";
+import Inventory from "@/pages/inventory-simple";
 import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
 import BatchManagement from "@/pages/batch-management";
