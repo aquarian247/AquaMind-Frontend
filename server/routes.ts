@@ -487,6 +487,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Django API v1 endpoints - Infrastructure Management
+  app.get("/api/v1/infrastructure/summary/", async (req, res) => {
+    try {
+      const containers = await storage.getContainers();
+      const batches = await storage.getBatches();
+      const feedingEvents = await storage.getFeedingEvents();
+      const alerts = await storage.getActiveAlerts();
+      
+      const activeBiomass = batches.reduce((sum, batch) => sum + parseFloat(batch.currentBiomassKg || "0"), 0);
+      const capacity = containers.reduce((sum, container) => sum + (container.capacity || 0), 0);
+      const today = new Date().toISOString().split('T')[0];
+      const todayEvents = feedingEvents.filter(event => event.feedingDate === today);
+      
+      res.json({
+        totalContainers: containers.length,
+        activeBiomass: Math.round(activeBiomass),
+        capacity: capacity,
+        sensorAlerts: alerts.length,
+        feedingEventsToday: todayEvents.length
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch infrastructure summary" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/geographies/", async (req, res) => {
+    try {
+      const farmSites = await storage.getFarmSites();
+      const geographies = [
+        {
+          id: 1,
+          name: "Faroe Islands",
+          totalContainers: farmSites.filter(s => s.location.includes("Faroe")).length * 15,
+          activeBiomass: farmSites.filter(s => s.location.includes("Faroe")).reduce((sum, site) => sum + site.currentStock, 0) * 50,
+          capacity: farmSites.filter(s => s.location.includes("Faroe")).reduce((sum, site) => sum + site.totalCapacity, 0) * 60
+        },
+        {
+          id: 2,
+          name: "Scotland",
+          totalContainers: farmSites.filter(s => s.location.includes("Scotland")).length * 12,
+          activeBiomass: farmSites.filter(s => s.location.includes("Scotland")).reduce((sum, site) => sum + site.currentStock, 0) * 45,
+          capacity: farmSites.filter(s => s.location.includes("Scotland")).reduce((sum, site) => sum + site.totalCapacity, 0) * 55
+        }
+      ];
+      
+      res.json({
+        count: geographies.length,
+        next: null,
+        previous: null,
+        results: geographies
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch geographies" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/containers/", async (req, res) => {
+    try {
+      const containers = await storage.getContainers();
+      const batches = await storage.getBatches();
+      const readings = await storage.getEnvironmentalReadings();
+      
+      const enrichedContainers = containers.map(container => {
+        const containerBatches = batches.filter(b => b.container === container.id);
+        const containerReadings = readings.filter(r => r.container === container.id);
+        
+        return {
+          id: container.id,
+          name: container.name,
+          type: container.containerType,
+          geography: "Faroe Islands",
+          area: container.location || "Unknown",
+          biomass: containerBatches.reduce((sum, batch) => sum + parseFloat(batch.currentBiomassKg || "0"), 0),
+          capacity: container.capacity,
+          currentBatch: containerBatches[0]?.name || "None",
+          lastFeed: "2h ago",
+          sensorReadings: {
+            temperature: containerReadings.find(r => r.parameter === 1)?.value ? parseFloat(containerReadings.find(r => r.parameter === 1)?.value || "0") : undefined,
+            oxygen: containerReadings.find(r => r.parameter === 2)?.value ? parseFloat(containerReadings.find(r => r.parameter === 2)?.value || "0") : undefined,
+            co2: containerReadings.find(r => r.parameter === 3)?.value ? parseFloat(containerReadings.find(r => r.parameter === 3)?.value || "0") : undefined
+          },
+          status: container.status
+        };
+      });
+      
+      res.json({
+        count: enrichedContainers.length,
+        next: null,
+        previous: null,
+        results: enrichedContainers
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch containers" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/alerts/", async (req, res) => {
+    try {
+      const alerts = await storage.getActiveAlerts();
+      const containers = await storage.getContainers();
+      
+      const enrichedAlerts = alerts.map(alert => {
+        const container = containers.find(c => c.id === alert.farmSiteId);
+        return {
+          id: alert.id,
+          containerId: alert.farmSiteId,
+          containerName: container?.name || `Container ${alert.farmSiteId}`,
+          type: alert.type,
+          message: alert.description,
+          severity: alert.severity,
+          timestamp: new Date(alert.createdAt).toLocaleString()
+        };
+      });
+      
+      res.json({
+        count: enrichedAlerts.length,
+        next: null,
+        previous: null,
+        results: enrichedAlerts
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch alerts" });
+    }
+  });
+
   // Django API v1 endpoints - Environmental Weather
   app.get("/api/v1/environmental/weather/", async (req, res) => {
     try {
