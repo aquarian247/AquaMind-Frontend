@@ -91,12 +91,12 @@ export default function Inventory() {
   const feedingEvents = feedingEventsData?.results || [];
 
   // Calculate metrics
-  const totalInventoryValue = containerStock.reduce((sum, item) => 
+  const totalInventoryValue = containerStock.reduce((sum: number, item: any) => 
     sum + (parseFloat(item.quantityKg) * parseFloat(item.costPerKg)), 0
   );
 
-  const totalQuantity = containerStock.reduce((sum, item) => sum + parseFloat(item.quantityKg), 0);
-  const activeContainers = containers.filter(c => c.isActive).length;
+  const totalQuantity = containerStock.reduce((sum: number, item: any) => sum + parseFloat(item.quantityKg), 0);
+  const activeContainers = containers.filter((c: any) => c.isActive).length;
 
   // Navigation menu items
   const navigationSections = [
@@ -114,10 +114,29 @@ export default function Inventory() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Feed Inventory Management</h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">FIFO tracking, cost optimization, and FCR monitoring</p>
+    <div className="container mx-auto p-4 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+        <div className="flex items-center space-x-2">
+          <Package className="h-8 w-8 text-green-600" />
+          <div>
+            <h1 className="text-2xl font-bold">Feed Inventory Management</h1>
+            <p className="text-muted-foreground">
+              FIFO tracking, cost optimization, and FCR monitoring
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+          <Button className="bg-green-600 hover:bg-green-700">
+            <Plus className="h-4 w-4 mr-2" />
+            New Purchase
+          </Button>
+          <Button variant="outline">
+            <Truck className="h-4 w-4 mr-2" />
+            Schedule Delivery
+          </Button>
+        </div>
       </div>
 
       {/* Operations Overview for Large Scale */}
@@ -161,85 +180,112 @@ export default function Inventory() {
         </div>
       </div>
 
-      {/* Hierarchical Filtering for Large Scale Operations */}
-      <HierarchicalFilter onFilterChange={handleFilterChange} showBatches={true} />
-
-      {/* KPI Cards - Always Visible */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
-        <Card className="touch-manipulation">
+      {/* Feed Inventory Summary KPIs - 4 Status Boxes */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
-              <span className="hidden sm:inline">Total Inventory Value</span>
-              <span className="sm:hidden">Inventory</span>
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-lg lg:text-2xl font-bold">
-              <span className="hidden sm:inline">${totalInventoryValue.toLocaleString()}</span>
-              <span className="sm:hidden">${(totalInventoryValue / 1000).toFixed(0)}k</span>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              ${totalInventoryValue.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="hidden sm:inline">FIFO calculated value</span>
-              <span className="sm:hidden">FIFO value</span>
+              FIFO calculated value
             </p>
           </CardContent>
         </Card>
 
-        <Card className="touch-manipulation">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
-              <span className="hidden sm:inline">Total Feed Stock</span>
-              <span className="sm:hidden">Feed Stock</span>
-            </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Total Feed Stock</CardTitle>
+            <Scale className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-lg lg:text-2xl font-bold">
-              <span className="hidden sm:inline">{totalQuantity.toLocaleString()} kg</span>
-              <span className="sm:hidden">{(totalQuantity / 1000).toFixed(1)}t</span>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {(totalQuantity / 1000).toFixed(1)}k kg
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="hidden sm:inline">Across all containers</span>
-              <span className="sm:hidden">All containers</span>
+              Across {activeContainers} containers
             </p>
           </CardContent>
         </Card>
 
-        <Card className="touch-manipulation">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
-              <span className="hidden sm:inline">Average FCR</span>
-              <span className="sm:hidden">Avg FCR</span>
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
+            <Factory className="h-4 w-4 text-purple-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-lg lg:text-2xl font-bold">1.32</div>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">
+              {activeContainers}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="hidden sm:inline">Feed conversion ratio</span>
-              <span className="sm:hidden">Conversion</span>
+              Storage locations
             </p>
           </CardContent>
         </Card>
 
-        <Card className="touch-manipulation">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
-              <span className="hidden sm:inline">Active Containers</span>
-              <span className="sm:hidden">Containers</span>
-            </CardTitle>
-            <Boxes className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Feeding Events</CardTitle>
+            <Calendar className="h-4 w-4 text-orange-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-lg lg:text-2xl font-bold">{activeContainers}</div>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {feedingEvents.length}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="hidden sm:inline">Currently in use</span>
-              <span className="sm:hidden">In use</span>
+              Total recorded
             </p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Hierarchical Filtering for Large Scale Operations */}
+      <HierarchicalFilter onFilterChange={handleFilterChange} showBatches={true} />
+
+      {/* Navigation Menu */}
+      <div className="space-y-4">
+        {/* Mobile Navigation */}
+        <div className="md:hidden">
+          <Select value={activeSection} onValueChange={setActiveSection}>
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                <span>{navigationSections.find(s => s.id === activeSection)?.label}</span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {navigationSections.map((section) => (
+                <SelectItem key={section.id} value={section.id}>
+                  {section.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex bg-muted rounded-lg p-1">
+          {navigationSections.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => setActiveSection(section.id)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeSection === section.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <section.icon className="h-4 w-4" />
+              <span>{section.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+
 
 
 
@@ -256,7 +302,7 @@ export default function Inventory() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {feedingEvents.slice(0, 5).map((event) => (
+                  {feedingEvents.slice(0, 5).map((event: any) => (
                     <div key={event.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">Batch {event.batch}</p>
