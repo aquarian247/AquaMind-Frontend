@@ -674,6 +674,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/v1/infrastructure/areas/:id", async (req, res) => {
+    try {
+      const areaId = parseInt(req.params.id);
+      
+      // Generate detailed area data
+      const area = {
+        id: areaId,
+        name: areaId <= 25 ? `Faroe Area ${String.fromCharCode(65 + Math.floor((areaId-1) / 5))}${((areaId-1) % 5) + 1}` : `Scotland Area ${String.fromCharCode(65 + Math.floor((areaId-26) / 4))}${((areaId-26) % 4) + 1}`,
+        geography: areaId <= 25 ? "Faroe Islands" : "Scotland",
+        type: "sea_area",
+        rings: Math.floor(Math.random() * 9) + (areaId <= 25 ? 18 : 10),
+        coordinates: {
+          lat: areaId <= 25 ? 62.0 + (Math.random() - 0.5) * 0.6 : 56.8 + (Math.random() - 0.5) * 1.0,
+          lng: areaId <= 25 ? -6.8 + (Math.random() - 0.5) * 1.2 : -5.5 + (Math.random() - 0.5) * 2.0
+        },
+        status: Math.random() > 0.1 ? "active" : "maintenance",
+        waterDepth: Math.round(Math.random() * 80 + 40),
+        lastInspection: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        
+        // Detailed operational data
+        totalBiomass: 0, // Will calculate from rings
+        capacity: 0, // Will calculate
+        currentStock: 0,
+        averageWeight: Math.round((Math.random() * 2 + 3) * 100) / 100, // 3-5 kg
+        mortalityRate: Math.round(Math.random() * 0.5 * 100) / 100, // 0-0.5%
+        feedConversion: Math.round((Math.random() * 0.3 + 1.1) * 100) / 100, // 1.1-1.4
+        
+        // Environmental conditions
+        waterTemperature: Math.round((Math.random() * 4 + 8) * 10) / 10, // 8-12°C
+        oxygenLevel: Math.round((Math.random() * 2 + 8) * 10) / 10, // 8-10 mg/L
+        salinity: Math.round((Math.random() * 2 + 34) * 10) / 10, // 34-36 ppt
+        currentSpeed: Math.round(Math.random() * 0.5 * 100) / 100, // 0-0.5 m/s
+        
+        // Recent activities
+        lastFeeding: new Date(Date.now() - Math.random() * 12 * 60 * 60 * 1000).toISOString(),
+        nextScheduledMaintenance: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        
+        // License and regulatory
+        licenseNumber: `LA-${areaId <= 25 ? 'FO' : 'SC'}-${String(areaId).padStart(3, '0')}`,
+        licenseExpiry: new Date(Date.now() + (Math.random() * 365 + 365) * 24 * 60 * 60 * 1000).toISOString(),
+        maxBiomassAllowed: Math.round(Math.random() * 1000 + 2000), // 2000-3000 tons
+      };
+      
+      // Calculate derived values
+      area.totalBiomass = Math.round(area.rings * 15.2);
+      area.capacity = Math.round(area.rings * 18.5);
+      area.currentStock = Math.round(area.totalBiomass / area.averageWeight * 1000); // Fish count
+      
+      res.json(area);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch area details" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/stations/:id", async (req, res) => {
+    try {
+      const stationId = parseInt(req.params.id);
+      
+      // Generate detailed station data
+      const station = {
+        id: stationId,
+        name: stationId <= 12 ? `Faroe Station ${String.fromCharCode(65 + (stationId-1))}` : `Scotland Station ${String.fromCharCode(65 + (stationId-13))}`,
+        geography: stationId <= 12 ? "Faroe Islands" : "Scotland",
+        type: "freshwater_station",
+        halls: Math.floor(Math.random() * 2) + 5, // 5-6 halls
+        coordinates: {
+          lat: stationId <= 12 ? 62.0 + (Math.random() - 0.5) * 0.4 : 56.8 + (Math.random() - 0.5) * 0.8,
+          lng: stationId <= 12 ? -6.8 + (Math.random() - 0.5) * 0.8 : -5.5 + (Math.random() - 0.5) * 1.5
+        },
+        status: Math.random() > 0.05 ? "active" : "maintenance",
+        waterSource: Math.random() > 0.5 ? "river" : "well",
+        lastInspection: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        
+        // Operational metrics
+        totalContainers: 0, // Will calculate
+        totalBiomass: 0, // Will calculate
+        capacity: 0,
+        currentStock: 0,
+        averageWeight: Math.round(Math.random() * 100) / 1000 + 0.05, // 50-150g for freshwater
+        mortalityRate: Math.round(Math.random() * 1.0 * 100) / 100, // 0-1.0%
+        feedConversion: Math.round((Math.random() * 0.2 + 0.9) * 100) / 100, // 0.9-1.1
+        
+        // Environmental conditions
+        waterTemperature: Math.round((Math.random() * 6 + 6) * 10) / 10, // 6-12°C
+        oxygenLevel: Math.round((Math.random() * 2 + 9) * 10) / 10, // 9-11 mg/L
+        pH: Math.round((Math.random() * 1 + 6.5) * 100) / 100, // 6.5-7.5
+        flowRate: Math.round((Math.random() * 50 + 50) * 10) / 10, // 50-100 L/min per tank
+        
+        // Infrastructure details
+        powerConsumption: Math.round(Math.random() * 200 + 100), // 100-300 kW
+        waterUsage: Math.round(Math.random() * 1000 + 500), // 500-1500 m³/day
+        
+        // Maintenance and operations
+        lastMaintenance: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        nextScheduledMaintenance: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        
+        // Staff and certifications
+        staffCount: Math.floor(Math.random() * 8) + 4, // 4-12 staff
+        certificationStatus: Math.random() > 0.1 ? "valid" : "renewal_required",
+        lastAudit: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      
+      // Calculate derived values
+      station.totalContainers = station.halls * (Math.floor(Math.random() * 9) + 8); // 8-16 containers per hall
+      station.totalBiomass = Math.round(station.totalContainers * 0.8);
+      station.capacity = Math.round(station.totalContainers * 1.2);
+      station.currentStock = Math.round(station.totalBiomass / station.averageWeight * 1000); // Fish count
+      
+      res.json(station);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch station details" });
+    }
+  });
+
   app.get("/api/v1/infrastructure/containers/", async (req, res) => {
     try {
       const containers = await storage.getContainers();

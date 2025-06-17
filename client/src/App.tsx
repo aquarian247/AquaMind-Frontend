@@ -11,6 +11,8 @@ import FarmManagement from "@/pages/farm-management";
 import Infrastructure from "@/pages/infrastructure";
 import InfrastructureAreas from "@/pages/infrastructure-areas";
 import InfrastructureStations from "@/pages/infrastructure-stations";
+import AreaDetail from "@/pages/area-detail";
+import StationDetail from "@/pages/station-detail";
 import Inventory from "@/pages/inventory-simple";
 import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
@@ -39,6 +41,8 @@ function Router() {
             <Route path="/infrastructure" component={Infrastructure} />
             <Route path="/infrastructure/areas" component={InfrastructureAreas} />
             <Route path="/infrastructure/stations" component={InfrastructureStations} />
+            <Route path="/infrastructure/areas/:id" component={AreaDetail} />
+            <Route path="/infrastructure/stations/:id" component={StationDetail} />
             <Route path="/batch-management" component={BatchManagement} />
             <Route path="/health" component={Health} />
             <Route path="/inventory" component={Inventory} />
