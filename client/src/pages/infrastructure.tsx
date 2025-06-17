@@ -613,10 +613,10 @@ export default function Infrastructure() {
               <p className="text-muted-foreground">
                 Access comprehensive container management with advanced filtering across all facilities.
               </p>
-              <div className="flex space-x-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   onClick={() => setLocation('/infrastructure/containers')}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Open Container Filters
@@ -624,6 +624,7 @@ export default function Infrastructure() {
                 <Button 
                   variant="outline"
                   onClick={() => setLocation('/infrastructure/stations')}
+                  className="w-full sm:w-auto"
                 >
                   <MapPin className="h-4 w-4 mr-2" />
                   Browse by Station
@@ -631,12 +632,13 @@ export default function Infrastructure() {
                 <Button 
                   variant="outline"
                   onClick={() => setLocation('/infrastructure/areas')}
+                  className="w-full sm:w-auto"
                 >
                   <Waves className="h-4 w-4 mr-2" />
                   Browse by Area
                 </Button>
               </div>
-              <div className="grid gap-4 md:grid-cols-3 text-sm">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-sm">
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <div className="font-medium text-blue-900">2,700+ Containers</div>
                   <div className="text-blue-700">Across all facilities</div>
@@ -666,10 +668,10 @@ export default function Infrastructure() {
               <p className="text-muted-foreground">
                 Monitor environmental sensors across all infrastructure with real-time status and alerts.
               </p>
-              <div className="flex space-x-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   onClick={() => setLocation('/infrastructure/sensors')}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Open Sensor Filters
@@ -677,6 +679,7 @@ export default function Infrastructure() {
                 <Button 
                   variant="outline"
                   onClick={() => setLocation('/infrastructure/stations')}
+                  className="w-full sm:w-auto"
                 >
                   <Factory className="h-4 w-4 mr-2" />
                   Freshwater Sensors
@@ -684,12 +687,13 @@ export default function Infrastructure() {
                 <Button 
                   variant="outline"
                   onClick={() => setLocation('/infrastructure/areas')}
+                  className="w-full sm:w-auto"
                 >
                   <Waves className="h-4 w-4 mr-2" />
                   Sea Sensors
                 </Button>
               </div>
-              <div className="grid gap-4 md:grid-cols-3 text-sm">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-sm">
                 <div className="p-3 bg-cyan-50 rounded-lg">
                   <div className="font-medium text-cyan-900">3,800+ Sensors</div>
                   <div className="text-cyan-700">Real-time monitoring</div>
