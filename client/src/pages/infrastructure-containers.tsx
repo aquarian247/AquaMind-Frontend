@@ -154,7 +154,7 @@ export default function InfrastructureContainers() {
             Site & Container Filters
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           <div className="space-y-4">
             {/* Search - Full width on mobile */}
             <div className="space-y-2">
@@ -165,17 +165,17 @@ export default function InfrastructureContainers() {
                   placeholder="Search containers..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-10"
                 />
               </div>
             </div>
 
             {/* Filter dropdowns - responsive grid */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Geography</label>
                 <Select value={geographyFilter} onValueChange={setGeographyFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Regions" />
                   </SelectTrigger>
                   <SelectContent>
@@ -189,7 +189,7 @@ export default function InfrastructureContainers() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Station/Area</label>
                 <Select value={stationFilter} onValueChange={setStationFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Facilities" />
                   </SelectTrigger>
                   <SelectContent>
@@ -203,7 +203,7 @@ export default function InfrastructureContainers() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Container Type</label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
@@ -221,7 +221,7 @@ export default function InfrastructureContainers() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>

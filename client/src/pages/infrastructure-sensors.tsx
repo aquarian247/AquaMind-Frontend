@@ -160,7 +160,7 @@ export default function InfrastructureSensors() {
             Site & Sensor Filters
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           <div className="space-y-4">
             {/* Search - Full width on mobile */}
             <div className="space-y-2">
@@ -171,17 +171,17 @@ export default function InfrastructureSensors() {
                   placeholder="Search sensors..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-10"
                 />
               </div>
             </div>
 
             {/* Filter dropdowns - responsive grid */}
-            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Geography</label>
                 <Select value={geographyFilter} onValueChange={setGeographyFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Regions" />
                   </SelectTrigger>
                   <SelectContent>
@@ -195,7 +195,7 @@ export default function InfrastructureSensors() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Facility</label>
                 <Select value={facilityFilter} onValueChange={setFacilityFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Facilities" />
                   </SelectTrigger>
                   <SelectContent>
@@ -209,7 +209,7 @@ export default function InfrastructureSensors() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Sensor Type</label>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
@@ -229,7 +229,7 @@ export default function InfrastructureSensors() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Status</label>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -245,7 +245,7 @@ export default function InfrastructureSensors() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Alert Level</label>
                 <Select value={alertFilter} onValueChange={setAlertFilter}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="All Alerts" />
                   </SelectTrigger>
                   <SelectContent>
