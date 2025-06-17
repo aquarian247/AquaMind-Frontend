@@ -22,7 +22,8 @@ import {
   Clock,
   Users,
   Shield,
-  Gauge
+  Gauge,
+  Eye
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -130,6 +131,10 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             <Settings className="h-4 w-4 mr-2" />
             Configure
           </Button>
+          <Button variant="outline" onClick={() => setLocation(`/batch-management?area=${area.id}`)}>
+            <Fish className="h-4 w-4 mr-2" />
+            View Batches
+          </Button>
           <Button>
             <FileText className="h-4 w-4 mr-2" />
             Generate Report
@@ -152,17 +157,21 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation(`/infrastructure/areas/${area.id}/rings`)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Production Rings</CardTitle>
             <Waves className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{area.rings}</div>
-            <p className="text-xs text-muted-foreground">Active sea pens</p>
+            <p className="text-xs text-muted-foreground">Active sea pens • Click to view</p>
             <div className="flex items-center space-x-2 mt-2">
               <span className="text-xs">Avg weight:</span>
               <span className="text-sm font-medium">{area.averageWeight} kg</span>
+            </div>
+            <div className="mt-2 text-xs text-blue-600 flex items-center">
+              <Eye className="h-3 w-3 mr-1" />
+              View ring layout & status
             </div>
           </CardContent>
         </Card>

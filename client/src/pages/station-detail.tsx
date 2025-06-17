@@ -24,7 +24,8 @@ import {
   Shield,
   Gauge,
   Container,
-  FlaskConical
+  FlaskConical,
+  Eye
 } from "lucide-react";
 import { useLocation } from "wouter";
 
@@ -149,6 +150,10 @@ export default function StationDetail({ params }: { params: { id: string } }) {
             <Settings className="h-4 w-4 mr-2" />
             Configure
           </Button>
+          <Button variant="outline" onClick={() => setLocation(`/batch-management?station=${station.id}`)}>
+            <Fish className="h-4 w-4 mr-2" />
+            View Batches
+          </Button>
           <Button>
             <FileText className="h-4 w-4 mr-2" />
             Generate Report
@@ -171,17 +176,21 @@ export default function StationDetail({ params }: { params: { id: string } }) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation(`/infrastructure/stations/${station.id}/halls`)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Production Halls</CardTitle>
             <Container className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{station.halls}</div>
-            <p className="text-xs text-muted-foreground">{station.totalContainers} containers</p>
+            <p className="text-xs text-muted-foreground">{station.totalContainers} containers • Click to view</p>
             <div className="flex items-center space-x-2 mt-2">
               <span className="text-xs">Avg weight:</span>
               <span className="text-sm font-medium">{(station.averageWeight * 1000).toFixed(0)}g</span>
+            </div>
+            <div className="mt-2 text-xs text-blue-600 flex items-center">
+              <Factory className="h-3 w-3 mr-1" />
+              View hall layout & systems
             </div>
           </CardContent>
         </Card>
@@ -373,9 +382,16 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                     <span className="text-muted-foreground">Production Halls:</span>
                     <div className="text-lg font-semibold">{station.halls}</div>
                   </div>
-                  <div>
+                  <div 
+                    className="cursor-pointer hover:bg-blue-50 p-2 rounded transition-colors"
+                    onClick={() => setLocation(`/infrastructure/stations/${station.id}/containers`)}
+                  >
                     <span className="text-muted-foreground">Total Containers:</span>
-                    <div className="text-lg font-semibold">{station.totalContainers}</div>
+                    <div className="text-lg font-semibold text-blue-600">{station.totalContainers}</div>
+                    <div className="text-xs text-blue-600 flex items-center mt-1">
+                      <Eye className="h-3 w-3 mr-1" />
+                      Quick access
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Containers/Hall:</span>
@@ -386,8 +402,21 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                     <div className="text-lg font-semibold">{station.capacity} tons</div>
                   </div>
                 </div>
-                <div className="flex justify-end">
-                  <Button variant="outline" size="sm">View Layout Plan</Button>
+                <div className="flex justify-between">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setLocation(`/infrastructure/stations/${station.id}/halls`)}
+                  >
+                    View by Halls
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setLocation(`/infrastructure/stations/${station.id}/containers`)}
+                  >
+                    All Containers
+                  </Button>
                 </div>
               </CardContent>
             </Card>
