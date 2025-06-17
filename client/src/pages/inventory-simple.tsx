@@ -324,7 +324,7 @@ export default function Inventory() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {containerStock.slice(0, 5).map((stock) => (
+                  {containerStock.slice(0, 5).map((stock: any) => (
                     <div key={stock.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">Container {stock.containerId}</p>
@@ -355,7 +355,7 @@ export default function Inventory() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {feedTypes.map((feed) => (
+            {feedTypes.map((feed: any) => (
               <Card key={feed.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
