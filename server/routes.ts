@@ -909,6 +909,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/v1/infrastructure/rings/:id", async (req, res) => {
+    try {
+      const ringId = parseInt(req.params.id);
+      const areaId = Math.floor(ringId / 100);
+      const areaName = areaId <= 25 ? `Faroe Area ${String.fromCharCode(65 + Math.floor((areaId-1) / 5))}${((areaId-1) % 5) + 1}` : `Scotland Area ${String.fromCharCode(65 + Math.floor((areaId-26) / 4))}${((areaId-26) % 4) + 1}`;
+      
+      const seedValue = ringId * 7890;
+      const seededRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+      
+      const ring = {
+        id: ringId,
+        name: `Ring ${String.fromCharCode(65 + ((ringId - 1) % 26))}`,
+        areaId,
+        areaName,
+        status: seededRandom(seedValue) > 0.1 ? "active" : "maintenance",
+        biomass: Math.round(seededRandom(seedValue + 1) * 20 + 10), // 10-30 tons per ring
+        capacity: Math.round(seededRandom(seedValue + 2) * 25 + 25), // 25-50 tons capacity
+        fishCount: Math.round(seededRandom(seedValue + 3) * 8000 + 2000), // 2000-10000 fish
+        averageWeight: Math.round((seededRandom(seedValue + 4) * 2 + 3) * 100) / 100, // 3-5 kg
+        waterDepth: Math.round(seededRandom(seedValue + 5) * 40 + 30), // 30-70m
+        netCondition: ["excellent", "good", "fair"][Math.floor(seededRandom(seedValue + 6) * 3)],
+        lastInspection: new Date(Date.now() - seededRandom(seedValue + 7) * 14 * 24 * 60 * 60 * 1000).toISOString(),
+        coordinates: {
+          lat: (areaId <= 25 ? 62.0 : 56.8) + (seededRandom(seedValue + 8) - 0.5) * 0.1,
+          lng: (areaId <= 25 ? -6.8 : -5.5) + (seededRandom(seedValue + 9) - 0.5) * 0.1
+        },
+        environmentalStatus: seededRandom(seedValue + 10) > 0.3 ? "optimal" : "monitoring",
+        
+        // Additional detailed fields
+        netLastChanged: new Date(Date.now() - seededRandom(seedValue + 11) * 180 * 24 * 60 * 60 * 1000).toISOString(),
+        netType: ["Standard", "Anti-predator", "High-flow"][Math.floor(seededRandom(seedValue + 12) * 3)],
+        cageVolume: Math.round(seededRandom(seedValue + 13) * 50000 + 30000), // 30000-80000 m³
+        installedDate: new Date(Date.now() - seededRandom(seedValue + 14) * 365 * 24 * 60 * 60 * 1000).toISOString(),
+        lastFeedingTime: new Date(Date.now() - seededRandom(seedValue + 15) * 8 * 60 * 60 * 1000).toISOString(),
+        dailyFeedAmount: Math.round(seededRandom(seedValue + 16) * 500 + 400), // 400-900 kg
+        mortalityRate: Math.round(seededRandom(seedValue + 17) * 0.3 * 100) / 100, // 0-0.3%
+        feedConversionRatio: Math.round((seededRandom(seedValue + 18) * 0.3 + 1.0) * 100) / 100, // 1.0-1.3
+        waterTemperature: Math.round((seededRandom(seedValue + 19) * 4 + 6) * 10) / 10, // 6-10°C
+        salinity: Math.round((seededRandom(seedValue + 20) * 2 + 33) * 10) / 10, // 33-35‰
+        currentSpeed: Math.round((seededRandom(seedValue + 21) * 0.5 + 0.1) * 100) / 100, // 0.1-0.6 m/s
+        oxygenSaturation: Math.round((seededRandom(seedValue + 22) * 5 + 90) * 10) / 10, // 90-95%
+      };
+      
+      res.json(ring);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch ring details" });
+    }
+  });
+
   app.get("/api/v1/infrastructure/containers/", async (req, res) => {
     try {
       const containers = await storage.getContainers();
