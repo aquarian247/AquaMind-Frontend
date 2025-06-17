@@ -155,8 +155,8 @@ export default function InfrastructureContainers() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <div className="space-y-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
               <label className="text-sm font-medium">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

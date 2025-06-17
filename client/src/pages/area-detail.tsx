@@ -105,15 +105,15 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
   return (
     <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+      <div className="flex flex-col space-y-4">
         <div className="flex items-center space-x-2">
           <Button variant="ghost" onClick={() => setLocation("/infrastructure/areas")} className="p-2">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Waves className="h-8 w-8 text-blue-600" />
-          <div>
-            <h1 className="text-2xl font-bold">{area.name}</h1>
-            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+          <Waves className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold truncate">{area.name}</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0 text-sm text-muted-foreground">
               <span className="flex items-center space-x-1">
                 <MapPin className="h-4 w-4" />
                 <span>{area.geography}</span>
@@ -121,23 +121,26 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
               <Badge className={getStatusBadge(area.status)}>
                 {area.status}
               </Badge>
-              <span>License: {area.licenseNumber}</span>
+              <span className="hidden sm:inline">License: {area.licenseNumber}</span>
             </div>
           </div>
         </div>
         
-        <div className="flex space-x-2">
-          <Button variant="outline">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+          <Button variant="outline" className="flex-1 sm:flex-initial">
             <Settings className="h-4 w-4 mr-2" />
-            Configure
+            <span className="hidden sm:inline">Configure</span>
+            <span className="sm:hidden">Config</span>
           </Button>
-          <Button variant="outline" onClick={() => setLocation(`/batch-management?area=${area.id}`)}>
+          <Button variant="outline" onClick={() => setLocation(`/batch-management?area=${area.id}`)} className="flex-1 sm:flex-initial">
             <Fish className="h-4 w-4 mr-2" />
-            View Batches
+            <span className="hidden sm:inline">View Batches</span>
+            <span className="sm:hidden">Batches</span>
           </Button>
-          <Button>
+          <Button className="flex-1 sm:flex-initial">
             <FileText className="h-4 w-4 mr-2" />
-            Generate Report
+            <span className="hidden sm:inline">Generate Report</span>
+            <span className="sm:hidden">Report</span>
           </Button>
         </div>
       </div>
