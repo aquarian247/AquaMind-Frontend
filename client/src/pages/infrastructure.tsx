@@ -27,6 +27,7 @@ import {
   Filter
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useLocation } from "wouter";
 
 // Infrastructure data interfaces
 interface GeographySummary {
@@ -108,6 +109,7 @@ export default function Infrastructure() {
     area: "all"
   });
   const isMobile = useIsMobile();
+  const [, setLocation] = useLocation();
 
   // Data queries
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
@@ -598,8 +600,115 @@ export default function Infrastructure() {
           </div>
         )}
 
-        {/* Other sections would be implemented similarly */}
-        {activeSection !== "overview" && activeSection !== "geographic" && (
+        {/* Container and Sensor sections - redirect to dedicated filtered views */}
+        {activeSection === "containers" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Container className="h-5 w-5" />
+                <span>All Containers</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                Access comprehensive container management with advanced filtering across all facilities.
+              </p>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setLocation('/infrastructure/containers')}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Open Container Filters
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setLocation('/infrastructure/stations')}
+                >
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Browse by Station
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setLocation('/infrastructure/areas')}
+                >
+                  <Waves className="h-4 w-4 mr-2" />
+                  Browse by Area
+                </Button>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3 text-sm">
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="font-medium text-blue-900">2,700+ Containers</div>
+                  <div className="text-blue-700">Across all facilities</div>
+                </div>
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <div className="font-medium text-green-900">Multiple Types</div>
+                  <div className="text-green-700">Trays, tanks, rings</div>
+                </div>
+                <div className="p-3 bg-purple-50 rounded-lg">
+                  <div className="font-medium text-purple-900">Smart Filtering</div>
+                  <div className="text-purple-700">By geography, type, status</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {activeSection === "sensors" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Radio className="h-5 w-5" />
+                <span>All Sensors</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                Monitor environmental sensors across all infrastructure with real-time status and alerts.
+              </p>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={() => setLocation('/infrastructure/sensors')}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Filter className="h-4 w-4 mr-2" />
+                  Open Sensor Filters
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setLocation('/infrastructure/stations')}
+                >
+                  <Factory className="h-4 w-4 mr-2" />
+                  Freshwater Sensors
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setLocation('/infrastructure/areas')}
+                >
+                  <Waves className="h-4 w-4 mr-2" />
+                  Sea Sensors
+                </Button>
+              </div>
+              <div className="grid gap-4 md:grid-cols-3 text-sm">
+                <div className="p-3 bg-cyan-50 rounded-lg">
+                  <div className="font-medium text-cyan-900">3,800+ Sensors</div>
+                  <div className="text-cyan-700">Real-time monitoring</div>
+                </div>
+                <div className="p-3 bg-orange-50 rounded-lg">
+                  <div className="font-medium text-orange-900">8 Sensor Types</div>
+                  <div className="text-orange-700">Temperature, O₂, pH, etc.</div>
+                </div>
+                <div className="p-3 bg-red-50 rounded-lg">
+                  <div className="font-medium text-red-900">Alert Management</div>
+                  <div className="text-red-700">Status and calibration</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Other sections placeholder */}
+        {activeSection !== "overview" && activeSection !== "geographic" && activeSection !== "containers" && activeSection !== "sensors" && (
           <Card>
             <CardHeader>
               <CardTitle>{navigationSections.find(s => s.id === activeSection)?.label}</CardTitle>
