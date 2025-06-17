@@ -674,47 +674,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cache for area details to avoid regenerating random data
+  const areaDetailsCache = new Map();
+  
   app.get("/api/v1/infrastructure/areas/:id", async (req, res) => {
     try {
       const areaId = parseInt(req.params.id);
       
-      // Generate detailed area data
+      // Check cache first
+      if (areaDetailsCache.has(areaId)) {
+        return res.json(areaDetailsCache.get(areaId));
+      }
+      
+      // Generate detailed area data (seeded for consistency)
+      const seedValue = areaId * 12345; // Deterministic seed
+      const seededRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+      
       const area = {
         id: areaId,
         name: areaId <= 25 ? `Faroe Area ${String.fromCharCode(65 + Math.floor((areaId-1) / 5))}${((areaId-1) % 5) + 1}` : `Scotland Area ${String.fromCharCode(65 + Math.floor((areaId-26) / 4))}${((areaId-26) % 4) + 1}`,
         geography: areaId <= 25 ? "Faroe Islands" : "Scotland",
         type: "sea_area",
-        rings: Math.floor(Math.random() * 9) + (areaId <= 25 ? 18 : 10),
+        rings: Math.floor(seededRandom(seedValue) * 9) + (areaId <= 25 ? 18 : 10),
         coordinates: {
-          lat: areaId <= 25 ? 62.0 + (Math.random() - 0.5) * 0.6 : 56.8 + (Math.random() - 0.5) * 1.0,
-          lng: areaId <= 25 ? -6.8 + (Math.random() - 0.5) * 1.2 : -5.5 + (Math.random() - 0.5) * 2.0
+          lat: areaId <= 25 ? 62.0 + (seededRandom(seedValue + 1) - 0.5) * 0.6 : 56.8 + (seededRandom(seedValue + 1) - 0.5) * 1.0,
+          lng: areaId <= 25 ? -6.8 + (seededRandom(seedValue + 2) - 0.5) * 1.2 : -5.5 + (seededRandom(seedValue + 2) - 0.5) * 2.0
         },
-        status: Math.random() > 0.1 ? "active" : "maintenance",
-        waterDepth: Math.round(Math.random() * 80 + 40),
-        lastInspection: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: seededRandom(seedValue + 3) > 0.1 ? "active" : "maintenance",
+        waterDepth: Math.round(seededRandom(seedValue + 4) * 80 + 40),
+        lastInspection: new Date(Date.now() - seededRandom(seedValue + 5) * 7 * 24 * 60 * 60 * 1000).toISOString(),
         
         // Detailed operational data
         totalBiomass: 0, // Will calculate from rings
         capacity: 0, // Will calculate
         currentStock: 0,
-        averageWeight: Math.round((Math.random() * 2 + 3) * 100) / 100, // 3-5 kg
-        mortalityRate: Math.round(Math.random() * 0.5 * 100) / 100, // 0-0.5%
-        feedConversion: Math.round((Math.random() * 0.3 + 1.1) * 100) / 100, // 1.1-1.4
+        averageWeight: Math.round((seededRandom(seedValue + 6) * 2 + 3) * 100) / 100, // 3-5 kg
+        mortalityRate: Math.round(seededRandom(seedValue + 7) * 0.5 * 100) / 100, // 0-0.5%
+        feedConversion: Math.round((seededRandom(seedValue + 8) * 0.3 + 1.1) * 100) / 100, // 1.1-1.4
         
         // Environmental conditions
-        waterTemperature: Math.round((Math.random() * 4 + 8) * 10) / 10, // 8-12°C
-        oxygenLevel: Math.round((Math.random() * 2 + 8) * 10) / 10, // 8-10 mg/L
-        salinity: Math.round((Math.random() * 2 + 34) * 10) / 10, // 34-36 ppt
-        currentSpeed: Math.round(Math.random() * 0.5 * 100) / 100, // 0-0.5 m/s
+        waterTemperature: Math.round((seededRandom(seedValue + 9) * 4 + 8) * 10) / 10, // 8-12°C
+        oxygenLevel: Math.round((seededRandom(seedValue + 10) * 2 + 8) * 10) / 10, // 8-10 mg/L
+        salinity: Math.round((seededRandom(seedValue + 11) * 2 + 34) * 10) / 10, // 34-36 ppt
+        currentSpeed: Math.round(seededRandom(seedValue + 12) * 0.5 * 100) / 100, // 0-0.5 m/s
         
         // Recent activities
-        lastFeeding: new Date(Date.now() - Math.random() * 12 * 60 * 60 * 1000).toISOString(),
-        nextScheduledMaintenance: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        lastFeeding: new Date(Date.now() - seededRandom(seedValue + 13) * 12 * 60 * 60 * 1000).toISOString(),
+        nextScheduledMaintenance: new Date(Date.now() + seededRandom(seedValue + 14) * 30 * 24 * 60 * 60 * 1000).toISOString(),
         
         // License and regulatory
         licenseNumber: `LA-${areaId <= 25 ? 'FO' : 'SC'}-${String(areaId).padStart(3, '0')}`,
-        licenseExpiry: new Date(Date.now() + (Math.random() * 365 + 365) * 24 * 60 * 60 * 1000).toISOString(),
-        maxBiomassAllowed: Math.round(Math.random() * 1000 + 2000), // 2000-3000 tons
+        licenseExpiry: new Date(Date.now() + (seededRandom(seedValue + 15) * 365 + 365) * 24 * 60 * 60 * 1000).toISOString(),
+        maxBiomassAllowed: Math.round(seededRandom(seedValue + 16) * 1000 + 2000), // 2000-3000 tons
       };
       
       // Calculate derived values
@@ -722,65 +736,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       area.capacity = Math.round(area.rings * 18.5);
       area.currentStock = Math.round(area.totalBiomass / area.averageWeight * 1000); // Fish count
       
+      // Cache the result
+      areaDetailsCache.set(areaId, area);
+      
       res.json(area);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch area details" });
     }
   });
 
+  // Cache for station details to avoid regenerating random data
+  const stationDetailsCache = new Map();
+  
   app.get("/api/v1/infrastructure/stations/:id", async (req, res) => {
     try {
       const stationId = parseInt(req.params.id);
       
-      // Generate detailed station data
+      // Check cache first
+      if (stationDetailsCache.has(stationId)) {
+        return res.json(stationDetailsCache.get(stationId));
+      }
+      
+      // Generate detailed station data (seeded for consistency)
+      const seedValue = stationId * 54321; // Deterministic seed
+      const seededRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+      
       const station = {
         id: stationId,
         name: stationId <= 12 ? `Faroe Station ${String.fromCharCode(65 + (stationId-1))}` : `Scotland Station ${String.fromCharCode(65 + (stationId-13))}`,
         geography: stationId <= 12 ? "Faroe Islands" : "Scotland",
         type: "freshwater_station",
-        halls: Math.floor(Math.random() * 2) + 5, // 5-6 halls
+        halls: Math.floor(seededRandom(seedValue) * 2) + 5, // 5-6 halls
         coordinates: {
-          lat: stationId <= 12 ? 62.0 + (Math.random() - 0.5) * 0.4 : 56.8 + (Math.random() - 0.5) * 0.8,
-          lng: stationId <= 12 ? -6.8 + (Math.random() - 0.5) * 0.8 : -5.5 + (Math.random() - 0.5) * 1.5
+          lat: stationId <= 12 ? 62.0 + (seededRandom(seedValue + 1) - 0.5) * 0.4 : 56.8 + (seededRandom(seedValue + 1) - 0.5) * 0.8,
+          lng: stationId <= 12 ? -6.8 + (seededRandom(seedValue + 2) - 0.5) * 0.8 : -5.5 + (seededRandom(seedValue + 2) - 0.5) * 1.5
         },
-        status: Math.random() > 0.05 ? "active" : "maintenance",
-        waterSource: Math.random() > 0.5 ? "river" : "well",
-        lastInspection: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: seededRandom(seedValue + 3) > 0.05 ? "active" : "maintenance",
+        waterSource: seededRandom(seedValue + 4) > 0.5 ? "river" : "well",
+        lastInspection: new Date(Date.now() - seededRandom(seedValue + 5) * 7 * 24 * 60 * 60 * 1000).toISOString(),
         
         // Operational metrics
         totalContainers: 0, // Will calculate
         totalBiomass: 0, // Will calculate
         capacity: 0,
         currentStock: 0,
-        averageWeight: Math.round(Math.random() * 100) / 1000 + 0.05, // 50-150g for freshwater
-        mortalityRate: Math.round(Math.random() * 1.0 * 100) / 100, // 0-1.0%
-        feedConversion: Math.round((Math.random() * 0.2 + 0.9) * 100) / 100, // 0.9-1.1
+        averageWeight: Math.round(seededRandom(seedValue + 6) * 100) / 1000 + 0.05, // 50-150g for freshwater
+        mortalityRate: Math.round(seededRandom(seedValue + 7) * 1.0 * 100) / 100, // 0-1.0%
+        feedConversion: Math.round((seededRandom(seedValue + 8) * 0.2 + 0.9) * 100) / 100, // 0.9-1.1
         
         // Environmental conditions
-        waterTemperature: Math.round((Math.random() * 6 + 6) * 10) / 10, // 6-12°C
-        oxygenLevel: Math.round((Math.random() * 2 + 9) * 10) / 10, // 9-11 mg/L
-        pH: Math.round((Math.random() * 1 + 6.5) * 100) / 100, // 6.5-7.5
-        flowRate: Math.round((Math.random() * 50 + 50) * 10) / 10, // 50-100 L/min per tank
+        waterTemperature: Math.round((seededRandom(seedValue + 9) * 6 + 6) * 10) / 10, // 6-12°C
+        oxygenLevel: Math.round((seededRandom(seedValue + 10) * 2 + 9) * 10) / 10, // 9-11 mg/L
+        pH: Math.round((seededRandom(seedValue + 11) * 1 + 6.5) * 100) / 100, // 6.5-7.5
+        flowRate: Math.round((seededRandom(seedValue + 12) * 50 + 50) * 10) / 10, // 50-100 L/min per tank
         
         // Infrastructure details
-        powerConsumption: Math.round(Math.random() * 200 + 100), // 100-300 kW
-        waterUsage: Math.round(Math.random() * 1000 + 500), // 500-1500 m³/day
+        powerConsumption: Math.round(seededRandom(seedValue + 13) * 200 + 100), // 100-300 kW
+        waterUsage: Math.round(seededRandom(seedValue + 14) * 1000 + 500), // 500-1500 m³/day
         
         // Maintenance and operations
-        lastMaintenance: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        nextScheduledMaintenance: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        lastMaintenance: new Date(Date.now() - seededRandom(seedValue + 15) * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        nextScheduledMaintenance: new Date(Date.now() + seededRandom(seedValue + 16) * 30 * 24 * 60 * 60 * 1000).toISOString(),
         
         // Staff and certifications
-        staffCount: Math.floor(Math.random() * 8) + 4, // 4-12 staff
-        certificationStatus: Math.random() > 0.1 ? "valid" : "renewal_required",
-        lastAudit: new Date(Date.now() - Math.random() * 180 * 24 * 60 * 60 * 1000).toISOString(),
+        staffCount: Math.floor(seededRandom(seedValue + 17) * 8) + 4, // 4-12 staff
+        certificationStatus: seededRandom(seedValue + 18) > 0.1 ? "valid" : "renewal_required",
+        lastAudit: new Date(Date.now() - seededRandom(seedValue + 19) * 180 * 24 * 60 * 60 * 1000).toISOString(),
       };
       
       // Calculate derived values
-      station.totalContainers = station.halls * (Math.floor(Math.random() * 9) + 8); // 8-16 containers per hall
+      station.totalContainers = station.halls * (Math.floor(seededRandom(seedValue + 20) * 9) + 8); // 8-16 containers per hall
       station.totalBiomass = Math.round(station.totalContainers * 0.8);
       station.capacity = Math.round(station.totalContainers * 1.2);
       station.currentStock = Math.round(station.totalBiomass / station.averageWeight * 1000); // Fish count
+      
+      // Cache the result
+      stationDetailsCache.set(stationId, station);
       
       res.json(station);
     } catch (error) {

@@ -41,8 +41,12 @@ function Router() {
             <Route path="/infrastructure" component={Infrastructure} />
             <Route path="/infrastructure/areas" component={InfrastructureAreas} />
             <Route path="/infrastructure/stations" component={InfrastructureStations} />
-            <Route path="/infrastructure/areas/:id" component={AreaDetail} />
-            <Route path="/infrastructure/stations/:id" component={StationDetail} />
+            <Route path="/infrastructure/areas/:id">
+              {(params) => <AreaDetail params={params} />}
+            </Route>
+            <Route path="/infrastructure/stations/:id">
+              {(params) => <StationDetail params={params} />}
+            </Route>
             <Route path="/batch-management" component={BatchManagement} />
             <Route path="/health" component={Health} />
             <Route path="/inventory" component={Inventory} />
