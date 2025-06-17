@@ -961,6 +961,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/v1/infrastructure/halls/:id/containers", async (req, res) => {
+    try {
+      const hallId = parseInt(req.params.id);
+      const stationId = Math.floor(hallId / 100);
+      const stationName = stationId <= 12 ? `Faroe Station ${String.fromCharCode(65 + (stationId-1))}` : `Scotland Station ${String.fromCharCode(65 + (stationId-13))}`;
+      const hallName = `Hall ${((hallId - 1) % 10) + 1}`;
+      
+      const containerCount = Math.floor(Math.sin(hallId * 9876) * 9) + 8; // 8-16 containers per hall
+      const hallStage = ["Egg&Alevin", "Fry", "Parr", "Smolt", "Post-Smolt"][hallId % 5]; // Different stages per hall
+      const containerType = {
+        "Egg&Alevin": "Tray",
+        "Fry": "Fry Tank", 
+        "Parr": "Parr Tank",
+        "Smolt": "Smolt Tank",
+        "Post-Smolt": "Post-Smolt Tank"
+      }[hallStage] || "Fry Tank";
+      
+      const containers = Array.from({ length: containerCount }, (_, i) => {
+        const containerId = hallId * 100 + i + 1;
+        const seedValue = containerId * 5432;
+        const seededRandom = (seed: number) => {
+          const x = Math.sin(seed) * 10000;
+          return x - Math.floor(x);
+        };
+        
+        // Different scales based on stage
+        const scaleFactors = {
+          "Egg&Alevin": { biomass: 0.1, fishCount: 50000, weight: 0.001 },
+          "Fry": { biomass: 2, fishCount: 10000, weight: 0.2 },
+          "Parr": { biomass: 15, fishCount: 2000, weight: 7.5 },
+          "Smolt": { biomass: 50, fishCount: 1000, weight: 50 },
+          "Post-Smolt": { biomass: 120, fishCount: 500, weight: 240 }
+        };
+        
+        const scale = scaleFactors[hallStage as keyof typeof scaleFactors];
+        
+        return {
+          id: containerId,
+          name: `${containerType} ${String.fromCharCode(65 + i)}`,
+          hallId,
+          hallName,
+          stationId,
+          stationName,
+          type: containerType,
+          stage: hallStage,
+          status: seededRandom(seedValue) > 0.05 ? "active" : "maintenance",
+          biomass: Math.round(seededRandom(seedValue + 1) * scale.biomass * 2 + scale.biomass),
+          capacity: Math.round(seededRandom(seedValue + 2) * scale.biomass * 3 + scale.biomass * 2),
+          fishCount: Math.round(seededRandom(seedValue + 3) * scale.fishCount + scale.fishCount / 2),
+          averageWeight: Math.round((seededRandom(seedValue + 4) * scale.weight * 0.5 + scale.weight) * 1000) / 1000,
+          temperature: Math.round((seededRandom(seedValue + 5) * 6 + 6) * 10) / 10, // 6-12°C
+          oxygenLevel: Math.round((seededRandom(seedValue + 6) * 2 + 9) * 10) / 10, // 9-11 mg/L
+          flowRate: Math.round((seededRandom(seedValue + 7) * 50 + 50) * 10) / 10, // 50-100 L/min
+          lastMaintenance: new Date(Date.now() - seededRandom(seedValue + 8) * 30 * 24 * 60 * 60 * 1000).toISOString(),
+          systemStatus: seededRandom(seedValue + 9) > 0.2 ? "optimal" : "monitoring",
+          density: Math.round((seededRandom(seedValue + 10) * 20 + 15) * 10) / 10, // 15-35 kg/m³
+          feedingSchedule: ["3x daily", "4x daily", "5x daily", "6x daily"][Math.floor(seededRandom(seedValue + 11) * 4)]
+        };
+      });
+      
+      res.json({
+        count: containers.length,
+        results: containers
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch containers" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/containers/:id", async (req, res) => {
+    try {
+      const containerId = parseInt(req.params.id);
+      const hallId = Math.floor(containerId / 100);
+      const stationId = Math.floor(hallId / 100);
+      const stationName = stationId <= 12 ? `Faroe Station ${String.fromCharCode(65 + (stationId-1))}` : `Scotland Station ${String.fromCharCode(65 + (stationId-13))}`;
+      const hallName = `Hall ${((hallId - 1) % 10) + 1}`;
+      const hallStage = ["Egg&Alevin", "Fry", "Parr", "Smolt", "Post-Smolt"][hallId % 5];
+      const containerType = {
+        "Egg&Alevin": "Tray",
+        "Fry": "Fry Tank", 
+        "Parr": "Parr Tank",
+        "Smolt": "Smolt Tank",
+        "Post-Smolt": "Post-Smolt Tank"
+      }[hallStage] || "Fry Tank";
+      
+      const seedValue = containerId * 5432;
+      const seededRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+      
+      const scaleFactors = {
+        "Egg&Alevin": { biomass: 0.1, fishCount: 50000, weight: 0.001, volume: 500 },
+        "Fry": { biomass: 2, fishCount: 10000, weight: 0.2, volume: 2000 },
+        "Parr": { biomass: 15, fishCount: 2000, weight: 7.5, volume: 5000 },
+        "Smolt": { biomass: 50, fishCount: 1000, weight: 50, volume: 10000 },
+        "Post-Smolt": { biomass: 120, fishCount: 500, weight: 240, volume: 15000 }
+      };
+      
+      const scale = scaleFactors[hallStage as keyof typeof scaleFactors];
+      
+      const container = {
+        id: containerId,
+        name: `${containerType} ${String.fromCharCode(65 + ((containerId - 1) % 26))}`,
+        hallId,
+        hallName,
+        stationId,
+        stationName,
+        type: containerType,
+        stage: hallStage,
+        status: seededRandom(seedValue) > 0.05 ? "active" : "maintenance",
+        biomass: Math.round(seededRandom(seedValue + 1) * scale.biomass * 2 + scale.biomass),
+        capacity: Math.round(seededRandom(seedValue + 2) * scale.biomass * 3 + scale.biomass * 2),
+        fishCount: Math.round(seededRandom(seedValue + 3) * scale.fishCount + scale.fishCount / 2),
+        averageWeight: Math.round((seededRandom(seedValue + 4) * scale.weight * 0.5 + scale.weight) * 1000) / 1000,
+        temperature: Math.round((seededRandom(seedValue + 5) * 6 + 6) * 10) / 10,
+        oxygenLevel: Math.round((seededRandom(seedValue + 6) * 2 + 9) * 10) / 10,
+        flowRate: Math.round((seededRandom(seedValue + 7) * 50 + 50) * 10) / 10,
+        lastMaintenance: new Date(Date.now() - seededRandom(seedValue + 8) * 30 * 24 * 60 * 60 * 1000).toISOString(),
+        systemStatus: seededRandom(seedValue + 9) > 0.2 ? "optimal" : "monitoring",
+        density: Math.round((seededRandom(seedValue + 10) * 20 + 15) * 10) / 10,
+        feedingSchedule: ["3x daily", "4x daily", "5x daily", "6x daily"][Math.floor(seededRandom(seedValue + 11) * 4)],
+        
+        // Additional detailed fields
+        volume: Math.round(seededRandom(seedValue + 12) * scale.volume * 2 + scale.volume),
+        installDate: new Date(Date.now() - seededRandom(seedValue + 13) * 365 * 24 * 60 * 60 * 1000).toISOString(),
+        lastFeedingTime: new Date(Date.now() - seededRandom(seedValue + 14) * 8 * 60 * 60 * 1000).toISOString(),
+        dailyFeedAmount: Math.round((seededRandom(seedValue + 15) * scale.biomass * 0.5 + scale.biomass * 0.5) * 100) / 100,
+        mortalityRate: Math.round(seededRandom(seedValue + 16) * 0.3 * 100) / 100,
+        feedConversionRatio: Math.round((seededRandom(seedValue + 17) * 0.2 + 0.85) * 100) / 100,
+        pH: Math.round((seededRandom(seedValue + 18) * 1 + 6.5) * 100) / 100,
+        salinity: Math.round((seededRandom(seedValue + 19) * 1 + 0.2) * 10) / 10,
+        lightingSchedule: ["12L:12D", "14L:10D", "16L:8D", "24L:0D"][Math.floor(seededRandom(seedValue + 20) * 4)],
+        waterExchangeRate: Math.round((seededRandom(seedValue + 21) * 10 + 10) * 10) / 10,
+        powerConsumption: Math.round((seededRandom(seedValue + 22) * 3 + 1) * 10) / 10,
+        filtrationSystem: ["Standard", "Bio-filter", "RAS", "Drum filter"][Math.floor(seededRandom(seedValue + 23) * 4)],
+        lastCleaning: new Date(Date.now() - seededRandom(seedValue + 24) * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        nextScheduledMaintenance: new Date(Date.now() + seededRandom(seedValue + 25) * 30 * 24 * 60 * 60 * 1000).toISOString()
+      };
+      
+      res.json(container);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch container details" });
+    }
+  });
+
   app.get("/api/v1/infrastructure/containers/", async (req, res) => {
     try {
       const containers = await storage.getContainers();

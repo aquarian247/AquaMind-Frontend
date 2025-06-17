@@ -16,6 +16,8 @@ import StationDetail from "@/pages/station-detail";
 import AreaRings from "@/pages/area-rings";
 import StationHalls from "@/pages/station-halls";
 import RingDetail from "@/pages/ring-detail";
+import HallDetail from "@/pages/hall-detail";
+import ContainerDetail from "@/pages/container-detail";
 import Inventory from "@/pages/inventory-simple";
 import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
@@ -58,6 +60,12 @@ function Router() {
             </Route>
             <Route path="/infrastructure/stations/:id/halls">
               {(params) => <StationHalls params={params} />}
+            </Route>
+            <Route path="/infrastructure/halls/:id">
+              {(params) => <HallDetail params={params} />}
+            </Route>
+            <Route path="/infrastructure/containers/:id">
+              {(params) => <ContainerDetail params={params} />}
             </Route>
             <Route path="/batch-management" component={BatchManagement} />
             <Route path="/health" component={Health} />
