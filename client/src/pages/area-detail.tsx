@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ResponsiveTabs } from "@/components/ui/responsive-tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -47,22 +49,17 @@ interface AreaDetail {
   oxygenLevel: number;
   salinity: number;
   currentSpeed: number;
-  lastFeeding: string;
-  nextScheduledMaintenance: string;
-  licenseNumber: string;
-  licenseExpiry: string;
-  maxBiomassAllowed: number;
 }
 
 export default function AreaDetail({ params }: { params: { id: string } }) {
   const [, setLocation] = useLocation();
-  const areaId = params.id;
+  const [activeTab, setActiveTab] = useState("environmental");
 
-  const { data: area, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/areas/", areaId],
+  const { data: area, isLoading, error } = useQuery({
+    queryKey: ["/api/v1/infrastructure/areas", params.id],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/areas/${areaId}`);
-      if (!response.ok) throw new Error("Failed to fetch area details");
+      const response = await fetch(`/api/v1/infrastructure/areas/${params.id}`);
+      if (!response.ok) throw new Error("Area not found");
       return response.json();
     },
   });
@@ -70,12 +67,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 space-y-6">
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" onClick={() => setLocation("/infrastructure/areas")} className="p-2">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
-        </div>
+        <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -90,59 +82,64 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
     );
   }
 
+  if (error || !area) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Area Not Found</h2>
+          <p className="text-gray-600 mb-4">The requested sea area could not be found.</p>
+          <Button onClick={() => setLocation("/infrastructure/areas")}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Areas
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const getStatusBadge = (status: string) => {
     const variants = {
-      active: "bg-green-100 text-green-800",
+      operational: "bg-green-100 text-green-800",
       maintenance: "bg-yellow-100 text-yellow-800",
-      inactive: "bg-red-100 text-red-800"
+      restricted: "bg-red-100 text-red-800"
     };
     return variants[status as keyof typeof variants] || "bg-gray-100 text-gray-800";
   };
 
-  const capacityUtilization = Math.round((area.totalBiomass / area.capacity) * 100);
-  const licenseUtilization = Math.round((area.totalBiomass / area.maxBiomassAllowed) * 100);
+  const tabItems = [
+    { value: "environmental", label: "Environmental" },
+    { value: "operations", label: "Operations" },
+    { value: "regulatory", label: "Regulatory" },
+    { value: "maintenance", label: "Maintenance" }
+  ];
 
   return (
     <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
-      <div className="flex flex-col space-y-4">
-        <div className="flex items-center space-x-2">
-          <Button variant="ghost" onClick={() => setLocation("/infrastructure/areas")} className="p-2">
-            <ArrowLeft className="h-4 w-4" />
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setLocation("/infrastructure/areas")}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Areas
           </Button>
-          <Waves className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold truncate">{area.name}</h1>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0 text-sm text-muted-foreground">
-              <span className="flex items-center space-x-1">
-                <MapPin className="h-4 w-4" />
-                <span>{area.geography}</span>
-              </span>
-              <Badge className={getStatusBadge(area.status)}>
-                {area.status}
-              </Badge>
-              <span className="hidden sm:inline">License: {area.licenseNumber}</span>
-            </div>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center">
+              <Waves className="h-8 w-8 mr-3 text-blue-600" />
+              {area.name}
+            </h1>
+            <p className="text-muted-foreground flex items-center">
+              <MapPin className="h-4 w-4 mr-1" />
+              {area.geography} • {area.type} • {area.rings} rings
+            </p>
           </div>
         </div>
-        
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Button variant="outline" className="flex-1 sm:flex-initial">
-            <Settings className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Configure</span>
-            <span className="sm:hidden">Config</span>
-          </Button>
-          <Button variant="outline" onClick={() => setLocation(`/batch-management?area=${area.id}`)} className="flex-1 sm:flex-initial">
-            <Fish className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">View Batches</span>
-            <span className="sm:hidden">Batches</span>
-          </Button>
-          <Button className="flex-1 sm:flex-initial">
-            <FileText className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Generate Report</span>
-            <span className="sm:hidden">Report</span>
-          </Button>
-        </div>
+        <Badge className={getStatusBadge(area.status)}>
+          {area.status}
+        </Badge>
       </div>
 
       {/* Key Metrics */}
@@ -153,28 +150,38 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             <Fish className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{area.totalBiomass}</div>
-            <p className="text-xs text-muted-foreground">tons • {area.currentStock.toLocaleString()} fish</p>
-            <Progress value={capacityUtilization} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">{capacityUtilization}% of capacity</p>
+            <div className="text-2xl font-bold text-blue-600">{area.totalBiomass.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">tonnes</p>
+            <div className="mt-2">
+              <Progress value={(area.totalBiomass / area.capacity) * 100} />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setLocation(`/infrastructure/areas/${area.id}/rings`)}>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Production Rings</CardTitle>
-            <Waves className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium">Average Weight</CardTitle>
+            <Scale className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{area.rings}</div>
-            <p className="text-xs text-muted-foreground">Active sea pens • Click to view</p>
-            <div className="flex items-center space-x-2 mt-2">
-              <span className="text-xs">Avg weight:</span>
-              <span className="text-sm font-medium">{area.averageWeight} kg</span>
+            <div className="text-2xl font-bold text-green-600">{area.averageWeight}</div>
+            <p className="text-xs text-muted-foreground">kg per fish</p>
+            <div className="mt-2">
+              <Progress value={(area.averageWeight / 6) * 100} />
             </div>
-            <div className="mt-2 text-xs text-blue-600 flex items-center">
-              <Eye className="h-3 w-3 mr-1" />
-              View ring layout & status
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mortality Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">{area.mortalityRate}%</div>
+            <p className="text-xs text-muted-foreground">monthly</p>
+            <div className="mt-2">
+              <Progress value={area.mortalityRate * 10} />
             </div>
           </CardContent>
         </Card>
@@ -182,41 +189,44 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Feed Conversion</CardTitle>
-            <TrendingUp className="h-4 w-4 text-purple-600" />
+            <Activity className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">{area.feedConversion}</div>
             <p className="text-xs text-muted-foreground">FCR ratio</p>
-            <div className="flex items-center space-x-2 mt-2">
-              <span className="text-xs">Mortality:</span>
-              <span className="text-sm font-medium">{area.mortalityRate}%</span>
+            <div className="mt-2">
+              <Progress value={(area.feedConversion / 2) * 100} />
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">License Status</CardTitle>
-            <Shield className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{licenseUtilization}%</div>
-            <p className="text-xs text-muted-foreground">of max allowed biomass</p>
-            <Progress value={licenseUtilization} className="mt-2" />
-            <p className="text-xs text-muted-foreground mt-1">
-              {area.maxBiomassAllowed - area.totalBiomass} tons remaining
-            </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Detailed Information Tabs */}
-      <Tabs defaultValue="environmental" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-          <TabsTrigger value="environmental" className="text-xs sm:text-sm">Environmental</TabsTrigger>
-          <TabsTrigger value="operations" className="text-xs sm:text-sm">Operations</TabsTrigger>
-          <TabsTrigger value="regulatory" className="text-xs sm:text-sm">Regulatory</TabsTrigger>
-          <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        {/* Mobile dropdown - visible only on small screens */}
+        <div className="md:hidden">
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {tabItems.find(item => item.value === activeTab)?.label}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {tabItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop tabs - hidden on mobile */}
+        <TabsList className="hidden md:grid w-full grid-cols-4">
+          <TabsTrigger value="environmental">Environmental</TabsTrigger>
+          <TabsTrigger value="operations">Operations</TabsTrigger>
+          <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
+          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="environmental" className="space-y-4">
@@ -228,45 +238,36 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{area.waterTemperature}°C</div>
-                <p className="text-xs text-muted-foreground">Optimal range: 8-12°C</p>
-                <div className="mt-2">
-                  <Progress value={((area.waterTemperature - 8) / 4) * 100} />
-                </div>
+                <p className="text-xs text-muted-foreground">Optimal range: 8-16°C</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Dissolved Oxygen</CardTitle>
+                <CardTitle className="text-sm font-medium">Oxygen Level</CardTitle>
                 <Droplets className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{area.oxygenLevel}</div>
                 <p className="text-xs text-muted-foreground">mg/L</p>
-                <div className="mt-2">
-                  <Progress value={(area.oxygenLevel / 12) * 100} />
-                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Salinity</CardTitle>
-                <Scale className="h-4 w-4 text-teal-500" />
+                <Waves className="h-4 w-4 text-cyan-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{area.salinity}</div>
                 <p className="text-xs text-muted-foreground">ppt</p>
-                <div className="mt-2">
-                  <Progress value={((area.salinity - 30) / 10) * 100} />
-                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Current Speed</CardTitle>
-                <Wind className="h-4 w-4 text-gray-500" />
+                <Wind className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{area.currentSpeed}</div>
@@ -323,64 +324,61 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Activity className="h-5 w-5" />
-                  <span>Production Metrics</span>
+                  <Fish className="h-5 w-5" />
+                  <span>Stock Management</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Current Stock:</span>
-                    <div className="text-lg font-semibold">{area.currentStock.toLocaleString()}</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Average Weight:</span>
-                    <div className="text-lg font-semibold">{area.averageWeight} kg</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Mortality Rate:</span>
-                    <div className="text-lg font-semibold">{area.mortalityRate}%</div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Feed Conversion:</span>
-                    <div className="text-lg font-semibold">{area.feedConversion}</div>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Current Stock:</span>
+                      <div className="font-medium">{area.currentStock.toLocaleString()} fish</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Capacity:</span>
+                      <div className="font-medium">{area.capacity.toLocaleString()} tonnes</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Utilization:</span>
+                      <div className="font-medium">{Math.round((area.totalBiomass / area.capacity) * 100)}%</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Generation:</span>
+                      <div className="font-medium">2023</div>
+                    </div>
                   </div>
                 </div>
-                <Progress value={capacityUtilization} />
-                <p className="text-xs text-muted-foreground">
-                  Capacity utilization: {capacityUtilization}%
-                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5" />
-                  <span>Recent Activities</span>
+                  <Activity className="h-5 w-5" />
+                  <span>Performance Metrics</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center justify-between p-2 bg-green-50 rounded">
-                  <div>
-                    <div className="font-medium text-sm">Last Feeding</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(area.lastFeeding).toLocaleString()}
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Growth Rate:</span>
+                      <div className="font-medium">2.1%/week</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Feed Efficiency:</span>
+                      <div className="font-medium">92.5%</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Health Score:</span>
+                      <div className="font-medium">8.7/10</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Harvest Est.:</span>
+                      <div className="font-medium">Q2 2024</div>
                     </div>
                   </div>
-                  <Badge className="bg-green-100 text-green-800">Completed</Badge>
-                </div>
-                <div className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                  <div>
-                    <div className="font-medium text-sm">Inspection</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(area.lastInspection).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <Badge className="bg-blue-100 text-blue-800">Regular</Badge>
-                </div>
-                <div className="flex justify-end">
-                  <Button variant="outline" size="sm">View Activity Log</Button>
                 </div>
               </CardContent>
             </Card>
@@ -388,86 +386,76 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
         </TabsContent>
 
         <TabsContent value="regulatory" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Shield className="h-5 w-5" />
-                <span>License & Compliance</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div>
-                  <span className="text-muted-foreground">License Number:</span>
-                  <div className="font-medium">{area.licenseNumber}</div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5" />
+                  <span>Compliance Status</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm">Environmental permit</span>
+                    <Badge className="bg-green-100 text-green-800">Valid</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm">Fish health certificate</span>
+                    <Badge className="bg-green-100 text-green-800">Valid</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm">Biomass reporting</span>
+                    <Badge className="bg-yellow-100 text-yellow-800">Due soon</Badge>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Expiry Date:</span>
-                  <div className="font-medium">{new Date(area.licenseExpiry).toLocaleDateString()}</div>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Max Biomass:</span>
-                  <div className="font-medium">{area.maxBiomassAllowed} tons</div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Current vs Licensed Capacity</span>
-                  <span>{licenseUtilization}%</span>
-                </div>
-                <Progress value={licenseUtilization} />
-                <p className="text-xs text-muted-foreground">
-                  {area.maxBiomassAllowed - area.totalBiomass} tons remaining capacity
-                </p>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" size="sm">View Permits</Button>
-                <Button variant="outline" size="sm">Compliance Report</Button>
-              </div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="h-5 w-5" />
+                  <span>Documentation</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Button variant="outline" size="sm" className="w-full justify-start">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Environmental Impact Assessment
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full justify-start">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Fish Health Management Plan
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full justify-start">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Escape Prevention Plan
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="maintenance" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5" />
+                <Settings className="h-5 w-5" />
                 <span>Maintenance Schedule</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Calendar className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium">Next Scheduled Maintenance</span>
-                  </div>
-                  <div className="text-lg font-semibold">
-                    {new Date(area.nextScheduledMaintenance).toLocaleDateString()}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Routine net inspection and cleaning</p>
-                </div>
-                
-                <div className="p-4 border rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
-                    <span className="font-medium">Maintenance Status</span>
-                  </div>
-                  <Badge className={getStatusBadge(area.status)}>
-                    {area.status}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground mt-1">All systems operational</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium">Upcoming Tasks</h4>
-                <div className="space-y-2">
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between p-2 border rounded">
-                    <span className="text-sm">Net integrity check</span>
+                    <span className="text-sm">Net inspection</span>
+                    <Badge className="bg-green-100 text-green-800">Completed</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm">Mooring check</span>
                     <Badge variant="outline">Due in 3 days</Badge>
                   </div>
                   <div className="flex items-center justify-between p-2 border rounded">
