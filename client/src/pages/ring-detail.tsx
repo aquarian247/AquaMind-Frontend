@@ -218,11 +218,11 @@ export default function RingDetail({ params }: { params: { id: string } }) {
 
       {/* Detailed Information Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="environmental">Environmental</TabsTrigger>
-          <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+          <TabsTrigger value="environmental" className="text-xs sm:text-sm">Environmental</TabsTrigger>
+          <TabsTrigger value="operations" className="text-xs sm:text-sm">Operations</TabsTrigger>
+          <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">

@@ -212,11 +212,11 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
 
       {/* Detailed Information Tabs */}
       <Tabs defaultValue="environmental" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="environmental">Environmental</TabsTrigger>
-          <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="regulatory">Regulatory</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+          <TabsTrigger value="environmental" className="text-xs sm:text-sm">Environmental</TabsTrigger>
+          <TabsTrigger value="operations" className="text-xs sm:text-sm">Operations</TabsTrigger>
+          <TabsTrigger value="regulatory" className="text-xs sm:text-sm">Regulatory</TabsTrigger>
+          <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="environmental" className="space-y-4">

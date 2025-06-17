@@ -252,12 +252,12 @@ export default function StationDetail({ params }: { params: { id: string } }) {
 
       {/* Detailed Information Tabs */}
       <Tabs defaultValue="environmental" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="environmental">Environmental</TabsTrigger>
-          <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
-          <TabsTrigger value="staff">Staff & Compliance</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <TabsTrigger value="environmental" className="text-xs sm:text-sm">Environmental</TabsTrigger>
+          <TabsTrigger value="operations" className="text-xs sm:text-sm">Operations</TabsTrigger>
+          <TabsTrigger value="infrastructure" className="text-xs sm:text-sm">Infrastructure</TabsTrigger>
+          <TabsTrigger value="staff" className="text-xs sm:text-sm">Staff & Compliance</TabsTrigger>
+          <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="environmental" className="space-y-4">
