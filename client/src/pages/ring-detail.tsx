@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   ArrowLeft, 
   Waves, 
@@ -54,6 +55,7 @@ interface RingDetail {
 
 export default function RingDetail({ params }: { params: { id: string } }) {
   const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState("overview");
   const ringId = params.id;
 
   const { data: ringData, isLoading } = useQuery({
@@ -217,12 +219,33 @@ export default function RingDetail({ params }: { params: { id: string } }) {
       </div>
 
       {/* Detailed Information Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-          <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-          <TabsTrigger value="environmental" className="text-xs sm:text-sm">Environmental</TabsTrigger>
-          <TabsTrigger value="operations" className="text-xs sm:text-sm">Operations</TabsTrigger>
-          <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        {/* Mobile dropdown - visible only on small screens */}
+        <div className="md:hidden">
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {activeTab === "overview" && "Overview"}
+                {activeTab === "environmental" && "Environmental"}
+                {activeTab === "operations" && "Operations"}
+                {activeTab === "maintenance" && "Maintenance"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="overview">Overview</SelectItem>
+              <SelectItem value="environmental">Environmental</SelectItem>
+              <SelectItem value="operations">Operations</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop tabs - hidden on mobile */}
+        <TabsList className="hidden md:grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="environmental">Environmental</TabsTrigger>
+          <TabsTrigger value="operations">Operations</TabsTrigger>
+          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">

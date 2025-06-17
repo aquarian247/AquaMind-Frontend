@@ -63,6 +63,7 @@ interface StationDetail {
 
 export default function StationDetail({ params }: { params: { id: string } }) {
   const [, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState("environmental");
   const stationId = params.id;
 
   const { data: station, isLoading } = useQuery({
@@ -253,13 +254,36 @@ export default function StationDetail({ params }: { params: { id: string } }) {
       </div>
 
       {/* Detailed Information Tabs */}
-      <Tabs defaultValue="environmental" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          <TabsTrigger value="environmental" className="text-xs sm:text-sm">Environmental</TabsTrigger>
-          <TabsTrigger value="operations" className="text-xs sm:text-sm">Operations</TabsTrigger>
-          <TabsTrigger value="infrastructure" className="text-xs sm:text-sm">Infrastructure</TabsTrigger>
-          <TabsTrigger value="staff" className="text-xs sm:text-sm">Staff & Compliance</TabsTrigger>
-          <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        {/* Mobile dropdown - visible only on small screens */}
+        <div className="md:hidden">
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue>
+                {activeTab === "environmental" && "Environmental"}
+                {activeTab === "operations" && "Operations"}
+                {activeTab === "infrastructure" && "Infrastructure"}
+                {activeTab === "staff" && "Staff & Compliance"}
+                {activeTab === "maintenance" && "Maintenance"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="environmental">Environmental</SelectItem>
+              <SelectItem value="operations">Operations</SelectItem>
+              <SelectItem value="infrastructure">Infrastructure</SelectItem>
+              <SelectItem value="staff">Staff & Compliance</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop tabs - hidden on mobile */}
+        <TabsList className="hidden md:grid w-full grid-cols-5">
+          <TabsTrigger value="environmental">Environmental</TabsTrigger>
+          <TabsTrigger value="operations">Operations</TabsTrigger>
+          <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
+          <TabsTrigger value="staff">Staff & Compliance</TabsTrigger>
+          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="environmental" className="space-y-4">
