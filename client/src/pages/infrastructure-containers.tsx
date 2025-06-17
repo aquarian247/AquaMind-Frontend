@@ -155,8 +155,9 @@ export default function InfrastructureContainers() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            <div className="space-y-2 sm:col-span-2 lg:col-span-1">
+          <div className="space-y-4">
+            {/* Search - Full width on mobile */}
+            <div className="space-y-2">
               <label className="text-sm font-medium">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -169,65 +170,68 @@ export default function InfrastructureContainers() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Geography</label>
-              <Select value={geographyFilter} onValueChange={setGeographyFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  <SelectItem value="Faroe Islands">Faroe Islands</SelectItem>
-                  <SelectItem value="Scotland">Scotland</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Filter dropdowns - responsive grid */}
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Geography</label>
+                <Select value={geographyFilter} onValueChange={setGeographyFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Regions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Regions</SelectItem>
+                    <SelectItem value="Faroe Islands">Faroe Islands</SelectItem>
+                    <SelectItem value="Scotland">Scotland</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Station/Area</label>
-              <Select value={stationFilter} onValueChange={setStationFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Facilities" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Facilities</SelectItem>
-                  <SelectItem value="stations">Freshwater Stations</SelectItem>
-                  <SelectItem value="areas">Sea Areas</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Station/Area</label>
+                <Select value={stationFilter} onValueChange={setStationFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Facilities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Facilities</SelectItem>
+                    <SelectItem value="stations">Freshwater Stations</SelectItem>
+                    <SelectItem value="areas">Sea Areas</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Container Type</label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Tray">Egg & Alevin Trays</SelectItem>
-                  <SelectItem value="Fry Tank">Fry Tanks</SelectItem>
-                  <SelectItem value="Parr Tank">Parr Tanks</SelectItem>
-                  <SelectItem value="Smolt Tank">Smolt Tanks</SelectItem>
-                  <SelectItem value="Post-Smolt Tank">Post-Smolt Tanks</SelectItem>
-                  <SelectItem value="Ring">Sea Rings</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Container Type</label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="Tray">Egg & Alevin Trays</SelectItem>
+                    <SelectItem value="Fry Tank">Fry Tanks</SelectItem>
+                    <SelectItem value="Parr Tank">Parr Tanks</SelectItem>
+                    <SelectItem value="Smolt Tank">Smolt Tanks</SelectItem>
+                    <SelectItem value="Post-Smolt Tank">Post-Smolt Tanks</SelectItem>
+                    <SelectItem value="Ring">Sea Rings</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardContent>
