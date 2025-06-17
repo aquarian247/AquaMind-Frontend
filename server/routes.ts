@@ -752,6 +752,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const stationId = parseInt(req.params.id);
       
+      // Validate station ID
+      if (isNaN(stationId) || stationId < 1 || stationId > 20) {
+        return res.status(404).json({ error: "Station not found" });
+      }
+      
       // Check cache first
       if (stationDetailsCache.has(stationId)) {
         return res.json(stationDetailsCache.get(stationId));
