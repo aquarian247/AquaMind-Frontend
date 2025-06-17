@@ -514,21 +514,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/v1/infrastructure/geographies/", async (req, res) => {
     try {
-      const farmSites = await storage.getFarmSites();
+      // Faroe Islands: 12 freshwater stations + 25 areas
+      // Scotland: 8 freshwater stations + 20 areas
+      
+      const faroeStations = 12;
+      const faroeAreas = 25;
+      const scotlandStations = 8;
+      const scotlandAreas = 20;
+      
+      // Faroe: 5-6 halls per station, 8-16 containers per hall, 18-26 rings per area
+      const faroeContainers = (faroeStations * 5.5 * 12) + (faroeAreas * 22); // ~1,881 containers
+      const faroeActiveBiomass = Math.round(faroeContainers * 15.2); // ~28,600 tons
+      const faroeCapacity = Math.round(faroeContainers * 18.5); // ~34,800 tons
+      
+      // Scotland: 5-6 halls per station, 8-16 containers per hall, 10-20 rings per area
+      const scotlandContainers = (scotlandStations * 5.5 * 12) + (scotlandAreas * 15); // ~828 containers  
+      const scotlandActiveBiomass = Math.round(scotlandContainers * 14.8); // ~12,254 tons
+      const scotlandCapacity = Math.round(scotlandContainers * 17.2); // ~14,242 tons
+      
       const geographies = [
         {
           id: 1,
           name: "Faroe Islands",
-          totalContainers: farmSites.filter(s => s.location.includes("Faroe")).length * 15,
-          activeBiomass: farmSites.filter(s => s.location.includes("Faroe")).reduce((sum, site) => sum + site.currentStock, 0) * 50,
-          capacity: farmSites.filter(s => s.location.includes("Faroe")).reduce((sum, site) => sum + site.totalCapacity, 0) * 60
+          totalContainers: faroeContainers,
+          activeBiomass: faroeActiveBiomass,
+          capacity: faroeCapacity,
+          freshwaterStations: faroeStations,
+          seaAreas: faroeAreas,
+          coordinates: { lat: 62.0, lng: -6.8 }
         },
         {
           id: 2,
           name: "Scotland",
-          totalContainers: farmSites.filter(s => s.location.includes("Scotland")).length * 12,
-          activeBiomass: farmSites.filter(s => s.location.includes("Scotland")).reduce((sum, site) => sum + site.currentStock, 0) * 45,
-          capacity: farmSites.filter(s => s.location.includes("Scotland")).reduce((sum, site) => sum + site.totalCapacity, 0) * 55
+          totalContainers: scotlandContainers,
+          activeBiomass: scotlandActiveBiomass,
+          capacity: scotlandCapacity,
+          freshwaterStations: scotlandStations,
+          seaAreas: scotlandAreas,
+          coordinates: { lat: 56.8, lng: -5.5 }
         }
       ];
       
@@ -540,6 +563,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch geographies" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/areas/", async (req, res) => {
+    try {
+      const geography = req.query.geography as string;
+      
+      const faroeAreas = Array.from({ length: 25 }, (_, i) => ({
+        id: i + 1,
+        name: `Faroe Area ${String.fromCharCode(65 + Math.floor(i / 5))}${(i % 5) + 1}`,
+        geography: "Faroe Islands",
+        type: "sea_area",
+        rings: Math.floor(Math.random() * 9) + 18, // 18-26 rings
+        totalBiomass: Math.round((Math.floor(Math.random() * 9) + 18) * 15.2),
+        coordinates: {
+          lat: 62.0 + (Math.random() - 0.5) * 0.6,
+          lng: -6.8 + (Math.random() - 0.5) * 1.2
+        },
+        status: Math.random() > 0.1 ? "active" : "maintenance",
+        waterDepth: Math.round(Math.random() * 80 + 40), // 40-120m
+        lastInspection: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
+      }));
+      
+      const scotlandAreas = Array.from({ length: 20 }, (_, i) => ({
+        id: i + 26,
+        name: `Scotland Area ${String.fromCharCode(65 + Math.floor(i / 4))}${(i % 4) + 1}`,
+        geography: "Scotland",
+        type: "sea_area", 
+        rings: Math.floor(Math.random() * 11) + 10, // 10-20 rings
+        totalBiomass: Math.round((Math.floor(Math.random() * 11) + 10) * 14.8),
+        coordinates: {
+          lat: 56.8 + (Math.random() - 0.5) * 1.0,
+          lng: -5.5 + (Math.random() - 0.5) * 2.0
+        },
+        status: Math.random() > 0.15 ? "active" : "maintenance",
+        waterDepth: Math.round(Math.random() * 60 + 30), // 30-90m
+        lastInspection: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
+      }));
+      
+      let areas = [...faroeAreas, ...scotlandAreas];
+      
+      if (geography && geography !== "all") {
+        areas = areas.filter(area => area.geography.toLowerCase().includes(geography.toLowerCase()));
+      }
+      
+      res.json({
+        count: areas.length,
+        next: null,
+        previous: null,
+        results: areas
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch areas" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/stations/", async (req, res) => {
+    try {
+      const geography = req.query.geography as string;
+      
+      const faroeStations = Array.from({ length: 12 }, (_, i) => ({
+        id: i + 1,
+        name: `Faroe Station ${String.fromCharCode(65 + i)}`,
+        geography: "Faroe Islands",
+        type: "freshwater_station",
+        halls: Math.floor(Math.random() * 2) + 5, // 5-6 halls
+        totalContainers: (Math.floor(Math.random() * 2) + 5) * (Math.floor(Math.random() * 9) + 8), // 5-6 halls * 8-16 containers
+        totalBiomass: Math.round(((Math.floor(Math.random() * 2) + 5) * (Math.floor(Math.random() * 9) + 8)) * 0.8), // smaller biomass for freshwater
+        coordinates: {
+          lat: 62.0 + (Math.random() - 0.5) * 0.4,
+          lng: -6.8 + (Math.random() - 0.5) * 0.8
+        },
+        status: Math.random() > 0.05 ? "active" : "maintenance",
+        waterSource: Math.random() > 0.5 ? "river" : "well",
+        lastInspection: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
+      }));
+      
+      const scotlandStations = Array.from({ length: 8 }, (_, i) => ({
+        id: i + 13,
+        name: `Scotland Station ${String.fromCharCode(65 + i)}`,
+        geography: "Scotland", 
+        type: "freshwater_station",
+        halls: Math.floor(Math.random() * 2) + 5, // 5-6 halls
+        totalContainers: (Math.floor(Math.random() * 2) + 5) * (Math.floor(Math.random() * 9) + 8), // 5-6 halls * 8-16 containers
+        totalBiomass: Math.round(((Math.floor(Math.random() * 2) + 5) * (Math.floor(Math.random() * 9) + 8)) * 0.8), // smaller biomass for freshwater
+        coordinates: {
+          lat: 56.8 + (Math.random() - 0.5) * 0.8,
+          lng: -5.5 + (Math.random() - 0.5) * 1.5
+        },
+        status: Math.random() > 0.1 ? "active" : "maintenance",
+        waterSource: Math.random() > 0.3 ? "river" : "well",
+        lastInspection: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
+      }));
+      
+      let stations = [...faroeStations, ...scotlandStations];
+      
+      if (geography && geography !== "all") {
+        stations = stations.filter(station => station.geography.toLowerCase().includes(geography.toLowerCase()));
+      }
+      
+      res.json({
+        count: stations.length,
+        next: null,
+        previous: null,
+        results: stations
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stations" });
     }
   });
 

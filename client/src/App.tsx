@@ -9,6 +9,8 @@ import Dashboard from "@/pages/dashboard";
 import Monitoring from "@/pages/monitoring";
 import FarmManagement from "@/pages/farm-management";
 import Infrastructure from "@/pages/infrastructure";
+import InfrastructureAreas from "@/pages/infrastructure-areas";
+import InfrastructureStations from "@/pages/infrastructure-stations";
 import Inventory from "@/pages/inventory-simple";
 import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
@@ -35,6 +37,8 @@ function Router() {
             <Route path="/monitoring" component={Monitoring} />
             <Route path="/farm-management" component={FarmManagement} />
             <Route path="/infrastructure" component={Infrastructure} />
+            <Route path="/infrastructure/areas" component={InfrastructureAreas} />
+            <Route path="/infrastructure/stations" component={InfrastructureStations} />
             <Route path="/batch-management" component={BatchManagement} />
             <Route path="/health" component={Health} />
             <Route path="/inventory" component={Inventory} />

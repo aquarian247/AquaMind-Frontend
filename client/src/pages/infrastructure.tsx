@@ -536,7 +536,7 @@ export default function Infrastructure() {
 
         {activeSection === "geographic" && (
           <div className="grid gap-6 lg:grid-cols-2">
-            {geographies.map((geo: GeographySummary) => (
+            {geographies.map((geo: any) => (
               <Card key={geo.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -547,7 +547,7 @@ export default function Infrastructure() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-blue-600">{geo.totalContainers}</div>
+                      <div className="text-2xl font-bold text-blue-600">{geo.totalContainers?.toLocaleString()}</div>
                       <div className="text-xs text-muted-foreground">Containers</div>
                     </div>
                     <div>
@@ -559,10 +559,38 @@ export default function Infrastructure() {
                       <div className="text-xs text-muted-foreground">Capacity</div>
                     </div>
                   </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="text-center p-2 bg-blue-50 rounded">
+                      <div className="font-semibold text-blue-600">{geo.seaAreas}</div>
+                      <div className="text-xs text-muted-foreground">Sea Areas</div>
+                    </div>
+                    <div className="text-center p-2 bg-green-50 rounded">
+                      <div className="font-semibold text-green-600">{geo.freshwaterStations}</div>
+                      <div className="text-xs text-muted-foreground">FW Stations</div>
+                    </div>
+                  </div>
+                  
                   <Progress value={(geo.activeBiomass / geo.capacity) * 100} />
-                  <div className="flex justify-between">
-                    <Button variant="outline" size="sm">View Areas</Button>
-                    <Button variant="outline" size="sm">View Stations</Button>
+                  <div className="flex justify-between space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => window.location.href = `/infrastructure/areas?geography=${geo.name.toLowerCase().replace(' ', '-')}`}
+                    >
+                      <Waves className="h-4 w-4 mr-2" />
+                      View Areas
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => window.location.href = `/infrastructure/stations?geography=${geo.name.toLowerCase().replace(' ', '-')}`}
+                    >
+                      <Factory className="h-4 w-4 mr-2" />
+                      View Stations
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
