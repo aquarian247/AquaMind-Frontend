@@ -1112,6 +1112,286 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/v1/infrastructure/containers/overview", async (req, res) => {
+    try {
+      const { geography, station, type, status } = req.query;
+      
+      // Generate overview data for all containers across facilities
+      const containers = [];
+      
+      // Add freshwater containers from stations
+      for (let stationId = 1; stationId <= 20; stationId++) {
+        const stationGeography = stationId <= 12 ? "Faroe Islands" : "Scotland";
+        if (geography && geography !== "all" && geography !== stationGeography) continue;
+        if (station && station !== "all" && station !== "stations") continue;
+        
+        const stationName = stationId <= 12 ? `Faroe Station ${String.fromCharCode(65 + (stationId-1))}` : `Scotland Station ${String.fromCharCode(65 + (stationId-13))}`;
+        const hallCount = Math.floor(Math.sin(stationId * 54321) * 2) + 5;
+        
+        for (let h = 1; h <= hallCount; h++) {
+          const hallId = stationId * 100 + h;
+          const hallStage = ["Egg&Alevin", "Fry", "Parr", "Smolt", "Post-Smolt"][h % 5];
+          const containerType = {
+            "Egg&Alevin": "Tray",
+            "Fry": "Fry Tank", 
+            "Parr": "Parr Tank",
+            "Smolt": "Smolt Tank",
+            "Post-Smolt": "Post-Smolt Tank"
+          }[hallStage] || "Fry Tank";
+          
+          if (type && type !== "all" && type !== containerType) continue;
+          
+          const containerCount = Math.floor(Math.sin(hallId * 9876) * 9) + 8;
+          
+          for (let c = 1; c <= containerCount; c++) {
+            const containerId = hallId * 100 + c;
+            const seedValue = containerId * 5432;
+            const seededRandom = (seed) => {
+              const x = Math.sin(seed) * 10000;
+              return x - Math.floor(x);
+            };
+            
+            const containerStatus = seededRandom(seedValue) > 0.05 ? "active" : "maintenance";
+            if (status && status !== "all" && status !== containerStatus) continue;
+            
+            const scaleFactors = {
+              "Egg&Alevin": { biomass: 0.1, fishCount: 50000, weight: 0.001 },
+              "Fry": { biomass: 2, fishCount: 10000, weight: 0.2 },
+              "Parr": { biomass: 15, fishCount: 2000, weight: 7.5 },
+              "Smolt": { biomass: 50, fishCount: 1000, weight: 50 },
+              "Post-Smolt": { biomass: 120, fishCount: 500, weight: 240 }
+            };
+            
+            const scale = scaleFactors[hallStage];
+            const biomass = Math.round(seededRandom(seedValue + 1) * scale.biomass * 2 + scale.biomass);
+            const capacity = Math.round(seededRandom(seedValue + 2) * scale.biomass * 3 + scale.biomass * 2);
+            
+            containers.push({
+              id: containerId,
+              name: `${containerType} ${String.fromCharCode(65 + (c - 1))}`,
+              type: containerType,
+              stage: hallStage,
+              status: containerStatus,
+              location: {
+                geography: stationGeography,
+                station: stationName,
+                hall: `Hall ${h}`
+              },
+              biomass,
+              capacity,
+              fishCount: Math.round(seededRandom(seedValue + 3) * scale.fishCount + scale.fishCount / 2),
+              temperature: Math.round((seededRandom(seedValue + 5) * 6 + 6) * 10) / 10,
+              oxygenLevel: Math.round((seededRandom(seedValue + 6) * 2 + 9) * 10) / 10,
+              lastMaintenance: new Date(Date.now() - seededRandom(seedValue + 8) * 30 * 24 * 60 * 60 * 1000).toISOString(),
+              utilizationPercent: Math.round((biomass / capacity) * 100)
+            });
+          }
+        }
+      }
+      
+      // Add sea containers (rings) from areas
+      for (let areaId = 1; areaId <= 45; areaId++) {
+        const areaGeography = areaId <= 25 ? "Faroe Islands" : "Scotland";
+        if (geography && geography !== "all" && geography !== areaGeography) continue;
+        if (station && station !== "all" && station !== "areas") continue;
+        if (type && type !== "all" && type !== "Ring") continue;
+        
+        const areaName = areaId <= 25 ? `Faroe Area ${String.fromCharCode(65 + Math.floor((areaId-1) / 5))}${((areaId-1) % 5) + 1}` : `Scotland Area ${String.fromCharCode(65 + Math.floor((areaId-26) / 4))}${((areaId-26) % 4) + 1}`;
+        const ringCount = Math.floor(Math.sin(areaId * 12345) * 4 + 22);
+        
+        for (let r = 1; r <= ringCount; r++) {
+          const ringId = areaId * 100 + r;
+          const seedValue = ringId * 7890;
+          const seededRandom = (seed) => {
+            const x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+          };
+          
+          const ringStatus = seededRandom(seedValue) > 0.1 ? "active" : "maintenance";
+          if (status && status !== "all" && status !== ringStatus) continue;
+          
+          const biomass = Math.round(seededRandom(seedValue + 1) * 20 + 10);
+          const capacity = Math.round(seededRandom(seedValue + 2) * 25 + 25);
+          
+          containers.push({
+            id: ringId,
+            name: `Ring ${String.fromCharCode(65 + (r - 1))}`,
+            type: "Ring",
+            stage: "Sea",
+            status: ringStatus,
+            location: {
+              geography: areaGeography,
+              area: areaName
+            },
+            biomass,
+            capacity,
+            fishCount: Math.round(seededRandom(seedValue + 3) * 8000 + 2000),
+            temperature: Math.round((seededRandom(seedValue + 19) * 4 + 6) * 10) / 10,
+            oxygenLevel: Math.round((seededRandom(seedValue + 22) * 5 + 90) * 10) / 10,
+            lastMaintenance: new Date(Date.now() - seededRandom(seedValue + 7) * 14 * 24 * 60 * 60 * 1000).toISOString(),
+            utilizationPercent: Math.round((biomass / capacity) * 100)
+          });
+        }
+      }
+      
+      res.json({
+        count: containers.length,
+        results: containers
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch container overview" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/sensors/overview", async (req, res) => {
+    try {
+      const { geography, facility, type, status, alert } = req.query;
+      
+      const sensorTypes = ["Temperature", "Oxygen", "pH", "Salinity", "Flow", "Pressure", "Turbidity", "Light"];
+      const sensors = [];
+      
+      // Generate sensors for all facilities
+      for (let stationId = 1; stationId <= 20; stationId++) {
+        const stationGeography = stationId <= 12 ? "Faroe Islands" : "Scotland";
+        if (geography && geography !== "all" && geography !== stationGeography) continue;
+        if (facility && facility !== "all" && facility !== "stations") continue;
+        
+        const stationName = stationId <= 12 ? `Faroe Station ${String.fromCharCode(65 + (stationId-1))}` : `Scotland Station ${String.fromCharCode(65 + (stationId-13))}`;
+        const hallCount = Math.floor(Math.sin(stationId * 54321) * 2) + 5;
+        
+        for (let h = 1; h <= hallCount; h++) {
+          const hallId = stationId * 100 + h;
+          
+          // 3-5 sensors per hall
+          const sensorCount = Math.floor(Math.sin(hallId * 1234) * 3) + 3;
+          
+          for (let s = 1; s <= sensorCount; s++) {
+            const sensorId = hallId * 100 + s;
+            const seedValue = sensorId * 9876;
+            const seededRandom = (seed) => {
+              const x = Math.sin(seed) * 10000;
+              return x - Math.floor(x);
+            };
+            
+            const sensorType = sensorTypes[Math.floor(seededRandom(seedValue) * sensorTypes.length)];
+            if (type && type !== "all" && type !== sensorType) continue;
+            
+            const sensorStatus = seededRandom(seedValue + 1) > 0.1 ? "online" : (seededRandom(seedValue + 2) > 0.5 ? "offline" : "maintenance");
+            if (status && status !== "all" && status !== sensorStatus) continue;
+            
+            const alertStatus = seededRandom(seedValue + 3) > 0.8 ? "warning" : (seededRandom(seedValue + 4) > 0.95 ? "critical" : "normal");
+            if (alert && alert !== "all" && alert !== alertStatus) continue;
+            
+            const valueRanges = {
+              "Temperature": { min: 6, max: 12, unit: "°C" },
+              "Oxygen": { min: 8, max: 12, unit: "mg/L" },
+              "pH": { min: 6.5, max: 7.5, unit: "" },
+              "Salinity": { min: 0.2, max: 1.0, unit: "‰" },
+              "Flow": { min: 50, max: 100, unit: "L/min" },
+              "Pressure": { min: 0.8, max: 1.2, unit: "bar" },
+              "Turbidity": { min: 0.1, max: 2.0, unit: "NTU" },
+              "Light": { min: 0, max: 100, unit: "%" }
+            };
+            
+            const range = valueRanges[sensorType];
+            const currentValue = Math.round((seededRandom(seedValue + 5) * (range.max - range.min) + range.min) * 100) / 100;
+            
+            sensors.push({
+              id: sensorId,
+              name: `${sensorType} Sensor ${s}`,
+              type: sensorType,
+              status: sensorStatus,
+              location: {
+                geography: stationGeography,
+                station: stationName,
+                hall: `Hall ${h}`,
+                containerId: hallId * 100 + Math.floor(seededRandom(seedValue + 6) * 10) + 1
+              },
+              currentValue,
+              unit: range.unit,
+              lastReading: new Date(Date.now() - seededRandom(seedValue + 7) * 60 * 60 * 1000).toISOString(),
+              batteryLevel: sensorType === "Light" ? Math.round(seededRandom(seedValue + 8) * 40 + 60) : undefined,
+              signalStrength: Math.round(seededRandom(seedValue + 9) * 40 + 60),
+              alertStatus,
+              calibrationDue: new Date(Date.now() + seededRandom(seedValue + 10) * 90 * 24 * 60 * 60 * 1000).toISOString()
+            });
+          }
+        }
+      }
+      
+      // Add sensors for sea areas
+      for (let areaId = 1; areaId <= 45; areaId++) {
+        const areaGeography = areaId <= 25 ? "Faroe Islands" : "Scotland";
+        if (geography && geography !== "all" && geography !== areaGeography) continue;
+        if (facility && facility !== "all" && facility !== "areas") continue;
+        
+        const areaName = areaId <= 25 ? `Faroe Area ${String.fromCharCode(65 + Math.floor((areaId-1) / 5))}${((areaId-1) % 5) + 1}` : `Scotland Area ${String.fromCharCode(65 + Math.floor((areaId-26) / 4))}${((areaId-26) % 4) + 1}`;
+        const ringCount = Math.floor(Math.sin(areaId * 12345) * 4 + 22);
+        
+        for (let r = 1; r <= Math.min(ringCount, 5); r++) { // Limit rings to keep response size manageable
+          const ringId = areaId * 100 + r;
+          
+          // 2-4 sensors per ring (less than freshwater)
+          const sensorCount = Math.floor(Math.sin(ringId * 5678) * 3) + 2;
+          
+          for (let s = 1; s <= sensorCount; s++) {
+            const sensorId = ringId * 100 + s;
+            const seedValue = sensorId * 3456;
+            const seededRandom = (seed) => {
+              const x = Math.sin(seed) * 10000;
+              return x - Math.floor(x);
+            };
+            
+            const seaTypes = ["Temperature", "Oxygen", "Salinity", "Flow"]; // More relevant for sea
+            const sensorType = seaTypes[Math.floor(seededRandom(seedValue) * seaTypes.length)];
+            if (type && type !== "all" && type !== sensorType) continue;
+            
+            const sensorStatus = seededRandom(seedValue + 1) > 0.15 ? "online" : "offline"; // Slightly higher failure rate in sea
+            if (status && status !== "all" && status !== sensorStatus) continue;
+            
+            const alertStatus = seededRandom(seedValue + 3) > 0.85 ? "warning" : (seededRandom(seedValue + 4) > 0.97 ? "critical" : "normal");
+            if (alert && alert !== "all" && alert !== alertStatus) continue;
+            
+            const valueRanges = {
+              "Temperature": { min: 6, max: 10, unit: "°C" },
+              "Oxygen": { min: 90, max: 100, unit: "%" },
+              "Salinity": { min: 33, max: 35, unit: "‰" },
+              "Flow": { min: 0.1, max: 0.6, unit: "m/s" }
+            };
+            
+            const range = valueRanges[sensorType];
+            const currentValue = Math.round((seededRandom(seedValue + 5) * (range.max - range.min) + range.min) * 100) / 100;
+            
+            sensors.push({
+              id: sensorId,
+              name: `${sensorType} Sensor ${s}`,
+              type: sensorType,
+              status: sensorStatus,
+              location: {
+                geography: areaGeography,
+                area: areaName,
+                ring: `Ring ${String.fromCharCode(65 + (r - 1))}`
+              },
+              currentValue,
+              unit: range.unit,
+              lastReading: new Date(Date.now() - seededRandom(seedValue + 7) * 60 * 60 * 1000).toISOString(),
+              signalStrength: Math.round(seededRandom(seedValue + 9) * 30 + 50), // Lower signal in sea
+              alertStatus,
+              calibrationDue: new Date(Date.now() + seededRandom(seedValue + 10) * 90 * 24 * 60 * 60 * 1000).toISOString()
+            });
+          }
+        }
+      }
+      
+      res.json({
+        count: sensors.length,
+        results: sensors
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch sensor overview" });
+    }
+  });
+
   app.get("/api/v1/infrastructure/containers/", async (req, res) => {
     try {
       const containers = await storage.getContainers();
