@@ -822,6 +822,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/v1/infrastructure/areas/:id/rings", async (req, res) => {
+    try {
+      const areaId = parseInt(req.params.id);
+      const areaName = areaId <= 25 ? `Faroe Area ${String.fromCharCode(65 + Math.floor((areaId-1) / 5))}${((areaId-1) % 5) + 1}` : `Scotland Area ${String.fromCharCode(65 + Math.floor((areaId-26) / 4))}${((areaId-26) % 4) + 1}`;
+      
+      const ringCount = Math.floor(Math.sin(areaId * 12345) * 4 + 22); // 18-26 rings for Faroe, 10-20 for Scotland
+      const rings = Array.from({ length: ringCount }, (_, i) => {
+        const ringId = areaId * 100 + i + 1;
+        const seedValue = ringId * 7890;
+        const seededRandom = (seed: number) => {
+          const x = Math.sin(seed) * 10000;
+          return x - Math.floor(x);
+        };
+        
+        return {
+          id: ringId,
+          name: `Ring ${String.fromCharCode(65 + i)}`,
+          areaId,
+          areaName,
+          status: seededRandom(seedValue) > 0.1 ? "active" : "maintenance",
+          biomass: Math.round(seededRandom(seedValue + 1) * 20 + 10), // 10-30 tons per ring
+          capacity: Math.round(seededRandom(seedValue + 2) * 25 + 25), // 25-50 tons capacity
+          fishCount: Math.round(seededRandom(seedValue + 3) * 8000 + 2000), // 2000-10000 fish
+          averageWeight: Math.round((seededRandom(seedValue + 4) * 2 + 3) * 100) / 100, // 3-5 kg
+          waterDepth: Math.round(seededRandom(seedValue + 5) * 40 + 30), // 30-70m
+          netCondition: ["excellent", "good", "fair"][Math.floor(seededRandom(seedValue + 6) * 3)],
+          lastInspection: new Date(Date.now() - seededRandom(seedValue + 7) * 14 * 24 * 60 * 60 * 1000).toISOString(),
+          coordinates: {
+            lat: (areaId <= 25 ? 62.0 : 56.8) + (seededRandom(seedValue + 8) - 0.5) * 0.1,
+            lng: (areaId <= 25 ? -6.8 : -5.5) + (seededRandom(seedValue + 9) - 0.5) * 0.1
+          },
+          environmentalStatus: seededRandom(seedValue + 10) > 0.3 ? "optimal" : "monitoring"
+        };
+      });
+      
+      res.json({
+        count: rings.length,
+        results: rings
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch rings" });
+    }
+  });
+
+  app.get("/api/v1/infrastructure/stations/:id/halls", async (req, res) => {
+    try {
+      const stationId = parseInt(req.params.id);
+      const stationName = stationId <= 12 ? `Faroe Station ${String.fromCharCode(65 + (stationId-1))}` : `Scotland Station ${String.fromCharCode(65 + (stationId-13))}`;
+      
+      const hallCount = Math.floor(Math.sin(stationId * 54321) * 2) + 5; // 5-6 halls
+      const halls = Array.from({ length: hallCount }, (_, i) => {
+        const hallId = stationId * 100 + i + 1;
+        const seedValue = hallId * 9876;
+        const seededRandom = (seed: number) => {
+          const x = Math.sin(seed) * 10000;
+          return x - Math.floor(x);
+        };
+        
+        const containers = Math.floor(seededRandom(seedValue) * 9) + 8; // 8-16 containers per hall
+        
+        return {
+          id: hallId,
+          name: `Hall ${i + 1}`,
+          stationId,
+          stationName,
+          status: seededRandom(seedValue + 1) > 0.05 ? "active" : "maintenance",
+          containers,
+          totalBiomass: Math.round(containers * 0.8), // ~0.8 tons per container
+          capacity: Math.round(containers * 1.2), // ~1.2 tons capacity per container
+          temperature: Math.round((seededRandom(seedValue + 2) * 6 + 6) * 10) / 10, // 6-12°C
+          oxygenLevel: Math.round((seededRandom(seedValue + 3) * 2 + 9) * 10) / 10, // 9-11 mg/L
+          flowRate: Math.round((seededRandom(seedValue + 4) * 50 + 50) * 10) / 10, // 50-100 L/min
+          powerUsage: Math.round(seededRandom(seedValue + 5) * 30 + 20), // 20-50 kW per hall
+          lastMaintenance: new Date(Date.now() - seededRandom(seedValue + 6) * 30 * 24 * 60 * 60 * 1000).toISOString(),
+          systemStatus: seededRandom(seedValue + 7) > 0.2 ? "optimal" : "monitoring"
+        };
+      });
+      
+      res.json({
+        count: halls.length,
+        results: halls
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch halls" });
+    }
+  });
+
   app.get("/api/v1/infrastructure/containers/", async (req, res) => {
     try {
       const containers = await storage.getContainers();
