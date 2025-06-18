@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon, Fish, Plus, MapPin, TrendingUp, Activity, AlertTriangle, Heart, Users, BarChart3, Container as ContainerIcon, Search, Filter, Clock, Target, Eye, ChevronDown } from "lucide-react";
+import { CalendarIcon, Fish, Plus, MapPin, TrendingUp, Activity, AlertTriangle, Heart, Users, BarChart3, Container as ContainerIcon, Search, Filter, Clock, Target, Eye } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -711,35 +711,24 @@ export default function BatchManagement() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {isMobile ? (
           <div className="mb-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
                   {activeTab === "overview" && "Overview"}
                   {activeTab === "containers" && "Containers"}
                   {activeTab === "medical" && "Medical Journal"}
                   {activeTab === "feed" && "Feed History"}
                   {activeTab === "analytics" && "Analytics"}
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-full">
-                <DropdownMenuItem onClick={() => setActiveTab("overview")}>
-                  Overview
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab("containers")}>
-                  Containers
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab("medical")}>
-                  Medical Journal
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab("feed")}>
-                  Feed History
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab("analytics")}>
-                  Analytics
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="overview">Overview</SelectItem>
+                <SelectItem value="containers">Containers</SelectItem>
+                <SelectItem value="medical">Medical Journal</SelectItem>
+                <SelectItem value="feed">Feed History</SelectItem>
+                <SelectItem value="analytics">Analytics</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         ) : (
           <TabsList className="grid grid-cols-5 w-full">

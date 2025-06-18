@@ -1,11 +1,12 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, ChevronDown } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BatchTraceabilityView } from "@/components/batch-management/BatchTraceabilityView";
 
@@ -182,29 +183,23 @@ export default function BatchDetails() {
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {isMobile ? (
           <div className="mb-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  <span>Navigation</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-full">
-                <DropdownMenuItem asChild>
-                  <TabsTrigger value="overview" className="w-full justify-start">
-                    Batch Overview
-                  </TabsTrigger>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <TabsTrigger value="traceability" className="w-full justify-start">
-                    {isComplexBatch ? "Full Traceability" : "Batch History"}
-                  </TabsTrigger>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {activeTab === "overview" && "Batch Overview"}
+                  {activeTab === "traceability" && (isComplexBatch ? "Full Traceability" : "Batch History")}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="overview">Batch Overview</SelectItem>
+                <SelectItem value="traceability">
+                  {isComplexBatch ? "Full Traceability" : "Batch History"}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         ) : (
           <TabsList className="grid w-full grid-cols-2">
