@@ -2,7 +2,7 @@ import {
   users, farmSites, pens, alerts, environmentalParameters, containers, sensors, 
   environmentalReadings, batches, feedTypes, feedInventory, feedingEvents, healthRecords,
   feedPurchases, feedContainers, feedContainerStock, batchFeedingSummaries,
-  species, stages, labSamples, healthAssessments, weatherData,
+  species, stages, labSamples, healthAssessments, weatherData, broodstockPairs, eggSuppliers,
   type User, type InsertUser, type FarmSite, type InsertFarmSite,
   type Pen, type InsertPen, type Alert, type InsertAlert, 
   type EnvironmentalParameter, type InsertEnvironmentalParameter,
@@ -14,7 +14,8 @@ import {
   type FeedContainerStock, type InsertFeedContainerStock, type BatchFeedingSummary, type InsertBatchFeedingSummary,
   type Species, type InsertSpecies, type Stage, type InsertStage,
   type LabSample, type InsertLabSample, type HealthAssessment, type InsertHealthAssessment,
-  type WeatherData, type InsertWeatherData
+  type WeatherData, type InsertWeatherData, type BroodstockPair, type InsertBroodstockPair,
+  type EggSupplier, type InsertEggSupplier
 } from "@shared/schema";
 
 export interface IStorage {
@@ -143,6 +144,10 @@ export class MemStorage implements IStorage {
   private labSamples: Map<number, LabSample> = new Map();
   private healthAssessments: Map<number, HealthAssessment> = new Map();
   private weatherData: Map<number, WeatherData> = new Map();
+  
+  // Broodstock Management
+  private broodstockPairs: Map<number, BroodstockPair> = new Map();
+  private eggSuppliers: Map<number, EggSupplier> = new Map();
   
   // Health Management data stores
   private healthJournalEntries: Map<number, any> = new Map();
@@ -337,40 +342,112 @@ export class MemStorage implements IStorage {
     };
     this.stages.set(adultStage.id, adultStage);
 
-    // Seed Batches with proper foreign keys
-    const batch1: Batch = {
+    // Broodstock pairs
+    const pair1: BroodstockPair = {
       id: this.currentId++,
-      name: "Batch 2024-001",
-      species: atlanticSalmon.id,
-      startDate: "2024-01-15",
-      initialCount: 2500,
-      initialBiomassKg: "5000.00",
-      currentCount: 2140,
-      currentBiomassKg: "6848.00",
-      container: container1.id,
-      stage: postSmoltStage.id,
-      status: "active",
-      expectedHarvestDate: "2025-07-15",
-      notes: null,
+      pairName: "P456-Atlantic-Elite",
+      maleFishId: "BM-2023-001",
+      femaleFishId: "BF-2023-007", 
+      pairingDate: "2023-10-01",
+      progenyCount: 75000,
+      geneticTraits: JSON.stringify({
+        growthRate: 0.85,
+        diseaseResistance: 0.92,
+        coldTolerance: 0.78
+      }),
+      isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.batches.set(batch1.id, batch1);
+
+    const pair2: BroodstockPair = {
+      id: this.currentId++,
+      pairName: "P789-Atlantic-Premium",
+      maleFishId: "BM-2023-003",
+      femaleFishId: "BF-2023-012",
+      pairingDate: "2023-11-15",
+      progenyCount: 68000,
+      geneticTraits: JSON.stringify({
+        growthRate: 0.91,
+        diseaseResistance: 0.87,
+        coldTolerance: 0.83
+      }),
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Egg suppliers
+    const supplier1: EggSupplier = {
+      id: this.currentId++,
+      name: "AquaGen Nordic AS",
+      contactInfo: "contact@aquagen-nordic.no, +47 12345678",
+      certifications: "ASC, GlobalGAP, ISO 14001",
+      country: "Norway",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const supplier2: EggSupplier = {
+      id: this.currentId++,
+      name: "Benchmark Genetics Scotland",
+      contactInfo: "info@benchmarkgenetics.com, +44 1234 567890",
+      certifications: "RSPCA Assured, ASC",
+      country: "Scotland",
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.broodstockPairs.set(pair1.id, pair1);
+    this.broodstockPairs.set(pair2.id, pair2);
+    this.eggSuppliers.set(supplier1.id, supplier1);
+    this.eggSuppliers.set(supplier2.id, supplier2);
+
+    // Seed Batches with proper foreign keys and broodstock traceability
+    const batch1: Batch = {
+      id: this.currentId++,
+      name: "BATCH-2024-001",
+      species: atlanticSalmon.id,
+      startDate: "2024-01-15",
+      initialCount: 50000,
+      initialBiomassKg: "1250.5",
+      currentCount: 48500,
+      currentBiomassKg: "2150.75",
+      container: container1.id,
+      stage: smoltStage.id,
+      status: "active",
+      expectedHarvestDate: "2025-12-15",
+      notes: "First generation Atlantic salmon batch",
+      eggSource: "internal",
+      broodstockPairId: pair1.id,
+      eggSupplierId: null,
+      eggBatchNumber: null,
+      eggProductionDate: "2023-10-15",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
     const batch2: Batch = {
       id: this.currentId++,
-      name: "Batch 2024-002",
+      name: "BATCH-2024-002",
       species: atlanticSalmon.id,
       startDate: "2024-02-01",
-      initialCount: 2200,
-      initialBiomassKg: "4400.00",
-      currentCount: 1890,
-      currentBiomassKg: "5565.50",
+      initialCount: 45000,
+      initialBiomassKg: "1125.0",
+      currentCount: 44200,
+      currentBiomassKg: "1989.5",
       container: container2.id,
-      stage: smoltStage.id,
+      stage: parrStage.id,
       status: "active",
-      expectedHarvestDate: "2025-08-01",
-      notes: null,
+      expectedHarvestDate: "2026-01-15",
+      notes: "Second generation with improved growth rate",
+      eggSource: "external",
+      broodstockPairId: null,
+      eggSupplierId: supplier1.id,
+      eggBatchNumber: "AGN-2024-E0127",
+      eggProductionDate: "2024-01-20",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1216,6 +1293,37 @@ export class MemStorage implements IStorage {
   async getRecentLiceCounts(): Promise<any[]> {
     const recent = Array.from(this.liceCounts.values());
     return recent.slice(0, 5);
+  }
+
+  // Broodstock Management methods
+  async getBroodstockPairs(): Promise<BroodstockPair[]> {
+    return Array.from(this.broodstockPairs.values());
+  }
+
+  async createBroodstockPair(insertPair: InsertBroodstockPair): Promise<BroodstockPair> {
+    const pair: BroodstockPair = {
+      id: this.currentId++,
+      ...insertPair,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.broodstockPairs.set(pair.id, pair);
+    return pair;
+  }
+
+  async getEggSuppliers(): Promise<EggSupplier[]> {
+    return Array.from(this.eggSuppliers.values());
+  }
+
+  async createEggSupplier(insertSupplier: InsertEggSupplier): Promise<EggSupplier> {
+    const supplier: EggSupplier = {
+      id: this.currentId++,
+      ...insertSupplier,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.eggSuppliers.set(supplier.id, supplier);
+    return supplier;
   }
 }
 
