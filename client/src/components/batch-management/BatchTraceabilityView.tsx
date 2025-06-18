@@ -196,14 +196,37 @@ export function BatchTraceabilityView({ batchId, batchName }: BatchTraceabilityV
         </Card>
       </div>
 
-      <Tabs defaultValue="lifecycle" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="lifecycle">Lifecycle Progression</TabsTrigger>
-          <TabsTrigger value="assignments">Container Assignments</TabsTrigger>
-          <TabsTrigger value="transfers">Transfer History</TabsTrigger>
-          <TabsTrigger value="growth">Growth Analysis</TabsTrigger>
-          <TabsTrigger value="mortality">Mortality Events</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeView} onValueChange={setActiveView} className="w-full">
+        {isMobile ? (
+          <div className="mb-4">
+            <Select value={activeView} onValueChange={setActiveView}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {activeView === "lifecycle" && "Lifecycle Progression"}
+                  {activeView === "assignments" && "Container Assignments"}
+                  {activeView === "transfers" && "Transfer History"}
+                  {activeView === "growth" && "Growth Analysis"}
+                  {activeView === "mortality" && "Mortality Events"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lifecycle">Lifecycle Progression</SelectItem>
+                <SelectItem value="assignments">Container Assignments</SelectItem>
+                <SelectItem value="transfers">Transfer History</SelectItem>
+                <SelectItem value="growth">Growth Analysis</SelectItem>
+                <SelectItem value="mortality">Mortality Events</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="lifecycle">Lifecycle Progression</TabsTrigger>
+            <TabsTrigger value="assignments">Container Assignments</TabsTrigger>
+            <TabsTrigger value="transfers">Transfer History</TabsTrigger>
+            <TabsTrigger value="growth">Growth Analysis</TabsTrigger>
+            <TabsTrigger value="mortality">Mortality Events</TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="lifecycle" className="space-y-4">
           <Card>
