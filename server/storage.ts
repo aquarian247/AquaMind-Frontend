@@ -563,20 +563,23 @@ export class MemStorage implements IStorage {
       this.environmentalReadings.set(oxygenReading.id, oxygenReading);
     }
 
-    // Seed Health Records
-    const healthRecord1: HealthRecord = {
-      id: this.currentId++,
-      batch: batch1.id,
-      checkDate: "2024-06-10",
-      veterinarian: "Dr. Erik Nordahl",
-      healthStatus: "excellent",
-      mortalityCount: 2,
-      averageWeight: "3.20",
-      notes: "Fish showing excellent growth rates and no signs of disease",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.healthRecords.set(healthRecord1.id, healthRecord1);
+    // Generate health records for first 20 batches
+    const firstBatches = batches.slice(0, 20);
+    firstBatches.forEach(batch => {
+      const healthRecord: HealthRecord = {
+        id: this.currentId++,
+        batch: batch.id,
+        checkDate: new Date(Date.now() - Math.random() * 30 * 24 * 3600000).toISOString().split('T')[0],
+        healthStatus: Math.random() > 0.1 ? "healthy" : "under_observation",
+        notes: "Regular health check - monitoring growth and mortality",
+        veterinarian: Math.random() > 0.5 ? "Dr. Sarah Mitchell" : "Dr. Erik Hansen",
+        mortalityCount: Math.floor(Math.random() * 50),
+        averageWeight: (Math.random() * 3 + 0.5).toFixed(2),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.healthRecords.set(healthRecord.id, healthRecord);
+    });
 
     // Seed FIFO Feed System Data
     const feedPurchase1: FeedPurchase = {
@@ -658,24 +661,28 @@ export class MemStorage implements IStorage {
     };
     this.feedContainerStock.set(stock2.id, stock2);
 
-    // Seed Feeding Events with enhanced fields
-    const feedingEvent1: FeedingEvent = {
-      id: this.currentId++,
-      batch: batch1.id,
-      container: container1.id,
-      feed: feedType1.id,
-      feedingDate: "2024-06-10",
-      feedingTime: "08:00:00",
-      amountKg: "45.50",
-      batchBiomassKg: "6848.00",
-      feedCost: "1114.75", // Auto-calculated: 45.50 * 24.50
-      method: "MANUAL",
-      notes: "Morning feeding completed successfully",
-      recordedBy: user1.id,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.feedingEvents.set(feedingEvent1.id, feedingEvent1);
+    // Generate feeding events for active batches
+    batches.slice(0, 30).forEach((batch, index) => {
+      for (let day = 0; day < 7; day++) {
+        const feedingEvent: FeedingEvent = {
+          id: this.currentId++,
+          batch: batch.id,
+          container: batch.container || container1.id,
+          feed: feedType1.id,
+          feedingDate: new Date(Date.now() - day * 24 * 3600000).toISOString().split('T')[0],
+          feedingTime: `${8 + (day % 3) * 4}:00`,
+          amountKg: (100 + Math.random() * 300).toFixed(2),
+          batchBiomassKg: batch.currentBiomassKg,
+          feedCost: (250 + Math.random() * 500).toFixed(2),
+          method: Math.random() > 0.3 ? "automatic" : "manual",
+          recordedBy: user1.id,
+          notes: day === 0 ? "Recent feeding cycle" : null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        this.feedingEvents.set(feedingEvent.id, feedingEvent);
+      }
+    });
 
     // Legacy compatibility - Farm Sites
     const site1: FarmSite = {
@@ -804,78 +811,74 @@ export class MemStorage implements IStorage {
     };
     this.healthParameters.set(skinConditionParam.id, skinConditionParam);
 
-    // Seed Health Journal Entries
-    const journalEntry1 = {
-      id: this.currentId++,
-      batch: batch1.id,
-      container: container1.id,
-      entryDate: "2024-06-10",
-      observations: "Fish showing good appetite and normal swimming behavior. Minor fin damage observed in 5% of population.",
-      veterinarian: "Dr. Emma Nordström",
-      healthStatus: "good",
-      flaggedForReview: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.healthJournalEntries.set(journalEntry1.id, journalEntry1);
+    // Generate health journal entries for batches
+    batches.slice(0, 25).forEach((batch, index) => {
+      const journalEntry = {
+        id: this.currentId++,
+        batch: batch.id,
+        container: batch.container,
+        entryDate: new Date(Date.now() - Math.random() * 14 * 24 * 3600000).toISOString().split('T')[0],
+        observations: [
+          "Fish showing excellent appetite and normal swimming behavior",
+          "Minor fin damage observed in small population percentage",
+          "Growth rates within expected parameters for this stage",
+          "All health indicators within normal ranges",
+          "Recommending continuation of current protocols"
+        ][index % 5],
+        veterinarian: ["Dr. Emma Nordström", "Dr. Lars Andersen", "Dr. Sarah Mitchell"][index % 3],
+        healthStatus: Math.random() > 0.2 ? "good" : "excellent",
+        flaggedForReview: Math.random() < 0.1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.healthJournalEntries.set(journalEntry.id, journalEntry);
+    });
 
-    const journalEntry2 = {
-      id: this.currentId++,
-      batch: batch2.id,
-      container: container2.id,
-      entryDate: "2024-06-12",
-      observations: "Excellent growth rates observed. All health parameters within normal ranges. Recommending continuation of current feeding protocol.",
-      veterinarian: "Dr. Lars Andersen",
-      healthStatus: "excellent",
-      flaggedForReview: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.healthJournalEntries.set(journalEntry2.id, journalEntry2);
+    // Generate mortality records, lice counts, and treatments for batches
+    batches.slice(0, 15).forEach((batch, index) => {
+      const mortalityRecord = {
+        id: this.currentId++,
+        batch: batch.id,
+        container: batch.container || container1.id,
+        date: new Date(Date.now() - Math.random() * 21 * 24 * 3600000).toISOString().split('T')[0],
+        count: Math.floor(Math.random() * 30) + 5,
+        reason: ["Natural mortality", "Environmental stress", "Handling mortality"][index % 3],
+        notes: "Within expected range for this stage",
+        reportedBy: `Field Operator ${["Hansen", "Olsen", "Larsen"][index % 3]}`,
+        veterinarianReview: true,
+      };
+      this.mortalityRecords.set(mortalityRecord.id, mortalityRecord);
 
-    // Seed Mortality Records
-    const mortalityRecord1 = {
-      id: this.currentId++,
-      batch: batch1.id,
-      container: container1.id,
-      date: "2024-06-08",
-      count: 12,
-      reason: "Natural mortality",
-      notes: "Within expected range for this stage",
-      reportedBy: "Field Operator Hansen",
-      veterinarianReview: true,
-    };
-    this.mortalityRecords.set(mortalityRecord1.id, mortalityRecord1);
+      const liceCount = {
+        id: this.currentId++,
+        batch: batch.id,
+        container: batch.container || container1.id,
+        countDate: new Date(Date.now() - Math.random() * 14 * 24 * 3600000).toISOString().split('T')[0],
+        adultFemale: Math.floor(Math.random() * 3) + 1,
+        adultMale: Math.floor(Math.random() * 2) + 1,
+        juvenile: Math.floor(Math.random() * 5) + 2,
+        countedBy: ["QA Specialist Johansen", "QA Specialist Nielsen", "QA Specialist Andersen"][index % 3],
+      };
+      this.liceCounts.set(liceCount.id, liceCount);
 
-    // Seed Lice Counts
-    const liceCount1 = {
-      id: this.currentId++,
-      batch: batch1.id,
-      container: container1.id,
-      countDate: "2024-06-10",
-      adultFemale: 1,
-      adultMale: 1,
-      juvenile: 3,
-      countedBy: "QA Specialist Johansen",
-    };
-    this.liceCounts.set(liceCount1.id, liceCount1);
-
-    // Seed Treatments
-    const treatment1 = {
-      id: this.currentId++,
-      batch: batch2.id,
-      container: container2.id,
-      treatmentType: "Preventive",
-      medication: "Slice (emamectin benzoate)",
-      dosage: "50 μg/kg",
-      startDate: "2024-06-01",
-      endDate: "2024-06-08",
-      veterinarian: "Dr. Emma Nordström",
-      reason: "Preventive lice treatment",
-      effectiveness: "excellent",
-      notes: "Treatment completed successfully with no adverse effects",
-    };
-    this.treatments.set(treatment1.id, treatment1);
+      if (index % 8 === 0) { // Some batches have treatments
+        const treatment = {
+          id: this.currentId++,
+          batch: batch.id,
+          container: batch.container || container1.id,
+          treatmentType: ["Preventive", "Therapeutic", "Emergency"][index % 3],
+          medication: ["Slice (emamectin benzoate)", "AlphaMax (deltamethrin)", "Salmosan (azamethiphos)"][index % 3],
+          dosage: ["50 μg/kg", "2 μg/L", "0.1 mg/L"][index % 3],
+          startDate: new Date(Date.now() - Math.random() * 30 * 24 * 3600000).toISOString().split('T')[0],
+          endDate: new Date(Date.now() - Math.random() * 23 * 24 * 3600000).toISOString().split('T')[0],
+          veterinarian: ["Dr. Emma Nordström", "Dr. Lars Andersen", "Dr. Sarah Mitchell"][index % 3],
+          reason: "Preventive lice treatment",
+          effectiveness: ["excellent", "good", "fair"][index % 3],
+          notes: "Treatment completed successfully with no adverse effects",
+        };
+        this.treatments.set(treatment.id, treatment);
+      }
+    });
   }
 
   // Django API Methods
