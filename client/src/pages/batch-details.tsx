@@ -64,6 +64,16 @@ export default function BatchDetails() {
     queryFn: () => fetch("/api/stages").then(res => res.json()),
   });
 
+  const { data: assignments } = useQuery({
+    queryKey: ["/api/batch-container-assignments", batchId],
+    queryFn: () => fetch(`/api/batch-container-assignments?batchId=${batchId}`).then(res => res.json()),
+  });
+
+  const { data: transfers } = useQuery({
+    queryKey: ["/api/batch-transfers", batchId],
+    queryFn: () => fetch(`/api/batch-transfers?batchId=${batchId}`).then(res => res.json()),
+  });
+
   if (isLoading) {
     return <div>Loading batch details...</div>;
   }
@@ -76,8 +86,10 @@ export default function BatchDetails() {
   const currentStage = stages?.find((s: any) => s.id === batch.stage);
   const currentContainer = batch.container ? containers?.find(c => c.id === batch.container) : null;
 
-  // Check if this is the complex traceability batch
-  const isComplexBatch = batch.name === "BATCH-2024-TRACE-001";
+  // Determine if this batch has complex traceability based on actual data
+  const hasMultipleAssignments = assignments && assignments.length > 5;
+  const hasMultipleTransfers = transfers && transfers.length > 10;
+  const isComplexBatch = hasMultipleAssignments && hasMultipleTransfers;
 
   return (
     <div className="space-y-6">
