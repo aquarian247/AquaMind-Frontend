@@ -71,6 +71,12 @@ export interface IStorage {
   getWeatherData(limit?: number): Promise<WeatherData[]>;
   createWeatherData(weather: InsertWeatherData): Promise<WeatherData>;
 
+  // Broodstock Management
+  getBroodstockPairs(): Promise<BroodstockPair[]>;
+  createBroodstockPair(pair: InsertBroodstockPair): Promise<BroodstockPair>;
+  getEggSuppliers(): Promise<EggSupplier[]>;
+  createEggSupplier(supplier: InsertEggSupplier): Promise<EggSupplier>;
+
   // Legacy compatibility for current frontend
   getFarmSites(): Promise<FarmSite[]>;
   getFarmSite(id: number): Promise<FarmSite | undefined>;

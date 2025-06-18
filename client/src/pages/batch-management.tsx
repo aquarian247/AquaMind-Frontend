@@ -21,7 +21,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import type { Batch, InsertBatch, Species, Stage, Container } from "@shared/schema";
+import type { Batch, InsertBatch, Species, Stage, Container, BroodstockPair, EggSupplier } from "@shared/schema";
 
 const batchFormSchema = z.object({
   name: z.string().min(1, "Batch name is required"),
@@ -36,6 +36,23 @@ const batchFormSchema = z.object({
   status: z.enum(["active", "harvested", "transferred"]).default("active"),
   expectedHarvestDate: z.date().optional(),
   notes: z.string().optional(),
+  // Broodstock traceability fields
+  eggSource: z.enum(["internal", "external"]),
+  broodstockPairId: z.number().optional(),
+  eggSupplierId: z.number().optional(),
+  eggBatchNumber: z.string().optional(),
+  eggProductionDate: z.date().optional(),
+}).refine((data) => {
+  if (data.eggSource === "internal" && !data.broodstockPairId) {
+    return false;
+  }
+  if (data.eggSource === "external" && (!data.eggSupplierId || !data.eggBatchNumber)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Please provide required fields for the selected egg source",
+  path: ["eggSource"],
 });
 
 type BatchFormData = z.infer<typeof batchFormSchema>;
@@ -82,6 +99,7 @@ export default function BatchManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
+  const [selectedEggSource, setSelectedEggSource] = useState<"internal" | "external">("internal");
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -101,6 +119,14 @@ export default function BatchManagement() {
 
   const { data: containers = [] } = useQuery<Container[]>({
     queryKey: ["/api/containers"],
+  });
+
+  const { data: broodstockPairs = [] } = useQuery<BroodstockPair[]>({
+    queryKey: ["/api/broodstock-pairs"],
+  });
+
+  const { data: eggSuppliers = [] } = useQuery<EggSupplier[]>({
+    queryKey: ["/api/egg-suppliers"],
   });
 
   // Create batch mutation
@@ -140,6 +166,7 @@ export default function BatchManagement() {
       initialBiomassKg: 0,
       currentCount: 0,
       currentBiomassKg: 0,
+      eggSource: "internal",
     },
   });
 
@@ -148,6 +175,7 @@ export default function BatchManagement() {
       ...data,
       startDate: data.startDate.toISOString().split('T')[0],
       expectedHarvestDate: data.expectedHarvestDate?.toISOString().split('T')[0],
+      eggProductionDate: data.eggProductionDate?.toISOString().split('T')[0],
       initialBiomassKg: data.initialBiomassKg.toString(),
       currentBiomassKg: data.currentBiomassKg.toString(),
     };
@@ -434,6 +462,160 @@ export default function BatchManagement() {
                       </FormItem>
                     )}
                   />
+                </div>
+
+                {/* Broodstock Traceability Section */}
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="font-medium text-sm">Egg Source & Traceability</h4>
+                  
+                  <FormField
+                    control={form.control}
+                    name="eggSource"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Egg Source</FormLabel>
+                        <Select 
+                          onValueChange={(value: "internal" | "external") => {
+                            field.onChange(value);
+                            setSelectedEggSource(value);
+                            // Reset related fields when changing source type
+                            if (value === "internal") {
+                              form.setValue("eggSupplierId", undefined);
+                              form.setValue("eggBatchNumber", undefined);
+                            } else {
+                              form.setValue("broodstockPairId", undefined);
+                            }
+                          }}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select egg source" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="internal">Internal Broodstock</SelectItem>
+                            <SelectItem value="external">External Supplier</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {selectedEggSource === "internal" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="broodstockPairId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Broodstock Pair</FormLabel>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select broodstock pair" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {broodstockPairs.map((pair) => (
+                                  <SelectItem key={pair.id} value={pair.id.toString()}>
+                                    {pair.pairName} (♂{pair.maleFishId} × ♀{pair.femaleFishId})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="eggProductionDate"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel>Egg Production Date</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "pl-3 text-left font-normal",
+                                      !field.value && "text-muted-foreground"
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      format(field.value, "PPP")
+                                    ) : (
+                                      <span>Pick production date</span>
+                                    )}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value}
+                                  onSelect={field.onChange}
+                                  disabled={(date) =>
+                                    date > new Date() || date < new Date("1900-01-01")
+                                  }
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+
+                  {selectedEggSource === "external" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="eggSupplierId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Egg Supplier</FormLabel>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select supplier" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {eggSuppliers.map((supplier) => (
+                                  <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                                    {supplier.name} ({supplier.country})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="eggBatchNumber"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Supplier Batch Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., AGN-2024-E0127" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end space-x-2 pt-4">

@@ -69,7 +69,32 @@ export const environmentalReadings = pgTable("environmental_readings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Batches - Fish groups
+// Broodstock Management Tables
+export const broodstockPairs = pgTable("broodstock_pairs", {
+  id: serial("id").primaryKey(),
+  pairName: text("pair_name").notNull(),
+  maleFishId: text("male_fish_id").notNull(),
+  femaleFishId: text("female_fish_id").notNull(),
+  pairingDate: date("pairing_date").notNull(),
+  progenyCount: integer("progeny_count"),
+  geneticTraits: text("genetic_traits"), // JSON string of traits
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const eggSuppliers = pgTable("egg_suppliers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  contactInfo: text("contact_info"),
+  certifications: text("certifications"),
+  country: text("country"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Batches - Fish groups with broodstock traceability
 export const batches = pgTable("batches", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -84,6 +109,12 @@ export const batches = pgTable("batches", {
   status: text("status").notNull().default("active"), // 'active', 'harvested', 'transferred'
   expectedHarvestDate: date("expected_harvest_date"),
   notes: text("notes"),
+  // Broodstock traceability fields
+  eggSource: text("egg_source").notNull(), // 'internal' or 'external'
+  broodstockPairId: integer("broodstock_pair_id").references(() => broodstockPairs.id),
+  eggSupplierId: integer("egg_supplier_id").references(() => eggSuppliers.id),
+  eggBatchNumber: text("egg_batch_number"), // Supplier batch number for external eggs
+  eggProductionDate: date("egg_production_date"), // Date eggs were produced/acquired
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -337,6 +368,18 @@ export const insertEnvironmentalReadingSchema = createInsertSchema(environmental
   updatedAt: true,
 });
 
+export const insertBroodstockPairSchema = createInsertSchema(broodstockPairs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEggSupplierSchema = createInsertSchema(eggSuppliers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertBatchSchema = createInsertSchema(batches).omit({
   id: true,
   createdAt: true,
@@ -516,3 +559,10 @@ export type InsertPen = z.infer<typeof insertPenSchema>;
 
 export type Alert = typeof alerts.$inferSelect;
 export type InsertAlert = z.infer<typeof insertAlertSchema>;
+
+// Broodstock Management types
+export type BroodstockPair = typeof broodstockPairs.$inferSelect;
+export type InsertBroodstockPair = z.infer<typeof insertBroodstockPairSchema>;
+
+export type EggSupplier = typeof eggSuppliers.$inferSelect;
+export type InsertEggSupplier = z.infer<typeof insertEggSupplierSchema>;

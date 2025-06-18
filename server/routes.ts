@@ -8,7 +8,8 @@ import {
   insertFeedingEventSchema, insertHealthRecordSchema,
   insertFeedPurchaseSchema, insertFeedContainerSchema, insertFeedContainerStockSchema,
   insertBatchFeedingSummarySchema, insertSpeciesSchema, insertStageSchema,
-  insertLabSampleSchema, insertHealthAssessmentSchema, insertWeatherDataSchema
+  insertLabSampleSchema, insertHealthAssessmentSchema, insertWeatherDataSchema,
+  insertBroodstockPairSchema, insertEggSupplierSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -75,6 +76,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(containers);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch containers" });
+    }
+  });
+
+  // Broodstock Management endpoints
+  app.get("/api/broodstock-pairs", async (req, res) => {
+    try {
+      const pairs = await storage.getBroodstockPairs();
+      res.json(pairs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch broodstock pairs" });
+    }
+  });
+
+  app.get("/api/egg-suppliers", async (req, res) => {
+    try {
+      const suppliers = await storage.getEggSuppliers();
+      res.json(suppliers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch egg suppliers" });
     }
   });
 
