@@ -12,6 +12,7 @@ interface BatchContainerViewProps {
 }
 
 export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedSite, setSelectedSite] = useState<string>("all");
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string>(selectedBatch?.id.toString() || "all");
   const [containerTypeFilter, setContainerTypeFilter] = useState<string>("all");
@@ -33,13 +34,46 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
     queryKey: ["/api/environmental-readings"],
   });
 
-  // Filter batches based on selected site
-  const filteredBatches = selectedSite === "all" 
-    ? allBatches 
-    : allBatches.filter(batch => {
-        const container = containers.find(c => c.id === batch.container);
-        return container?.name.includes(selectedSite);
+  // Filter farm sites based on selected region
+  const filteredFarmSites = selectedRegion === "all" 
+    ? farmSites 
+    : farmSites.filter(site => {
+        if (selectedRegion === "faroe") {
+          return site.name.toLowerCase().includes("atlantic") || site.name.toLowerCase().includes("faroe");
+        }
+        if (selectedRegion === "scotland") {
+          return site.name.toLowerCase().includes("scotland") || site.name.toLowerCase().includes("north sea");
+        }
+        return true;
       });
+
+  // Filter batches based on selected region and site
+  const filteredBatches = allBatches.filter(batch => {
+    const container = containers.find(c => c.id === batch.container);
+    
+    // Filter by region first
+    if (selectedRegion !== "all") {
+      const matchingSite = farmSites.find(site => {
+        if (selectedRegion === "faroe") {
+          return (site.name.toLowerCase().includes("atlantic") || site.name.toLowerCase().includes("faroe")) &&
+                 container?.name.includes(site.name);
+        }
+        if (selectedRegion === "scotland") {
+          return (site.name.toLowerCase().includes("scotland") || site.name.toLowerCase().includes("north sea")) &&
+                 container?.name.includes(site.name);
+        }
+        return false;
+      });
+      if (!matchingSite) return false;
+    }
+    
+    // Then filter by specific site
+    if (selectedSite !== "all") {
+      return container?.name.includes(selectedSite);
+    }
+    
+    return true;
+  });
 
   // Get containers for selected batch(es)
   const getContainersForBatch = () => {
@@ -84,11 +118,28 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            Site & Batch Filters
+            Region, Site & Batch Filters
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Region</label>
+              <Select value={selectedRegion} onValueChange={(value) => {
+                setSelectedRegion(value);
+                setSelectedSite("all"); // Reset site when region changes
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  <SelectItem value="faroe">Faroe Islands</SelectItem>
+                  <SelectItem value="scotland">Scotland</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Site</label>
               <Select value={selectedSite} onValueChange={setSelectedSite}>
@@ -97,7 +148,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Sites</SelectItem>
-                  {farmSites.map((site) => (
+                  {filteredFarmSites.map((site) => (
                     <SelectItem key={site.id} value={site.name}>
                       {site.name}
                     </SelectItem>
