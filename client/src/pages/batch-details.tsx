@@ -47,6 +47,7 @@ export default function BatchDetails() {
   const params = useParams();
   const batchId = parseInt(params.id!);
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState("overview");
 
   const { data: batch, isLoading } = useQuery({
     queryKey: [`/api/batches/${batchId}`],
