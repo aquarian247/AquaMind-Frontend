@@ -15,7 +15,11 @@ import {
   type Species, type InsertSpecies, type Stage, type InsertStage,
   type LabSample, type InsertLabSample, type HealthAssessment, type InsertHealthAssessment,
   type WeatherData, type InsertWeatherData, type BroodstockPair, type InsertBroodstockPair,
-  type EggSupplier, type InsertEggSupplier
+  type EggSupplier, type InsertEggSupplier,
+  type BatchContainerAssignment, type InsertBatchContainerAssignment,
+  type BatchTransfer, type InsertBatchTransfer,
+  type GrowthSample, type InsertGrowthSample,
+  type MortalityEvent, type InsertMortalityEvent
 } from "@shared/schema";
 
 export interface IStorage {
@@ -79,14 +83,14 @@ export interface IStorage {
   createEggSupplier(supplier: InsertEggSupplier): Promise<EggSupplier>;
 
   // Complex Batch Tracking
-  getBatchContainerAssignments(batchId?: number): Promise<BatchContainerAssignment[]>;
-  createBatchContainerAssignment(assignment: InsertBatchContainerAssignment): Promise<BatchContainerAssignment>;
-  getBatchTransfers(batchId?: number): Promise<BatchTransfer[]>;
-  createBatchTransfer(transfer: InsertBatchTransfer): Promise<BatchTransfer>;
-  getGrowthSamples(assignmentId?: number): Promise<GrowthSample[]>;
-  createGrowthSample(sample: InsertGrowthSample): Promise<GrowthSample>;
-  getMortalityEvents(assignmentId?: number): Promise<MortalityEvent[]>;
-  createMortalityEvent(event: InsertMortalityEvent): Promise<MortalityEvent>;
+  getBatchContainerAssignments(batchId?: number): Promise<any[]>;
+  createBatchContainerAssignment(assignment: any): Promise<any>;
+  getBatchTransfers(batchId?: number): Promise<any[]>;
+  createBatchTransfer(transfer: any): Promise<any>;
+  getGrowthSamples(assignmentId?: number): Promise<any[]>;
+  createGrowthSample(sample: any): Promise<any>;
+  getMortalityEvents(assignmentId?: number): Promise<any[]>;
+  createMortalityEvent(event: any): Promise<any>;
 
   // Legacy compatibility for current frontend
   getFarmSites(): Promise<FarmSite[]>;
@@ -160,10 +164,10 @@ export class MemStorage implements IStorage {
   private eggSuppliers: Map<number, EggSupplier> = new Map();
   
   // Complex batch tracking storage
-  private batchContainerAssignments: Map<number, BatchContainerAssignment> = new Map();
-  private batchTransfers: Map<number, BatchTransfer> = new Map();
-  private growthSamples: Map<number, GrowthSample> = new Map();
-  private mortalityEvents: Map<number, MortalityEvent> = new Map();
+  private batchContainerAssignments: Map<number, any> = new Map();
+  private batchTransfers: Map<number, any> = new Map();
+  private growthSamples: Map<number, any> = new Map();
+  private mortalityEvents: Map<number, any> = new Map();
   
   // Health Management data stores
   private healthJournalEntries: Map<number, any> = new Map();
@@ -180,10 +184,10 @@ export class MemStorage implements IStorage {
   private currentId = 1;
 
   constructor() {
-    this.seedData();
+    this.seedData().catch(console.error);
   }
 
-  private seedData() {
+  private async seedData() {
     // Seed users
     const user1: User = {
       id: this.currentId++,
@@ -1428,13 +1432,13 @@ export class MemStorage implements IStorage {
   }
 
   // Complex Batch Tracking Implementation
-  async getBatchContainerAssignments(batchId?: number): Promise<BatchContainerAssignment[]> {
+  async getBatchContainerAssignments(batchId?: number): Promise<any[]> {
     const assignments = Array.from(this.batchContainerAssignments.values());
     return batchId ? assignments.filter(a => a.batch === batchId) : assignments;
   }
 
-  async createBatchContainerAssignment(assignment: InsertBatchContainerAssignment): Promise<BatchContainerAssignment> {
-    const newAssignment: BatchContainerAssignment = {
+  async createBatchContainerAssignment(assignment: any): Promise<any> {
+    const newAssignment = {
       id: this.currentId++,
       ...assignment,
       createdAt: new Date(),
@@ -1444,13 +1448,13 @@ export class MemStorage implements IStorage {
     return newAssignment;
   }
 
-  async getBatchTransfers(batchId?: number): Promise<BatchTransfer[]> {
+  async getBatchTransfers(batchId?: number): Promise<any[]> {
     const transfers = Array.from(this.batchTransfers.values());
     return batchId ? transfers.filter(t => t.batch === batchId) : transfers;
   }
 
-  async createBatchTransfer(transfer: InsertBatchTransfer): Promise<BatchTransfer> {
-    const newTransfer: BatchTransfer = {
+  async createBatchTransfer(transfer: any): Promise<any> {
+    const newTransfer = {
       id: this.currentId++,
       ...transfer,
       createdAt: new Date(),
@@ -1460,13 +1464,13 @@ export class MemStorage implements IStorage {
     return newTransfer;
   }
 
-  async getGrowthSamples(assignmentId?: number): Promise<GrowthSample[]> {
+  async getGrowthSamples(assignmentId?: number): Promise<any[]> {
     const samples = Array.from(this.growthSamples.values());
     return assignmentId ? samples.filter(s => s.containerAssignment === assignmentId) : samples;
   }
 
-  async createGrowthSample(sample: InsertGrowthSample): Promise<GrowthSample> {
-    const newSample: GrowthSample = {
+  async createGrowthSample(sample: any): Promise<any> {
+    const newSample = {
       id: this.currentId++,
       ...sample,
       createdAt: new Date(),
@@ -1476,13 +1480,13 @@ export class MemStorage implements IStorage {
     return newSample;
   }
 
-  async getMortalityEvents(assignmentId?: number): Promise<MortalityEvent[]> {
+  async getMortalityEvents(assignmentId?: number): Promise<any[]> {
     const events = Array.from(this.mortalityEvents.values());
     return assignmentId ? events.filter(e => e.containerAssignment === assignmentId) : events;
   }
 
-  async createMortalityEvent(event: InsertMortalityEvent): Promise<MortalityEvent> {
-    const newEvent: MortalityEvent = {
+  async createMortalityEvent(event: any): Promise<any> {
+    const newEvent = {
       id: this.currentId++,
       ...event,
       createdAt: new Date(),
@@ -1559,7 +1563,7 @@ export class MemStorage implements IStorage {
       const biomassPerContainer = (fishPerContainer * stageInfo.avgWeight) / 1000;
 
       // Create assignments for this stage
-      const assignments: BatchContainerAssignment[] = [];
+      const assignments: any[] = [];
       for (let i = 0; i < stageContainers.length; i++) {
         const container = stageContainers[i];
         const assignment = await this.createBatchContainerAssignment({
