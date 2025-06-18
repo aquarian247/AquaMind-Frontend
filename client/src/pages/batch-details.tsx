@@ -224,7 +224,7 @@ export default function BatchDetails() {
                         <p className="font-medium capitalize">{batch.eggSource || 'Unknown'}</p>
                       </div>
                     </div>
-                    
+
                     {batch.notes && (
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Notes</label>
@@ -242,32 +242,32 @@ export default function BatchDetails() {
                     <CardDescription>Key performance indicators</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Average Weight</label>
-                      <p className="text-lg font-bold">
-                        {batch.currentCount && batch.currentBiomassKg && batch.currentCount > 0
-                          ? ((parseFloat(batch.currentBiomassKg) * 1000) / batch.currentCount).toFixed(2)
-                          : '0.00'} g
-                      </p>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Growth Rate</label>
-                      <p className="text-lg font-bold text-green-600">+15.2% /week</p>
-                      <p className="text-xs text-muted-foreground">Based on recent samples</p>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Feed Conversion</label>
-                      <p className="text-lg font-bold">1.23 FCR</p>
-                      <p className="text-xs text-muted-foreground">Feed conversion ratio</p>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Health Score</label>
-                      <p className="text-lg font-bold text-blue-600">92/100</p>
-                      <p className="text-xs text-muted-foreground">Overall health assessment</p>
-                    </div>
+                    <div className="space-y-1">
+                        <label className="text-sm font-medium text-muted-foreground">Average Weight</label>
+                        <p className="text-lg lg:text-xl font-bold">
+                          {batch.currentCount && batch.currentBiomassKg && batch.currentCount > 0
+                            ? ((parseFloat(batch.currentBiomassKg) * 1000) / batch.currentCount).toFixed(2)
+                            : '0.00'} g
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-muted-foreground">Growth Rate</label>
+                        <p className="text-lg lg:text-xl font-bold text-green-600">+15.2% /week</p>
+                        <p className="text-xs text-muted-foreground">Based on recent samples</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-muted-foreground">Feed Conversion</label>
+                        <p className="text-lg lg:text-xl font-bold">1.23 FCR</p>
+                        <p className="text-xs text-muted-foreground">Feed conversion ratio</p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-sm font-medium text-muted-foreground">Health Score</label>
+                        <p className="text-lg lg:text-xl font-bold text-blue-600">92/100</p>
+                        <p className="text-xs text-muted-foreground">Overall health assessment</p>
+                      </div>
                   </CardContent>
                 </Card>
               </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CalendarIcon, Fish, Plus, MapPin, TrendingUp, Activity, AlertTriangle, Heart, Users, BarChart3, Container as ContainerIcon, Search, Filter, Clock, Target, Eye } from "lucide-react";
-import { Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -192,7 +192,7 @@ export default function BatchManagement() {
       const biomass = typeof b.currentBiomassKg === 'string' ? parseFloat(b.currentBiomassKg) : b.currentBiomassKg;
       return sum + biomass;
     }, 0);
-    
+
     const avgSurvivalRate = activeBatches.length > 0 ? 
       activeBatches.reduce((sum, b) => {
         const rate = b.initialCount > 0 ? (b.currentCount / b.initialCount) * 100 : 0;
@@ -253,19 +253,19 @@ export default function BatchManagement() {
 
   const getStageProgress = (stageName?: string, daysActive?: number) => {
     if (!stageName || !daysActive) return 0;
-    
+
     const stages = getLifecycleStages();
     const currentStageIndex = stages.findIndex(s => 
       stageName.toLowerCase().includes(s.name.toLowerCase())
     );
-    
+
     if (currentStageIndex === -1) return 0;
-    
+
     // Calculate cumulative days up to current stage
     const cumulativeDays = stages.slice(0, currentStageIndex).reduce((sum, stage) => sum + stage.duration, 0);
     const daysInCurrentStage = daysActive - cumulativeDays;
     const currentStageDuration = stages[currentStageIndex].duration;
-    
+
     const progress = Math.min((daysInCurrentStage / currentStageDuration) * 100, 100);
     return Math.max(0, progress);
   };
@@ -314,7 +314,7 @@ export default function BatchManagement() {
             Track and manage fish batches through their lifecycle
           </p>
         </div>
-        
+
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -329,7 +329,7 @@ export default function BatchManagement() {
                 Add a new fish batch to the system
               </DialogDescription>
             </DialogHeader>
-            
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -346,7 +346,7 @@ export default function BatchManagement() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="species"
@@ -461,7 +461,7 @@ export default function BatchManagement() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="initialBiomassKg"
@@ -486,7 +486,7 @@ export default function BatchManagement() {
                 {/* Broodstock Traceability Section */}
                 <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                   <h4 className="font-medium text-sm">Egg Source & Traceability</h4>
-                  
+
                   <FormField
                     control={form.control}
                     name="eggSource"
@@ -548,7 +548,7 @@ export default function BatchManagement() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="eggProductionDate"
@@ -619,7 +619,7 @@ export default function BatchManagement() {
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name="eggBatchNumber"
@@ -743,7 +743,7 @@ export default function BatchManagement() {
                 />
               </div>
             </div>
-            
+
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Status" />
@@ -780,7 +780,7 @@ export default function BatchManagement() {
               const currentBiomass = typeof batch.currentBiomassKg === 'string' ? parseFloat(batch.currentBiomassKg) : batch.currentBiomassKg;
               const avgWeight = batch.currentCount > 0 ? (currentBiomass * 1000) / batch.currentCount : 0;
               const stageProgress = getStageProgress(batch.stageName, daysActive);
-              
+
               return (
                 <Card 
                   key={batch.id} 
@@ -815,11 +815,10 @@ export default function BatchManagement() {
                             <span>Started {format(new Date(batch.startDate), "MMM dd, yyyy")}</span>
                           </div>
                         </div>
-                        
+
                         <Link href={`/batch-details/${batch.id}`}>
                           <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
+                            <Eye className="h-4 w-4 mr-2" />View Details
                           </Button>
                         </Link>
                       </div>
@@ -839,7 +838,7 @@ export default function BatchManagement() {
                             );
                             const isCurrentStage = currentStageIndex === index;
                             const isCompleted = currentStageIndex > index;
-                            
+
                             return (
                               <div key={stage.name} className="flex-1 space-y-1">
                                 <div className={cn(
@@ -874,21 +873,21 @@ export default function BatchManagement() {
                           </div>
                           <div className="text-xs text-muted-foreground">Fish Count</div>
                         </div>
-                        
+
                         <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
                           <div className="text-2xl font-bold text-green-600">
                             {currentBiomass.toFixed(1)}kg
                           </div>
                           <div className="text-xs text-muted-foreground">Biomass</div>
                         </div>
-                        
+
                         <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
                           <div className="text-2xl font-bold text-orange-600">
                             {survivalRate.toFixed(1)}%
                           </div>
                           <div className="text-xs text-muted-foreground">Survival</div>
                         </div>
-                        
+
                         <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
                           <div className="text-2xl font-bold text-purple-600">
                             {avgWeight.toFixed(0)}g
