@@ -520,6 +520,12 @@ export class MemStorage implements IStorage {
       
       batches.push(batch);
       this.batches.set(batch.id, batch);
+      
+      // Update container with batch reference for container distribution
+      const assignedContainer = containers[i % containers.length];
+      const updatedContainer = { ...assignedContainer, batchId: batch.id };
+      this.containers.set(assignedContainer.id, updatedContainer);
+      
       batchCounter++;
     }
 

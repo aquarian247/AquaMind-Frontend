@@ -252,6 +252,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Batch Management API endpoints  
+  app.get("/api/batches", async (req, res) => {
+    try {
+      const batches = await storage.getBatches();
+      
+      // Enrich with related data
+      const enrichedBatches = await Promise.all(
+        batches.map(async (batch) => {
+          const species = await storage.getSpecies();
+          const stages = await storage.getStages();
+          const containers = await storage.getContainers();
+          
+          const batchSpecies = species.find(s => s.id === batch.species);
+          const batchStage = stages.find(s => s.id === batch.stage);
+          const batchContainer = containers.find(c => c.id === batch.container);
+          
+          return {
+            ...batch,
+            speciesName: batchSpecies?.name,
+            stageName: batchStage?.name,
+            containerName: batchContainer?.name
+          };
+        })
+      );
+      
+      res.json(enrichedBatches);
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+      res.status(500).json({ error: "Failed to fetch batches" });
+    }
+  });
+
+  // Get single batch by ID
+  app.get("/api/batches/:id", async (req, res) => {
+    try {
+      const batchId = parseInt(req.params.id);
+      const batches = await storage.getBatches();
+      const batch = batches.find(b => b.id === batchId);
+      
+      if (!batch) {
+        return res.status(404).json({ error: "Batch not found" });
+      }
+      
+      // Enrich with related data
+      const species = await storage.getSpecies();
+      const stages = await storage.getStages();
+      const containers = await storage.getContainers();
+      
+      const batchSpecies = species.find(s => s.id === batch.species);
+      const batchStage = stages.find(s => s.id === batch.stage);
+      const batchContainer = containers.find(c => c.id === batch.container);
+      
+      const enrichedBatch = {
+        ...batch,
+        speciesName: batchSpecies?.name,
+        stageName: batchStage?.name,
+        containerName: batchContainer?.name
+      };
+      
+      res.json(enrichedBatch);
+    } catch (error) {
+      console.error("Error fetching batch:", error);
+      res.status(500).json({ error: "Failed to fetch batch" });
+    }
+  });
+
   app.post("/api/v1/batch/batches/", async (req, res) => {
     try {
       const validatedData = insertBatchSchema.parse(req.body);
