@@ -61,13 +61,13 @@ export function ThemeProvider({
   const value = {
     theme,
     mode,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey + "-theme", theme);
-      setTheme(theme);
+    setTheme: (newTheme: Theme) => {
+      localStorage.setItem(storageKey + "-theme", newTheme);
+      setTheme(newTheme);
     },
-    setMode: (mode: Mode) => {
-      localStorage.setItem(storageKey + "-mode", mode);
-      setMode(mode);
+    setMode: (newMode: Mode) => {
+      localStorage.setItem(storageKey + "-mode", newMode);
+      setMode(newMode);
     },
     toggleMode: () => {
       const newMode = mode === "light" ? "dark" : "light";
