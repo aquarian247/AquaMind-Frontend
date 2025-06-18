@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon, Fish, Plus, MapPin, TrendingUp, Activity, AlertTriangle } from "lucide-react";
+import { CalendarIcon, Fish, Plus, MapPin, TrendingUp, Activity, AlertTriangle, Heart, Users, BarChart3, Container as ContainerIcon, Search, Filter, Clock, Target } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,6 +21,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import type { Batch, InsertBatch, Species, Stage, Container } from "@shared/schema";
 
 const batchFormSchema = z.object({
@@ -47,12 +49,41 @@ interface ExtendedBatch extends Batch {
   fcr?: number;
   survivalRate?: number;
   avgWeight?: number;
+  daysActive?: number;
+  containerCount?: number;
+  healthStatus?: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
+  mortalityRate?: number;
+  biomassGrowthRate?: number;
+}
+
+interface BatchKPIs {
+  totalActiveBatches: number;
+  averageHealthScore: number;
+  totalFishCount: number;
+  averageSurvivalRate: number;
+  batchesRequiringAttention: number;
+  avgGrowthRate: number;
+  totalBiomass: number;
+  averageFCR: number;
+}
+
+interface ContainerDistribution {
+  containerId: number;
+  containerName: string;
+  containerType: string;
+  status: 'healthy' | 'warning' | 'critical';
+  fishCount: number;
+  biomassKg: number;
+  lastUpdate: string;
 }
 
 export default function BatchManagement() {
   const [selectedBatch, setSelectedBatch] = useState<ExtendedBatch | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [stageFilter, setStageFilter] = useState("all");
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -60,6 +91,11 @@ export default function BatchManagement() {
   // Fetch batches with extended information
   const { data: batches = [], isLoading: batchesLoading } = useQuery<ExtendedBatch[]>({
     queryKey: ["/api/batches"],
+  });
+
+  // Fetch batch KPIs
+  const { data: batchKPIs, isLoading: kpisLoading } = useQuery<BatchKPIs>({
+    queryKey: ["/api/batches/kpis"],
   });
 
   // Fetch reference data
@@ -135,11 +171,7 @@ export default function BatchManagement() {
     }
   };
 
-  const getStageProgress = (stageName?: string) => {
-    const stages = ["Egg", "Fry", "Parr", "Smolt", "Post-Smolt", "Adult"];
-    const currentIndex = stageName ? stages.indexOf(stageName) : 0;
-    return ((currentIndex + 1) / stages.length) * 100;
-  };
+
 
   const calculateBatchMetrics = (batch: ExtendedBatch) => {
     const survivalRate = batch.initialCount > 0 ? (batch.currentCount / batch.initialCount) * 100 : 0;
@@ -147,18 +179,54 @@ export default function BatchManagement() {
     const initialBiomass = typeof batch.initialBiomassKg === 'string' ? parseFloat(batch.initialBiomassKg) : batch.initialBiomassKg;
     const avgWeight = batch.currentCount > 0 ? (currentBiomass * 1000) / batch.currentCount : 0;
     const growthRate = initialBiomass > 0 ? ((currentBiomass - initialBiomass) / initialBiomass) * 100 : 0;
+    const daysActive = batch.startDate ? Math.floor((new Date().getTime() - new Date(batch.startDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
     
-    return { survivalRate, avgWeight, growthRate };
+    return { survivalRate, avgWeight, growthRate, daysActive };
   };
 
-  if (batchesLoading) {
+  const getHealthStatus = (batch: ExtendedBatch): 'excellent' | 'good' | 'fair' | 'poor' | 'critical' => {
+    const metrics = calculateBatchMetrics(batch);
+    if (metrics.survivalRate >= 95) return 'excellent';
+    if (metrics.survivalRate >= 90) return 'good';
+    if (metrics.survivalRate >= 85) return 'fair';
+    if (metrics.survivalRate >= 80) return 'poor';
+    return 'critical';
+  };
+
+  const getLifecycleStages = () => [
+    { name: "Egg/Alevin", duration: 95, color: "bg-purple-500" },
+    { name: "Parr", duration: 95, color: "bg-blue-500" },
+    { name: "Smolt", duration: 95, color: "bg-green-500" },
+    { name: "Post-Smolt", duration: 95, color: "bg-yellow-500" },
+    { name: "Adult", duration: 450, color: "bg-orange-500" }
+  ];
+
+  const getStageProgress = (stageName?: string, daysActive?: number) => {
+    const stages = getLifecycleStages();
+    const currentStageIndex = stageName ? stages.findIndex(s => s.name.includes(stageName)) : 0;
+    if (currentStageIndex === -1) return 0;
+    
+    const currentStage = stages[currentStageIndex];
+    const stageProgress = daysActive ? Math.min((daysActive % currentStage.duration) / currentStage.duration * 100, 100) : 0;
+    return stageProgress;
+  };
+
+  const filteredBatches = batches.filter(batch => {
+    const matchesSearch = batch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         batch.speciesName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || batch.status === statusFilter;
+    const matchesStage = stageFilter === "all" || batch.stageName === stageFilter;
+    return matchesSearch && matchesStatus && matchesStage;
+  });
+
+  if (batchesLoading || kpisLoading) {
     return (
       <div className="container mx-auto p-4 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Batch Management</h1>
         </div>
         <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
                 <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
@@ -171,7 +239,8 @@ export default function BatchManagement() {
   }
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto p-3 lg:p-6 space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Batch Management</h1>
