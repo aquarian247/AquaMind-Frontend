@@ -116,6 +116,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complex Batch Tracking Routes
+  app.get("/api/batch-container-assignments", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const assignments = await storage.getBatchContainerAssignments(batchId);
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching batch container assignments:", error);
+      res.status(500).json({ error: "Failed to fetch batch container assignments" });
+    }
+  });
+
+  app.get("/api/batch-transfers", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const transfers = await storage.getBatchTransfers(batchId);
+      res.json(transfers);
+    } catch (error) {
+      console.error("Error fetching batch transfers:", error);
+      res.status(500).json({ error: "Failed to fetch batch transfers" });
+    }
+  });
+
+  app.get("/api/growth-samples", async (req, res) => {
+    try {
+      const assignmentId = req.query.assignmentId ? parseInt(req.query.assignmentId as string) : undefined;
+      const samples = await storage.getGrowthSamples(assignmentId);
+      res.json(samples);
+    } catch (error) {
+      console.error("Error fetching growth samples:", error);
+      res.status(500).json({ error: "Failed to fetch growth samples" });
+    }
+  });
+
+  app.get("/api/mortality-events", async (req, res) => {
+    try {
+      const assignmentId = req.query.assignmentId ? parseInt(req.query.assignmentId as string) : undefined;
+      const events = await storage.getMortalityEvents(assignmentId);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching mortality events:", error);
+      res.status(500).json({ error: "Failed to fetch mortality events" });
+    }
+  });
+
   // Health Management API endpoints
   app.get("/api/health/summary", async (req, res) => {
     try {

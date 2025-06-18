@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Fish, Thermometer, Activity, Calendar, History, MapPin, Truck } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity } from "lucide-react";
+import { BatchTraceabilityView } from "@/components/batch-management/BatchTraceabilityView";
 
 interface BatchDetails {
   id: number;
