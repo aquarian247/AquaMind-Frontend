@@ -812,20 +812,30 @@ export default function BatchManagement() {
                         </div>
                         <div className="flex space-x-1">
                           {getLifecycleStages().map((stage, index) => {
-                            const isCurrentStage = batch.stageName?.toLowerCase().includes(stage.name.toLowerCase());
-                            const isCompleted = stages.findIndex(s => s.name === batch.stageName) > index;
+                            const stages = getLifecycleStages();
+                            const currentStageIndex = stages.findIndex(s => 
+                              batch.stageName?.toLowerCase().includes(s.name.toLowerCase())
+                            );
+                            const isCurrentStage = currentStageIndex === index;
+                            const isCompleted = currentStageIndex > index;
                             
                             return (
                               <div key={stage.name} className="flex-1 space-y-1">
                                 <div className={cn(
-                                  "h-2 rounded-full",
-                                  isCurrentStage ? stage.color : isCompleted ? "bg-green-300" : "bg-gray-200"
+                                  "h-3 rounded-full relative overflow-hidden",
+                                  isCompleted ? "bg-green-300" : "bg-gray-200"
                                 )}>
                                   {isCurrentStage && (
                                     <div 
-                                      className="h-full bg-white/30 rounded-full transition-all duration-300"
+                                      className={cn(
+                                        "h-full rounded-full transition-all duration-300",
+                                        getProgressColor(stageProgress)
+                                      )}
                                       style={{ width: `${stageProgress}%` }}
                                     />
+                                  )}
+                                  {isCompleted && (
+                                    <div className="absolute inset-0 bg-green-300 rounded-full" />
                                   )}
                                 </div>
                                 <div className="text-xs text-center truncate">{stage.name}</div>
