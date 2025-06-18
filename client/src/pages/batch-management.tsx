@@ -273,7 +273,7 @@ export default function BatchManagement() {
     if (progress < 60) return "bg-green-500";
     if (progress < 75) return "bg-yellow-500";
     if (progress < 90) return "bg-orange-500";
-    return "bg-red-500";
+    return "bg-red-700";
   };
 
   const filteredBatches = batches.filter(batch => {
