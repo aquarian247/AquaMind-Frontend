@@ -122,7 +122,7 @@ export default function BatchDetails() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Current Population</CardTitle>
@@ -193,11 +193,15 @@ export default function BatchDetails() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-full">
-                <DropdownMenuItem onClick={() => document.querySelector('[data-state="active"][value="overview"]')?.click()}>
-                  Batch Overview
+                <DropdownMenuItem asChild>
+                  <TabsTrigger value="overview" className="w-full justify-start">
+                    Batch Overview
+                  </TabsTrigger>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => document.querySelector('[data-state="inactive"][value="traceability"]')?.click()}>
-                  {isComplexBatch ? "Full Traceability" : "Batch History"}
+                <DropdownMenuItem asChild>
+                  <TabsTrigger value="traceability" className="w-full justify-start">
+                    {isComplexBatch ? "Full Traceability" : "Batch History"}
+                  </TabsTrigger>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
