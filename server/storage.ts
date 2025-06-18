@@ -219,34 +219,65 @@ export class MemStorage implements IStorage {
     };
     this.environmentalParameters.set(phParam.id, phParam);
 
-    // Seed Containers
-    const container1: Container = {
-      id: this.currentId++,
-      name: "Pen A1 - Atlantic Site",
-      containerType: "pen",
-      capacity: 2500,
-      location: "Nordfjord, Norway",
-      coordinates: "61.9167,5.7333",
-      depth: "25.00",
-      status: "active",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.containers.set(container1.id, container1);
-
-    const container2: Container = {
-      id: this.currentId++,
-      name: "Pen B1 - Pacific Site",
-      containerType: "pen",
-      capacity: 2200,
-      location: "Sognefjord, Norway",
-      coordinates: "61.2181,7.1250",
-      depth: "28.00",
-      status: "active",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.containers.set(container2.id, container2);
+    // Seed Containers - Create diverse container types for different stages
+    const containers: Container[] = [];
+    
+    // Sea cages for adult/post-smolt stages
+    for (let i = 1; i <= 25; i++) {
+      const container: Container = {
+        id: this.currentId++,
+        name: `Sea Cage ${String(i).padStart(2, '0')} - Atlantic`,
+        containerType: "sea_cage",
+        capacity: 200000, // Large capacity for adult fish
+        location: i <= 12 ? "Faroe Islands" : "Scotland",
+        coordinates: i <= 12 ? "62.0000,-6.7833" : "57.0000,-5.5000",
+        depth: "35.00",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      containers.push(container);
+      this.containers.set(container.id, container);
+    }
+    
+    // Land-based tanks for smolt/parr/fry stages
+    for (let i = 1; i <= 30; i++) {
+      const container: Container = {
+        id: this.currentId++,
+        name: `Tank ${String(i).padStart(2, '0')} - Freshwater`,
+        containerType: "tank",
+        capacity: 50000, // Medium capacity for juvenile fish
+        location: i <= 15 ? "Bakkafrost Hatchery A" : "Bakkafrost Hatchery B",
+        coordinates: i <= 15 ? "62.0167,-6.7667" : "62.0333,-6.8000",
+        depth: "8.00",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      containers.push(container);
+      this.containers.set(container.id, container);
+    }
+    
+    // Incubation systems for egg/alevin stages
+    for (let i = 1; i <= 20; i++) {
+      const container: Container = {
+        id: this.currentId++,
+        name: `Incubator ${String(i).padStart(2, '0')} - Controlled`,
+        containerType: "incubator",
+        capacity: 4000000, // Very high capacity for eggs
+        location: "Bakkafrost Broodstock Facility",
+        coordinates: "62.0500,-6.7500",
+        depth: "2.00",
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      containers.push(container);
+      this.containers.set(container.id, container);
+    }
+    
+    const container1 = containers[0];
+    const container2 = containers[1];
 
     // Seed Species first
     const atlanticSalmon: Species = {
@@ -405,53 +436,89 @@ export class MemStorage implements IStorage {
     this.eggSuppliers.set(supplier1.id, supplier1);
     this.eggSuppliers.set(supplier2.id, supplier2);
 
-    // Seed Batches with proper foreign keys and broodstock traceability
-    const batch1: Batch = {
-      id: this.currentId++,
-      name: "BATCH-2024-001",
-      species: atlanticSalmon.id,
-      startDate: "2024-01-15",
-      initialCount: 50000,
-      initialBiomassKg: "1250.5",
-      currentCount: 48500,
-      currentBiomassKg: "2150.75",
-      container: container1.id,
-      stage: smoltStage.id,
-      status: "active",
-      expectedHarvestDate: "2025-12-15",
-      notes: "First generation Atlantic salmon batch",
-      eggSource: "internal",
-      broodstockPairId: pair1.id,
-      eggSupplierId: null,
-      eggBatchNumber: null,
-      eggProductionDate: "2023-10-15",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    // Create realistic batch data representing 75 active batches across lifecycle stages
+    // Based on ~3.5M eggs initial, 20-25% mortality, production targeting 100,000 tons annually
+    
+    const batchTemplates = [
+      // Adult stage batches (sea cages) - 450+ days, highest biomass
+      { stage: adultStage, ageMonths: 18, mortality: 0.25, avgWeightG: 4500, stagePrefix: "AD" },
+      { stage: adultStage, ageMonths: 17, mortality: 0.24, avgWeightG: 4200, stagePrefix: "AD" },
+      { stage: adultStage, ageMonths: 16, mortality: 0.23, avgWeightG: 3800, stagePrefix: "AD" },
+      { stage: adultStage, ageMonths: 15, mortality: 0.22, avgWeightG: 3400, stagePrefix: "AD" },
+      { stage: adultStage, ageMonths: 14, mortality: 0.21, avgWeightG: 3000, stagePrefix: "AD" },
+      
+      // Post-smolt stage (90-100 days) - rapid growth phase
+      { stage: postSmoltStage, ageMonths: 6, mortality: 0.20, avgWeightG: 800, stagePrefix: "PS" },
+      { stage: postSmoltStage, ageMonths: 5, mortality: 0.19, avgWeightG: 600, stagePrefix: "PS" },
+      { stage: postSmoltStage, ageMonths: 4, mortality: 0.18, avgWeightG: 400, stagePrefix: "PS" },
+      
+      // Smolt stage (90-100 days) - pre-seawater transfer
+      { stage: smoltStage, ageMonths: 3, mortality: 0.17, avgWeightG: 180, stagePrefix: "SM" },
+      { stage: smoltStage, ageMonths: 3, mortality: 0.16, avgWeightG: 160, stagePrefix: "SM" },
+      { stage: smoltStage, ageMonths: 3, mortality: 0.15, avgWeightG: 140, stagePrefix: "SM" },
+      
+      // Parr stage (90-100 days) - freshwater growth
+      { stage: parrStage, ageMonths: 2, mortality: 0.14, avgWeightG: 45, stagePrefix: "PR" },
+      { stage: parrStage, ageMonths: 2, mortality: 0.13, avgWeightG: 35, stagePrefix: "PR" },
+      { stage: parrStage, ageMonths: 1, mortality: 0.12, avgWeightG: 25, stagePrefix: "PR" },
+      
+      // Fry stage (60-90 days) - early development
+      { stage: fryStage, ageMonths: 1, mortality: 0.11, avgWeightG: 8, stagePrefix: "FR" },
+      { stage: fryStage, ageMonths: 1, mortality: 0.10, avgWeightG: 5, stagePrefix: "FR" },
+      
+      // Egg/Alevin stage (90-100 days) - highest mortality
+      { stage: eggStage, ageMonths: 0, mortality: 0.08, avgWeightG: 0.1, stagePrefix: "EG" },
+      { stage: eggStage, ageMonths: 0, mortality: 0.07, avgWeightG: 0.08, stagePrefix: "EG" },
+    ];
 
-    const batch2: Batch = {
-      id: this.currentId++,
-      name: "BATCH-2024-002",
-      species: atlanticSalmon.id,
-      startDate: "2024-02-01",
-      initialCount: 45000,
-      initialBiomassKg: "1125.0",
-      currentCount: 44200,
-      currentBiomassKg: "1989.5",
-      container: container2.id,
-      stage: parrStage.id,
-      status: "active",
-      expectedHarvestDate: "2026-01-15",
-      notes: "Second generation with improved growth rate",
-      eggSource: "external",
-      broodstockPairId: null,
-      eggSupplierId: supplier1.id,
-      eggBatchNumber: "AGN-2024-E0127",
-      eggProductionDate: "2024-01-20",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.batches.set(batch2.id, batch2);
+    // Generate 75 batches with realistic progression
+    const batches: Batch[] = [];
+    let batchCounter = 1;
+    
+    for (let i = 0; i < 75; i++) {
+      const template = batchTemplates[i % batchTemplates.length];
+      const baseDate = new Date();
+      baseDate.setMonth(baseDate.getMonth() - template.ageMonths);
+      
+      const initialCount = 3500000; // 3.5M eggs
+      const currentCount = Math.floor(initialCount * (1 - template.mortality));
+      const currentBiomassKg = (currentCount * template.avgWeightG / 1000).toFixed(2);
+      const initialBiomassKg = template.stage.name === "Egg" ? "0.35" : (initialCount * 0.1 / 1000).toFixed(2);
+      
+      const harvestDate = new Date(baseDate);
+      harvestDate.setMonth(harvestDate.getMonth() + 24); // 2 years total cycle
+      
+      const isInternal = Math.random() > 0.3; // 70% internal, 30% external
+      const selectedPair = Math.random() > 0.5 ? pair1 : pair2;
+      const selectedSupplier = Math.random() > 0.5 ? supplier1 : supplier2;
+      
+      const batch: Batch = {
+        id: this.currentId++,
+        name: `BATCH-2024-${String(batchCounter).padStart(3, '0')}`,
+        species: atlanticSalmon.id,
+        startDate: baseDate.toISOString().split('T')[0],
+        initialCount,
+        initialBiomassKg,
+        currentCount,
+        currentBiomassKg,
+        container: containers[i % containers.length].id, // Distribute across containers
+        stage: template.stage.id,
+        status: template.stage.name === "Adult" && template.ageMonths >= 18 ? "harvested" : "active",
+        expectedHarvestDate: harvestDate.toISOString().split('T')[0],
+        notes: `${template.stage.name} stage batch - Day ${template.ageMonths * 30}`,
+        eggSource: isInternal ? "internal" : "external",
+        broodstockPairId: isInternal ? selectedPair.id : null,
+        eggSupplierId: isInternal ? null : selectedSupplier.id,
+        eggBatchNumber: isInternal ? null : `${selectedSupplier.name.split(' ')[0].toUpperCase()}-2024-E${String(Math.floor(Math.random() * 999)).padStart(3, '0')}`,
+        eggProductionDate: baseDate.toISOString().split('T')[0],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      batches.push(batch);
+      this.batches.set(batch.id, batch);
+      batchCounter++;
+    }
 
     // Seed Feed Types
     const feedType1: FeedType = {
