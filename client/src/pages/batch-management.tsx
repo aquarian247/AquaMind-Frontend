@@ -4,12 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon, Fish, Plus, MapPin, TrendingUp, Activity, AlertTriangle, Heart, Users, BarChart3, Container as ContainerIcon, Search, Filter, Clock, Target } from "lucide-react";
+import { CalendarIcon, Fish, Plus, MapPin, TrendingUp, Activity, AlertTriangle, Heart, Users, BarChart3, Container as ContainerIcon, Search, Filter, Clock, Target, Eye } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -88,17 +86,11 @@ export default function BatchManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch batches with extended information
+  // Fetch data
   const { data: batches = [], isLoading: batchesLoading } = useQuery<ExtendedBatch[]>({
     queryKey: ["/api/batches"],
   });
 
-  // Fetch batch KPIs
-  const { data: batchKPIs, isLoading: kpisLoading } = useQuery<BatchKPIs>({
-    queryKey: ["/api/batches/kpis"],
-  });
-
-  // Fetch reference data
   const { data: species = [] } = useQuery<Species[]>({
     queryKey: ["/api/species"],
   });
@@ -162,35 +154,58 @@ export default function BatchManagement() {
     createBatchMutation.mutate(insertData);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active": return "bg-green-500";
-      case "harvested": return "bg-blue-500";
-      case "transferred": return "bg-yellow-500";
-      default: return "bg-gray-500";
-    }
-  };
-
-
-
-  const calculateBatchMetrics = (batch: ExtendedBatch) => {
-    const survivalRate = batch.initialCount > 0 ? (batch.currentCount / batch.initialCount) * 100 : 0;
-    const currentBiomass = typeof batch.currentBiomassKg === 'string' ? parseFloat(batch.currentBiomassKg) : batch.currentBiomassKg;
-    const initialBiomass = typeof batch.initialBiomassKg === 'string' ? parseFloat(batch.initialBiomassKg) : batch.initialBiomassKg;
-    const avgWeight = batch.currentCount > 0 ? (currentBiomass * 1000) / batch.currentCount : 0;
-    const growthRate = initialBiomass > 0 ? ((currentBiomass - initialBiomass) / initialBiomass) * 100 : 0;
-    const daysActive = batch.startDate ? Math.floor((new Date().getTime() - new Date(batch.startDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  // Calculate KPIs from batches
+  const calculateKPIs = (): BatchKPIs => {
+    const activeBatches = batches.filter(b => b.status === 'active');
+    const totalFishCount = activeBatches.reduce((sum, b) => sum + b.currentCount, 0);
+    const totalBiomass = activeBatches.reduce((sum, b) => {
+      const biomass = typeof b.currentBiomassKg === 'string' ? parseFloat(b.currentBiomassKg) : b.currentBiomassKg;
+      return sum + biomass;
+    }, 0);
     
-    return { survivalRate, avgWeight, growthRate, daysActive };
+    const avgSurvivalRate = activeBatches.length > 0 ? 
+      activeBatches.reduce((sum, b) => {
+        const rate = b.initialCount > 0 ? (b.currentCount / b.initialCount) * 100 : 0;
+        return sum + rate;
+      }, 0) / activeBatches.length : 0;
+
+    const batchesWithCriticalHealth = activeBatches.filter(b => {
+      const survivalRate = b.initialCount > 0 ? (b.currentCount / b.initialCount) * 100 : 0;
+      return survivalRate < 85; // Consider <85% survival as requiring attention
+    }).length;
+
+    return {
+      totalActiveBatches: activeBatches.length,
+      averageHealthScore: avgSurvivalRate,
+      totalFishCount,
+      averageSurvivalRate: avgSurvivalRate,
+      batchesRequiringAttention: batchesWithCriticalHealth,
+      avgGrowthRate: 15.2, // Mock data
+      totalBiomass,
+      averageFCR: 1.2, // Mock data
+    };
   };
+
+  const kpis = calculateKPIs();
 
   const getHealthStatus = (batch: ExtendedBatch): 'excellent' | 'good' | 'fair' | 'poor' | 'critical' => {
-    const metrics = calculateBatchMetrics(batch);
-    if (metrics.survivalRate >= 95) return 'excellent';
-    if (metrics.survivalRate >= 90) return 'good';
-    if (metrics.survivalRate >= 85) return 'fair';
-    if (metrics.survivalRate >= 80) return 'poor';
+    const survivalRate = batch.initialCount > 0 ? (batch.currentCount / batch.initialCount) * 100 : 0;
+    if (survivalRate >= 95) return 'excellent';
+    if (survivalRate >= 90) return 'good';
+    if (survivalRate >= 85) return 'fair';
+    if (survivalRate >= 80) return 'poor';
     return 'critical';
+  };
+
+  const getHealthStatusColor = (status: string) => {
+    switch (status) {
+      case "excellent": return "text-green-600 bg-green-50 border-green-200";
+      case "good": return "text-blue-600 bg-blue-50 border-blue-200";
+      case "fair": return "text-yellow-600 bg-yellow-50 border-yellow-200";
+      case "poor": return "text-orange-600 bg-orange-50 border-orange-200";
+      case "critical": return "text-red-600 bg-red-50 border-red-200";
+      default: return "text-gray-600 bg-gray-50 border-gray-200";
+    }
   };
 
   const getLifecycleStages = () => [
@@ -201,9 +216,13 @@ export default function BatchManagement() {
     { name: "Adult", duration: 450, color: "bg-orange-500" }
   ];
 
+  const calculateDaysActive = (startDate: string) => {
+    return Math.floor((new Date().getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24));
+  };
+
   const getStageProgress = (stageName?: string, daysActive?: number) => {
     const stages = getLifecycleStages();
-    const currentStageIndex = stageName ? stages.findIndex(s => s.name.includes(stageName)) : 0;
+    const currentStageIndex = stageName ? stages.findIndex(s => s.name.toLowerCase().includes(stageName.toLowerCase())) : 0;
     if (currentStageIndex === -1) return 0;
     
     const currentStage = stages[currentStageIndex];
@@ -219,9 +238,9 @@ export default function BatchManagement() {
     return matchesSearch && matchesStatus && matchesStage;
   });
 
-  if (batchesLoading || kpisLoading) {
+  if (batchesLoading) {
     return (
-      <div className="container mx-auto p-4 space-y-6">
+      <div className="container mx-auto p-3 lg:p-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Batch Management</h1>
         </div>
@@ -417,89 +436,6 @@ export default function BatchManagement() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="currentCount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Fish Count</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="48500" 
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="currentBiomassKg"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Biomass (kg)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01"
-                            placeholder="2500.00" 
-                            {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="container"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Container (Optional)</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select container" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {containers.map((c) => (
-                            <SelectItem key={c.id} value={c.id.toString()}>
-                              {c.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Notes</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Additional notes about this batch..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <div className="flex justify-end space-x-2 pt-4">
                   <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Cancel
@@ -514,125 +450,319 @@ export default function BatchManagement() {
         </Dialog>
       </div>
 
-      {/* Batch Overview Cards */}
-      <div className="grid gap-4">
-        {batches.map((batch: ExtendedBatch) => {
-          const metrics = calculateBatchMetrics(batch);
-          
-          return (
-            <Card 
-              key={batch.id} 
-              className={cn(
-                "cursor-pointer transition-all hover:shadow-md",
-                selectedBatch?.id === batch.id && "ring-2 ring-primary"
-              )}
-              onClick={() => setSelectedBatch(batch)}
-            >
-              <CardContent className="p-6">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-                  <div className="flex-1 space-y-2">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <h3 className="text-xl font-semibold">{batch.name}</h3>
-                      <Badge className={getStatusColor(batch.status)}>
-                        {batch.status}
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Fish className="h-4 w-4 text-blue-500" />
-                        <span className="text-muted-foreground">Species:</span>
-                        <span>{batch.speciesName || "Unknown"}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-green-500" />
-                        <span className="text-muted-foreground">Stage:</span>
-                        <span>{batch.stageName || "Not set"}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-orange-500" />
-                        <span className="text-muted-foreground">Location:</span>
-                        <span>{batch.containerName || "Unassigned"}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-purple-500" />
-                        <span className="text-muted-foreground">Started:</span>
-                        <span>{new Date(batch.startDate).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center min-w-0 lg:min-w-[400px]">
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">
-                        {batch.currentCount.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Fish Count</div>
-                    </div>
-                    
-                    <div>
-                      <div className="text-2xl font-bold text-green-600">
-                        {parseFloat(batch.currentBiomassKg.toString()).toFixed(1)}kg
-                      </div>
-                      <div className="text-xs text-muted-foreground">Biomass</div>
-                    </div>
-                    
-                    <div>
-                      <div className="text-2xl font-bold text-orange-600">
-                        {metrics.survivalRate.toFixed(1)}%
-                      </div>
-                      <div className="text-xs text-muted-foreground">Survival</div>
-                    </div>
-                    
-                    <div>
-                      <div className="text-2xl font-bold text-purple-600">
-                        {metrics.avgWeight.toFixed(0)}g
-                      </div>
-                      <div className="text-xs text-muted-foreground">Avg Weight</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lifecycle Progress */}
-                <div className="mt-4">
-                  <div className="flex items-center justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Lifecycle Progress</span>
-                    <span className="font-medium">{batch.stageName || "Not set"}</span>
-                  </div>
-                  <Progress value={getStageProgress(batch.stageName)} className="h-2" />
-                </div>
-
-                {/* Health Indicators */}
-                {metrics.survivalRate < 90 && (
-                  <div className="mt-3 flex items-center gap-2 text-sm text-amber-600">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span>Low survival rate - requires attention</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {batches.length === 0 && (
+      {/* KPI Boxes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-12 text-center">
-            <Fish className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Batches Found</h3>
-            <p className="text-muted-foreground mb-4">
-              Get started by creating your first fish batch
-            </p>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create First Batch
-            </Button>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Active Batches</p>
+                <p className="text-2xl font-bold">{kpis.totalActiveBatches}</p>
+                <p className="text-xs text-muted-foreground mt-1">Currently in production</p>
+              </div>
+              <Fish className="h-8 w-8 text-blue-500" />
+            </div>
           </CardContent>
         </Card>
-      )}
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Fish Count</p>
+                <p className="text-2xl font-bold">{kpis.totalFishCount.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground mt-1">Across all batches</p>
+              </div>
+              <Users className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Avg Survival Rate</p>
+                <p className="text-2xl font-bold">{kpis.averageSurvivalRate.toFixed(1)}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Overall health indicator</p>
+              </div>
+              <Heart className="h-8 w-8 text-red-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Need Attention</p>
+                <p className="text-2xl font-bold">{kpis.batchesRequiringAttention}</p>
+                <p className="text-xs text-muted-foreground mt-1">Batches requiring review</p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Navigation Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className={cn(
+          "grid grid-cols-2 lg:grid-cols-5 w-full",
+          isMobile && "h-auto p-1"
+        )}>
+          <TabsTrigger value="overview" className={cn(isMobile && "text-xs px-2 py-3")}>
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="containers" className={cn(isMobile && "text-xs px-2 py-3")}>
+            Containers
+          </TabsTrigger>
+          <TabsTrigger value="medical" className={cn(isMobile && "text-xs px-2 py-3")}>
+            Medical Journal
+          </TabsTrigger>
+          <TabsTrigger value="feed" className={cn(isMobile && "text-xs px-2 py-3")}>
+            Feed History
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className={cn(isMobile && "text-xs px-2 py-3")}>
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4 p-4 bg-muted/50 rounded-lg">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search batches..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="harvested">Harvested</SelectItem>
+                <SelectItem value="transferred">Transferred</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={stageFilter} onValueChange={setStageFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Stage" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Stages</SelectItem>
+                {stages.map((stage) => (
+                  <SelectItem key={stage.id} value={stage.name}>
+                    {stage.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Batch Cards */}
+          <div className="space-y-4">
+            {filteredBatches.map((batch: ExtendedBatch) => {
+              const daysActive = calculateDaysActive(batch.startDate);
+              const survivalRate = batch.initialCount > 0 ? (batch.currentCount / batch.initialCount) * 100 : 0;
+              const healthStatus = getHealthStatus(batch);
+              const currentBiomass = typeof batch.currentBiomassKg === 'string' ? parseFloat(batch.currentBiomassKg) : batch.currentBiomassKg;
+              const avgWeight = batch.currentCount > 0 ? (currentBiomass * 1000) / batch.currentCount : 0;
+              const stageProgress = getStageProgress(batch.stageName, daysActive);
+              
+              return (
+                <Card 
+                  key={batch.id} 
+                  className={cn(
+                    "cursor-pointer transition-all hover:shadow-md border-l-4",
+                    healthStatus === 'excellent' && "border-l-green-500",
+                    healthStatus === 'good' && "border-l-blue-500",
+                    healthStatus === 'fair' && "border-l-yellow-500",
+                    healthStatus === 'poor' && "border-l-orange-500",
+                    healthStatus === 'critical' && "border-l-red-500",
+                    selectedBatch?.id === batch.id && "ring-2 ring-primary"
+                  )}
+                  onClick={() => setSelectedBatch(batch)}
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      {/* Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3">
+                            <h3 className="text-xl font-semibold">{batch.name}</h3>
+                            <Badge variant="secondary">{batch.status}</Badge>
+                            <Badge className={getHealthStatusColor(healthStatus)}>
+                              {healthStatus}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>{batch.speciesName || "Unknown Species"}</span>
+                            <span>•</span>
+                            <span>{daysActive} days active</span>
+                            <span>•</span>
+                            <span>Started {format(new Date(batch.startDate), "MMM dd, yyyy")}</span>
+                          </div>
+                        </div>
+                        
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </div>
+
+                      {/* Lifecycle Progress */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium">Lifecycle Stage: {batch.stageName || "Not set"}</span>
+                          <span className="text-muted-foreground">{stageProgress.toFixed(1)}% through stage</span>
+                        </div>
+                        <div className="flex space-x-1">
+                          {getLifecycleStages().map((stage, index) => {
+                            const isCurrentStage = batch.stageName?.toLowerCase().includes(stage.name.toLowerCase());
+                            const isCompleted = stages.findIndex(s => s.name === batch.stageName) > index;
+                            
+                            return (
+                              <div key={stage.name} className="flex-1 space-y-1">
+                                <div className={cn(
+                                  "h-2 rounded-full",
+                                  isCurrentStage ? stage.color : isCompleted ? "bg-green-300" : "bg-gray-200"
+                                )}>
+                                  {isCurrentStage && (
+                                    <div 
+                                      className="h-full bg-white/30 rounded-full transition-all duration-300"
+                                      style={{ width: `${stageProgress}%` }}
+                                    />
+                                  )}
+                                </div>
+                                <div className="text-xs text-center truncate">{stage.name}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Metrics Grid */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {batch.currentCount.toLocaleString()}
+                          </div>
+                          <div className="text-xs text-muted-foreground">Fish Count</div>
+                        </div>
+                        
+                        <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                          <div className="text-2xl font-bold text-green-600">
+                            {currentBiomass.toFixed(1)}kg
+                          </div>
+                          <div className="text-xs text-muted-foreground">Biomass</div>
+                        </div>
+                        
+                        <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+                          <div className="text-2xl font-bold text-orange-600">
+                            {survivalRate.toFixed(1)}%
+                          </div>
+                          <div className="text-xs text-muted-foreground">Survival</div>
+                        </div>
+                        
+                        <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+                          <div className="text-2xl font-bold text-purple-600">
+                            {avgWeight.toFixed(0)}g
+                          </div>
+                          <div className="text-xs text-muted-foreground">Avg Weight</div>
+                        </div>
+                      </div>
+
+                      {/* Container Distribution Indicator */}
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <ContainerIcon className="h-5 w-5 text-muted-foreground" />
+                          <span className="text-sm font-medium">Container Distribution</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex space-x-1">
+                            {/* Mock container status indicators */}
+                            <div className="w-3 h-3 rounded-full bg-green-500" title="Healthy container" />
+                            <div className="w-3 h-3 rounded-full bg-green-500" title="Healthy container" />
+                            <div className="w-3 h-3 rounded-full bg-yellow-500" title="Warning container" />
+                          </div>
+                          <span className="text-sm text-muted-foreground">3 containers</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="containers">
+          <Card>
+            <CardHeader>
+              <CardTitle>Container Distribution</CardTitle>
+              <CardDescription>
+                View batch distribution across containers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Container details will be displayed here based on selected batch.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="medical">
+          <Card>
+            <CardHeader>
+              <CardTitle>Medical Journal</CardTitle>
+              <CardDescription>
+                Health events and medical records
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Medical journal entries will be displayed here.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="feed">
+          <Card>
+            <CardHeader>
+              <CardTitle>Feed History</CardTitle>
+              <CardDescription>
+                Feeding events and feed conversion data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Feed history and FCR data will be displayed here.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <Card>
+            <CardHeader>
+              <CardTitle>Batch Analytics</CardTitle>
+              <CardDescription>
+                Performance metrics and trends
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Analytics and performance charts will be displayed here.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

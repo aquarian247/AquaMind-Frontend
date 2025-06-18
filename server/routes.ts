@@ -22,6 +22,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/batches/kpis", async (req, res) => {
+    try {
+      // This would normally calculate from actual batch data
+      const kpis = {
+        totalActiveBatches: 23,
+        averageHealthScore: 87.5,
+        totalFishCount: 125350,
+        averageSurvivalRate: 87.5,
+        batchesRequiringAttention: 3,
+        avgGrowthRate: 15.2,
+        totalBiomass: 2847.3,
+        averageFCR: 1.2
+      };
+      res.json(kpis);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch batch KPIs" });
+    }
+  });
+
   app.post("/api/batches", async (req, res) => {
     try {
       const validatedData = insertBatchSchema.parse(req.body);
