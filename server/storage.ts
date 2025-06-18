@@ -78,6 +78,16 @@ export interface IStorage {
   getEggSuppliers(): Promise<EggSupplier[]>;
   createEggSupplier(supplier: InsertEggSupplier): Promise<EggSupplier>;
 
+  // Complex Batch Tracking
+  getBatchContainerAssignments(batchId?: number): Promise<BatchContainerAssignment[]>;
+  createBatchContainerAssignment(assignment: InsertBatchContainerAssignment): Promise<BatchContainerAssignment>;
+  getBatchTransfers(batchId?: number): Promise<BatchTransfer[]>;
+  createBatchTransfer(transfer: InsertBatchTransfer): Promise<BatchTransfer>;
+  getGrowthSamples(assignmentId?: number): Promise<GrowthSample[]>;
+  createGrowthSample(sample: InsertGrowthSample): Promise<GrowthSample>;
+  getMortalityEvents(assignmentId?: number): Promise<MortalityEvent[]>;
+  createMortalityEvent(event: InsertMortalityEvent): Promise<MortalityEvent>;
+
   // Legacy compatibility for current frontend
   getFarmSites(): Promise<FarmSite[]>;
   getFarmSite(id: number): Promise<FarmSite | undefined>;
@@ -148,6 +158,12 @@ export class MemStorage implements IStorage {
   // Broodstock Management
   private broodstockPairs: Map<number, BroodstockPair> = new Map();
   private eggSuppliers: Map<number, EggSupplier> = new Map();
+  
+  // Complex batch tracking storage
+  private batchContainerAssignments: Map<number, BatchContainerAssignment> = new Map();
+  private batchTransfers: Map<number, BatchTransfer> = new Map();
+  private growthSamples: Map<number, GrowthSample> = new Map();
+  private mortalityEvents: Map<number, MortalityEvent> = new Map();
   
   // Health Management data stores
   private healthJournalEntries: Map<number, any> = new Map();
@@ -474,11 +490,17 @@ export class MemStorage implements IStorage {
       { stage: eggStage, ageDays: 95, mortality: 0.07, avgWeightG: 0.1, stagePrefix: "EG" }  // 95% through egg
     ];
 
-    // Generate 75 batches with realistic progression
-    const batches: Batch[] = [];
-    let batchCounter = 1;
+    // Create one complex traceability batch first
+    const complexBatch = await this.createComplexTraceabilityBatch(
+      atlanticSalmon, containers, [eggStage, fryStage, parrStage, smoltStage, postSmoltStage, adultStage],
+      pair1, user1
+    );
     
-    for (let i = 0; i < 75; i++) {
+    // Generate 74 additional batches with realistic progression
+    const batches: Batch[] = [complexBatch];
+    let batchCounter = 2;
+    
+    for (let i = 0; i < 74; i++) {
       const template = batchTemplates[i % batchTemplates.length];
       const baseDate = new Date();
       baseDate.setDate(baseDate.getDate() - template.ageDays);
@@ -1403,6 +1425,279 @@ export class MemStorage implements IStorage {
     };
     this.eggSuppliers.set(supplier.id, supplier);
     return supplier;
+  }
+
+  // Complex Batch Tracking Implementation
+  async getBatchContainerAssignments(batchId?: number): Promise<BatchContainerAssignment[]> {
+    const assignments = Array.from(this.batchContainerAssignments.values());
+    return batchId ? assignments.filter(a => a.batch === batchId) : assignments;
+  }
+
+  async createBatchContainerAssignment(assignment: InsertBatchContainerAssignment): Promise<BatchContainerAssignment> {
+    const newAssignment: BatchContainerAssignment = {
+      id: this.currentId++,
+      ...assignment,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.batchContainerAssignments.set(newAssignment.id, newAssignment);
+    return newAssignment;
+  }
+
+  async getBatchTransfers(batchId?: number): Promise<BatchTransfer[]> {
+    const transfers = Array.from(this.batchTransfers.values());
+    return batchId ? transfers.filter(t => t.batch === batchId) : transfers;
+  }
+
+  async createBatchTransfer(transfer: InsertBatchTransfer): Promise<BatchTransfer> {
+    const newTransfer: BatchTransfer = {
+      id: this.currentId++,
+      ...transfer,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.batchTransfers.set(newTransfer.id, newTransfer);
+    return newTransfer;
+  }
+
+  async getGrowthSamples(assignmentId?: number): Promise<GrowthSample[]> {
+    const samples = Array.from(this.growthSamples.values());
+    return assignmentId ? samples.filter(s => s.containerAssignment === assignmentId) : samples;
+  }
+
+  async createGrowthSample(sample: InsertGrowthSample): Promise<GrowthSample> {
+    const newSample: GrowthSample = {
+      id: this.currentId++,
+      ...sample,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.growthSamples.set(newSample.id, newSample);
+    return newSample;
+  }
+
+  async getMortalityEvents(assignmentId?: number): Promise<MortalityEvent[]> {
+    const events = Array.from(this.mortalityEvents.values());
+    return assignmentId ? events.filter(e => e.containerAssignment === assignmentId) : events;
+  }
+
+  async createMortalityEvent(event: InsertMortalityEvent): Promise<MortalityEvent> {
+    const newEvent: MortalityEvent = {
+      id: this.currentId++,
+      ...event,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.mortalityEvents.set(newEvent.id, newEvent);
+    return newEvent;
+  }
+
+  // Create a complex batch with full lifecycle tracking
+  private async createComplexTraceabilityBatch(
+    species: Species, 
+    containers: Container[], 
+    stages: Stage[], 
+    broodstockPair: BroodstockPair,
+    user: User
+  ): Promise<Batch> {
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 18); // 18 months ago
+    
+    // Create the master batch
+    const complexBatch: Batch = {
+      id: this.currentId++,
+      name: "BATCH-2024-TRACE-001",
+      species: species.id,
+      startDate: startDate.toISOString().split('T')[0],
+      initialCount: 5000000, // 5M eggs
+      initialBiomassKg: "5000.000",
+      currentCount: 850000, // Final harvest count after full lifecycle
+      currentBiomassKg: "4250000.000", // 5kg average at harvest
+      container: null, // Complex batch spans multiple containers
+      stage: stages[5].id, // Currently at Adult stage
+      status: "active",
+      expectedHarvestDate: new Date().toISOString().split('T')[0],
+      notes: "Complex traceability batch with full lifecycle tracking through multiple container types",
+      eggSource: "internal",
+      broodstockPairId: broodstockPair.id,
+      eggSupplierId: null,
+      eggBatchNumber: null,
+      eggProductionDate: startDate.toISOString().split('T')[0],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.batches.set(complexBatch.id, complexBatch);
+
+    // Define container progression for realistic salmon lifecycle
+    const lifecycleProgression = [
+      // Egg stage - 10 egg/alevin tanks
+      { stage: stages[0], containerCount: 10, duration: 90, mortalityRate: 0.15, avgWeight: 0.1 },
+      // Fry stage - 12 fry tanks  
+      { stage: stages[1], containerCount: 12, duration: 120, mortalityRate: 0.12, avgWeight: 3.5 },
+      // Parr stage - 16 parr tanks
+      { stage: stages[2], containerCount: 16, duration: 150, mortalityRate: 0.10, avgWeight: 35 },
+      // Smolt stage - 12 smolt tanks
+      { stage: stages[3], containerCount: 12, duration: 90, mortalityRate: 0.08, avgWeight: 180 },
+      // Post-smolt stage - 16 post-smolt tanks
+      { stage: stages[4], containerCount: 16, duration: 120, mortalityRate: 0.06, avgWeight: 800 },
+      // Adult stage - 22 sea rings
+      { stage: stages[5], containerCount: 22, duration: 365, mortalityRate: 0.05, avgWeight: 5000 }
+    ];
+
+    let currentDate = new Date(startDate);
+    let remainingFish = complexBatch.initialCount;
+    let currentBiomass = parseFloat(complexBatch.initialBiomassKg);
+
+    // Create container assignments and transfers for each lifecycle stage
+    for (let stageIndex = 0; stageIndex < lifecycleProgression.length; stageIndex++) {
+      const stageInfo = lifecycleProgression[stageIndex];
+      const stageContainers = containers.slice(0, stageInfo.containerCount);
+      
+      // Calculate fish distribution across containers
+      const fishPerContainer = Math.floor(remainingFish / stageInfo.containerCount);
+      const biomassPerContainer = (fishPerContainer * stageInfo.avgWeight) / 1000;
+
+      // Create assignments for this stage
+      const assignments: BatchContainerAssignment[] = [];
+      for (let i = 0; i < stageContainers.length; i++) {
+        const container = stageContainers[i];
+        const assignment = await this.createBatchContainerAssignment({
+          batch: complexBatch.id,
+          container: container.id,
+          lifecycleStage: stageInfo.stage.id,
+          populationCount: fishPerContainer,
+          avgWeightG: stageInfo.avgWeight.toString(),
+          biomassKg: biomassPerContainer.toString(),
+          assignmentDate: currentDate.toISOString().split('T')[0],
+          departureDate: null,
+          isActive: stageIndex === lifecycleProgression.length - 1,
+          notes: `${stageInfo.stage.name} stage assignment - Container ${i + 1}/${stageInfo.containerCount}`,
+        });
+        assignments.push(assignment);
+
+        // Create growth samples
+        for (let sampleWeek = 0; sampleWeek < Math.floor(stageInfo.duration / 14); sampleWeek++) {
+          const sampleDate = new Date(currentDate);
+          sampleDate.setDate(sampleDate.getDate() + (sampleWeek * 14));
+          
+          const weightVariation = 1 + (Math.random() - 0.5) * 0.2; // ±10% variation
+          const sampleWeight = stageInfo.avgWeight * weightVariation;
+          const kFactor = 100 * (sampleWeight / Math.pow(12, 3)); // Simplified K-factor
+
+          await this.createGrowthSample({
+            containerAssignment: assignment.id,
+            sampleDate: sampleDate.toISOString().split('T')[0],
+            sampleSize: 50,
+            avgWeightG: sampleWeight.toString(),
+            avgLengthCm: "12.0",
+            conditionFactor: kFactor.toString(),
+            stdDeviationWeight: (sampleWeight * 0.15).toString(),
+            stdDeviationLength: "1.5",
+            sampledBy: user.id,
+            notes: `Biweekly growth sample - Week ${sampleWeek + 1}`,
+          });
+        }
+
+        // Create mortality events
+        const mortalityCount = Math.floor(fishPerContainer * stageInfo.mortalityRate * 0.1);
+        if (mortalityCount > 0) {
+          const mortalityDate = new Date(currentDate);
+          mortalityDate.setDate(mortalityDate.getDate() + Math.floor(stageInfo.duration / 2));
+          
+          await this.createMortalityEvent({
+            containerAssignment: assignment.id,
+            eventDate: mortalityDate.toISOString().split('T')[0],
+            mortalityCount,
+            cause: stageIndex < 3 ? "Natural mortality" : "Sea lice treatment stress",
+            investigation: `Standard mortality investigation completed`,
+            preventiveMeasures: `Enhanced monitoring protocols implemented`,
+            reportedBy: user.id,
+          });
+        }
+
+        // Create environmental readings for this container
+        const tempParam = Array.from(this.environmentalParameters.values()).find(p => p.name === "Temperature");
+        const oxygenParam = Array.from(this.environmentalParameters.values()).find(p => p.name === "Oxygen");
+        
+        if (tempParam && oxygenParam) {
+          for (let day = 0; day < stageInfo.duration; day += 7) {
+            const readingDate = new Date(currentDate);
+            readingDate.setDate(readingDate.getDate() + day);
+            
+            // Temperature reading
+            const tempReading: EnvironmentalReading = {
+              id: this.currentId++,
+              container: container.id,
+              parameter: tempParam.id,
+              value: (stageIndex < 4 ? 8 + Math.random() * 4 : 12 + Math.random() * 6).toFixed(1), // Freshwater vs seawater temps
+              readingTime: readingDate,
+              sensor: null,
+              notes: `Weekly environmental monitoring`,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+            this.environmentalReadings.set(tempReading.id, tempReading);
+
+            // Oxygen reading
+            const oxygenReading: EnvironmentalReading = {
+              id: this.currentId++,
+              container: container.id,
+              parameter: oxygenParam.id,
+              value: (8.5 + Math.random() * 2).toFixed(1),
+              readingTime: readingDate,
+              sensor: null,
+              notes: `Weekly environmental monitoring`,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
+            this.environmentalReadings.set(oxygenReading.id, oxygenReading);
+          }
+        }
+      }
+
+      // Create complex transfers between stages
+      if (stageIndex > 0 && stageIndex < lifecycleProgression.length - 1) {
+        // Simulate partial transfers with realistic percentages
+        const prevAssignments = await this.getBatchContainerAssignments(complexBatch.id);
+        const activeAssignments = prevAssignments.filter(a => a.isActive);
+        
+        for (let i = 0; i < Math.min(activeAssignments.length, assignments.length); i++) {
+          const fromAssignment = activeAssignments[i];
+          const toAssignment = assignments[i % assignments.length];
+          
+          // Create realistic transfer percentages (30-70% per transfer)
+          const transferPercentage = 30 + Math.random() * 40;
+          const transferCount = Math.floor(fromAssignment.populationCount * (transferPercentage / 100));
+          const transferBiomass = transferCount * stageInfo.avgWeight / 1000;
+
+          await this.createBatchTransfer({
+            batch: complexBatch.id,
+            fromContainerAssignment: fromAssignment.id,
+            toContainerAssignment: toAssignment.id,
+            transferType: i % 2 === 0 ? "SPLIT" : "MOVE",
+            populationCount: transferCount,
+            biomassKg: transferBiomass.toString(),
+            transferDate: currentDate.toISOString().split('T')[0],
+            transferPercentage: transferPercentage.toString(),
+            reason: `Stage transition from ${lifecycleProgression[stageIndex-1].stage.name} to ${stageInfo.stage.name}`,
+            performedBy: user.id,
+          });
+
+          // Deactivate previous assignment
+          fromAssignment.isActive = false;
+          fromAssignment.departureDate = currentDate.toISOString().split('T')[0];
+          this.batchContainerAssignments.set(fromAssignment.id, fromAssignment);
+        }
+      }
+
+      // Update date and population for next stage
+      currentDate.setDate(currentDate.getDate() + stageInfo.duration);
+      remainingFish = Math.floor(remainingFish * (1 - stageInfo.mortalityRate));
+      currentBiomass = (remainingFish * stageInfo.avgWeight) / 1000;
+    }
+
+    return complexBatch;
   }
 }
 

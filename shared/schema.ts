@@ -288,6 +288,71 @@ export const weatherData = pgTable("weather_data", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Batch Container Assignments - Track batch portions in containers
+export const batchContainerAssignments = pgTable("batch_container_assignments", {
+  id: serial("id").primaryKey(),
+  batch: integer("batch").references(() => batches.id).notNull(),
+  container: integer("container").references(() => containers.id).notNull(),
+  lifecycleStage: integer("lifecycle_stage").references(() => stages.id).notNull(),
+  populationCount: integer("population_count").notNull(),
+  avgWeightG: decimal("avg_weight_g", { precision: 8, scale: 3 }),
+  biomassKg: decimal("biomass_kg", { precision: 10, scale: 3 }).notNull(),
+  assignmentDate: date("assignment_date").notNull(),
+  departureDate: date("departure_date"),
+  isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Batch Transfers - Record movements between containers
+export const batchTransfers = pgTable("batch_transfers", {
+  id: serial("id").primaryKey(),
+  batch: integer("batch").references(() => batches.id).notNull(),
+  fromContainerAssignment: integer("from_container_assignment").references(() => batchContainerAssignments.id),
+  toContainerAssignment: integer("to_container_assignment").references(() => batchContainerAssignments.id).notNull(),
+  transferType: text("transfer_type").notNull(), // 'MOVE', 'SPLIT', 'MERGE'
+  populationCount: integer("population_count").notNull(),
+  biomassKg: decimal("biomass_kg", { precision: 10, scale: 3 }).notNull(),
+  transferDate: date("transfer_date").notNull(),
+  transferPercentage: decimal("transfer_percentage", { precision: 5, scale: 2 }),
+  reason: text("reason"),
+  performedBy: integer("performed_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Growth Samples - Track fish growth over time
+export const growthSamples = pgTable("growth_samples", {
+  id: serial("id").primaryKey(),
+  containerAssignment: integer("container_assignment").references(() => batchContainerAssignments.id).notNull(),
+  sampleDate: date("sample_date").notNull(),
+  sampleSize: integer("sample_size").notNull(),
+  avgWeightG: decimal("avg_weight_g", { precision: 8, scale: 3 }).notNull(),
+  avgLengthCm: decimal("avg_length_cm", { precision: 6, scale: 2 }),
+  conditionFactor: decimal("condition_factor", { precision: 6, scale: 3 }), // K-factor
+  stdDeviationWeight: decimal("std_deviation_weight", { precision: 8, scale: 3 }),
+  stdDeviationLength: decimal("std_deviation_length", { precision: 6, scale: 2 }),
+  sampledBy: integer("sampled_by").references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Mortality Events - Track mortality in specific assignments
+export const mortalityEvents = pgTable("mortality_events", {
+  id: serial("id").primaryKey(),
+  containerAssignment: integer("container_assignment").references(() => batchContainerAssignments.id).notNull(),
+  eventDate: date("event_date").notNull(),
+  mortalityCount: integer("mortality_count").notNull(),
+  cause: text("cause"),
+  investigation: text("investigation"),
+  preventiveMeasures: text("preventive_measures"),
+  reportedBy: integer("reported_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Health Records (keeping existing structure for compatibility)
 export const healthRecords = pgTable("health_records", {
   id: serial("id").primaryKey(),
@@ -566,3 +631,23 @@ export type InsertBroodstockPair = z.infer<typeof insertBroodstockPairSchema>;
 
 export type EggSupplier = typeof eggSuppliers.$inferSelect;
 export type InsertEggSupplier = z.infer<typeof insertEggSupplierSchema>;
+
+// Batch Container Assignment types
+export const insertBatchContainerAssignmentSchema = createInsertSchema(batchContainerAssignments);
+export type BatchContainerAssignment = typeof batchContainerAssignments.$inferSelect;
+export type InsertBatchContainerAssignment = z.infer<typeof insertBatchContainerAssignmentSchema>;
+
+// Batch Transfer types
+export const insertBatchTransferSchema = createInsertSchema(batchTransfers);
+export type BatchTransfer = typeof batchTransfers.$inferSelect;
+export type InsertBatchTransfer = z.infer<typeof insertBatchTransferSchema>;
+
+// Growth Sample types
+export const insertGrowthSampleSchema = createInsertSchema(growthSamples);
+export type GrowthSample = typeof growthSamples.$inferSelect;
+export type InsertGrowthSample = z.infer<typeof insertGrowthSampleSchema>;
+
+// Mortality Event types
+export const insertMortalityEventSchema = createInsertSchema(mortalityEvents);
+export type MortalityEvent = typeof mortalityEvents.$inferSelect;
+export type InsertMortalityEvent = z.infer<typeof insertMortalityEventSchema>;
