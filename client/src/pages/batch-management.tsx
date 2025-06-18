@@ -238,11 +238,12 @@ export default function BatchManagement() {
   };
 
   const getLifecycleStages = () => [
-    { name: "Egg/Alevin", duration: 95, color: "bg-purple-500" },
-    { name: "Parr", duration: 95, color: "bg-blue-500" },
-    { name: "Smolt", duration: 95, color: "bg-green-500" },
-    { name: "Post-Smolt", duration: 95, color: "bg-yellow-500" },
-    { name: "Adult", duration: 450, color: "bg-orange-500" }
+    { name: "Egg", duration: 100, color: "bg-yellow-400" },
+    { name: "Fry", duration: 100, color: "bg-orange-400" },
+    { name: "Parr", duration: 100, color: "bg-green-400" },
+    { name: "Smolt", duration: 100, color: "bg-blue-400" },
+    { name: "Post-Smolt", duration: 100, color: "bg-purple-400" },
+    { name: "Adult", duration: 450, color: "bg-red-400" }
   ];
 
   const calculateDaysActive = (startDate: string) => {
@@ -250,13 +251,29 @@ export default function BatchManagement() {
   };
 
   const getStageProgress = (stageName?: string, daysActive?: number) => {
+    if (!stageName || !daysActive) return 0;
+    
     const stages = getLifecycleStages();
-    const currentStageIndex = stageName ? stages.findIndex(s => s.name.toLowerCase().includes(stageName.toLowerCase())) : 0;
+    const currentStageIndex = stages.findIndex(s => 
+      stageName.toLowerCase().includes(s.name.toLowerCase())
+    );
+    
     if (currentStageIndex === -1) return 0;
     
-    const currentStage = stages[currentStageIndex];
-    const stageProgress = daysActive ? Math.min((daysActive % currentStage.duration) / currentStage.duration * 100, 100) : 0;
-    return stageProgress;
+    // Calculate cumulative days up to current stage
+    const cumulativeDays = stages.slice(0, currentStageIndex).reduce((sum, stage) => sum + stage.duration, 0);
+    const daysInCurrentStage = daysActive - cumulativeDays;
+    const currentStageDuration = stages[currentStageIndex].duration;
+    
+    const progress = Math.min((daysInCurrentStage / currentStageDuration) * 100, 100);
+    return Math.max(0, progress);
+  };
+
+  const getProgressColor = (progress: number) => {
+    if (progress < 60) return "bg-green-500";
+    if (progress < 75) return "bg-yellow-500";
+    if (progress < 90) return "bg-orange-500";
+    return "bg-red-500";
   };
 
   const filteredBatches = batches.filter(batch => {
@@ -814,7 +831,8 @@ export default function BatchManagement() {
                           {getLifecycleStages().map((stage, index) => {
                             const stages = getLifecycleStages();
                             const currentStageIndex = stages.findIndex(s => 
-                              batch.stageName?.toLowerCase().includes(s.name.toLowerCase())
+                              batch.stageName?.toLowerCase().includes(s.name.toLowerCase()) ||
+                              (s.name === "Egg" && batch.stageName?.toLowerCase().includes("alevin"))
                             );
                             const isCurrentStage = currentStageIndex === index;
                             const isCompleted = currentStageIndex > index;
@@ -823,22 +841,22 @@ export default function BatchManagement() {
                               <div key={stage.name} className="flex-1 space-y-1">
                                 <div className={cn(
                                   "h-3 rounded-full relative overflow-hidden",
-                                  isCompleted ? "bg-green-300" : "bg-gray-200"
+                                  "bg-gray-200"
                                 )}>
+                                  {isCompleted && (
+                                    <div className="absolute inset-0 bg-green-400 rounded-full" />
+                                  )}
                                   {isCurrentStage && (
                                     <div 
                                       className={cn(
-                                        "h-full rounded-full transition-all duration-300",
+                                        "h-full rounded-full transition-all duration-500",
                                         getProgressColor(stageProgress)
                                       )}
                                       style={{ width: `${stageProgress}%` }}
                                     />
                                   )}
-                                  {isCompleted && (
-                                    <div className="absolute inset-0 bg-green-300 rounded-full" />
-                                  )}
                                 </div>
-                                <div className="text-xs text-center truncate">{stage.name}</div>
+                                <div className="text-xs text-center truncate px-1">{stage.name}</div>
                               </div>
                             );
                           })}
