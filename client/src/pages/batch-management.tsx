@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import type { Batch, InsertBatch, Species, Stage, Container, BroodstockPair, EggSupplier } from "@shared/schema";
+import { BatchContainerView } from "@/components/batch-management/BatchContainerView";
 
 const batchFormSchema = z.object({
   name: z.string().min(1, "Batch name is required"),
@@ -890,17 +891,7 @@ export default function BatchManagement() {
         </TabsContent>
 
         <TabsContent value="containers">
-          <Card>
-            <CardHeader>
-              <CardTitle>Container Distribution</CardTitle>
-              <CardDescription>
-                View batch distribution across containers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Container details will be displayed here based on selected batch.</p>
-            </CardContent>
-          </Card>
+          <BatchContainerView selectedBatch={selectedBatch} />
         </TabsContent>
 
         <TabsContent value="medical">
