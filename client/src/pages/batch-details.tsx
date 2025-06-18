@@ -172,7 +172,7 @@ export default function BatchDetails() {
     currentBiomass: parseFloat(batch.currentBiomassKg),
     fishCount: batch.currentCount,
     capacityUsage: batchContainers.length > 0 
-      ? (batchContainers.reduce((sum, c) => sum + c.currentStock, 0) / batchContainers.reduce((sum, c) => sum + c.capacity, 0)) * 100 
+      ? (batchContainers.reduce((sum, c) => sum + (c.currentStock || 0), 0) / batchContainers.reduce((sum, c) => sum + (c.capacity || 1), 0)) * 100 
       : 0,
     averageWeight: batch.currentCount > 0 ? (parseFloat(batch.currentBiomassKg) * 1000) / batch.currentCount : 0
   };
