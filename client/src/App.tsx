@@ -24,6 +24,7 @@ import Inventory from "@/pages/inventory-simple";
 import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
 import BatchManagement from "@/pages/batch-management";
+import BatchDetails from "@/pages/batch-details";
 import Health from "@/pages/health";
 import NotFound from "@/pages/not-found";
 
@@ -72,6 +73,7 @@ function Router() {
               {(params) => <ContainerDetail params={params} />}
             </Route>
             <Route path="/batch-management" component={BatchManagement} />
+        <Route path="/batch-details/:id" component={BatchDetails} />
             <Route path="/health" component={Health} />
             <Route path="/inventory" component={Inventory} />
             <Route path="/analytics" component={Analytics} />
