@@ -17,7 +17,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/batches", async (req, res) => {
     try {
       const batches = await storage.getBatches();
-      res.json(batches);
+      const species = await storage.getSpecies();
+      const stages = await storage.getStages();
+      const containers = await storage.getContainers();
+      
+      // Extend batches with related data
+      const extendedBatches = batches.map(batch => {
+        const batchSpecies = species.find(s => s.id === batch.species);
+        const batchStage = stages.find(s => s.id === batch.stage);
+        const batchContainer = containers.find(c => c.id === batch.container);
+        
+        return {
+          ...batch,
+          speciesName: batchSpecies?.name,
+          stageName: batchStage?.name,
+          containerName: batchContainer?.name
+        };
+      });
+      
+      res.json(extendedBatches);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch batches" });
     }
