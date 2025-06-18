@@ -439,36 +439,39 @@ export class MemStorage implements IStorage {
     // Create realistic batch data representing 75 active batches across lifecycle stages
     // Based on ~3.5M eggs initial, 20-25% mortality, production targeting 100,000 tons annually
     
-    const batchTemplates = [
-      // Adult stage batches (sea cages) - 450+ days, highest biomass
-      { stage: adultStage, ageMonths: 18, mortality: 0.25, avgWeightG: 4500, stagePrefix: "AD" },
-      { stage: adultStage, ageMonths: 17, mortality: 0.24, avgWeightG: 4200, stagePrefix: "AD" },
-      { stage: adultStage, ageMonths: 16, mortality: 0.23, avgWeightG: 3800, stagePrefix: "AD" },
-      { stage: adultStage, ageMonths: 15, mortality: 0.22, avgWeightG: 3400, stagePrefix: "AD" },
-      { stage: adultStage, ageMonths: 14, mortality: 0.21, avgWeightG: 3000, stagePrefix: "AD" },
+    const batchTemplates: Array<{ stage: any; ageDays: number; mortality: number; avgWeightG: number; stagePrefix: string }> = [
+      // Adult stage batches (sea cages) - showing various progress levels
+      { stage: adultStage, ageDays: 600, mortality: 0.25, avgWeightG: 4500, stagePrefix: "AD" }, // 33% through (600/450 = beyond, so shows as complete)
+      { stage: adultStage, ageDays: 540, mortality: 0.24, avgWeightG: 4200, stagePrefix: "AD" }, // 20% through adult stage
+      { stage: adultStage, ageDays: 630, mortality: 0.23, avgWeightG: 3800, stagePrefix: "AD" }, // 40% through adult stage
+      { stage: adultStage, ageDays: 720, mortality: 0.22, avgWeightG: 3400, stagePrefix: "AD" }, // 60% through adult stage
+      { stage: adultStage, ageDays: 810, mortality: 0.21, avgWeightG: 3000, stagePrefix: "AD" }, // 80% through adult stage
       
-      // Post-smolt stage (90-100 days) - rapid growth phase
-      { stage: postSmoltStage, ageMonths: 6, mortality: 0.20, avgWeightG: 800, stagePrefix: "PS" },
-      { stage: postSmoltStage, ageMonths: 5, mortality: 0.19, avgWeightG: 600, stagePrefix: "PS" },
-      { stage: postSmoltStage, ageMonths: 4, mortality: 0.18, avgWeightG: 400, stagePrefix: "PS" },
+      // Post-smolt stage showing color progression
+      { stage: postSmoltStage, ageDays: 420, mortality: 0.20, avgWeightG: 800, stagePrefix: "PS" }, // 20% through post-smolt
+      { stage: postSmoltStage, ageDays: 440, mortality: 0.19, avgWeightG: 600, stagePrefix: "PS" }, // 40% through post-smolt  
+      { stage: postSmoltStage, ageDays: 470, mortality: 0.18, avgWeightG: 400, stagePrefix: "PS" }, // 70% through post-smolt
+      { stage: postSmoltStage, ageDays: 490, mortality: 0.17, avgWeightG: 350, stagePrefix: "PS" }, // 90% through post-smolt
       
-      // Smolt stage (90-100 days) - pre-seawater transfer
-      { stage: smoltStage, ageMonths: 3, mortality: 0.17, avgWeightG: 180, stagePrefix: "SM" },
-      { stage: smoltStage, ageMonths: 3, mortality: 0.16, avgWeightG: 160, stagePrefix: "SM" },
-      { stage: smoltStage, ageMonths: 3, mortality: 0.15, avgWeightG: 140, stagePrefix: "SM" },
+      // Smolt stage showing different progress levels
+      { stage: smoltStage, ageDays: 320, mortality: 0.17, avgWeightG: 180, stagePrefix: "SM" }, // 20% through smolt
+      { stage: smoltStage, ageDays: 350, mortality: 0.16, avgWeightG: 160, stagePrefix: "SM" }, // 50% through smolt
+      { stage: smoltStage, ageDays: 380, mortality: 0.15, avgWeightG: 140, stagePrefix: "SM" }, // 80% through smolt
       
-      // Parr stage (90-100 days) - freshwater growth
-      { stage: parrStage, ageMonths: 2, mortality: 0.14, avgWeightG: 45, stagePrefix: "PR" },
-      { stage: parrStage, ageMonths: 2, mortality: 0.13, avgWeightG: 35, stagePrefix: "PR" },
-      { stage: parrStage, ageMonths: 1, mortality: 0.12, avgWeightG: 25, stagePrefix: "PR" },
+      // Parr stage with varied progress
+      { stage: parrStage, ageDays: 250, mortality: 0.14, avgWeightG: 25, stagePrefix: "PA" }, // 50% through parr
+      { stage: parrStage, ageDays: 280, mortality: 0.13, avgWeightG: 30, stagePrefix: "PA" }, // 80% through parr
+      { stage: parrStage, ageDays: 290, mortality: 0.12, avgWeightG: 35, stagePrefix: "PA" }, // 90% through parr
       
-      // Fry stage (60-90 days) - early development
-      { stage: fryStage, ageMonths: 1, mortality: 0.11, avgWeightG: 8, stagePrefix: "FR" },
-      { stage: fryStage, ageMonths: 1, mortality: 0.10, avgWeightG: 5, stagePrefix: "FR" },
+      // Fry stage with progress indicators
+      { stage: fryStage, ageDays: 130, mortality: 0.11, avgWeightG: 2.5, stagePrefix: "FR" }, // 30% through fry
+      { stage: fryStage, ageDays: 150, mortality: 0.10, avgWeightG: 3.0, stagePrefix: "FR" }, // 50% through fry
+      { stage: fryStage, ageDays: 180, mortality: 0.09, avgWeightG: 4.0, stagePrefix: "FR" }, // 80% through fry
       
-      // Egg/Alevin stage (90-100 days) - highest mortality
-      { stage: eggStage, ageMonths: 0, mortality: 0.08, avgWeightG: 0.1, stagePrefix: "EG" },
-      { stage: eggStage, ageMonths: 0, mortality: 0.07, avgWeightG: 0.08, stagePrefix: "EG" },
+      // Egg stage with some progress
+      { stage: eggStage, ageDays: 60, mortality: 0.05, avgWeightG: 0.1, stagePrefix: "EG" }, // 60% through egg
+      { stage: eggStage, ageDays: 80, mortality: 0.06, avgWeightG: 0.1, stagePrefix: "EG" }, // 80% through egg
+      { stage: eggStage, ageDays: 95, mortality: 0.07, avgWeightG: 0.1, stagePrefix: "EG" }  // 95% through egg
     ];
 
     // Generate 75 batches with realistic progression
@@ -478,7 +481,7 @@ export class MemStorage implements IStorage {
     for (let i = 0; i < 75; i++) {
       const template = batchTemplates[i % batchTemplates.length];
       const baseDate = new Date();
-      baseDate.setMonth(baseDate.getMonth() - template.ageMonths);
+      baseDate.setDate(baseDate.getDate() - template.ageDays);
       
       const initialCount = 3500000; // 3.5M eggs
       const currentCount = Math.floor(initialCount * (1 - template.mortality));
@@ -503,9 +506,9 @@ export class MemStorage implements IStorage {
         currentBiomassKg,
         container: containers[i % containers.length].id, // Distribute across containers
         stage: template.stage.id,
-        status: template.stage.name === "Adult" && template.ageMonths >= 18 ? "harvested" : "active",
+        status: template.stage.name === "Adult" && template.ageDays >= 540 ? "harvested" : "active",
         expectedHarvestDate: harvestDate.toISOString().split('T')[0],
-        notes: `${template.stage.name} stage batch - Day ${template.ageMonths * 30}`,
+        notes: `${template.stage.name} stage batch - Day ${template.ageDays}`,
         eggSource: isInternal ? "internal" : "external",
         broodstockPairId: isInternal ? selectedPair.id : null,
         eggSupplierId: isInternal ? null : selectedSupplier.id,
