@@ -167,14 +167,15 @@ export default function BatchDetails() {
         </Card>
       </div>
 
-      {isComplexBatch ? (
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">Batch Overview</TabsTrigger>
-            <TabsTrigger value="traceability">Full Traceability</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="overview">Batch Overview</TabsTrigger>
+          <TabsTrigger value="traceability">
+            {isComplexBatch ? "Full Traceability" : "Batch History"}
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="overview" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <Card>
@@ -261,96 +262,10 @@ export default function BatchDetails() {
             </div>
           </TabsContent>
 
-          <TabsContent value="traceability">
-            <BatchTraceabilityView batchId={batch.id} batchName={batch.name} />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Batch Information</CardTitle>
-                <CardDescription>General details and current status</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Species</label>
-                    <p className="font-medium">{currentSpecies?.name || 'Unknown'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Current Stage</label>
-                    <Badge variant="outline">{currentStage?.name || 'Unknown'}</Badge>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Container</label>
-                    <p className="font-medium">{currentContainer?.name || 'Multiple Containers'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Status</label>
-                    <Badge variant={batch.status === 'active' ? 'default' : 'secondary'}>
-                      {batch.status || 'Unknown'}
-                    </Badge>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Expected Harvest</label>
-                    <p className="font-medium">{batch.expectedHarvestDate || 'TBD'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Egg Source</label>
-                    <p className="font-medium capitalize">{batch.eggSource || 'Unknown'}</p>
-                  </div>
-                </div>
-                
-                {batch.notes && (
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground">Notes</label>
-                    <p className="text-sm mt-1">{batch.notes}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Production Metrics</CardTitle>
-                <CardDescription>Key performance indicators</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Average Weight</label>
-                  <p className="text-lg font-bold">
-                    {batch.currentCount && batch.currentBiomassKg && batch.currentCount > 0
-                      ? ((parseFloat(batch.currentBiomassKg) * 1000) / batch.currentCount).toFixed(2)
-                      : '0.00'} g
-                  </p>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Growth Rate</label>
-                  <p className="text-lg font-bold text-green-600">+15.2% /week</p>
-                  <p className="text-xs text-muted-foreground">Based on recent samples</p>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Feed Conversion</label>
-                  <p className="text-lg font-bold">1.23 FCR</p>
-                  <p className="text-xs text-muted-foreground">Feed conversion ratio</p>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Health Score</label>
-                  <p className="text-lg font-bold text-blue-600">92/100</p>
-                  <p className="text-xs text-muted-foreground">Overall health assessment</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
+        <TabsContent value="traceability">
+          <BatchTraceabilityView batchId={batch.id} batchName={batch.name} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

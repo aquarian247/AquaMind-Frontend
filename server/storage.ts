@@ -1660,18 +1660,21 @@ export class MemStorage implements IStorage {
         }
       }
 
-      // Create complex transfers between stages
-      if (stageIndex > 0 && stageIndex < lifecycleProgression.length - 1) {
-        // Simulate partial transfers with realistic percentages
-        const prevAssignments = await this.getBatchContainerAssignments(complexBatch.id);
-        const activeAssignments = prevAssignments.filter(a => a.isActive);
+      // Create complex transfers between stages - for all transitions after the first stage
+      if (stageIndex > 0) {
+        // Get all previous assignments for this batch (not just active ones for historical tracking)
+        const allPrevAssignments = await this.getBatchContainerAssignments(complexBatch.id);
+        const prevStageAssignments = allPrevAssignments.filter(a => 
+          a.lifecycleStage === lifecycleProgression[stageIndex - 1].stage.id
+        );
         
-        for (let i = 0; i < Math.min(activeAssignments.length, assignments.length); i++) {
-          const fromAssignment = activeAssignments[i];
+        // Create transfers from previous stage to current stage
+        for (let i = 0; i < Math.min(prevStageAssignments.length, assignments.length); i++) {
+          const fromAssignment = prevStageAssignments[i];
           const toAssignment = assignments[i % assignments.length];
           
-          // Create realistic transfer percentages (30-70% per transfer)
-          const transferPercentage = 30 + Math.random() * 40;
+          // Create realistic transfer percentages (40-80% per transfer for stage transitions)
+          const transferPercentage = 40 + Math.random() * 40;
           const transferCount = Math.floor(fromAssignment.populationCount * (transferPercentage / 100));
           const transferBiomass = transferCount * stageInfo.avgWeight / 1000;
 
@@ -1679,19 +1682,52 @@ export class MemStorage implements IStorage {
             batch: complexBatch.id,
             fromContainerAssignment: fromAssignment.id,
             toContainerAssignment: toAssignment.id,
-            transferType: i % 2 === 0 ? "SPLIT" : "MOVE",
+            transferType: i % 3 === 0 ? "SPLIT" : (i % 3 === 1 ? "MOVE" : "CONSOLIDATE"),
             populationCount: transferCount,
             biomassKg: transferBiomass.toString(),
             transferDate: currentDate.toISOString().split('T')[0],
             transferPercentage: transferPercentage.toString(),
             reason: `Stage transition from ${lifecycleProgression[stageIndex-1].stage.name} to ${stageInfo.stage.name}`,
             performedBy: user.id,
+            notes: `Lifecycle progression transfer - Batch moved to ${stageInfo.containerCount} ${stageInfo.stage.name} containers`,
           });
 
-          // Deactivate previous assignment
+          // Mark previous assignment as completed
           fromAssignment.isActive = false;
           fromAssignment.departureDate = currentDate.toISOString().split('T')[0];
           this.batchContainerAssignments.set(fromAssignment.id, fromAssignment);
+        }
+
+        // Also create additional intra-stage transfers to demonstrate complex movement patterns
+        if (assignments.length > 2 && stageIndex > 2) {
+          // Create 2-3 additional transfers within the same stage for realistic management
+          const numIntraTransfers = Math.min(3, Math.floor(assignments.length / 3));
+          for (let j = 0; j < numIntraTransfers; j++) {
+            const sourceIdx = j * 2;
+            const targetIdx = sourceIdx + 1;
+            if (sourceIdx < assignments.length && targetIdx < assignments.length) {
+              const intraTransferDate = new Date(currentDate);
+              intraTransferDate.setDate(intraTransferDate.getDate() + (j + 1) * 30); // Monthly intra-stage transfers
+
+              const intraPercentage = 20 + Math.random() * 20; // Smaller percentages for optimization transfers
+              const intraCount = Math.floor(assignments[sourceIdx].populationCount * (intraPercentage / 100));
+              const intraBiomass = intraCount * stageInfo.avgWeight / 1000;
+
+              await this.createBatchTransfer({
+                batch: complexBatch.id,
+                fromContainerAssignment: assignments[sourceIdx].id,
+                toContainerAssignment: assignments[targetIdx].id,
+                transferType: "OPTIMIZE",
+                populationCount: intraCount,
+                biomassKg: intraBiomass.toString(),
+                transferDate: intraTransferDate.toISOString().split('T')[0],
+                transferPercentage: intraPercentage.toString(),
+                reason: `Container optimization - load balancing within ${stageInfo.stage.name} stage`,
+                performedBy: user.id,
+                notes: `Optimization transfer for better container utilization`,
+              });
+            }
+          }
         }
       }
 
