@@ -35,10 +35,13 @@ interface Container {
   name: string;
   containerType: string;
   capacity: number;
-  healthStatus: string;
-  currentStock: number;
-  location: string;
+  healthStatus?: string;
+  currentStock?: number;
+  location?: string;
   batchId?: number;
+  status?: string;
+  coordinates?: string;
+  depth?: string;
 }
 
 interface ProductionMetrics {
@@ -150,7 +153,8 @@ export default function BatchDetails() {
     }
   };
 
-  const getHealthStatusColor = (status: string) => {
+  const getHealthStatusColor = (status: string | undefined) => {
+    if (!status) return 'text-gray-600 bg-gray-50';
     switch (status.toLowerCase()) {
       case 'excellent': return 'text-green-600 bg-green-50';
       case 'good': return 'text-green-600 bg-green-50';
@@ -362,10 +366,10 @@ export default function BatchDetails() {
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium">{container.name}</h4>
                         <Badge 
-                          className={`text-xs ${getHealthStatusColor(container.healthStatus)}`}
+                          className={`text-xs ${getHealthStatusColor(container.healthStatus || container.status)}`}
                           variant="outline"
                         >
-                          {container.healthStatus}
+                          {container.healthStatus || container.status || 'Unknown'}
                         </Badge>
                       </div>
                       <div className="space-y-2 text-sm">
@@ -375,23 +379,23 @@ export default function BatchDetails() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Capacity:</span>
-                          <span>{container.capacity.toLocaleString()}</span>
+                          <span>{(container.capacity || 0).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Current Stock:</span>
-                          <span>{container.currentStock.toLocaleString()}</span>
+                          <span>{(container.currentStock || 0).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Utilization:</span>
-                          <span>{((container.currentStock / container.capacity) * 100).toFixed(1)}%</span>
+                          <span>{(((container.currentStock || 0) / (container.capacity || 1)) * 100).toFixed(1)}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Location:</span>
-                          <span className="text-xs">{container.location}</span>
+                          <span className="text-xs">{container.location || 'Not specified'}</span>
                         </div>
                       </div>
                       <div className="mt-3">
-                        <Progress value={(container.currentStock / container.capacity) * 100} className="h-2" />
+                        <Progress value={((container.currentStock || 0) / (container.capacity || 1)) * 100} className="h-2" />
                       </div>
                     </div>
                   ))}
