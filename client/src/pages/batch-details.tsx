@@ -96,7 +96,7 @@ export default function BatchDetails() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Link href="/batch-management">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -109,7 +109,7 @@ export default function BatchDetails() {
             {currentSpecies?.name || 'Unknown Species'} • {currentStage?.name || 'Unknown Stage'}
           </p>
         </div>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex gap-2 flex-wrap">
           {isComplexBatch && (
             <Badge variant="secondary" className="text-purple-600">
               <Activity className="w-4 h-4 mr-1" />
@@ -188,15 +188,15 @@ export default function BatchDetails() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
-                  <span>Batch Overview</span>
+                  <span>Navigation</span>
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-full">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => document.querySelector('[data-state="active"][value="overview"]')?.click()}>
                   Batch Overview
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => document.querySelector('[data-state="inactive"][value="traceability"]')?.click()}>
                   {isComplexBatch ? "Full Traceability" : "Batch History"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
