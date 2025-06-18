@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity } from "lucide-react";
+import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { BatchTraceabilityView } from "@/components/batch-management/BatchTraceabilityView";
 
 interface BatchDetails {
@@ -43,6 +45,7 @@ interface Container {
 export default function BatchDetails() {
   const params = useParams();
   const batchId = parseInt(params.id!);
+  const isMobile = useIsMobile();
 
   const { data: batch, isLoading } = useQuery({
     queryKey: [`/api/batches/${batchId}`],
@@ -180,12 +183,33 @@ export default function BatchDetails() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="overview">Batch Overview</TabsTrigger>
-          <TabsTrigger value="traceability">
-            {isComplexBatch ? "Full Traceability" : "Batch History"}
-          </TabsTrigger>
-        </TabsList>
+        {isMobile ? (
+          <div className="mb-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  <span>Batch Overview</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-full">
+                <DropdownMenuItem>
+                  Batch Overview
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  {isComplexBatch ? "Full Traceability" : "Batch History"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : (
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overview">Batch Overview</TabsTrigger>
+            <TabsTrigger value="traceability">
+              {isComplexBatch ? "Full Traceability" : "Batch History"}
+            </TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -196,7 +220,7 @@ export default function BatchDetails() {
                     <CardDescription>General details and current status</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Species</label>
                         <p className="font-medium">{currentSpecies?.name || 'Unknown'}</p>

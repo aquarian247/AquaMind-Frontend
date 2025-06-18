@@ -706,28 +706,49 @@ export default function BatchManagement() {
         </Card>
       </div>
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs - Desktop horizontal, Mobile dropdown */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={cn(
-          "grid grid-cols-2 lg:grid-cols-5 w-full",
-          isMobile && "h-auto p-1"
-        )}>
-          <TabsTrigger value="overview" className={cn(isMobile && "text-xs px-2 py-3")}>
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="containers" className={cn(isMobile && "text-xs px-2 py-3")}>
-            Containers
-          </TabsTrigger>
-          <TabsTrigger value="medical" className={cn(isMobile && "text-xs px-2 py-3")}>
-            Medical Journal
-          </TabsTrigger>
-          <TabsTrigger value="feed" className={cn(isMobile && "text-xs px-2 py-3")}>
-            Feed History
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className={cn(isMobile && "text-xs px-2 py-3")}>
-            Analytics
-          </TabsTrigger>
-        </TabsList>
+        {isMobile ? (
+          <div className="mb-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full justify-between">
+                  {activeTab === "overview" && "Overview"}
+                  {activeTab === "containers" && "Containers"}
+                  {activeTab === "medical" && "Medical Journal"}
+                  {activeTab === "feed" && "Feed History"}
+                  {activeTab === "analytics" && "Analytics"}
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-full">
+                <DropdownMenuItem onClick={() => setActiveTab("overview")}>
+                  Overview
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("containers")}>
+                  Containers
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("medical")}>
+                  Medical Journal
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("feed")}>
+                  Feed History
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("analytics")}>
+                  Analytics
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ) : (
+          <TabsList className="grid grid-cols-5 w-full">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="containers">Containers</TabsTrigger>
+            <TabsTrigger value="medical">Medical Journal</TabsTrigger>
+            <TabsTrigger value="feed">Feed History</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value="overview" className="space-y-4">
           {/* Filters */}
