@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import { Fish, TrendingUp, TrendingDown, Activity, Beaker, AlertTriangle } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BatchTraceabilityViewProps {
   batchId: number;
@@ -12,6 +15,8 @@ interface BatchTraceabilityViewProps {
 }
 
 export function BatchTraceabilityView({ batchId, batchName }: BatchTraceabilityViewProps) {
+  const [activeView, setActiveView] = useState("lifecycle");
+  const isMobile = useIsMobile();
   const { data: assignments } = useQuery({
     queryKey: ["/api/batch-container-assignments", batchId],
     queryFn: () => fetch(`/api/batch-container-assignments?batchId=${batchId}`).then(res => res.json()),
