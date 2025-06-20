@@ -136,9 +136,10 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           <Button 
             variant="ghost" 
             onClick={() => setLocation(`/infrastructure/stations/${stationId}/halls`)} 
-            className="p-2"
+            className="flex items-center"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Station Halls
           </Button>
           <Factory className="h-8 w-8 text-blue-600" />
           <div>
