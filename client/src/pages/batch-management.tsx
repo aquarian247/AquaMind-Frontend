@@ -334,6 +334,22 @@ export default function BatchManagement() {
             Track and manage fish batches through their lifecycle
           </p>
         </div>
+        
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Geography" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Geographies</SelectItem>
+              {geographiesData?.results?.map((geo: any) => (
+                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
+                  {geo.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
