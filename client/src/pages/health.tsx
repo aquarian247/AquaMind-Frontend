@@ -107,13 +107,32 @@ export default function Health() {
   const [selectedTab, setSelectedTab] = useState("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedGeography, setSelectedGeography] = useState("all");
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Geography data
+  const { data: geographiesData } = useQuery({
+    queryKey: ["/api/v1/infrastructure/geographies/"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/infrastructure/geographies/");
+      if (!response.ok) throw new Error("Failed to fetch geographies");
+      return response.json();
+    },
+  });
+
   // Health dashboard data
   const { data: healthSummary, isLoading: summaryLoading } = useQuery<HealthSummary>({
-    queryKey: ["/api/health/summary"],
+    queryKey: ["/api/health/summary", selectedGeography],
+    queryFn: async () => {
+      const url = selectedGeography !== "all" 
+        ? `/api/health/summary?geography=${selectedGeography}`
+        : "/api/health/summary";
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch health summary");
+      return response.json();
+    },
   });
 
   const { data: recentJournalEntries = [] } = useQuery<HealthJournalEntry[]>({

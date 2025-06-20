@@ -102,14 +102,33 @@ export default function BatchManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
+  const [selectedGeography, setSelectedGeography] = useState("all");
   const [selectedEggSource, setSelectedEggSource] = useState<"internal" | "external">("internal");
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Geography data
+  const { data: geographiesData } = useQuery({
+    queryKey: ["/api/v1/infrastructure/geographies/"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/infrastructure/geographies/");
+      if (!response.ok) throw new Error("Failed to fetch geographies");
+      return response.json();
+    },
+  });
+
   // Fetch data
   const { data: batches = [], isLoading: batchesLoading } = useQuery<ExtendedBatch[]>({
-    queryKey: ["/api/batches"],
+    queryKey: ["/api/batches", selectedGeography],
+    queryFn: async () => {
+      const url = selectedGeography !== "all" 
+        ? `/api/batches?geography=${selectedGeography}`
+        : "/api/batches";
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch batches");
+      return response.json();
+    },
   });
 
   const { data: species = [] } = useQuery<Species[]>({

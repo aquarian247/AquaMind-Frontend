@@ -220,13 +220,24 @@ const api = {
 
 export default function Inventory() {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
+  const [selectedGeography, setSelectedGeography] = useState("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Geography data
+  const { data: geographiesData } = useQuery({
+    queryKey: ["/api/v1/infrastructure/geographies/"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/infrastructure/geographies/");
+      if (!response.ok) throw new Error("Failed to fetch geographies");
+      return response.json();
+    },
+  });
+
   // Data queries
   const { data: feedTypesData, isLoading: feedTypesLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-types/"],
-    queryFn: api.getFeedTypes,
+    queryKey: ["/api/v1/inventory/feed-types/", selectedGeography],
+    queryFn: () => api.getFeedTypes(selectedGeography !== "all" ? selectedGeography : undefined),
   });
 
   const { data: purchasesData, isLoading: purchasesLoading } = useQuery({
