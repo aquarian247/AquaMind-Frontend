@@ -162,8 +162,8 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
             onClick={() => setLocation(`/infrastructure/halls/${container.hallId}`)} 
             className="flex items-center"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Hall Detail
+            <ArrowLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Hall Detail</span>
           </Button>
           <Factory className="h-8 w-8 text-blue-600" />
           <div>

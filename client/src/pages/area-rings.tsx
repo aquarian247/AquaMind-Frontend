@@ -109,8 +109,8 @@ export default function AreaRings({ params }: { params: { id: string } }) {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div className="flex items-center space-x-2">
           <Button variant="ghost" onClick={() => setLocation(`/infrastructure/areas/${areaId}`)} className="flex items-center">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Area Detail
+            <ArrowLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Area Detail</span>
           </Button>
           <Waves className="h-8 w-8 text-blue-600" />
           <div>

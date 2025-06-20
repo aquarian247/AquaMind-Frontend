@@ -101,8 +101,8 @@ export default function BatchDetails() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Link href="/batch-management">
           <Button variant="ghost" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Batch Management
+            <ArrowLeft className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Batch Management</span>
           </Button>
         </Link>
         <div>

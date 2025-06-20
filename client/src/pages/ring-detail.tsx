@@ -143,8 +143,8 @@ export default function RingDetail({ params }: { params: { id: string } }) {
             onClick={() => setLocation(`/infrastructure/areas/${ring.areaId}/rings`)} 
             className="flex items-center"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Area Rings
+            <ArrowLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Area Rings</span>
           </Button>
           <Waves className="h-8 w-8 text-blue-600" />
           <div>

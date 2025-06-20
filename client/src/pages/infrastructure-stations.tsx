@@ -220,8 +220,8 @@ export default function InfrastructureStations() {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div className="flex items-center space-x-2">
           <Button variant="ghost" onClick={() => setLocation("/infrastructure")} className="flex items-center">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Infrastructure
+            <ArrowLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Infrastructure</span>
           </Button>
           <Factory className="h-8 w-8 text-green-600" />
           <div>

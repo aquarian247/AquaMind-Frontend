@@ -121,8 +121,8 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Area Not Found</h2>
           <p className="text-gray-600 mb-4">The requested sea area could not be found.</p>
           <Button onClick={() => setLocation("/infrastructure/areas")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Areas
+            <ArrowLeft className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Back to Areas</span>
           </Button>
         </div>
       </div>
