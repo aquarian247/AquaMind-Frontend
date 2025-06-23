@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity } from "lucide-react";
+import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, Heart, Utensils, BarChart3 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BatchTraceabilityView } from "@/components/batch-management/BatchTraceabilityView";
 
@@ -191,11 +191,17 @@ export default function BatchDetails() {
               <SelectTrigger className="w-full">
                 <SelectValue>
                   {activeTab === "overview" && "Batch Overview"}
+                  {activeTab === "health" && "Health"}
+                  {activeTab === "feed-history" && "Feed History"}
+                  {activeTab === "analytics" && "Analytics"}
                   {activeTab === "traceability" && (isComplexBatch ? "Full Traceability" : "Batch History")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="overview">Batch Overview</SelectItem>
+                <SelectItem value="health">Health</SelectItem>
+                <SelectItem value="feed-history">Feed History</SelectItem>
+                <SelectItem value="analytics">Analytics</SelectItem>
                 <SelectItem value="traceability">
                   {isComplexBatch ? "Full Traceability" : "Batch History"}
                 </SelectItem>
@@ -203,10 +209,13 @@ export default function BatchDetails() {
             </Select>
           </div>
         ) : (
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="overview">Batch Overview</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="health">Health</TabsTrigger>
+            <TabsTrigger value="feed-history">Feed History</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="traceability">
-              {isComplexBatch ? "Full Traceability" : "Batch History"}
+              {isComplexBatch ? "Traceability" : "History"}
             </TabsTrigger>
           </TabsList>
         )}
@@ -297,6 +306,18 @@ export default function BatchDetails() {
               </div>
             </div>
           </TabsContent>
+
+        <TabsContent value="health" className="space-y-6">
+          <BatchHealthView batchId={batch.id} batchName={batch.name} />
+        </TabsContent>
+
+        <TabsContent value="feed-history" className="space-y-6">
+          <BatchFeedHistoryView batchId={batch.id} batchName={batch.name} />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <BatchAnalyticsView batchId={batch.id} batchName={batch.name} />
+        </TabsContent>
 
         <TabsContent value="traceability">
           <BatchTraceabilityView batchId={batch.id} batchName={batch.name} />
