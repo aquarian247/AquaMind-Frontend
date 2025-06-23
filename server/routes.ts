@@ -242,8 +242,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/batch/feeding-summaries", async (req, res) => {
     try {
       const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const period = req.query.period as string || "30";
+      const customFrom = req.query.from as string;
+      const customTo = req.query.to as string;
+      
+      // Generate period-specific summaries based on actual feeding events
+      const allEvents = await storage.getFeedingEvents();
+      let events = batchId ? allEvents.filter(e => e.batch === batchId) : allEvents;
+      
+      // Apply period filtering
+      const now = new Date();
+      let startDate: Date;
+      let endDate: Date = now;
+      
+      if (period === "custom" && customFrom && customTo) {
+        startDate = new Date(customFrom);
+        endDate = new Date(customTo);
+      } else {
+        switch (period) {
+          case "7":
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case "30":
+            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            break;
+          case "90":
+            startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+            break;
+          case "week":
+            startDate = new Date(now);
+            startDate.setDate(now.getDate() - now.getDay());
+            break;
+          case "month":
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          default:
+            startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        }
+      }
+      
+      // Filter events by date range
+      const periodEvents = events.filter(e => {
+        const eventDate = new Date(e.feedingDate);
+        return eventDate >= startDate && eventDate <= endDate;
+      });
+      
+      // Calculate summary metrics from actual events
+      const totalFeedKg = periodEvents.reduce((sum, e) => sum + e.amountKg, 0);
+      const totalFeedConsumedKg = totalFeedKg * 0.95; // 95% consumption rate
+      const averageBiomass = periodEvents.length > 0 
+        ? periodEvents.reduce((sum, e) => sum + e.batchBiomassKg, 0) / periodEvents.length 
+        : 0;
+      const biomassGain = averageBiomass * 0.15; // Estimated 15% growth
+      const fcr = totalFeedConsumedKg > 0 ? totalFeedConsumedKg / biomassGain : 1.25;
+      
+      const currentSummary = {
+        id: 999,
+        periodStart: startDate.toISOString().split('T')[0],
+        periodEnd: endDate.toISOString().split('T')[0],
+        totalFeedKg,
+        totalFeedConsumedKg,
+        totalBiomassGainKg: biomassGain,
+        fcr,
+        averageFeedingPercentage: totalFeedConsumedKg > 0 ? (totalFeedConsumedKg / averageBiomass) * 100 : 0,
+        feedingEventsCount: periodEvents.length,
+        totalCost: periodEvents.reduce((sum, e) => sum + (e.feedCost || 0), 0)
+      };
+      
+      // Get historical summaries
       const allSummaries = await storage.getBatchFeedingSummaries(batchId);
-      res.json(allSummaries);
+      
+      res.json([currentSummary, ...allSummaries]);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch feeding summaries" });
     }

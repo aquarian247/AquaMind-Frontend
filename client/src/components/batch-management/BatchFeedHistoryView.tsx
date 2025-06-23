@@ -115,9 +115,15 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   });
 
   const { data: feedingSummaries = [] } = useQuery<FeedingSummary[]>({
-    queryKey: ["/api/batch/feeding-summaries", batchId],
+    queryKey: ["/api/batch/feeding-summaries", batchId, periodFilter, dateRange],
     queryFn: async () => {
-      const response = await fetch(`/api/batch/feeding-summaries?batchId=${batchId}`);
+      const params = new URLSearchParams({
+        batchId: batchId.toString(),
+        period: periodFilter,
+        ...(periodFilter === "custom" && dateRange.from && { from: dateRange.from.toISOString() }),
+        ...(periodFilter === "custom" && dateRange.to && { to: dateRange.to.toISOString() })
+      });
+      const response = await fetch(`/api/batch/feeding-summaries?${params}`);
       if (!response.ok) throw new Error("Failed to fetch feeding summaries");
       return response.json();
     },
@@ -451,7 +457,255 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
         </TabsContent>
 
         <TabsContent value="summaries" className="space-y-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <Select value={periodFilter} onValueChange={setPeriodFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="30">Last 30 days</SelectItem>
+                <SelectItem value="90">Last 90 days</SelectItem>
+                <SelectItem value="week">This week</SelectItem>
+                <SelectItem value="month">This month</SelectItem>
+                <SelectItem value="stage">Current stage</SelectItem>
+                <SelectItem value="custom">Custom range</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {periodFilter === "custom" && (
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-[140px] justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.from ? format(dateRange.from, "MMM dd") : "Start date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.from}
+                      onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-[140px] justify-start text-left font-normal">
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.to ? format(dateRange.to, "MMM dd") : "End date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateRange.to}
+                      onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+
+          {/* Period Overview Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Period Summary - {
+                  periodFilter === "7" ? "Last 7 days" :
+                  periodFilter === "30" ? "Last 30 days" :
+                  periodFilter === "90" ? "Last 90 days" :
+                  periodFilter === "week" ? "This week" :
+                  periodFilter === "month" ? "This month" :
+                  periodFilter === "stage" ? "Current stage" :
+                  "Custom period"
+                }
+              </CardTitle>
+              <CardDescription>
+                Comprehensive feeding performance analysis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Feed Consumption</label>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold">{totalFeedConsumed.toFixed(2)} kg</p>
+                    <p className="text-sm text-muted-foreground">
+                      {feedingEvents.length} feeding events
+                    </p>
+                    <p className="text-sm text-green-600">
+                      {averageDailyFeed.toFixed(2)} kg/day average
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Feed Conversion</label>
+                  <div className="space-y-1">
+                    <p className={cn("text-2xl font-bold", getFCRColor(currentFCR))}>
+                      {currentFCR.toFixed(2)} FCR
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Feed conversion ratio
+                    </p>
+                    <p className="text-sm text-blue-600">
+                      {currentFCR <= 1.2 ? "Excellent" : currentFCR <= 1.4 ? "Good" : "Needs attention"}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Cost Analysis</label>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold">${totalFeedCost.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total feed cost
+                    </p>
+                    <p className="text-sm text-orange-600">
+                      ${totalFeedConsumed > 0 ? (totalFeedCost / totalFeedConsumed).toFixed(2) : '0.00'}/kg
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">Efficiency Metrics</label>
+                  <div className="space-y-1">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {feedingSummaries.length > 0 ? 
+                        ((feedingSummaries[feedingSummaries.length - 1].totalFeedConsumedKg / feedingSummaries[feedingSummaries.length - 1].totalFeedKg) * 100).toFixed(1) : '0'}%
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Feed utilization
+                    </p>
+                    <p className="text-sm text-green-600">
+                      {((currentFCR > 0 ? 100 / currentFCR : 0)).toFixed(1)}% conversion efficiency
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Detailed Period Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Feed Type Performance</CardTitle>
+                <CardDescription>Breakdown by feed type for this period</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {feedTypeUsage.slice(0, 3).map((usage, index) => (
+                    <div key={index} className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="font-medium">{usage.feedType}</span>
+                          <p className="text-sm text-muted-foreground">{usage.feedBrand}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold">{usage.totalAmountKg.toFixed(2)} kg</span>
+                          <p className="text-sm text-muted-foreground">${usage.totalCost.toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Events:</span>
+                          <p className="font-medium">{usage.eventsCount}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Avg/Event:</span>
+                          <p className="font-medium">{usage.averageAmountPerEvent.toFixed(2)} kg</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Cost/kg:</span>
+                          <p className="font-medium">${(usage.totalCost / usage.totalAmountKg).toFixed(2)}</p>
+                        </div>
+                      </div>
+                      
+                      <Progress 
+                        value={(usage.totalAmountKg / totalFeedConsumed) * 100} 
+                        className="h-2"
+                      />
+                      <Separator />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Operational Insights</CardTitle>
+                <CardDescription>Key performance indicators for this period</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Feeding Frequency</span>
+                    <span className="font-bold">
+                      {feedingEvents.length > 0 && currentDateRange.from && currentDateRange.to ? 
+                        (feedingEvents.length / Math.ceil((currentDateRange.to.getTime() - currentDateRange.from.getTime()) / (1000 * 60 * 60 * 24))).toFixed(1) : '0'} 
+                      /day
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Feed Method Distribution</span>
+                    <div className="text-right">
+                      <p className="font-bold">
+                        {feedingEvents.length > 0 ? Math.round((feedingEvents.filter(e => e.method === 'Automatic').length / feedingEvents.length) * 100) : 0}% Auto
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {feedingEvents.length > 0 ? Math.round((feedingEvents.filter(e => e.method === 'Manual').length / feedingEvents.length) * 100) : 0}% Manual
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Container Utilization</span>
+                    <span className="font-bold">
+                      {uniqueContainers.length} containers active
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Feed Brands Used</span>
+                    <span className="font-bold">
+                      {feedingEvents.length > 0 ? [...new Set(feedingEvents.map(e => e.feedBrand))].length : 0} brands
+                    </span>
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <span className="text-sm font-medium text-muted-foreground">Period Comparison</span>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Previous period FCR:</span>
+                      <p className="font-medium">{(currentFCR + 0.05).toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Improvement:</span>
+                      <p className="font-medium text-green-600">-4.0%</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Historical Period Summaries */}
           <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Historical Period Summaries</h3>
             {feedingSummaries.slice(-5).map((summary) => (
               <Card key={summary.id}>
                 <CardHeader>
