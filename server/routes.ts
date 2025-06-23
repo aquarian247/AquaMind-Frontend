@@ -288,13 +288,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Calculate summary metrics from actual events
-      const totalFeedKg = periodEvents.reduce((sum, e) => sum + e.amountKg, 0);
+      const totalFeedKg = periodEvents.reduce((sum, e) => sum + Number(e.amountKg || 0), 0);
       const totalFeedConsumedKg = totalFeedKg * 0.95; // 95% consumption rate
       const averageBiomass = periodEvents.length > 0 
-        ? periodEvents.reduce((sum, e) => sum + e.batchBiomassKg, 0) / periodEvents.length 
+        ? periodEvents.reduce((sum, e) => sum + Number(e.batchBiomassKg || 0), 0) / periodEvents.length 
         : 0;
       const biomassGain = averageBiomass * 0.15; // Estimated 15% growth
-      const fcr = totalFeedConsumedKg > 0 ? totalFeedConsumedKg / biomassGain : 1.25;
+      const fcr = totalFeedConsumedKg > 0 && biomassGain > 0 ? totalFeedConsumedKg / biomassGain : 1.25;
       
       const currentSummary = {
         id: 999,
@@ -306,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fcr,
         averageFeedingPercentage: totalFeedConsumedKg > 0 ? (totalFeedConsumedKg / averageBiomass) * 100 : 0,
         feedingEventsCount: periodEvents.length,
-        totalCost: periodEvents.reduce((sum, e) => sum + (e.feedCost || 0), 0)
+        totalCost: periodEvents.reduce((sum, e) => sum + Number(e.feedCost || 0), 0)
       };
       
       // Get historical summaries

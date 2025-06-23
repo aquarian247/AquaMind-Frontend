@@ -578,8 +578,8 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
                   <label className="text-sm font-medium text-muted-foreground">Efficiency Metrics</label>
                   <div className="space-y-1">
                     <p className="text-2xl font-bold text-blue-600">
-                      {feedingSummaries.length > 0 ? 
-                        ((feedingSummaries[feedingSummaries.length - 1].totalFeedConsumedKg / feedingSummaries[feedingSummaries.length - 1].totalFeedKg) * 100).toFixed(1) : '0'}%
+                      {feedingSummaries.length > 0 && Number(feedingSummaries[feedingSummaries.length - 1].totalFeedKg) > 0 ? 
+                        ((Number(feedingSummaries[feedingSummaries.length - 1].totalFeedConsumedKg) / Number(feedingSummaries[feedingSummaries.length - 1].totalFeedKg)) * 100).toFixed(1) : '0'}%
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Feed utilization
@@ -626,7 +626,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
                         </div>
                         <div>
                           <span className="text-muted-foreground">Cost/kg:</span>
-                          <p className="font-medium">${(usage.totalCost / usage.totalAmountKg).toFixed(2)}</p>
+                          <p className="font-medium">${usage.totalAmountKg > 0 ? (usage.totalCost / usage.totalAmountKg).toFixed(2) : '0.00'}</p>
                         </div>
                       </div>
                       
@@ -714,10 +714,10 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
                       <CardTitle className="text-lg">
                         {format(new Date(summary.periodStart), "MMM dd")} - {format(new Date(summary.periodEnd), "MMM dd, yyyy")}
                       </CardTitle>
-                      <CardDescription>{summary.feedingEventsCount} feeding events</CardDescription>
+                      <CardDescription>{summary.feedingEventsCount || 0} feeding events</CardDescription>
                     </div>
-                    <Badge className={cn("border", getFCRColor(summary.fcr).replace('text-', 'border-').replace('text-', 'bg-') + '-100')}>
-                      FCR: {summary.fcr.toFixed(2)}
+                    <Badge className={cn("border", getFCRColor(Number(summary.fcr) || 0).replace('text-', 'border-').replace('text-', 'bg-') + '-100')}>
+                      FCR: {Number(summary.fcr || 0).toFixed(2)}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -725,19 +725,19 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Total Feed</label>
-                      <p className="text-lg font-semibold">{summary.totalFeedKg.toFixed(2)} kg</p>
+                      <p className="text-lg font-semibold">{Number(summary.totalFeedKg || 0).toFixed(2)} kg</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Feed Consumed</label>
-                      <p className="text-lg font-semibold">{summary.totalFeedConsumedKg.toFixed(2)} kg</p>
+                      <p className="text-lg font-semibold">{Number(summary.totalFeedConsumedKg || 0).toFixed(2)} kg</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Biomass Gain</label>
-                      <p className="text-lg font-semibold text-green-600">+{summary.totalBiomassGainKg.toFixed(2)} kg</p>
+                      <p className="text-lg font-semibold text-green-600">+{Number(summary.totalBiomassGainKg || 0).toFixed(2)} kg</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">Avg Feed %</label>
-                      <p className="text-lg font-semibold">{summary.averageFeedingPercentage.toFixed(2)}%</p>
+                      <p className="text-lg font-semibold">{Number(summary.averageFeedingPercentage || 0).toFixed(2)}%</p>
                     </div>
                   </div>
                 </CardContent>
