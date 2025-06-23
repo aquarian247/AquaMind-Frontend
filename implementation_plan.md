@@ -6,6 +6,9 @@
 
 The system focuses on FIFO inventory management, real-time monitoring, mortality tracking, and comprehensive analytics for large-scale aquaculture operations.
 
+### Critical Data Integrity Principle
+**All GUI fields, metrics, and aggregations must reflect actual API capabilities.** Never invent, mock, or display data that cannot be retrieved from the existing API endpoints. This ensures the frontend accurately represents real system capabilities and prevents misleading users about available functionality. All displayed values should be derived from actual API responses or calculated from authentic data sources.
+
 ## Technology Stack
 - **Frontend**: React 18 + TypeScript, Tailwind CSS, Radix UI components, Wouter routing
 - **State Management**: TanStack Query (server state management)
