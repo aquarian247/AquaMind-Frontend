@@ -97,6 +97,345 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Batch-specific endpoints for details views
+  app.get("/api/batches/:id", async (req, res) => {
+    try {
+      const batchId = parseInt(req.params.id);
+      const batches = await storage.getBatches();
+      const batch = batches.find(b => b.id === batchId);
+      
+      if (!batch) {
+        return res.status(404).json({ error: "Batch not found" });
+      }
+
+      const species = await storage.getSpecies();
+      const stages = await storage.getStages();
+      const containers = await storage.getContainers();
+      
+      const batchSpecies = species.find(s => s.id === batch.species);
+      const batchStage = stages.find(s => s.id === batch.stage);
+      const batchContainer = containers.find(c => c.id === batch.container);
+      
+      const extendedBatch = {
+        ...batch,
+        speciesName: batchSpecies?.name,
+        stageName: batchStage?.name,
+        containerName: batchContainer?.name
+      };
+      
+      res.json(extendedBatch);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch batch details" });
+    }
+  });
+
+  // Batch Health endpoints
+  app.get("/api/health/records", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const allRecords = await storage.getHealthRecords();
+      const records = batchId ? allRecords.filter(r => r.batchId === batchId) : allRecords;
+      res.json(records);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch health records" });
+    }
+  });
+
+  app.get("/api/batch/mortality-events", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      // Mock mortality events data for batch
+      const events = [
+        {
+          id: 1,
+          date: "2024-01-15",
+          count: 12,
+          cause: "Disease",
+          description: "Bacterial infection outbreak in tank A3",
+          containerName: "Tank A3"
+        },
+        {
+          id: 2,
+          date: "2024-01-08",
+          count: 5,
+          cause: "Stress",
+          description: "Handling stress during routine sampling",
+          containerName: "Tank A2"
+        },
+        {
+          id: 3,
+          date: "2024-01-02",
+          count: 3,
+          cause: "Environmental",
+          description: "Temperature fluctuation during storm",
+          containerName: "Tank A1"
+        }
+      ];
+      res.json(events);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch mortality events" });
+    }
+  });
+
+  app.get("/api/health/assessments", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const allAssessments = await storage.getHealthAssessments(batchId);
+      res.json(allAssessments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch health assessments" });
+    }
+  });
+
+  app.get("/api/health/lab-samples", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const allSamples = await storage.getLabSamples(batchId);
+      res.json(allSamples);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch lab samples" });
+    }
+  });
+
+  // Batch Feed History endpoints
+  app.get("/api/batch/feeding-events", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const from = req.query.from as string;
+      const to = req.query.to as string;
+      
+      const allEvents = await storage.getFeedingEvents();
+      let events = batchId ? allEvents.filter(e => e.batch === batchId) : allEvents;
+      
+      if (from && to) {
+        const fromDate = new Date(from);
+        const toDate = new Date(to);
+        events = events.filter(e => {
+          const eventDate = new Date(e.feedingDate);
+          return eventDate >= fromDate && eventDate <= toDate;
+        });
+      }
+      
+      // Extend with feed type and container information
+      const feedTypes = await storage.getFeedTypes();
+      const containers = await storage.getContainers();
+      
+      const extendedEvents = events.map(event => {
+        const feedType = feedTypes.find(ft => ft.id === event.feed);
+        const container = containers.find(c => c.id === event.container);
+        
+        return {
+          ...event,
+          feedType: feedType?.name || 'Unknown Feed',
+          feedBrand: feedType?.manufacturer || 'Unknown Brand',
+          containerName: container?.name || 'Unknown Container',
+          recordedBy: 'System' // Mock user data
+        };
+      });
+      
+      res.json(extendedEvents);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feeding events" });
+    }
+  });
+
+  app.get("/api/batch/feeding-summaries", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const allSummaries = await storage.getBatchFeedingSummaries(batchId);
+      res.json(allSummaries);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feeding summaries" });
+    }
+  });
+
+  // Batch Analytics endpoints
+  app.get("/api/batch/growth-metrics", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const timeframe = req.query.timeframe as string || "30";
+      
+      // Mock growth metrics data
+      const days = parseInt(timeframe);
+      const metrics = Array.from({ length: Math.min(days, 10) }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (days - i - 1) * (days / 10));
+        
+        return {
+          date: date.toISOString().split('T')[0],
+          averageWeight: 150 + i * 25 + Math.random() * 10,
+          totalBiomass: 2500 + i * 200 + Math.random() * 100,
+          populationCount: 25000 - i * 50 - Math.floor(Math.random() * 20),
+          growthRate: 12 + Math.random() * 6,
+          condition: 0.9 + Math.random() * 0.2
+        };
+      });
+      
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch growth metrics" });
+    }
+  });
+
+  app.get("/api/batch/performance-metrics", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      
+      // Mock performance metrics
+      const metrics = {
+        survivalRate: 87.5 + Math.random() * 10,
+        growthRate: 14.2 + Math.random() * 4,
+        feedConversionRatio: 1.15 + Math.random() * 0.3,
+        healthScore: 85 + Math.random() * 10,
+        productivity: 82 + Math.random() * 15,
+        efficiency: 78 + Math.random() * 18
+      };
+      
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch performance metrics" });
+    }
+  });
+
+  app.get("/api/batch/environmental-correlations", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      
+      // Mock environmental correlation data
+      const correlations = [
+        {
+          parameter: "Temperature",
+          correlation: 0.65,
+          impact: "positive",
+          significance: "high"
+        },
+        {
+          parameter: "Oxygen",
+          correlation: 0.78,
+          impact: "positive", 
+          significance: "high"
+        },
+        {
+          parameter: "pH",
+          correlation: -0.23,
+          impact: "negative",
+          significance: "medium"
+        },
+        {
+          parameter: "Salinity",
+          correlation: 0.12,
+          impact: "neutral",
+          significance: "low"
+        }
+      ];
+      
+      res.json(correlations);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch environmental correlations" });
+    }
+  });
+
+  app.get("/api/batch/predictive-insights", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      
+      // Mock predictive insights
+      const insights = [
+        {
+          metric: "Growth Rate",
+          currentValue: 14.2,
+          predictedValue: 16.8,
+          trend: "improving",
+          confidence: 85,
+          timeframe: "next 2 weeks"
+        },
+        {
+          metric: "Feed Conversion Ratio",
+          currentValue: 1.25,
+          predictedValue: 1.18,
+          trend: "improving", 
+          confidence: 78,
+          timeframe: "next month"
+        },
+        {
+          metric: "Mortality Rate",
+          currentValue: 0.8,
+          predictedValue: 1.2,
+          trend: "declining",
+          confidence: 72,
+          timeframe: "next 2 weeks"
+        }
+      ];
+      
+      res.json(insights);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch predictive insights" });
+    }
+  });
+
+  app.get("/api/batch/benchmarks", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      
+      // Mock benchmark data
+      const benchmarks = [
+        {
+          metric: "Survival Rate",
+          current: 87.5,
+          target: 90.0,
+          industry: 85.2,
+          status: "below"
+        },
+        {
+          metric: "Feed Conversion Ratio",
+          current: 1.25,
+          target: 1.20,
+          industry: 1.30,
+          status: "above"
+        },
+        {
+          metric: "Growth Rate",
+          current: 14.2,
+          target: 15.0,
+          industry: 13.8,
+          status: "above"
+        },
+        {
+          metric: "Health Score",
+          current: 87.0,
+          target: 85.0,
+          industry: 82.5,
+          status: "above"
+        }
+      ];
+      
+      res.json(benchmarks);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch benchmarks" });
+    }
+  });
+
+  // Batch Container Assignments and Transfers
+  app.get("/api/batch-container-assignments", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const assignments = await storage.getBatchContainerAssignments(batchId);
+      res.json(assignments);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch batch container assignments" });
+    }
+  });
+
+  app.get("/api/batch-transfers", async (req, res) => {
+    try {
+      const batchId = req.query.batchId ? parseInt(req.query.batchId as string) : undefined;
+      const transfers = await storage.getBatchTransfers(batchId);
+      res.json(transfers);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch batch transfers" });
+    }
+  });
+
   // Broodstock Management endpoints
   app.get("/api/broodstock-pairs", async (req, res) => {
     try {

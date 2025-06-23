@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, Heart, Utensils, BarChart3 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BatchTraceabilityView } from "@/components/batch-management/BatchTraceabilityView";
+import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
+import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
+import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
 
 interface BatchDetails {
   id: number;
