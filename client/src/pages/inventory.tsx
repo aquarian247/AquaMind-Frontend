@@ -224,30 +224,22 @@ export default function Inventory() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Geography data
-  const { data: geographiesData } = useQuery({
-    queryKey: ["/api/v1/infrastructure/geographies/"],
-    queryFn: async () => {
-      const response = await fetch("/api/v1/infrastructure/geographies/");
-      if (!response.ok) throw new Error("Failed to fetch geographies");
-      return response.json();
-    },
-  });
+
 
   // Data queries
   const { data: feedTypesData, isLoading: feedTypesLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-types/", selectedGeography],
-    queryFn: () => api.getFeedTypes(selectedGeography !== "all" ? selectedGeography : undefined),
+    queryKey: ["/api/v1/inventory/feed-types/"],
+    queryFn: api.getFeedTypes,
   });
 
   const { data: purchasesData, isLoading: purchasesLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-purchases/", selectedGeography],
-    queryFn: () => api.getFeedPurchases(selectedGeography !== "all" ? selectedGeography : undefined),
+    queryKey: ["/api/v1/inventory/feed-purchases/"],
+    queryFn: api.getFeedPurchases,
   });
 
   const { data: containersData, isLoading: containersLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-containers/", selectedGeography],
-    queryFn: () => api.getFeedContainers(selectedGeography !== "all" ? selectedGeography : undefined),
+    queryKey: ["/api/v1/inventory/feed-containers/"],
+    queryFn: api.getFeedContainers,
   });
 
   const { data: stockData, isLoading: stockLoading } = useQuery({
@@ -376,27 +368,9 @@ export default function Inventory() {
 
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-        <div className="text-center lg:text-left">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Feed Inventory Management</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">FIFO tracking, cost optimization, and FCR monitoring</p>
-        </div>
-        
-        <div className="flex justify-center lg:justify-end">
-          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Geography" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Geographies</SelectItem>
-              {geographiesData?.results?.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
-                  {geo.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Feed Inventory Management</h1>
+        <p className="text-sm sm:text-base text-gray-600 mt-2">FIFO tracking, cost optimization, and FCR monitoring</p>
       </div>
 
       {/* KPI Cards - Always Visible */}
