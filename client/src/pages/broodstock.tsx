@@ -204,19 +204,20 @@ function BroodstockDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Select geography" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Geographies</SelectItem>
+          <div className="relative">
+            <select 
+              value={selectedGeography} 
+              onChange={(e) => setSelectedGeography(e.target.value)}
+              className="h-9 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
+            >
+              <option value="all">All Geographies</option>
               {geographiesData?.results?.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name.toLowerCase()}>
+                <option key={geo.id} value={geo.name.toLowerCase()}>
                   {geo.name}
-                </SelectItem>
+                </option>
               ))}
-            </SelectContent>
-          </Select>
+            </select>
+          </div>
           <Button variant="outline" size="sm">
             <Plus className="w-4 h-4 mr-2" />
             New Program
