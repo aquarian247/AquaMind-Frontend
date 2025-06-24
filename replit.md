@@ -106,6 +106,7 @@ Current endpoints follow `/api/` pattern with planned migration to Django-style 
 
 - June 24, 2025. Initial setup
 - June 24, 2025. Implemented comprehensive Broodstock Management module with tabbed navigation following consistent UI patterns from Infrastructure, Batch, and Health modules
+- June 24, 2025. Added "View Details" functionality to breeding programs and broodstock containers with dedicated detail pages featuring tabbed interfaces, matching the UX patterns from batch management module
 
 ## User Preferences
 

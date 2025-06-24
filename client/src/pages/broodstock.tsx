@@ -1031,6 +1031,7 @@ function BroodstockDashboard() {
                         <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Oxygen</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">pH</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Status</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1063,6 +1064,14 @@ function BroodstockDashboard() {
                             <Badge className={container.environmentalStatus === 'optimal' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
                               {container.environmentalStatus}
                             </Badge>
+                          </td>
+                          <td className="py-3 px-2">
+                            <Link href={`/broodstock-container-details/${container.id}`}>
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </Button>
+                            </Link>
                           </td>
                         </tr>
                       ))}
