@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -545,7 +546,7 @@ function BroodstockDashboard() {
           {/* Programs Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {programs?.results?.map((program: any) => (
-              <Card key={program.id} className="cursor-pointer hover:shadow-lg transition-shadow">
+              <Card key={program.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -652,13 +653,21 @@ function BroodstockDashboard() {
                     </div>
                   </div>
 
-                  {/* Lead Geneticist */}
+                  {/* Actions */}
                   <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Lead Geneticist</p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {program.leadGeneticist}
-                      </p>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Lead Geneticist</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {program.leadGeneticist}
+                        </p>
+                      </div>
+                      <Link href={`/breeding-program-details/${program.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </CardContent>
@@ -924,7 +933,7 @@ function BroodstockDashboard() {
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {containers?.results?.map((container: any) => (
-                <Card key={container.id} className="cursor-pointer hover:shadow-lg transition-shadow">
+                <Card key={container.id} className="hover:shadow-lg transition-shadow">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -990,6 +999,14 @@ function BroodstockDashboard() {
                         ></div>
                       </div>
                     </div>
+
+                    {/* View Details Button */}
+                    <Link href={`/broodstock-container-details/${container.id}`}>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               ))}
