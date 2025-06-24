@@ -78,8 +78,12 @@ function Router() {
               {(params) => <ContainerDetail params={params} />}
             </Route>
             <Route path="/batch-management" component={BatchManagement} />
-        <Route path="/batch-details/:id" component={BatchDetails} />
+            <Route path="/batch-details/:id" component={BatchDetails} />
             <Route path="/health" component={Health} />
+            <Route path="/broodstock" component={Broodstock} />
+            <Route path="/broodstock/programs" component={BroodstockPrograms} />
+            <Route path="/broodstock/genetic" component={BroodstockGenetic} />
+            <Route path="/broodstock/population" component={BroodstockPopulation} />
             <Route path="/inventory" component={Inventory} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/mortality-reporting" component={MortalityReporting} />

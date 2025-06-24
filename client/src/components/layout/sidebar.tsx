@@ -47,6 +47,12 @@ const navigationItems = [
   },
   {
     id: 7,
+    label: "Broodstock",
+    icon: "fas fa-dna",
+    path: "/broodstock",
+  },
+  {
+    id: 8,
     label: "Inventory",
     icon: "fas fa-boxes",
     path: "/inventory",
