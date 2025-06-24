@@ -2337,6 +2337,546 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Broodstock Management API endpoints
+  app.get("/api/v1/broodstock/dashboard/kpis/", async (req, res) => {
+    try {
+      res.json({
+        activeBroodstockPairs: 127,
+        totalProgenyCount: 184650,
+        broodstockPopulation: 3840,
+        geneticDiversityIndex: 0.847,
+        pendingSelections: 8,
+        averageGeneticGain: 12.7
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch broodstock KPIs" });
+    }
+  });
+
+  app.get("/api/v1/broodstock/programs/", async (req, res) => {
+    try {
+      const programs = [
+        {
+          id: 1,
+          name: "Growth Rate Optimization G5",
+          status: "active",
+          currentGeneration: 5,
+          targetGeneration: 6,
+          startDate: "2021-02-15",
+          progress: 89,
+          populationSize: 1847,
+          leadGeneticist: "Dr. Emma Nordström",
+          traitWeights: {
+            growthRate: 55,
+            feedConversion: 25,
+            fleshQuality: 15,
+            diseaseResistance: 5
+          },
+          geneticGain: [12.4, 18.7, 24.3, 31.2, 38.9],
+          description: "Multi-generation selective breeding focusing on accelerated growth while optimizing feed conversion ratio for sustainable aquaculture",
+          nextMilestone: "Generation 6 selection - Q2 2025",
+          recentActivity: "G5 performance evaluation completed - exceeded growth targets by 14%"
+        },
+        {
+          id: 2,
+          name: "Pancreas Disease Resistance",
+          status: "active",
+          currentGeneration: 3,
+          targetGeneration: 5,
+          startDate: "2022-08-01",
+          progress: 64,
+          populationSize: 1420,
+          leadGeneticist: "Dr. Lars Andersen",
+          traitWeights: {
+            diseaseResistance: 70,
+            survivalRate: 15,
+            growthRate: 10,
+            fleshQuality: 5
+          },
+          geneticGain: [22.1, 41.7, 58.3],
+          description: "Genomic-assisted breeding program targeting PD resistance using SNP markers and challenge testing protocols",
+          nextMilestone: "Challenge test protocol initiation - March 2025",
+          recentActivity: "SNP validation completed for 847 candidates"
+        },
+        {
+          id: 3,
+          name: "Premium Flesh Quality",
+          status: "selection",
+          currentGeneration: 4,
+          targetGeneration: 5,
+          startDate: "2020-11-12",
+          progress: 78,
+          populationSize: 956,
+          leadGeneticist: "Dr. Sigrid Olsen",
+          traitWeights: {
+            fleshColor: 40,
+            fatDistribution: 30,
+            textureScore: 20,
+            shelfLife: 10
+          },
+          geneticGain: [15.8, 28.4, 42.9, 59.7],
+          description: "Premium market-focused program enhancing flesh color uniformity, optimal fat marbling, and extended shelf life characteristics",
+          nextMilestone: "G5 breeding pair selection - January 2025",
+          recentActivity: "Flesh quality analysis completed for 1,847 individuals"
+        },
+        {
+          id: 4,
+          name: "Arctic Adaptation Program",
+          status: "active",
+          currentGeneration: 2,
+          targetGeneration: 4,
+          startDate: "2023-05-20",
+          progress: 45,
+          populationSize: 1156,
+          leadGeneticist: "Dr. Magnus Eriksson",
+          traitWeights: {
+            coldTolerance: 45,
+            winterGrowth: 35,
+            antifreeze: 15,
+            metabolicRate: 5
+          },
+          geneticGain: [18.3, 34.6],
+          description: "Developing cold-water adapted strains for northern latitude operations with enhanced winter performance",
+          nextMilestone: "Cold tolerance challenge testing - February 2025",
+          recentActivity: "G2 winter trial results show 23% improved growth retention"
+        },
+        {
+          id: 5,
+          name: "Feed Efficiency Enhancement",
+          status: "planning",
+          currentGeneration: 1,
+          targetGeneration: 6,
+          startDate: "2024-10-01",
+          progress: 15,
+          populationSize: 2100,
+          leadGeneticist: "Dr. Astrid Hansen",
+          traitWeights: {
+            feedConversion: 60,
+            digestibility: 25,
+            growthRate: 10,
+            wasteReduction: 5
+          },
+          geneticGain: [8.7],
+          description: "Next-generation FCR optimization program incorporating novel feed digestibility markers and metabolic efficiency traits",
+          nextMilestone: "Baseline phenotyping completion - March 2025",
+          recentActivity: "Initial population established with 2,100 individuals"
+        },
+        {
+          id: 6,
+          name: "Sea Lice Resistance",
+          status: "delayed",
+          currentGeneration: 2,
+          targetGeneration: 5,
+          startDate: "2023-01-10",
+          progress: 28,
+          populationSize: 785,
+          leadGeneticist: "Dr. Bjørn Kristiansen",
+          traitWeights: {
+            liceResistance: 65,
+            skinBarrier: 20,
+            immuneResponse: 10,
+            behavioralAvoidance: 5
+          },
+          geneticGain: [14.2, 26.8],
+          description: "Developing natural sea lice resistance through selective breeding and genomic markers targeting multiple resistance mechanisms",
+          nextMilestone: "Program review and resource reallocation - Q1 2025",
+          recentActivity: "Program paused pending facility upgrades"
+        }
+      ];
+      
+      res.json({
+        count: programs.length,
+        next: null,
+        previous: null,
+        results: programs
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch breeding programs" });
+    }
+  });
+
+  app.get("/api/v1/broodstock/genetic/traits/", async (req, res) => {
+    try {
+      const traitData = {
+        traitPerformance: {
+          labels: ['Growth Rate', 'Disease Resistance', 'Feed Conversion', 'Flesh Quality', 'Cold Tolerance', 'Maturation Control'],
+          currentGeneration: [91.3, 78.7, 84.2, 87.9, 73.4, 79.8],
+          targetProfile: [95.0, 85.0, 90.0, 90.0, 80.0, 85.0],
+          previousGeneration: [86.7, 72.1, 79.4, 83.2, 68.9, 76.3]
+        },
+        correlationMatrix: {
+          traits: ['Growth Rate', 'FCR', 'PD Resistance', 'Flesh Color', 'Fat Content', 'Maturation'],
+          correlations: [
+            [1.00, 0.73, -0.18, 0.31, 0.58, -0.47],
+            [0.73, 1.00, -0.09, 0.24, 0.52, -0.33],
+            [-0.18, -0.09, 1.00, -0.12, -0.28, 0.14],
+            [0.31, 0.24, -0.12, 1.00, 0.79, -0.21],
+            [0.58, 0.52, -0.28, 0.79, 1.00, -0.39],
+            [-0.47, -0.33, 0.14, -0.21, -0.39, 1.00]
+          ]
+        },
+        snpAnalysis: {
+          totalSnps: 48750,
+          analyzedTraits: 18,
+          genomicAccuracy: 0.847,
+          heritabilityEstimates: {
+            growthRate: 0.42,
+            feedConversion: 0.38,
+            diseaseResistance: 0.29,
+            fleshQuality: 0.45,
+            coldTolerance: 0.33,
+            maturationTime: 0.51
+          },
+          genomicMarkers: [
+            { type: 'growth', chromosome: 'Chr1', positions: [0.12, 0.28, 0.67, 0.89], effect: 'major' },
+            { type: 'growth', chromosome: 'Chr4', positions: [0.34, 0.71], effect: 'moderate' },
+            { type: 'disease', chromosome: 'Chr2', positions: [0.15, 0.43, 0.78], effect: 'major' },
+            { type: 'disease', chromosome: 'Chr6', positions: [0.22, 0.56], effect: 'minor' },
+            { type: 'quality', chromosome: 'Chr3', positions: [0.19, 0.47, 0.82], effect: 'major' },
+            { type: 'quality', chromosome: 'Chr5', positions: [0.31, 0.64], effect: 'moderate' },
+            { type: 'maturation', chromosome: 'Chr7', positions: [0.09, 0.35, 0.73], effect: 'major' },
+            { type: 'cold', chromosome: 'Chr8', positions: [0.16, 0.52, 0.87], effect: 'moderate' }
+          ],
+          recentFindings: [
+            "New QTL discovered on Chr9 associated with viral resistance",
+            "Validation of feed conversion markers in independent population",
+            "Fine-mapping of flesh color genes shows 3 novel variants"
+          ]
+        },
+        breedingValues: {
+          topPerformers: [
+            { id: "BSM-2024-0847", growthRate: 142.3, fcr: 89.7, diseaseRes: 156.8, overall: 129.6 },
+            { id: "BSF-2024-1203", growthRate: 138.9, fcr: 145.2, diseaseRes: 134.7, overall: 139.6 },
+            { id: "BSM-2024-0692", growthRate: 151.7, fcr: 102.4, diseaseRes: 142.1, overall: 132.1 },
+            { id: "BSF-2024-0934", growthRate: 129.8, fcr: 167.3, diseaseRes: 119.4, overall: 138.8 },
+            { id: "BSM-2024-1156", growthRate: 143.2, fcr: 98.6, diseaseRes: 178.9, overall: 140.2 }
+          ],
+          generationTrends: {
+            labels: ['G1', 'G2', 'G3', 'G4', 'G5'],
+            growthGain: [100, 114.2, 126.8, 135.9, 142.3],
+            fcrGain: [100, 108.7, 119.4, 127.1, 134.8],
+            diseaseGain: [100, 122.1, 141.7, 158.3, 169.2]
+          }
+        }
+      };
+      
+      res.json(traitData);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch genetic trait data" });
+    }
+  });
+
+  app.get("/api/v1/broodstock/activities/", async (req, res) => {
+    try {
+      const activities = [
+        {
+          id: 1,
+          type: 'genetic_analysis',
+          title: 'G5 Performance Evaluation Complete',
+          description: 'Growth Rate Optimization G5 cohort exceeded targets by 14.2%. SNP validation confirmed 847 high-value breeding candidates.',
+          timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+          icon: 'dna',
+          priority: 'high',
+          program: 'Growth Rate Optimization G5'
+        },
+        {
+          id: 2,
+          type: 'breeding_selection',
+          title: 'Premium Flesh Quality G5 Selection',
+          description: 'Selected 127 elite breeding pairs from 1,847 candidates. Flesh color uniformity improved 23% vs G4.',
+          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+          icon: 'check',
+          priority: 'high',
+          program: 'Premium Flesh Quality'
+        },
+        {
+          id: 3,
+          type: 'challenge_test',
+          title: 'PD Challenge Test Results',
+          description: 'Pancreas Disease challenge completed. G3 candidates show 67% survival vs 34% control. Genomic predictions validated.',
+          timestamp: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
+          icon: 'flask',
+          priority: 'critical',
+          program: 'Pancreas Disease Resistance'
+        },
+        {
+          id: 4,
+          type: 'winter_trial',
+          title: 'Arctic Program Winter Trial Success',
+          description: 'G2 Arctic Adaptation cohort maintained 78% growth rate at 2°C. Cold tolerance markers validated in field conditions.',
+          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          icon: 'thermometer',
+          priority: 'medium',
+          program: 'Arctic Adaptation Program'
+        },
+        {
+          id: 5,
+          type: 'facility_expansion',
+          title: 'New Genomics Lab Operational',
+          description: 'Advanced genomics facility at Tórshavn station now processing 500+ samples weekly. SNP throughput increased 340%.',
+          timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          icon: 'building',
+          priority: 'medium',
+          program: 'Infrastructure'
+        },
+        {
+          id: 6,
+          type: 'milestone_achievement',
+          title: 'Feed Efficiency Program Launch',
+          description: 'Established G1 population of 2,100 individuals. Novel digestibility markers integrated into selection protocol.',
+          timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          icon: 'target',
+          priority: 'medium',
+          program: 'Feed Efficiency Enhancement'
+        },
+        {
+          id: 7,
+          type: 'data_analysis',
+          title: 'Multi-Program Correlation Analysis',
+          description: 'Cross-program trait correlation study reveals optimal selection indices. Updated breeding values for 4,847 individuals.',
+          timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          icon: 'bar-chart',
+          priority: 'low',
+          program: 'Multi-Program Analysis'
+        }
+      ];
+      
+      res.json({
+        count: activities.length,
+        next: null,
+        previous: null,
+        results: activities
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch activities" });
+    }
+  });
+
+  app.get("/api/v1/broodstock/tasks/", async (req, res) => {
+    try {
+      const tasks = [
+        {
+          id: 1,
+          title: 'G6 Breeding Plan Finalization',
+          description: 'Finalize mating design for Growth Rate Optimization G6. Review 127 selected pairs and optimize genetic diversity.',
+          dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          priority: 'high',
+          status: 'in_progress',
+          assignee: 'Dr. Emma Nordström',
+          program: 'Growth Rate Optimization G5',
+          estimatedHours: 16
+        },
+        {
+          id: 2,
+          title: 'Arctic Cold Challenge Protocol',
+          description: 'Execute winter performance challenge test for Arctic Adaptation G2 cohort. Temperature gradient 8°C to 1°C over 14 days.',
+          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          priority: 'critical',
+          status: 'pending',
+          assignee: 'Dr. Magnus Eriksson',
+          program: 'Arctic Adaptation Program',
+          estimatedHours: 120
+        },
+        {
+          id: 3,
+          title: 'Flesh Quality Sensory Panel',
+          description: 'Coordinate sensory evaluation panel for Premium Flesh Quality G4 harvest. Schedule 24 trained evaluators.',
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          priority: 'high',
+          status: 'scheduled',
+          assignee: 'Dr. Sigrid Olsen',
+          program: 'Premium Flesh Quality',
+          estimatedHours: 32
+        },
+        {
+          id: 4,
+          title: 'SNP Chip Design Update',
+          description: 'Integrate 347 new SNP markers from recent QTL discovery. Update genotyping panel for all active programs.',
+          dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+          priority: 'medium',
+          status: 'scheduled',
+          assignee: 'Dr. Lars Andersen',
+          program: 'Genomics Infrastructure',
+          estimatedHours: 24
+        },
+        {
+          id: 5,
+          title: 'Feed Efficiency Baseline Collection',
+          description: 'Complete individual feed intake measurements for 2,100 G1 individuals. Install RFID feeding systems.',
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          priority: 'medium',
+          status: 'scheduled',
+          assignee: 'Dr. Astrid Hansen',
+          program: 'Feed Efficiency Enhancement',
+          estimatedHours: 80
+        },
+        {
+          id: 6,
+          title: 'Sea Lice Program Review',
+          description: 'Conduct comprehensive review of Sea Lice Resistance program delays. Assess facility requirements and timeline.',
+          dueDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
+          priority: 'medium',
+          status: 'pending',
+          assignee: 'Dr. Bjørn Kristiansen',
+          program: 'Sea Lice Resistance',
+          estimatedHours: 40
+        },
+        {
+          id: 7,
+          title: 'Multi-Site Genetic Correlation',
+          description: 'Analyze genotype x environment interactions across Faroe Islands and Scotland populations.',
+          dueDate: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
+          priority: 'low',
+          status: 'planned',
+          assignee: 'Dr. Emma Nordström',
+          program: 'Multi-Program Analysis',
+          estimatedHours: 60
+        },
+        {
+          id: 8,
+          title: 'Breeding Program Annual Review',
+          description: 'Prepare comprehensive annual review presentation for executive leadership. Include ROI analysis and 2025 projections.',
+          dueDate: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString(),
+          priority: 'high',
+          status: 'planned',
+          assignee: 'All Program Leads',
+          program: 'Strategic Planning',
+          estimatedHours: 120
+        }
+      ];
+      
+      res.json({
+        count: tasks.length,
+        next: null,
+        previous: null,
+        results: tasks
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch tasks" });
+    }
+  });
+
+  app.get("/api/v1/broodstock/containers/", async (req, res) => {
+    try {
+      const broodstockContainers = [];
+      
+      const faroeStations = [
+        { name: 'Tórshavn Broodstock Center', code: 'TBC', containers: 18 },
+        { name: 'Vestmanna Genetics Facility', code: 'VGF', containers: 16 },
+        { name: 'Runavík Research Station', code: 'RRS', containers: 12 }
+      ];
+      
+      const scotlandStations = [
+        { name: 'Orkney Breeding Unit', code: 'OBU', containers: 14 },
+        { name: 'Shetland Genetics Lab', code: 'SGL', containers: 10 },
+        { name: 'Highland Research Center', code: 'HRC', containers: 8 }
+      ];
+      
+      let containerId = 1;
+      
+      [...faroeStations, ...scotlandStations].forEach((station, stationIndex) => {
+        const isScotland = stationIndex >= 3;
+        const geography = isScotland ? 'Scotland' : 'Faroe Islands';
+        
+        for (let i = 1; i <= station.containers; i++) {
+          const containerCode = `${station.code}-BS${String(i).padStart(2, '0')}`;
+          const isBreeding = Math.random() > 0.3;
+          const maturityStage = isBreeding ? 'mature_broodstock' : 'developing_broodstock';
+          
+          const fishCount = isBreeding ? 
+            Math.floor(Math.random() * 40) + 60 :
+            Math.floor(Math.random() * 80) + 120;
+            
+          const capacity = isBreeding ? 100 : 200;
+          
+          const baseTemp = isScotland ? 9.2 : 8.7;
+          const temperature = (baseTemp + (Math.random() - 0.5) * 2).toFixed(1);
+          const oxygen = (8.2 + Math.random() * 1.5).toFixed(1);
+          const ph = (7.3 + Math.random() * 0.4).toFixed(1);
+          const salinity = (34.5 + Math.random() * 1.0).toFixed(1);
+          
+          let environmentalStatus = 'optimal';
+          if (parseFloat(temperature) > 11.5 || parseFloat(temperature) < 7.5) environmentalStatus = 'warning';
+          if (parseFloat(oxygen) < 7.5) environmentalStatus = 'warning';
+          if (parseFloat(ph) < 7.2 || parseFloat(ph) > 7.8) environmentalStatus = 'warning';
+          if (Math.random() < 0.05) environmentalStatus = 'critical';
+          
+          let assignedProgram = null;
+          if (isBreeding) {
+            const programs = [
+              'Growth Rate Optimization G5',
+              'Pancreas Disease Resistance', 
+              'Premium Flesh Quality',
+              'Arctic Adaptation Program',
+              'Feed Efficiency Enhancement'
+            ];
+            assignedProgram = programs[Math.floor(Math.random() * programs.length)];
+          }
+          
+          broodstockContainers.push({
+            id: containerId++,
+            name: containerCode,
+            location: `${station.name} - ${geography}`,
+            facility: station.name,
+            geography: geography,
+            containerType: 'broodstock_tank',
+            stage: maturityStage,
+            fishCount: fishCount,
+            capacity: capacity,
+            utilizationRate: Math.round((fishCount / capacity) * 100),
+            assignedProgram: assignedProgram,
+            generation: assignedProgram ? `G${Math.floor(Math.random() * 3) + 3}` : null,
+            
+            temperature: parseFloat(temperature),
+            oxygen: parseFloat(oxygen), 
+            ph: parseFloat(ph),
+            salinity: parseFloat(salinity),
+            light: Math.floor(Math.random() * 4) + 10,
+            flowRate: Math.floor(Math.random() * 20) + 15,
+            
+            environmentalStatus: environmentalStatus,
+            status: fishCount > 0 ? 'active' : 'maintenance',
+            
+            lastFeedingTime: new Date(Date.now() - Math.random() * 8 * 60 * 60 * 1000).toISOString(),
+            lastHealthCheck: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+            lastSampling: assignedProgram ? new Date(Date.now() - Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString() : null,
+            
+            mortalityRate: (Math.random() * 2).toFixed(2),
+            avgWeight: isBreeding ? (3200 + Math.random() * 800).toFixed(0) : (1800 + Math.random() * 600).toFixed(0),
+            conditionFactor: (1.1 + Math.random() * 0.3).toFixed(2),
+            
+            hasActiveAlerts: environmentalStatus !== 'optimal',
+            alertCount: environmentalStatus === 'critical' ? Math.floor(Math.random() * 3) + 2 : 
+                       environmentalStatus === 'warning' ? Math.floor(Math.random() * 2) + 1 : 0
+          });
+        }
+      });
+      
+      res.json({
+        count: broodstockContainers.length,
+        next: null,
+        previous: null,
+        results: broodstockContainers,
+        summary: {
+          totalContainers: broodstockContainers.length,
+          activeContainers: broodstockContainers.filter(c => c.status === 'active').length,
+          optimalStatus: broodstockContainers.filter(c => c.environmentalStatus === 'optimal').length,
+          warningStatus: broodstockContainers.filter(c => c.environmentalStatus === 'warning').length,
+          criticalStatus: broodstockContainers.filter(c => c.environmentalStatus === 'critical').length,
+          totalFish: broodstockContainers.reduce((sum, c) => sum + c.fishCount, 0),
+          avgUtilization: Math.round(broodstockContainers.reduce((sum, c) => sum + c.utilizationRate, 0) / broodstockContainers.length),
+          avgTemperature: (broodstockContainers.reduce((sum, c) => sum + c.temperature, 0) / broodstockContainers.length).toFixed(1),
+          facilitiesCount: {
+            faroeIslands: 3,
+            scotland: 3
+          }
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch broodstock containers" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
