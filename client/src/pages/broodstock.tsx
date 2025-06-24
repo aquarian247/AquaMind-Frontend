@@ -18,7 +18,19 @@ import {
   BarChart3,
   DNA,
   Microscope,
-  Target
+  Target,
+  Plus,
+  Dna,
+  Grid,
+  List,
+  Filter,
+  Download,
+  Thermometer,
+  Droplets,
+  Search,
+  ArrowRight,
+  Eye,
+  FlaskConical
 } from "lucide-react";
 import { Radar, Line, Bar, Scatter } from "react-chartjs-2";
 import {
