@@ -27,6 +27,10 @@ import MortalityReporting from "@/pages/mortality-reporting";
 import BatchManagement from "@/pages/batch-management";
 import BatchDetails from "@/pages/batch-details";
 import Health from "@/pages/health";
+import Broodstock from "@/pages/broodstock";
+import BroodstockPrograms from "@/pages/broodstock-programs";
+import BroodstockGenetic from "@/pages/broodstock-genetic";
+import BroodstockPopulation from "@/pages/broodstock-population";
 import NotFound from "@/pages/not-found";
 
 import Sidebar from "@/components/layout/sidebar";

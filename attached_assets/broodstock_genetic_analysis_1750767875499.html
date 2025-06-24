@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+      .slide-container {
+        width: 1280px;
+        min-height: 720px;
+        background: #002b36;
+        color: #93a1a1;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+        position: relative;
+      }
+      .content-area {
+        background-color: #fdf6e3;
+        min-height: 720px;
+        color: #657b83;
+      }
+      .sidebar {
+        width: 280px;
+        background: linear-gradient(180deg, #073642 0%, #002b36 100%);
+        color: #839496;
+      }
+      .nav-item {
+        padding: 12px 20px;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+      .nav-item.active {
+        background: rgba(42, 161, 152, 0.1);
+        color: #2aa198;
+        border-left-color: #2aa198;
+      }
+      .nav-item:hover {
+        background: rgba(88, 110, 117, 0.1);
+        color: #93a1a1;
+        border-left-color: #2aa198;
+      }
+      .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid #eee8d5;
+      }
+      .metric-card {
+        background: #fdf6e3;
+        border: 1px solid #eee8d5;
+        border-radius: 8px;
+      }
+      .tab {
+        padding: 10px 20px;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.3s ease;
+      }
+      .tab.active {
+        background: #fdf6e3;
+        color: #657b83;
+        font-weight: 600;
+      }
+      .tab:not(.active) {
+        background: rgba(42, 161, 152, 0.1);
+        color: #839496;
+      }
+      .tab:hover:not(.active) {
+        background: rgba(42, 161, 152, 0.2);
+      }
+      .btn-primary {
+        background-color: #268bd2;
+        color: white;
+        transition: all 0.3s ease;
+      }
+      .btn-primary:hover {
+        background-color: #2176b1;
+      }
+      .btn-secondary {
+        background-color: #2aa198;
+        color: white;
+        transition: all 0.3s ease;
+      }
+      .btn-secondary:hover {
+        background-color: #238c83;
+      }
+      .genomic-marker {
+        height: 24px;
+        border-radius: 4px;
+        margin: 2px 0;
+        transition: all 0.3s ease;
+      }
+      .genomic-marker:hover {
+        transform: scaleY(1.2);
+      }
+      .marker-growth { background-color: #268bd2; }
+      .marker-disease { background-color: #859900; }
+      .marker-quality { background-color: #b58900; }
+      .marker-maturation { background-color: #6c71c4; }
+      .marker-unknown { background-color: #93a1a1; }
+      
+      .network-node {
+        fill: #268bd2;
+        stroke: #fdf6e3;
+        stroke-width: 2px;
+        transition: all 0.3s ease;
+      }
+      .network-node:hover {
+        fill: #2aa198;
+        r: 8;
+      }
+      .network-link {
+        stroke: #93a1a1;
+        stroke-opacity: 0.4;
+        stroke-width: 1px;
+      }
+      .correlation-cell {
+        transition: all 0.3s ease;
+      }
+      .correlation-cell:hover {
+        stroke: #002b36;
+        stroke-width: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container flex">
+      <!-- Sidebar -->
+      <div class="sidebar p-6">
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-teal-400">🌊 AquaMind</h1>
+        </div>
+        <nav class="space-y-2">
+          <div class="nav-item">
+            <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-building mr-3"></i>Infrastructure
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-box mr-3"></i>Batch Management
+          </div>
+          <div class="nav-item active">
+            <i class="fas fa-dna mr-3"></i>Broodstock
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-heartbeat mr-3"></i>Health
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-warehouse mr-3"></i>Inventory
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-chart-line mr-3"></i>Analytics
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-cog mr-3"></i>Settings
+          </div>
+        </nav>
+      </div>
+
+      <!-- Main Content -->
+      <div class="content-area flex-1 p-8">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-1">
+              <i class="fas fa-dna text-teal-500 mr-2"></i>
+              Genetic Analysis
+            </h1>
+            <p class="text-gray-600">Advanced genomic analysis and trait correlation</p>
+          </div>
+          <div class="flex space-x-4">
+            <div class="relative">
+              <select class="bg-yellow-100 border border-yellow-300 text-gray-700 py-2 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                <option>All Programs</option>
+                <option>Growth Rate Optimization</option>
+                <option>Disease Resistance (PD)</option>
+                <option>Flesh Quality Enhancement</option>
+              </select>
+            </div>
+            <button class="btn-primary py-2 px-4 rounded-lg flex items-center">
+              <i class="fas fa-file-export mr-2"></i>
+              Export Data
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-200 mb-6">
+          <div class="tab">
+            <i class="fas fa-home mr-2"></i>Overview
+          </div>
+          <div class="tab">
+            <i class="fas fa-project-diagram mr-2"></i>Breeding Programs
+          </div>
+          <div class="tab active">
+            <i class="fas fa-dna mr-2"></i>Genetic Analysis
+          </div>
+          <div class="tab">
+            <i class="fas fa-fish mr-2"></i>Population Management
+          </div>
+          <div class="tab">
+            <i class="fas fa-chart-bar mr-2"></i>Trait Analysis
+          </div>
+        </div>
+
+        <!-- Genetic Analysis Tools -->
+        <div class="grid grid-cols-3 gap-6 mb-6">
+          <!-- SNP Analysis -->
+          <div class="card p-5">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-semibold text-gray-800">SNP Analysis</h3>
+              <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">22,000 SNPs</span>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">Analyze single nucleotide polymorphisms across the genome</p>
+            <button class="w-full btn-primary py-2 px-4 rounded-lg flex items-center justify-center">
+              <i class="fas fa-microscope mr-2"></i>
+              Open SNP Browser
+            </button>
+          </div>
+
+          <!-- Trait Correlation -->
+          <div class="card p-5">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-semibold text-gray-800">Trait Correlation</h3>
+              <span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">12 Traits</span>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">Analyze relationships between phenotypic traits</p>
+            <button class="w-full btn-primary py-2 px-4 rounded-lg flex items-center justify-center">
+              <i class="fas fa-project-diagram mr-2"></i>
+              View Correlation Matrix
+            </button>
+          </div>
+
+          <!-- Breeding Value Calculator -->
+          <div class="card p-5">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="font-semibold text-gray-800">Breeding Value Calculator</h3>
+              <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">Advanced</span>
+            </div>
+            <p class="text-sm text-gray-600 mb-3">Calculate estimated breeding values for selection</p>
+            <button class="w-full btn-primary py-2 px-4 rounded-lg flex items-center justify-center">
+              <i class="fas fa-calculator mr-2"></i>
+              Calculate EBVs
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Content Sections -->
+        <div class="grid grid-cols-2 gap-6 mb-6">
+          <!-- Genomic Browser -->
+          <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-semibold text-gray-800">Genomic Browser</h2>
+              <div class="flex space-x-2">
+                <button class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-800">Chromosome 1</button>
+                <button class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-800">
+                  <i class="fas fa-search-plus"></i>
+                </button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="flex justify-between text-xs text-gray-500 mb-1">
+                <span>Position 0</span>
+                <span>Position 50M</span>
+              </div>
+              <div class="h-64 bg-gray-50 border border-gray-200 rounded-lg p-2 overflow-hidden">
+                <!-- Genomic Markers Visualization -->
+                <div class="genomic-marker marker-growth" style="width: 100%"></div>
+                <div class="genomic-marker marker-disease" style="width: 30%"></div>
+                <div class="genomic-marker marker-unknown" style="width: 60%"></div>
+                <div class="genomic-marker marker-quality" style="width: 45%"></div>
+                <div class="genomic-marker marker-maturation" style="width: 80%"></div>
+                <div class="genomic-marker marker-disease" style="width: 25%"></div>
+                <div class="genomic-marker marker-growth" style="width: 70%"></div>
+                <div class="genomic-marker marker-unknown" style="width: 40%"></div>
+                <div class="genomic-marker marker-quality" style="width: 55%"></div>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-blue-500 rounded-sm mr-1"></div>
+                <span class="text-xs text-gray-600">Growth</span>
+              </div>
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-green-500 rounded-sm mr-1"></div>
+                <span class="text-xs text-gray-600">Disease Resistance</span>
+              </div>
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-yellow-500 rounded-sm mr-1"></div>
+                <span class="text-xs text-gray-600">Flesh Quality</span>
+              </div>
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-purple-500 rounded-sm mr-1"></div>
+                <span class="text-xs text-gray-600">Maturation</span>
+              </div>
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-gray-400 rounded-sm mr-1"></div>
+                <span class="text-xs text-gray-600">Unknown</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trait Correlation Matrix -->
+          <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-semibold text-gray-800">Trait Correlation Matrix</h2>
+              <div class="flex space-x-2">
+                <button class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-800">Phenotypic</button>
+                <button class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-800">Genetic</button>
+              </div>
+            </div>
+            <div class="h-64">
+              <canvas id="correlationMatrix"></canvas>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-2">
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-blue-700 rounded-sm mr-1"></div>
+                <span>Strong Positive</span>
+              </div>
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-gray-200 rounded-sm mr-1"></div>
+                <span>No Correlation</span>
+              </div>
+              <div class="flex items-center">
+                <div class="w-3 h-3 bg-red-700 rounded-sm mr-1"></div>
+                <span>Strong Negative</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="card p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Genetic Relationship Network</h2>
+            <div class="flex space-x-2">
+              <button class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-800">Growth Program</button>
+              <button class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-800">
+                <i class="fas fa-filter"></i> Filter
+              </button>
+            </div>
+          </div>
+          <div class="h-64 bg-gray-50 border border-gray-200 rounded-lg" id="networkVisualization">
+            <!-- D3.js Network Visualization will be rendered here -->
+          </div>
+          <div class="flex justify-between mt-3">
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
+              <span class="text-xs text-gray-600">Male</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full bg-pink-500 mr-1"></div>
+              <span class="text-xs text-gray-600">Female</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full bg-purple-500 mr-1"></div>
+              <span class="text-xs text-gray-600">Selected for Breeding</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-full bg-gray-400 mr-1"></div>
+              <span class="text-xs text-gray-600">Not Selected</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-4 h-0.5 bg-gray-400 mr-1"></div>
+              <span class="text-xs text-gray-600">Genetic Relationship</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Correlation Matrix
+      const ctx = document.getElementById('correlationMatrix').getContext('2d');
+      
+      // Sample correlation data
+      const labels = ['Growth', 'FCR', 'Disease', 'Color', 'Fat', 'Maturation'];
+      const correlationData = [
+        [1.0, 0.7, -0.2, 0.3, 0.6, -0.5],
+        [0.7, 1.0, -0.1, 0.2, 0.5, -0.3],
+        [-0.2, -0.1, 1.0, -0.1, -0.3, 0.1],
+        [0.3, 0.2, -0.1, 1.0, 0.8, -0.2],
+        [0.6, 0.5, -0.3, 0.8, 1.0, -0.4],
+        [-0.5, -0.3, 0.1, -0.2, -0.4, 1.0]
+      ];
+      
+      const correlationMatrix = new Chart(ctx, {
+        type: 'matrix',
+        data: {
+          datasets: [{
+            label: 'Trait Correlation',
+            data: generateMatrixData(labels, correlationData),
+            backgroundColor: function(context) {
+              const value = context.dataset.data[context.dataIndex].v;
+              const alpha = Math.abs(value);
+              return value < 0 
+                ? `rgba(220, 50, 47, ${alpha})` 
+                : `rgba(38, 139, 210, ${alpha})`;
+            },
+            borderColor: 'white',
+            borderWidth: 1,
+            width: ({ chart }) => (chart.chartArea || {}).width / labels.length - 1,
+            height: ({ chart }) => (chart.chartArea || {}).height / labels.length - 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                title: function() {
+                  return '';
+                },
+                label: function(context) {
+                  const v = context.dataset.data[context.dataIndex];
+                  return `${v.x} vs ${v.y}: ${v.v.toFixed(2)}`;
+                }
+              }
+            },
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            x: {
+              type: 'category',
+              labels: labels,
+              offset: true,
+              ticks: {
+                display: true
+              },
+              grid: {
+                display: false
+              }
+            },
+            y: {
+              type: 'category',
+              labels: labels,
+              offset: true,
+              ticks: {
+                display: true
+              },
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+      
+      // Helper function to generate matrix data format
+      function generateMatrixData(labels, correlationData) {
+        const result = [];
+        for (let i = 0; i < labels.length; i++) {
+          for (let j = 0; j < labels.length; j++) {
+            result.push({
+              x: labels[i],
+              y: labels[j],
+              v: correlationData[i][j]
+            });
+          }
+        }
+        return result;
+      }
+      
+      // Initialize Network Visualization with D3.js
+      const svg = d3.select("#networkVisualization")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%");
+        
+      // Sample network data
+      const nodes = [
+        {id: 1, group: 1, selected: true},
+        {id: 2, group: 2, selected: true},
+        {id: 3, group: 1, selected: false},
+        {id: 4, group: 2, selected: true},
+        {id: 5, group: 1, selected: false},
+        {id: 6, group: 2, selected: false},
+        {id: 7, group: 1, selected: true},
+        {id: 8, group: 2, selected: false},
+        {id: 9, group: 1, selected: false},
+        {id: 10, group: 2, selected: true}
+      ];
+      
+      const links = [
+        {source: 1, target: 2, value: 0.9},
+        {source: 1, target: 3, value: 0.7},
+        {source: 2, target: 4, value: 0.5},
+        {source: 3, target: 5, value: 0.6},
+        {source: 4, target: 6, value: 0.4},
+        {source: 5, target: 7, value: 0.3},
+        {source: 6, target: 8, value: 0.8},
+        {source: 7, target: 9, value: 0.2},
+        {source: 8, target: 10, value: 0.5},
+        {source: 9, target: 10, value: 0.7}
+      ];
+      
+      // Create a force simulation
+      const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(80))
+        .force("charge", d3.forceManyBody().strength(-120))
+        .force("center", d3.forceCenter("50%", "50%"));
+      
+      // Create the links
+      const link = svg.append("g")
+        .selectAll("line")
+        .data(links)
+        .enter().append("line")
+        .attr("class", "network-link")
+        .attr("stroke-width", d => Math.sqrt(d.value) * 2);
+      
+      // Create the nodes
+      const node = svg.append("g")
+        .selectAll("circle")
+        .data(nodes)
+        .enter().append("circle")
+        .attr("class", "network-node")
+        .attr("r", 6)
+        .attr("fill", d => d.group === 1 ? "#268bd2" : "#d33682")
+        .attr("stroke", d => d.selected ? "#6c71c4" : "#fdf6e3")
+        .attr("stroke-width", d => d.selected ? 3 : 2)
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+      
+      // Add titles for tooltips
+      node.append("title")
+        .text(d => `Fish ID: ${d.id}\nGroup: ${d.group === 1 ? 'Male' : 'Female'}\nStatus: ${d.selected ? 'Selected' : 'Not Selected'}`);
+      
+      // Update positions on simulation tick
+      simulation.on("tick", () => {
+        link
+          .attr("x1", d => d.source.x)
+          .attr("y1", d => d.source.y)
+          .attr("x2", d => d.target.x)
+          .attr("y2", d => d.target.y);
+        
+        node
+          .attr("cx", d => d.x)
+          .attr("cy", d => d.y);
+      });
+      
+      // Drag functions
+      function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+      
+      function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+      
+      function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+    </script>
+  </body>
+</html>
+

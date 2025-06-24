@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+      .slide-container {
+        width: 1280px;
+        min-height: 720px;
+        background: #002b36;
+        color: #93a1a1;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+        position: relative;
+      }
+      .content-area {
+        background-color: #fdf6e3;
+        min-height: 720px;
+        color: #657b83;
+      }
+      .sidebar {
+        width: 280px;
+        background: linear-gradient(180deg, #073642 0%, #002b36 100%);
+        color: #839496;
+      }
+      .nav-item {
+        padding: 12px 20px;
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+      .nav-item.active {
+        background: rgba(42, 161, 152, 0.1);
+        color: #2aa198;
+        border-left-color: #2aa198;
+      }
+      .nav-item:hover {
+        background: rgba(88, 110, 117, 0.1);
+        color: #93a1a1;
+        border-left-color: #2aa198;
+      }
+      .card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 1px solid #eee8d5;
+      }
+      .metric-card {
+        background: #fdf6e3;
+        border: 1px solid #eee8d5;
+        border-radius: 8px;
+      }
+      .tab {
+        padding: 10px 20px;
+        border-radius: 8px 8px 0 0;
+        transition: all 0.3s ease;
+      }
+      .tab.active {
+        background: #fdf6e3;
+        color: #657b83;
+        font-weight: 600;
+      }
+      .tab:not(.active) {
+        background: rgba(42, 161, 152, 0.1);
+        color: #839496;
+      }
+      .tab:hover:not(.active) {
+        background: rgba(42, 161, 152, 0.2);
+      }
+      .btn-primary {
+        background-color: #268bd2;
+        color: white;
+        transition: all 0.3s ease;
+      }
+      .btn-primary:hover {
+        background-color: #2176b1;
+      }
+      .btn-secondary {
+        background-color: #2aa198;
+        color: white;
+        transition: all 0.3s ease;
+      }
+      .btn-secondary:hover {
+        background-color: #238c83;
+      }
+      .progress-bar {
+        height: 8px;
+        border-radius: 4px;
+        background-color: #eee8d5;
+      }
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+      }
+      .progress-fill.good { background-color: #859900; }
+      .progress-fill.warning { background-color: #b58900; }
+      .progress-fill.critical { background-color: #dc322f; }
+      .badge-success { background-color: #859900; }
+      .badge-warning { background-color: #b58900; }
+      .badge-danger { background-color: #dc322f; }
+      .badge-info { background-color: #268bd2; }
+      .badge-purple { background-color: #6c71c4; }
+      .container-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+      }
+      .container-item {
+        aspect-ratio: 1;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        transition: all 0.3s ease;
+      }
+      .container-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      .container-item.active {
+        border: 2px solid #268bd2;
+      }
+      .container-item.optimal { background-color: rgba(133, 153, 0, 0.1); }
+      .container-item.warning { background-color: rgba(181, 137, 0, 0.1); }
+      .container-item.critical { background-color: rgba(220, 50, 47, 0.1); }
+      .container-item.empty { background-color: rgba(147, 161, 161, 0.1); }
+      
+      .env-parameter {
+        height: 24px;
+        display: flex;
+        align-items: center;
+      }
+      .env-value {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .env-value.temp { background-color: #268bd2; }
+      .env-value.oxygen { background-color: #2aa198; }
+      .env-value.light { background-color: #b58900; }
+      .env-value.ph { background-color: #6c71c4; }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container flex">
+      <!-- Sidebar -->
+      <div class="sidebar p-6">
+        <div class="mb-8">
+          <h1 class="text-2xl font-bold text-teal-400">🌊 AquaMind</h1>
+        </div>
+        <nav class="space-y-2">
+          <div class="nav-item">
+            <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-building mr-3"></i>Infrastructure
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-box mr-3"></i>Batch Management
+          </div>
+          <div class="nav-item active">
+            <i class="fas fa-dna mr-3"></i>Broodstock
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-heartbeat mr-3"></i>Health
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-warehouse mr-3"></i>Inventory
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-chart-line mr-3"></i>Analytics
+          </div>
+          <div class="nav-item">
+            <i class="fas fa-cog mr-3"></i>Settings
+          </div>
+        </nav>
+      </div>
+
+      <!-- Main Content -->
+      <div class="content-area flex-1 p-8">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-1">
+              <i class="fas fa-fish text-teal-500 mr-2"></i>
+              Population Management
+            </h1>
+            <p class="text-gray-600">Broodstock container management and environmental control</p>
+          </div>
+          <div class="flex space-x-4">
+            <div class="relative">
+              <select class="bg-yellow-100 border border-yellow-300 text-gray-700 py-2 px-4 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                <option>Faroe Islands</option>
+                <option>Scotland</option>
+              </select>
+            </div>
+            <button class="btn-primary py-2 px-4 rounded-lg flex items-center">
+              <i class="fas fa-plus mr-2"></i>
+              Add Container
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex border-b border-gray-200 mb-6">
+          <div class="tab">
+            <i class="fas fa-home mr-2"></i>Overview
+          </div>
+          <div class="tab">
+            <i class="fas fa-project-diagram mr-2"></i>Breeding Programs
+          </div>
+          <div class="tab">
+            <i class="fas fa-dna mr-2"></i>Genetic Analysis
+          </div>
+          <div class="tab active">
+            <i class="fas fa-fish mr-2"></i>Population Management
+          </div>
+          <div class="tab">
+            <i class="fas fa-chart-bar mr-2"></i>Trait Analysis
+          </div>
+        </div>
+
+        <!-- Facility Selection -->
+        <div class="flex space-x-4 mb-6">
+          <button class="px-4 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">Nordfjord Freshwater Station</button>
+          <button class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm">Sognefjord Freshwater Station</button>
+          <button class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg text-sm">Vestmanna Broodstock Facility</button>
+          <div class="flex-1"></div>
+          <div class="relative">
+            <input type="text" placeholder="Search containers..." class="w-64 px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <i class="fas fa-search absolute right-3 top-2.5 text-gray-400"></i>
+          </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-4 gap-6 mb-6">
+          <!-- Total Containers -->
+          <div class="card p-5">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="text-sm font-medium text-gray-500 uppercase">Total Containers</h3>
+              <i class="fas fa-cube text-blue-500"></i>
+            </div>
+            <div class="flex items-end">
+              <div class="text-3xl font-bold text-gray-800">24</div>
+              <div class="text-sm text-gray-600 ml-2 mb-1">tanks</div>
+            </div>
+            <div class="text-sm text-gray-600 mt-1">22 active, 2 maintenance</div>
+          </div>
+
+          <!-- Total Broodstock -->
+          <div class="card p-5">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="text-sm font-medium text-gray-500 uppercase">Total Broodstock</h3>
+              <i class="fas fa-fish text-green-500"></i>
+            </div>
+            <div class="flex items-end">
+              <div class="text-3xl font-bold text-gray-800">1,840</div>
+              <div class="text-sm text-green-600 ml-2 mb-1">+120 this month</div>
+            </div>
+            <div class="text-sm text-gray-600 mt-1">Across 3 breeding programs</div>
+          </div>
+
+          <!-- Environmental Status -->
+          <div class="card p-5">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="text-sm font-medium text-gray-500 uppercase">Environmental Status</h3>
+              <i class="fas fa-thermometer-half text-blue-500"></i>
+            </div>
+            <div class="flex items-end">
+              <div class="text-3xl font-bold text-gray-800">92%</div>
+              <div class="text-sm text-green-600 ml-2 mb-1">Optimal</div>
+            </div>
+            <div class="text-sm text-gray-600 mt-1">2 containers need attention</div>
+          </div>
+
+          <!-- Capacity Utilization -->
+          <div class="card p-5">
+            <div class="flex justify-between items-start mb-2">
+              <h3 class="text-sm font-medium text-gray-500 uppercase">Capacity Utilization</h3>
+              <i class="fas fa-chart-pie text-purple-500"></i>
+            </div>
+            <div class="flex items-end">
+              <div class="text-3xl font-bold text-gray-800">76%</div>
+              <div class="text-sm text-gray-600 ml-2 mb-1">of max capacity</div>
+            </div>
+            <div class="text-sm text-gray-600 mt-1">440 spaces available</div>
+          </div>
+        </div>
+
+        <!-- Container Grid -->
+        <div class="card p-6 mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Broodstock Containers</h2>
+            <div class="flex space-x-2">
+              <button class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-800">Hall A</button>
+              <button class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-800">Hall B</button>
+              <button class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-800">Hall C</button>
+            </div>
+          </div>
+          
+          <div class="container-grid mb-4">
+            <!-- Container Items -->
+            <div class="container-item optimal active">
+              <div class="text-sm font-medium text-gray-800">A-01</div>
+              <div class="text-xs text-gray-600">85 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+            
+            <div class="container-item optimal">
+              <div class="text-sm font-medium text-gray-800">A-02</div>
+              <div class="text-xs text-gray-600">82 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+            
+            <div class="container-item optimal">
+              <div class="text-sm font-medium text-gray-800">A-03</div>
+              <div class="text-xs text-gray-600">78 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+            
+            <div class="container-item warning">
+              <div class="text-sm font-medium text-gray-800">A-04</div>
+              <div class="text-xs text-gray-600">90 fish</div>
+              <div class="text-xs text-yellow-600">Check O₂</div>
+            </div>
+            
+            <div class="container-item optimal">
+              <div class="text-sm font-medium text-gray-800">A-05</div>
+              <div class="text-xs text-gray-600">75 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+            
+            <div class="container-item optimal">
+              <div class="text-sm font-medium text-gray-800">A-06</div>
+              <div class="text-xs text-gray-600">80 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+            
+            <div class="container-item optimal">
+              <div class="text-sm font-medium text-gray-800">A-07</div>
+              <div class="text-xs text-gray-600">82 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+            
+            <div class="container-item optimal">
+              <div class="text-sm font-medium text-gray-800">A-08</div>
+              <div class="text-xs text-gray-600">79 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+            
+            <div class="container-item critical">
+              <div class="text-sm font-medium text-gray-800">A-09</div>
+              <div class="text-xs text-gray-600">65 fish</div>
+              <div class="text-xs text-red-600">Temp Alert</div>
+            </div>
+            
+            <div class="container-item optimal">
+              <div class="text-sm font-medium text-gray-800">A-10</div>
+              <div class="text-xs text-gray-600">84 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+            
+            <div class="container-item empty">
+              <div class="text-sm font-medium text-gray-800">A-11</div>
+              <div class="text-xs text-gray-600">Empty</div>
+              <div class="text-xs text-gray-500">Maintenance</div>
+            </div>
+            
+            <div class="container-item optimal">
+              <div class="text-sm font-medium text-gray-800">A-12</div>
+              <div class="text-xs text-gray-600">76 fish</div>
+              <div class="text-xs text-green-600">Optimal</div>
+            </div>
+          </div>
+          
+          <div class="flex justify-between text-xs text-gray-500">
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-sm bg-green-100 mr-1"></div>
+              <span>Optimal</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-sm bg-yellow-100 mr-1"></div>
+              <span>Warning</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-sm bg-red-100 mr-1"></div>
+              <span>Critical</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 rounded-sm bg-gray-100 mr-1"></div>
+              <span>Empty</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selected Container Details -->
+        <div class="grid grid-cols-2 gap-6">
+          <!-- Container Details -->
+          <div class="card p-6">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <div class="flex items-center mb-1">
+                  <h2 class="text-xl font-semibold text-gray-800 mr-2">Container A-01</h2>
+                  <span class="px-2 py-0.5 text-xs rounded-full badge-success text-white">Active</span>
+                </div>
+                <p class="text-sm text-gray-600">Growth Rate Optimization Program - Generation 4</p>
+              </div>
+              <div class="flex space-x-2">
+                <button class="btn-secondary py-1.5 px-3 rounded-lg text-sm">
+                  <i class="fas fa-edit mr-1"></i>
+                  Edit
+                </button>
+                <button class="bg-gray-100 text-gray-800 py-1.5 px-3 rounded-lg text-sm">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <h3 class="text-sm font-medium text-gray-500 uppercase mb-2">Population Details</h3>
+                <div class="space-y-2">
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Current Count:</span>
+                    <span class="text-sm font-medium">85 fish</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Males:</span>
+                    <span class="text-sm font-medium">42 fish</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Females:</span>
+                    <span class="text-sm font-medium">43 fish</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Average Weight:</span>
+                    <span class="text-sm font-medium">4.2 kg</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Average Age:</span>
+                    <span class="text-sm font-medium">2.5 years</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 class="text-sm font-medium text-gray-500 uppercase mb-2">Container Specifications</h3>
+                <div class="space-y-2">
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Type:</span>
+                    <span class="text-sm font-medium">Circular Tank</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Diameter:</span>
+                    <span class="text-sm font-medium">8 meters</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Depth:</span>
+                    <span class="text-sm font-medium">3 meters</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Volume:</span>
+                    <span class="text-sm font-medium">150 m³</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Max Capacity:</span>
+                    <span class="text-sm font-medium">100 fish</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-4">
+              <h3 class="text-sm font-medium text-gray-500 uppercase mb-2">Recent Activities</h3>
+              <div class="space-y-3">
+                <div class="flex items-start">
+                  <div class="rounded-full bg-blue-100 p-1.5 mr-3">
+                    <i class="fas fa-thermometer-half text-blue-500 text-xs"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex justify-between">
+                      <h4 class="text-sm font-medium text-gray-800">Temperature Adjustment</h4>
+                      <span class="text-xs text-gray-500">2 hours ago</span>
+                    </div>
+                    <p class="text-xs text-gray-600">Temperature adjusted from 12.2°C to 12.5°C</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="rounded-full bg-green-100 p-1.5 mr-3">
+                    <i class="fas fa-weight text-green-500 text-xs"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex justify-between">
+                      <h4 class="text-sm font-medium text-gray-800">Biomass Measurement</h4>
+                      <span class="text-xs text-gray-500">Yesterday</span>
+                    </div>
+                    <p class="text-xs text-gray-600">Average weight increased by 0.2kg since last measurement</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-start">
+                  <div class="rounded-full bg-purple-100 p-1.5 mr-3">
+                    <i class="fas fa-syringe text-purple-500 text-xs"></i>
+                  </div>
+                  <div class="flex-1">
+                    <div class="flex justify-between">
+                      <h4 class="text-sm font-medium text-gray-800">Health Check</h4>
+                      <span class="text-xs text-gray-500">3 days ago</span>
+                    </div>
+                    <p class="text-xs text-gray-600">Routine health inspection completed, all fish healthy</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <button class="w-full btn-primary py-2 px-4 rounded-lg flex items-center justify-center">
+                <i class="fas fa-clipboard-list mr-2"></i>
+                View Full History
+              </button>
+            </div>
+          </div>
+          
+          <!-- Environmental Controls -->
+          <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-semibold text-gray-800">Environmental Controls</h2>
+              <div class="flex space-x-2">
+                <button class="px-3 py-1 text-xs rounded bg-blue-100 text-blue-800">Live Data</button>
+                <button class="px-3 py-1 text-xs rounded bg-gray-200 text-gray-800">History</button>
+              </div>
+            </div>
+            
+            <div class="space-y-6">
+              <!-- Temperature -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="text-sm font-medium text-gray-800">Temperature</h3>
+                  <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-800 mr-2">12.5°C</span>
+                    <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800">Optimal</span>
+                  </div>
+                </div>
+                <div class="env-parameter bg-gray-100 rounded-full">
+                  <div class="env-value temp rounded-full" style="width: 62.5%">12.5°C</div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>10°C</span>
+                  <span>Target: 12-13°C</span>
+                  <span>15°C</span>
+                </div>
+              </div>
+              
+              <!-- Oxygen -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="text-sm font-medium text-gray-800">Dissolved Oxygen</h3>
+                  <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-800 mr-2">8.2 mg/L</span>
+                    <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800">Optimal</span>
+                  </div>
+                </div>
+                <div class="env-parameter bg-gray-100 rounded-full">
+                  <div class="env-value oxygen rounded-full" style="width: 75%">8.2 mg/L</div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>6 mg/L</span>
+                  <span>Target: >8 mg/L</span>
+                  <span>12 mg/L</span>
+                </div>
+              </div>
+              
+              <!-- Photoperiod -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="text-sm font-medium text-gray-800">Photoperiod</h3>
+                  <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-800 mr-2">16:8 (L:D)</span>
+                    <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800">Summer Regime</span>
+                  </div>
+                </div>
+                <div class="env-parameter bg-gray-100 rounded-full">
+                  <div class="env-value light rounded-full" style="width: 66.7%">16h Light</div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>0h</span>
+                  <span>Current: Light Phase (12:30 remaining)</span>
+                  <span>24h</span>
+                </div>
+              </div>
+              
+              <!-- pH -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <h3 class="text-sm font-medium text-gray-800">pH Level</h3>
+                  <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-800 mr-2">7.2</span>
+                    <span class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800">Optimal</span>
+                  </div>
+                </div>
+                <div class="env-parameter bg-gray-100 rounded-full">
+                  <div class="env-value ph rounded-full" style="width: 60%">7.2</div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>6.5</span>
+                  <span>Target: 7.0-7.5</span>
+                  <span>8.0</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-6">
+              <h3 class="text-sm font-medium text-gray-500 uppercase mb-3">Environmental Regime</h3>
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex-1">
+                  <div class="flex items-center">
+                    <span class="text-sm font-medium text-gray-800 mr-2">Summer Growth Regime</span>
+                    <span class="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-800">Active</span>
+                  </div>
+                  <p class="text-xs text-gray-600">Optimized for maximum growth rate</p>
+                </div>
+                <div class="flex space-x-2">
+                  <button class="bg-gray-100 text-gray-800 py-1.5 px-3 rounded-lg text-sm">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="bg-gray-100 text-gray-800 py-1.5 px-3 rounded-lg text-sm">
+                    <i class="fas fa-cog"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4">
+                <button class="btn-secondary py-2 px-4 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-history mr-2"></i>
+                  View Regime History
+                </button>
+                <button class="bg-gray-100 text-gray-800 py-2 px-4 rounded-lg flex items-center justify-center">
+                  <i class="fas fa-exchange-alt mr-2"></i>
+                  Change Regime
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
