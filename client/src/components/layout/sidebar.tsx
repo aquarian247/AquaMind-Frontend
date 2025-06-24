@@ -132,10 +132,10 @@ export default function Sidebar() {
             <p className="text-xs text-muted-foreground">Farm Management</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <ThemeSelector />
-          
+
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="outline" size="sm" className="p-2 h-10 w-10">
@@ -164,11 +164,11 @@ export default function Sidebar() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex-1 px-4 py-6">
                   <NavigationMenu onItemClick={() => setMobileMenuOpen(false)} />
                 </div>
-                
+
                 {/* Theme Controls in Mobile Menu */}
                 <div className="px-4 py-4 border-t">
                   <div className="flex items-center justify-between">

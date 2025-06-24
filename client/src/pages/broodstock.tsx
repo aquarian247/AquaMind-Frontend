@@ -1,14 +1,25 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Activity, Target, TrendingUp, Users, AlertCircle, CheckCircle, FlaskConical, Calendar, Eye, Dna, Grid, List, Filter, Download, BarChart3, Thermometer, Droplets, Plus, Search, AlertTriangle, ArrowRight } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Calendar, 
+  TrendingUp, 
+  Users, 
+  Activity, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle,
+  BarChart3,
+  DNA,
+  Microscope,
+  Target
+} from "lucide-react";
 import { Radar, Line, Bar, Scatter } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -540,7 +551,7 @@ function BroodstockDashboard() {
                     </div>
                   </div>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-4">
                   {/* Progress */}
                   <div className="space-y-2">
@@ -762,14 +773,14 @@ function BroodstockDashboard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400">Heterozygosity</p>
-                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">0.847</p>
+                      <p className="text-xl font-bold text-gray-90 dark:text-gray-100">0.847</p>
                     </div>
                     <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400">Inbreeding Coeff.</p>
                       <p className="text-xl font-bold text-gray-900 dark:text-gray-100">0.023</p>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Allelic Richness</span>
@@ -917,7 +928,7 @@ function BroodstockDashboard() {
                       </Badge>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent className="space-y-4">
                     {/* Fish Count */}
                     <div className="flex justify-between items-center">
