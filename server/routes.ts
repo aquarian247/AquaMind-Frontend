@@ -2964,12 +2964,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/v1/scenario-planning/fcr-models/", async (req, res) => {
     try {
-      console.log("FCR Model request body:", JSON.stringify(req.body, null, 2));
       const validatedData = insertFcrModelSchema.parse(req.body);
       const model = await storage.createFcrModel(validatedData);
       res.status(201).json(model);
     } catch (error) {
-      console.error("FCR Model creation error:", error);
       res.status(400).json({ error: "Invalid FCR model data", details: error instanceof Error ? error.message : String(error) });
     }
   });
