@@ -3,6 +3,9 @@ import {
   environmentalReadings, batches, feedTypes, feedInventory, feedingEvents, healthRecords,
   feedPurchases, feedContainers, feedContainerStock, batchFeedingSummaries,
   species, stages, labSamples, healthAssessments, weatherData, broodstockPairs, eggSuppliers,
+  temperatureProfiles, temperatureReadings, tgcModels, tgcStageOverrides,
+  fcrModels, fcrModelStages, fcrWeightOverrides, mortalityModels, mortalityStageOverrides,
+  biologicalConstraints, biologicalConstraintStages, scenarios, scenarioModelChanges, scenarioProjections,
   type User, type InsertUser, type FarmSite, type InsertFarmSite,
   type Pen, type InsertPen, type Alert, type InsertAlert, 
   type EnvironmentalParameter, type InsertEnvironmentalParameter,
@@ -19,7 +22,21 @@ import {
   type BatchContainerAssignment, type InsertBatchContainerAssignment,
   type BatchTransfer, type InsertBatchTransfer,
   type GrowthSample, type InsertGrowthSample,
-  type MortalityEvent, type InsertMortalityEvent
+  type MortalityEvent, type InsertMortalityEvent,
+  type TemperatureProfile, type InsertTemperatureProfile,
+  type TemperatureReading, type InsertTemperatureReading,
+  type TgcModel, type InsertTgcModel,
+  type TgcStageOverride, type InsertTgcStageOverride,
+  type FcrModel, type InsertFcrModel,
+  type FcrModelStage, type InsertFcrModelStage,
+  type FcrWeightOverride, type InsertFcrWeightOverride,
+  type MortalityModel, type InsertMortalityModel,
+  type MortalityStageOverride, type InsertMortalityStageOverride,
+  type BiologicalConstraint, type InsertBiologicalConstraint,
+  type BiologicalConstraintStage, type InsertBiologicalConstraintStage,
+  type Scenario, type InsertScenario,
+  type ScenarioModelChange, type InsertScenarioModelChange,
+  type ScenarioProjection, type InsertScenarioProjection
 } from "@shared/schema";
 
 export interface IStorage {
@@ -1065,6 +1082,209 @@ export class MemStorage implements IStorage {
         this.treatments.set(treatment.id, treatment);
       }
     });
+
+    // Seed Scenario Planning Data
+    await this.seedScenarioPlanningData();
+  }
+
+  private async seedScenarioPlanningData() {
+    // Temperature Profiles
+    const profile1: TemperatureProfile = {
+      id: this.currentId++,
+      name: "North Atlantic Winter Profile",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.temperatureProfiles.set(profile1.id, profile1);
+
+    const profile2: TemperatureProfile = {
+      id: this.currentId++,
+      name: "North Atlantic Summer Profile",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.temperatureProfiles.set(profile2.id, profile2);
+
+    const profile3: TemperatureProfile = {
+      id: this.currentId++,
+      name: "Norwegian Fjord Profile",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.temperatureProfiles.set(profile3.id, profile3);
+
+    // Temperature readings for profiles
+    const winterTemps = [4.2, 3.8, 3.5, 3.2, 3.8, 4.5, 5.2, 6.1, 7.3, 8.1, 6.8, 5.4];
+    const summerTemps = [8.5, 9.2, 10.8, 12.5, 14.2, 15.8, 16.5, 16.1, 14.7, 12.3, 10.1, 9.0];
+    const fjordTemps = [6.2, 6.8, 7.5, 8.9, 10.2, 11.8, 13.1, 12.9, 11.4, 9.7, 8.1, 6.9];
+
+    [profile1.id, profile2.id, profile3.id].forEach((profileId, profileIndex) => {
+      const temps = [winterTemps, summerTemps, fjordTemps][profileIndex];
+      temps.forEach((temp, monthIndex) => {
+        const reading: TemperatureReading = {
+          id: this.currentId++,
+          profileId,
+          readingDate: `2024-${String(monthIndex + 1).padStart(2, '0')}-15`,
+          temperature: temp.toString(),
+          createdAt: new Date(),
+        };
+        this.temperatureReadings.set(reading.id, reading);
+      });
+    });
+
+    // TGC Models
+    const tgcModel1: TgcModel = {
+      id: this.currentId++,
+      name: "Atlantic Salmon Standard TGC",
+      location: "North Atlantic",
+      releasePeriod: "Spring",
+      tgcValue: "0.003",
+      exponentN: "1.0",
+      exponentM: "0.333",
+      profileId: profile1.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tgcModels.set(tgcModel1.id, tgcModel1);
+
+    const tgcModel2: TgcModel = {
+      id: this.currentId++,
+      name: "High Performance TGC Model",
+      location: "Norwegian Fjords",
+      releasePeriod: "Summer",
+      tgcValue: "0.0035",
+      exponentN: "1.0",
+      exponentM: "0.333",
+      profileId: profile3.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tgcModels.set(tgcModel2.id, tgcModel2);
+
+    // FCR Models
+    const fcrModel1: FcrModel = {
+      id: this.currentId++,
+      name: "Standard FCR Profile",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.fcrModels.set(fcrModel1.id, fcrModel1);
+
+    const fcrModel2: FcrModel = {
+      id: this.currentId++,
+      name: "Premium Feed FCR Profile",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.fcrModels.set(fcrModel2.id, fcrModel2);
+
+    // Mortality Models
+    const mortalityModel1: MortalityModel = {
+      id: this.currentId++,
+      name: "Standard Mortality Profile",
+      frequency: "daily",
+      rate: "0.00015",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.mortalityModels.set(mortalityModel1.id, mortalityModel1);
+
+    const mortalityModel2: MortalityModel = {
+      id: this.currentId++,
+      name: "Low Mortality Profile",
+      frequency: "daily",
+      rate: "0.00008",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.mortalityModels.set(mortalityModel2.id, mortalityModel2);
+
+    // Biological Constraints
+    const biologicalConstraint1: BiologicalConstraint = {
+      id: this.currentId++,
+      name: "Standard Growth Constraints",
+      description: "Standard biological limits for Atlantic salmon growth stages",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.biologicalConstraints.set(biologicalConstraint1.id, biologicalConstraint1);
+
+    // Get first user for scenario creation
+    const firstUser = Array.from(this.users.values())[0];
+
+    // Scenarios
+    const scenario1: Scenario = {
+      id: this.currentId++,
+      name: "12-Month Growth Projection",
+      description: "Standard 12-month growth scenario for spring release Atlantic salmon",
+      startDate: "2024-04-01",
+      durationDays: 365,
+      initialCount: 100000,
+      initialWeight: "15.000",
+      genotype: "AquaGen Atlantic",
+      supplier: "AquaGen AS",
+      tgcModelId: tgcModel1.id,
+      fcrModelId: fcrModel1.id,
+      mortalityModelId: mortalityModel1.id,
+      batchId: null,
+      biologicalConstraintsId: biologicalConstraint1.id,
+      status: "completed",
+      createdBy: firstUser.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(scenario1.id, scenario1);
+
+    const scenario2: Scenario = {
+      id: this.currentId++,
+      name: "Premium Feed Scenario",
+      description: "Comparison scenario using premium feed with enhanced FCR",
+      startDate: "2024-04-01",
+      durationDays: 365,
+      initialCount: 100000,
+      initialWeight: "15.000",
+      genotype: "AquaGen Atlantic",
+      supplier: "AquaGen AS",
+      tgcModelId: tgcModel2.id,
+      fcrModelId: fcrModel2.id,
+      mortalityModelId: mortalityModel2.id,
+      batchId: null,
+      biologicalConstraintsId: biologicalConstraint1.id,
+      status: "draft",
+      createdBy: firstUser.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(scenario2.id, scenario2);
+
+    // Generate scenario projections for completed scenario
+    for (let day = 0; day < 365; day += 7) { // Weekly projections
+      const projectionDate = new Date(2024, 3, 1 + day); // April 1, 2024 + days
+      const dayNumber = day + 1;
+      
+      // Simple growth calculation for mock data
+      const avgWeight = 15 + (day * 0.8) + (Math.random() * 2 - 1);
+      const population = 100000 * (1 - day * 0.00015);
+      const biomass = avgWeight * population / 1000; // in kg
+      const dailyFeed = biomass * 0.015; // 1.5% body weight
+      const cumulativeFeed = dailyFeed * dayNumber;
+
+      const projection: ScenarioProjection = {
+        id: this.currentId++,
+        scenarioId: scenario1.id,
+        projectionDate: projectionDate.toISOString().split('T')[0],
+        dayNumber,
+        averageWeight: avgWeight.toFixed(3),
+        population: population.toFixed(2),
+        biomass: biomass.toFixed(2),
+        dailyFeed: dailyFeed.toFixed(3),
+        cumulativeFeed: cumulativeFeed.toFixed(3),
+        temperature: winterTemps[Math.floor(day / 30) % 12]?.toString() || "8.0",
+        currentStageId: null,
+        createdAt: new Date(),
+      };
+      this.scenarioProjections.set(projection.id, projection);
+    }
   }
 
   // Django API Methods
@@ -1889,6 +2109,563 @@ export class MemStorage implements IStorage {
     }
 
     return complexBatch;
+  }
+
+  // Scenario Planning Implementation
+  
+  // Temperature Profiles
+  async getTemperatureProfiles(search?: string, ordering?: string): Promise<TemperatureProfile[]> {
+    let profiles = Array.from(this.temperatureProfiles.values());
+    
+    if (search) {
+      profiles = profiles.filter(p => 
+        p.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    if (ordering === '-created_at') {
+      profiles.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    } else if (ordering === 'name') {
+      profiles.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    
+    return profiles;
+  }
+
+  async getTemperatureProfile(id: number): Promise<TemperatureProfile | undefined> {
+    return this.temperatureProfiles.get(id);
+  }
+
+  async createTemperatureProfile(profile: InsertTemperatureProfile): Promise<TemperatureProfile> {
+    const newProfile: TemperatureProfile = {
+      ...profile,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.temperatureProfiles.set(newProfile.id, newProfile);
+    return newProfile;
+  }
+
+  async getTemperatureProfileStatistics(id: number): Promise<{
+    profileId: number;
+    name: string;
+    statistics: {
+      min: number;
+      max: number;
+      avg: number;
+      stdDev: number;
+      median: number;
+      count: number;
+      dateRange: { start: string; end: string };
+    };
+    monthlyAverages: Array<{ month: string; avgTemp: number }>;
+  }> {
+    const profile = this.temperatureProfiles.get(id);
+    if (!profile) throw new Error('Profile not found');
+    
+    const readings = Array.from(this.temperatureReadings.values())
+      .filter(r => r.profileId === id);
+    
+    const temps = readings.map(r => parseFloat(r.temperature));
+    const min = Math.min(...temps);
+    const max = Math.max(...temps);
+    const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
+    const sortedTemps = temps.sort((a, b) => a - b);
+    const median = sortedTemps[Math.floor(sortedTemps.length / 2)];
+    const stdDev = Math.sqrt(temps.reduce((sq, n) => sq + Math.pow(n - avg, 2), 0) / temps.length);
+    
+    const monthlyAverages = readings.reduce((acc, reading) => {
+      const month = reading.readingDate.substring(0, 7);
+      if (!acc[month]) acc[month] = [];
+      acc[month].push(parseFloat(reading.temperature));
+      return acc;
+    }, {} as Record<string, number[]>);
+    
+    return {
+      profileId: id,
+      name: profile.name,
+      statistics: {
+        min,
+        max,
+        avg,
+        stdDev,
+        median,
+        count: temps.length,
+        dateRange: {
+          start: readings[0]?.readingDate || '',
+          end: readings[readings.length - 1]?.readingDate || ''
+        }
+      },
+      monthlyAverages: Object.entries(monthlyAverages).map(([month, temps]) => ({
+        month,
+        avgTemp: temps.reduce((a, b) => a + b, 0) / temps.length
+      }))
+    };
+  }
+
+  async createTemperatureReadings(profileId: number, readings: InsertTemperatureReading[]): Promise<TemperatureReading[]> {
+    return readings.map(reading => {
+      const newReading: TemperatureReading = {
+        ...reading,
+        id: this.currentId++,
+        profileId,
+        createdAt: new Date(),
+      };
+      this.temperatureReadings.set(newReading.id, newReading);
+      return newReading;
+    });
+  }
+
+  // TGC Models
+  async getTgcModels(location?: string, releasePeriod?: string, search?: string, ordering?: string): Promise<TgcModel[]> {
+    let models = Array.from(this.tgcModels.values());
+    
+    if (location) {
+      models = models.filter(m => m.location?.toLowerCase().includes(location.toLowerCase()));
+    }
+    
+    if (releasePeriod) {
+      models = models.filter(m => m.releasePeriod?.toLowerCase().includes(releasePeriod.toLowerCase()));
+    }
+    
+    if (search) {
+      models = models.filter(m => 
+        m.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    return models;
+  }
+
+  async getTgcModel(id: number): Promise<TgcModel | undefined> {
+    return this.tgcModels.get(id);
+  }
+
+  async createTgcModel(model: InsertTgcModel): Promise<TgcModel> {
+    const newModel: TgcModel = {
+      ...model,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tgcModels.set(newModel.id, newModel);
+    return newModel;
+  }
+
+  async duplicateTgcModel(id: number, newName: string): Promise<TgcModel> {
+    const original = this.tgcModels.get(id);
+    if (!original) throw new Error('TGC Model not found');
+    
+    const duplicate: TgcModel = {
+      ...original,
+      id: this.currentId++,
+      name: newName,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tgcModels.set(duplicate.id, duplicate);
+    return duplicate;
+  }
+
+  async getTgcModelTemplates(): Promise<Array<{
+    name: string;
+    location: string;
+    releasePeriod: string;
+    tgcValue: number;
+    exponentN: number;
+    exponentM: number;
+    description: string;
+  }>> {
+    return [
+      {
+        name: "North Atlantic Standard",
+        location: "North Atlantic",
+        releasePeriod: "Spring",
+        tgcValue: 0.003,
+        exponentN: 1.0,
+        exponentM: 0.333,
+        description: "Standard TGC model for North Atlantic salmon farming"
+      },
+      {
+        name: "Norwegian Fjord Enhanced",
+        location: "Norwegian Fjords",
+        releasePeriod: "Summer",
+        tgcValue: 0.0035,
+        exponentN: 1.0,
+        exponentM: 0.333,
+        description: "Enhanced TGC model optimized for Norwegian fjord conditions"
+      }
+    ];
+  }
+
+  // FCR Models
+  async getFcrModels(search?: string, ordering?: string): Promise<FcrModel[]> {
+    let models = Array.from(this.fcrModels.values());
+    
+    if (search) {
+      models = models.filter(m => 
+        m.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    return models;
+  }
+
+  async getFcrModel(id: number): Promise<FcrModel | undefined> {
+    return this.fcrModels.get(id);
+  }
+
+  async createFcrModel(model: InsertFcrModel): Promise<FcrModel> {
+    const newModel: FcrModel = {
+      ...model,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.fcrModels.set(newModel.id, newModel);
+    return newModel;
+  }
+
+  async getFcrModelStageSummary(id: number): Promise<{
+    modelId: number;
+    modelName: string;
+    totalStages: number;
+    totalDuration: number;
+    averageFcr: number;
+    stages: Array<{
+      stageName: string;
+      fcrValue: number;
+      durationDays: number;
+      weightRange: { min: number; max: number };
+      overrideCount: number;
+    }>;
+  }> {
+    const model = this.fcrModels.get(id);
+    if (!model) throw new Error('FCR Model not found');
+    
+    return {
+      modelId: id,
+      modelName: model.name,
+      totalStages: 6,
+      totalDuration: 540,
+      averageFcr: 1.15,
+      stages: [
+        { stageName: "Fry", fcrValue: 0.9, durationDays: 90, weightRange: { min: 0.1, max: 5 }, overrideCount: 0 },
+        { stageName: "Parr", fcrValue: 1.0, durationDays: 120, weightRange: { min: 5, max: 50 }, overrideCount: 2 },
+        { stageName: "Smolt", fcrValue: 1.1, durationDays: 90, weightRange: { min: 50, max: 200 }, overrideCount: 1 },
+        { stageName: "Post-smolt", fcrValue: 1.2, durationDays: 120, weightRange: { min: 200, max: 1000 }, overrideCount: 0 },
+        { stageName: "Grow-out", fcrValue: 1.3, durationDays: 180, weightRange: { min: 1000, max: 4000 }, overrideCount: 3 },
+        { stageName: "Harvest", fcrValue: 1.4, durationDays: 90, weightRange: { min: 4000, max: 6000 }, overrideCount: 1 }
+      ]
+    };
+  }
+
+  // Mortality Models
+  async getMortalityModels(frequency?: string, search?: string, ordering?: string): Promise<MortalityModel[]> {
+    let models = Array.from(this.mortalityModels.values());
+    
+    if (frequency) {
+      models = models.filter(m => m.frequency === frequency);
+    }
+    
+    if (search) {
+      models = models.filter(m => 
+        m.name.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    return models;
+  }
+
+  async getMortalityModel(id: number): Promise<MortalityModel | undefined> {
+    return this.mortalityModels.get(id);
+  }
+
+  async createMortalityModel(model: InsertMortalityModel): Promise<MortalityModel> {
+    const newModel: MortalityModel = {
+      ...model,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.mortalityModels.set(newModel.id, newModel);
+    return newModel;
+  }
+
+  // Biological Constraints
+  async getBiologicalConstraints(search?: string, ordering?: string): Promise<BiologicalConstraint[]> {
+    let constraints = Array.from(this.biologicalConstraints.values());
+    
+    if (search) {
+      constraints = constraints.filter(c => 
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.description?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    return constraints;
+  }
+
+  async getBiologicalConstraint(id: number): Promise<BiologicalConstraint | undefined> {
+    return this.biologicalConstraints.get(id);
+  }
+
+  async createBiologicalConstraint(constraint: InsertBiologicalConstraint): Promise<BiologicalConstraint> {
+    const newConstraint: BiologicalConstraint = {
+      ...constraint,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.biologicalConstraints.set(newConstraint.id, newConstraint);
+    return newConstraint;
+  }
+
+  // Scenarios
+  async getScenarios(
+    all?: boolean,
+    startDate?: string,
+    tgcModelLocation?: string,
+    search?: string,
+    ordering?: string
+  ): Promise<Scenario[]> {
+    let scenarios = Array.from(this.scenarios.values());
+    
+    if (startDate) {
+      scenarios = scenarios.filter(s => s.startDate >= startDate);
+    }
+    
+    if (tgcModelLocation) {
+      const tgcModelsInLocation = Array.from(this.tgcModels.values())
+        .filter(m => m.location?.toLowerCase().includes(tgcModelLocation.toLowerCase()))
+        .map(m => m.id);
+      scenarios = scenarios.filter(s => tgcModelsInLocation.includes(s.tgcModelId));
+    }
+    
+    if (search) {
+      scenarios = scenarios.filter(s => 
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.description?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    if (ordering === '-created_at') {
+      scenarios.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    }
+    
+    return scenarios;
+  }
+
+  async getScenario(id: number): Promise<Scenario | undefined> {
+    return this.scenarios.get(id);
+  }
+
+  async createScenario(scenario: InsertScenario): Promise<Scenario> {
+    const newScenario: Scenario = {
+      ...scenario,
+      id: this.currentId++,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(newScenario.id, newScenario);
+    return newScenario;
+  }
+
+  async duplicateScenario(
+    id: number,
+    newName: string,
+    includeProjections?: boolean,
+    includeModelChanges?: boolean
+  ): Promise<Scenario> {
+    const original = this.scenarios.get(id);
+    if (!original) throw new Error('Scenario not found');
+    
+    const duplicate: Scenario = {
+      ...original,
+      id: this.currentId++,
+      name: newName,
+      status: "draft",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(duplicate.id, duplicate);
+    return duplicate;
+  }
+
+  async createScenarioFromBatch(
+    batchId: number,
+    scenarioName: string,
+    durationDays: number,
+    useCurrentModels?: boolean
+  ): Promise<Scenario> {
+    const batch = this.batches.get(batchId);
+    if (!batch) throw new Error('Batch not found');
+    
+    const firstTgcModel = Array.from(this.tgcModels.values())[0];
+    const firstFcrModel = Array.from(this.fcrModels.values())[0];
+    const firstMortalityModel = Array.from(this.mortalityModels.values())[0];
+    const firstUser = Array.from(this.users.values())[0];
+    
+    const newScenario: Scenario = {
+      id: this.currentId++,
+      name: scenarioName,
+      description: `Scenario created from batch ${batch.name}`,
+      startDate: batch.startDate,
+      durationDays,
+      initialCount: batch.initialCount,
+      initialWeight: "15.000",
+      genotype: "AquaGen Atlantic",
+      supplier: "From Batch",
+      tgcModelId: firstTgcModel.id,
+      fcrModelId: firstFcrModel.id,
+      mortalityModelId: firstMortalityModel.id,
+      batchId,
+      biologicalConstraintsId: null,
+      status: "draft",
+      createdBy: firstUser.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(newScenario.id, newScenario);
+    return newScenario;
+  }
+
+  async runScenarioProjection(id: number): Promise<{
+    success: boolean;
+    summary: {
+      totalDays: number;
+      finalWeight: number;
+      finalPopulation: number;
+      finalBiomass: number;
+      totalFeedConsumed: number;
+      overallFcr: number;
+      survivalRate: number;
+      stagesReached: string[];
+    };
+    warnings: string[];
+    message: string;
+  }> {
+    const scenario = this.scenarios.get(id);
+    if (!scenario) throw new Error('Scenario not found');
+    
+    // Update scenario status
+    scenario.status = "completed";
+    this.scenarios.set(id, scenario);
+    
+    return {
+      success: true,
+      summary: {
+        totalDays: scenario.durationDays,
+        finalWeight: 4850.5,
+        finalPopulation: 85000,
+        finalBiomass: 412292.5,
+        totalFeedConsumed: 475534.8,
+        overallFcr: 1.15,
+        survivalRate: 85.0,
+        stagesReached: ["Fry", "Parr", "Smolt", "Post-smolt", "Grow-out", "Harvest"]
+      },
+      warnings: [
+        "Temperature exceeded optimal range for 3 days during summer period",
+        "FCR temporarily increased during week 28 due to high temperatures"
+      ],
+      message: "Scenario projection completed successfully"
+    };
+  }
+
+  // Scenario Projections
+  async getScenarioProjections(
+    scenarioId: number,
+    startDate?: string,
+    endDate?: string,
+    aggregation?: string
+  ): Promise<ScenarioProjection[]> {
+    let projections = Array.from(this.scenarioProjections.values())
+      .filter(p => p.scenarioId === scenarioId);
+    
+    if (startDate) {
+      projections = projections.filter(p => p.projectionDate >= startDate);
+    }
+    
+    if (endDate) {
+      projections = projections.filter(p => p.projectionDate <= endDate);
+    }
+    
+    return projections.sort((a, b) => a.dayNumber - b.dayNumber);
+  }
+
+  async getScenarioChartData(
+    scenarioId: number,
+    metrics?: string[],
+    chartType?: string,
+    aggregation?: string
+  ): Promise<{
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      borderColor: string;
+      backgroundColor: string;
+      yAxisID?: string;
+    }>;
+    options: any;
+  }> {
+    const projections = await this.getScenarioProjections(scenarioId);
+    
+    return {
+      labels: projections.map(p => p.projectionDate),
+      datasets: [
+        {
+          label: "Average Weight (g)",
+          data: projections.map(p => parseFloat(p.averageWeight)),
+          borderColor: "#3B82F6",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+          yAxisID: "y"
+        },
+        {
+          label: "Population",
+          data: projections.map(p => parseFloat(p.population)),
+          borderColor: "#10B981",
+          backgroundColor: "rgba(16, 185, 129, 0.1)",
+          yAxisID: "y1"
+        },
+        {
+          label: "Biomass (kg)",
+          data: projections.map(p => parseFloat(p.biomass)),
+          borderColor: "#F59E0B",
+          backgroundColor: "rgba(245, 158, 11, 0.1)",
+          yAxisID: "y2"
+        }
+      ],
+      options: {
+        responsive: true,
+        scales: {
+          y: { type: 'linear', display: true, position: 'left' },
+          y1: { type: 'linear', display: true, position: 'right' },
+          y2: { type: 'linear', display: false }
+        }
+      }
+    };
+  }
+
+  // Scenario Planning Dashboard KPIs
+  async getScenarioPlanningKPIs(): Promise<{
+    totalActiveScenarios: number;
+    scenariosInProgress: number;
+    completedProjections: number;
+    averageProjectionDuration: number;
+  }> {
+    const scenarios = Array.from(this.scenarios.values());
+    const activeScenarios = scenarios.filter(s => s.status !== "failed");
+    const inProgress = scenarios.filter(s => s.status === "running");
+    const completed = scenarios.filter(s => s.status === "completed");
+    
+    return {
+      totalActiveScenarios: activeScenarios.length,
+      scenariosInProgress: inProgress.length,
+      completedProjections: completed.length,
+      averageProjectionDuration: scenarios.reduce((sum, s) => sum + s.durationDays, 0) / scenarios.length || 0
+    };
   }
 }
 

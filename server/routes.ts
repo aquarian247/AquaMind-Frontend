@@ -9,7 +9,10 @@ import {
   insertFeedPurchaseSchema, insertFeedContainerSchema, insertFeedContainerStockSchema,
   insertBatchFeedingSummarySchema, insertSpeciesSchema, insertStageSchema,
   insertLabSampleSchema, insertHealthAssessmentSchema, insertWeatherDataSchema,
-  insertBroodstockPairSchema, insertEggSupplierSchema
+  insertBroodstockPairSchema, insertEggSupplierSchema,
+  insertTemperatureProfileSchema, insertTemperatureReadingSchema,
+  insertTgcModelSchema, insertFcrModelSchema, insertMortalityModelSchema,
+  insertBiologicalConstraintSchema, insertScenarioSchema
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
