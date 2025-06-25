@@ -145,13 +145,7 @@ export function MortalityModelCreationDialog({ children, onSuccess }: MortalityM
         body: {
           name: data.name,
           frequency: data.frequency,
-          rate: parseFloat(data.rate) / 100, // Convert percentage to decimal
-          description: data.description,
-          stage_overrides: data.useStageOverrides ? data.stageOverrides?.map(override => ({
-            lifecycle_stage: override.lifecycleStage,
-            daily_rate_percent: parseFloat(override.dailyRatePercent),
-            weekly_rate_percent: parseFloat(override.weeklyRatePercent),
-          })) : [],
+          rate: data.rate,
         },
       });
     },

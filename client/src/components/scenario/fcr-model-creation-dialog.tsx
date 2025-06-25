@@ -112,11 +112,6 @@ export function FcrModelCreationDialog({ children, onSuccess }: FcrModelCreation
         body: {
           name: data.name,
           description: data.description,
-          stages: data.stages.map(stage => ({
-            stage_id: stage.stage,
-            fcr_value: parseFloat(stage.fcrValue),
-            duration_days: parseInt(stage.durationDays),
-          })),
         },
       });
     },

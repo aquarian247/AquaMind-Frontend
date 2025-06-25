@@ -2667,6 +2667,101 @@ export class MemStorage implements IStorage {
       averageProjectionDuration: scenarios.reduce((sum, s) => sum + s.durationDays, 0) / scenarios.length || 0
     };
   }
+
+  // Scenario Planning API Implementation - Missing Methods
+  async getScenarios(): Promise<Scenario[]> {
+    return Array.from(this.scenarios.values());
+  }
+
+  async createScenario(scenario: InsertScenario): Promise<Scenario> {
+    const newScenario: Scenario = {
+      id: this.currentId++,
+      ...scenario,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(newScenario.id, newScenario);
+    return newScenario;
+  }
+
+  async deleteScenario(id: number): Promise<void> {
+    this.scenarios.delete(id);
+  }
+
+  async getTemperatureProfiles(): Promise<TemperatureProfile[]> {
+    return Array.from(this.temperatureProfiles.values());
+  }
+
+  async createTemperatureProfile(profile: InsertTemperatureProfile): Promise<TemperatureProfile> {
+    const newProfile: TemperatureProfile = {
+      id: this.currentId++,
+      ...profile,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.temperatureProfiles.set(newProfile.id, newProfile);
+    return newProfile;
+  }
+
+  async getTgcModels(): Promise<TgcModel[]> {
+    return Array.from(this.tgcModels.values());
+  }
+
+  async createTgcModel(model: InsertTgcModel): Promise<TgcModel> {
+    const newModel: TgcModel = {
+      id: this.currentId++,
+      ...model,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tgcModels.set(newModel.id, newModel);
+    return newModel;
+  }
+
+  async getFcrModels(): Promise<FcrModel[]> {
+    return Array.from(this.fcrModels.values());
+  }
+
+  async createFcrModel(model: InsertFcrModel): Promise<FcrModel> {
+    const newModel: FcrModel = {
+      id: this.currentId++,
+      ...model,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.fcrModels.set(newModel.id, newModel);
+    return newModel;
+  }
+
+  async getMortalityModels(): Promise<MortalityModel[]> {
+    return Array.from(this.mortalityModels.values());
+  }
+
+  async createMortalityModel(model: InsertMortalityModel): Promise<MortalityModel> {
+    const newModel: MortalityModel = {
+      id: this.currentId++,
+      ...model,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.mortalityModels.set(newModel.id, newModel);
+    return newModel;
+  }
+
+  async getBiologicalConstraints(): Promise<BiologicalConstraint[]> {
+    return Array.from(this.biologicalConstraints.values());
+  }
+
+  async createBiologicalConstraint(constraint: InsertBiologicalConstraint): Promise<BiologicalConstraint> {
+    const newConstraint: BiologicalConstraint = {
+      id: this.currentId++,
+      ...constraint,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.biologicalConstraints.set(newConstraint.id, newConstraint);
+    return newConstraint;
+  }
 }
 
 export const storage = new MemStorage();

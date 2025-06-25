@@ -96,12 +96,11 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
         body: {
           name: data.name,
           location: data.location,
-          release_period: data.releasePeriod,
-          tgc_value: parseFloat(data.tgcValue),
-          exponent_n: parseFloat(data.exponentN),
-          exponent_m: parseFloat(data.exponentM),
-          profile_id: data.profileId,
-          description: data.description,
+          releasePeriod: data.releasePeriod,
+          tgcValue: data.tgcValue,
+          exponentN: data.exponentN,
+          exponentM: data.exponentM,
+          profileId: data.profileId,
         },
       });
     },
