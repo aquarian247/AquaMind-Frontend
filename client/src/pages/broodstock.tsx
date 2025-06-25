@@ -337,7 +337,7 @@ function BroodstockDashboard() {
         </Card>
       </div>
 
-      {/* Tabs Navigation */}
+      {/* Responsive Tabs moved below KPI cards */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
@@ -772,8 +772,7 @@ function BroodstockDashboard() {
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${traitData.traitPerformance.currentGeneration[index]}%` }}
+                          className="bg-blue-600 h-2 rounded-full" style={{ width: `${traitData.traitPerformance.currentGeneration[index]}%` }}
                         ></div>
                       </div>
                     </div>
@@ -795,7 +794,7 @@ function BroodstockDashboard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400">Heterozygosity</p>
-                      <p className="text-xl font-bold text-gray-90 dark:text-gray-100">0.847</p>
+                      <p className="text-xl font-bold text-gray-900 dark:text-gray-100">0.847</p>
                     </div>
                     <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <p className="text-sm text-gray-600 dark:text-gray-400">Inbreeding Coeff.</p>
