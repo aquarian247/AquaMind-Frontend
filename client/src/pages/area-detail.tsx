@@ -251,215 +251,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
         </Card>
       </div>
 
-      {/* Rings Section */}
-      <div className="space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-          <div>
-            <h2 className="text-xl font-semibold">Production Rings</h2>
-            <p className="text-muted-foreground">Sea pen units in this area</p>
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="outline">
-              <Activity className="h-4 w-4 mr-2" />
-              Ring Monitor
-            </Button>
-            <Button variant="outline">
-              <Settings className="h-4 w-4 mr-2" />
-              Configure
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary Stats for Rings */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Rings</CardTitle>
-              <Waves className="h-4 w-4 text-blue-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{filteredRings.length}</div>
-              <p className="text-xs text-muted-foreground">Production units</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Ring Biomass</CardTitle>
-              <Fish className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {filteredRings.reduce((sum, ring) => sum + ring.biomass, 0).toFixed(1)} tons
-              </div>
-              <p className="text-xs text-muted-foreground">Current stock</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Rings</CardTitle>
-              <Activity className="h-4 w-4 text-purple-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600">
-                {filteredRings.filter(ring => ring.status === 'active').length}
-              </div>
-              <p className="text-xs text-muted-foreground">Currently operational</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg Depth</CardTitle>
-              <Gauge className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {filteredRings.length > 0 ? (filteredRings.reduce((sum, ring) => sum + ring.waterDepth, 0) / filteredRings.length).toFixed(1) : 0}m
-              </div>
-              <p className="text-xs text-muted-foreground">Water depth</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search rings..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Rings Grid */}
-        {isLoadingRings ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i}>
-                <CardHeader className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                </CardHeader>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredRings.map((ring) => (
-              <Card key={ring.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg flex items-center">
-                        <span className="mr-2">🌊</span>
-                        {ring.name}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Sea Ring • Depth: {ring.waterDepth}m
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <Badge className={getStatusBadge(ring.status)}>
-                        {ring.status}
-                      </Badge>
-                      <Badge className={getNetConditionBadge(ring.netCondition)}>
-                        {ring.netCondition} net
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Biomass</span>
-                      <div className="font-semibold text-lg">{ring.biomass} tons</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Fish Count</span>
-                      <div className="font-semibold text-lg">{ring.fishCount.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Avg Weight</span>
-                      <div className="font-medium">{ring.averageWeight} kg</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Environment</span>
-                      <Badge variant="outline" className={ring.environmentalStatus === 'optimal' ? 'border-green-500 text-green-700' : 'border-yellow-500 text-yellow-700'}>
-                        {ring.environmentalStatus}
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Capacity Utilization</span>
-                      <span>{Math.round((ring.biomass / ring.capacity) * 100)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all" 
-                        style={{ width: `${Math.min((ring.biomass / ring.capacity) * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Inspected {new Date(ring.lastInspection).toLocaleDateString()}
-                    </span>
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => setLocation(`/infrastructure/rings/${ring.id}`)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Details
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {filteredRings.length === 0 && !isLoadingRings && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Waves className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No rings found</h3>
-              <p className="text-muted-foreground text-center">
-                Try adjusting your search criteria or filters.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      {/* Detailed Information Tabs */}
+      {/* Detailed Information Tabs - moved below KPI cards */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         {/* Mobile dropdown - visible only on small screens */}
         <div className="md:hidden">
@@ -735,6 +527,216 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Rings Section */}
+      <div className="space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          <div>
+            <h2 className="text-xl font-semibold">Production Rings</h2>
+            <p className="text-muted-foreground">Sea pen units in this area</p>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline">
+              <Activity className="h-4 w-4 mr-2" />
+              Ring Monitor
+            </Button>
+            <Button variant="outline">
+              <Settings className="h-4 w-4 mr-2" />
+              Configure
+            </Button>
+          </div>
+        </div>
+
+        {/* Summary Stats for Rings */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Rings</CardTitle>
+              <Waves className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">{filteredRings.length}</div>
+              <p className="text-xs text-muted-foreground">Production units</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Ring Biomass</CardTitle>
+              <Fish className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {filteredRings.reduce((sum, ring) => sum + ring.biomass, 0).toFixed(1)} tons
+              </div>
+              <p className="text-xs text-muted-foreground">Current stock</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Rings</CardTitle>
+              <Activity className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">
+                {filteredRings.filter(ring => ring.status === 'active').length}
+              </div>
+              <p className="text-xs text-muted-foreground">Currently operational</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Avg Depth</CardTitle>
+              <Gauge className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">
+                {filteredRings.length > 0 ? (filteredRings.reduce((sum, ring) => sum + ring.waterDepth, 0) / filteredRings.length).toFixed(1) : 0}m
+              </div>
+              <p className="text-xs text-muted-foreground">Water depth</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search rings..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="maintenance">Maintenance</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Rings Grid */}
+        {isLoadingRings ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredRings.map((ring) => (
+              <Card key={ring.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg flex items-center">
+                        <span className="mr-2">🌊</span>
+                        {ring.name}
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        Sea Ring • Depth: {ring.waterDepth}m
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <Badge className={getStatusBadge(ring.status)}>
+                        {ring.status}
+                      </Badge>
+                      <Badge className={getNetConditionBadge(ring.netCondition)}>
+                        {ring.netCondition} net
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Biomass</span>
+                      <div className="font-semibold text-lg">{ring.biomass} tons</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Fish Count</span>
+                      <div className="font-semibold text-lg">{ring.fishCount.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Avg Weight</span>
+                      <div className="font-medium">{ring.averageWeight} kg</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Environment</span>
+                      <Badge variant="outline" className={ring.environmentalStatus === 'optimal' ? 'border-green-500 text-green-700' : 'border-yellow-500 text-yellow-700'}>
+                        {ring.environmentalStatus}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Capacity Utilization</span>
+                      <span>{Math.round((ring.biomass / ring.capacity) * 100)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full transition-all" 
+                        style={{ width: `${Math.min((ring.biomass / ring.capacity) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Inspected {new Date(ring.lastInspection).toLocaleDateString()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => setLocation(`/infrastructure/rings/${ring.id}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Details
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {filteredRings.length === 0 && !isLoadingRings && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Waves className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No rings found</h3>
+              <p className="text-muted-foreground text-center">
+                Try adjusting your search criteria or filters.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      
     </div>
   );
 }
