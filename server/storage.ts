@@ -1178,6 +1178,88 @@ export class MemStorage implements IStorage {
     };
     this.fcrModels.set(fcrModel2.id, fcrModel2);
 
+    // Add more TGC Models for variety
+    const tgcModel3: TgcModel = {
+      id: this.currentId++,
+      name: "Scottish Highlands TGC",
+      location: "Scottish Highlands",
+      releasePeriod: "Spring",
+      tgcValue: "0.0028",
+      exponentN: "1.0",
+      exponentM: "0.333",
+      profileId: profile2.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tgcModels.set(tgcModel3.id, tgcModel3);
+
+    const tgcModel4: TgcModel = {
+      id: this.currentId++,
+      name: "Faroe Islands Standard",
+      location: "Faroe Islands",
+      releasePeriod: "Autumn",
+      tgcValue: "0.0032",
+      exponentN: "1.0",
+      exponentM: "0.333",
+      profileId: profile1.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tgcModels.set(tgcModel4.id, tgcModel4);
+
+    // Add more FCR Models
+    const fcrModel3: FcrModel = {
+      id: this.currentId++,
+      name: "Eco-Efficient FCR Profile",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.fcrModels.set(fcrModel3.id, fcrModel3);
+
+    // FCR Stages for each model
+    const fcrStagesStandard = [
+      { stage: "fry", fcrValue: "1.0", durationDays: 90 },
+      { stage: "parr", fcrValue: "1.1", durationDays: 90 },
+      { stage: "smolt", fcrValue: "1.0", durationDays: 90 },
+      { stage: "post_smolt", fcrValue: "1.1", durationDays: 120 },
+      { stage: "adult", fcrValue: "1.2", durationDays: 400 }
+    ];
+
+    const fcrStagesPremium = [
+      { stage: "fry", fcrValue: "0.95", durationDays: 90 },
+      { stage: "parr", fcrValue: "1.05", durationDays: 90 },
+      { stage: "smolt", fcrValue: "0.98", durationDays: 90 },
+      { stage: "post_smolt", fcrValue: "1.08", durationDays: 120 },
+      { stage: "adult", fcrValue: "1.15", durationDays: 400 }
+    ];
+
+    const fcrStagesEco = [
+      { stage: "fry", fcrValue: "1.02", durationDays: 90 },
+      { stage: "parr", fcrValue: "1.12", durationDays: 90 },
+      { stage: "smolt", fcrValue: "1.03", durationDays: 90 },
+      { stage: "post_smolt", fcrValue: "1.13", durationDays: 120 },
+      { stage: "adult", fcrValue: "1.22", durationDays: 400 }
+    ];
+
+    [
+      { modelId: fcrModel1.id, stages: fcrStagesStandard },
+      { modelId: fcrModel2.id, stages: fcrStagesPremium },
+      { modelId: fcrModel3.id, stages: fcrStagesEco }
+    ].forEach(({ modelId, stages }) => {
+      stages.forEach(stage => {
+        const fcrStage: FcrStage = {
+          id: this.currentId++,
+          fcrModelId: modelId,
+          stage: stage.stage,
+          fcrValue: stage.fcrValue,
+          durationDays: stage.durationDays,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        this.fcrStages.set(fcrStage.id, fcrStage);
+      });
+    });
+
     // Mortality Models
     const mortalityModel1: MortalityModel = {
       id: this.currentId++,
@@ -1198,6 +1280,16 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.mortalityModels.set(mortalityModel2.id, mortalityModel2);
+
+    const mortalityModel3: MortalityModel = {
+      id: this.currentId++,
+      name: "High Risk Environment",
+      frequency: "daily",
+      rate: "0.00025",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.mortalityModels.set(mortalityModel3.id, mortalityModel3);
 
     // Biological Constraints
     const biologicalConstraint1: BiologicalConstraint = {
@@ -1257,34 +1349,110 @@ export class MemStorage implements IStorage {
     };
     this.scenarios.set(scenario2.id, scenario2);
 
-    // Generate scenario projections for completed scenario
-    for (let day = 0; day < 365; day += 7) { // Weekly projections
-      const projectionDate = new Date(2024, 3, 1 + day); // April 1, 2024 + days
-      const dayNumber = day + 1;
-      
-      // Simple growth calculation for mock data
-      const avgWeight = 15 + (day * 0.8) + (Math.random() * 2 - 1);
-      const population = 100000 * (1 - day * 0.00015);
-      const biomass = avgWeight * population / 1000; // in kg
-      const dailyFeed = biomass * 0.015; // 1.5% body weight
-      const cumulativeFeed = dailyFeed * dayNumber;
+    // Add more scenarios for demonstration
+    const scenario3: Scenario = {
+      id: this.currentId++,
+      name: "Scottish Site Comparison",
+      description: "Scenario modeling growth at Scottish Highlands location with cooler temperatures",
+      startDate: "2024-03-15",
+      durationDays: 420,
+      initialCount: 95000,
+      initialWeight: "12.500",
+      genotype: "SalmoBreed Plus",
+      supplier: "Scottish Salmon Company",
+      tgcModelId: tgcModel3.id,
+      fcrModelId: fcrModel1.id,
+      mortalityModelId: mortalityModel1.id,
+      batchId: null,
+      biologicalConstraintsId: biologicalConstraint1.id,
+      status: "active",
+      createdBy: firstUser.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(scenario3.id, scenario3);
 
-      const projection: ScenarioProjection = {
+    const scenario4: Scenario = {
+      id: this.currentId++,
+      name: "Eco-Efficient Production",
+      description: "Sustainable production model with eco-efficient feed and reduced environmental impact",
+      startDate: "2024-05-01",
+      durationDays: 390,
+      initialCount: 120000,
+      initialWeight: "18.000",
+      genotype: "AquaGen Atlantic",
+      supplier: "AquaGen AS",
+      tgcModelId: tgcModel4.id,
+      fcrModelId: fcrModel3.id,
+      mortalityModelId: mortalityModel2.id,
+      batchId: null,
+      biologicalConstraintsId: biologicalConstraint1.id,
+      status: "completed",
+      createdBy: firstUser.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(scenario4.id, scenario4);
+
+    // Get a batch for "from batch" scenario
+    const firstBatch = Array.from(this.batches.values())[0];
+    if (firstBatch) {
+      const scenario5: Scenario = {
         id: this.currentId++,
-        scenarioId: scenario1.id,
-        projectionDate: projectionDate.toISOString().split('T')[0],
-        dayNumber,
-        averageWeight: avgWeight.toFixed(3),
-        population: population.toFixed(2),
-        biomass: biomass.toFixed(2),
-        dailyFeed: dailyFeed.toFixed(3),
-        cumulativeFeed: cumulativeFeed.toFixed(3),
-        temperature: winterTemps[Math.floor(day / 30) % 12]?.toString() || "8.0",
-        currentStageId: null,
+        name: `Batch ${firstBatch.batchNumber} Growth Projection`,
+        description: "Real batch scenario based on current production data",
+        startDate: "2024-06-01",
+        durationDays: 300,
+        initialCount: firstBatch.initialCount || 85000,
+        initialWeight: firstBatch.averageWeight?.toString() || "25.000",
+        genotype: "Current Production Stock",
+        supplier: "Internal Production",
+        tgcModelId: tgcModel1.id,
+        fcrModelId: fcrModel2.id,
+        mortalityModelId: mortalityModel1.id,
+        batchId: firstBatch.id,
+        biologicalConstraintsId: biologicalConstraint1.id,
+        status: "draft",
+        createdBy: firstUser.id,
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
-      this.scenarioProjections.set(projection.id, projection);
+      this.scenarios.set(scenario5.id, scenario5);
     }
+
+    // Generate scenario projections for completed scenarios
+    for (let day = 0; day < 365; day += 7) { // Weekly projections
+        const startDateObj = new Date(scenario.startDate);
+        const projectionDate = new Date(startDateObj.getTime() + day * 24 * 60 * 60 * 1000);
+        const dayNumber = day + 1;
+        
+        // Different growth patterns for different scenarios
+        const growthRate = scenarioIndex === 0 ? 0.8 : 0.9; // Second scenario grows faster
+        const mortalityRate = scenarioIndex === 0 ? 0.00015 : 0.00008; // Second scenario lower mortality
+        
+        const avgWeight = startWeight + (day * growthRate) + (Math.random() * 1.5 - 0.75);
+        const population = startCount * (1 - day * mortalityRate);
+        const biomass = avgWeight * population / 1000; // in kg
+        const dailyFeed = biomass * 0.015; // 1.5% body weight
+        const cumulativeFeed = dailyFeed * dayNumber;
+
+        const projection: ScenarioProjection = {
+          id: this.currentId++,
+          scenarioId: scenario.id,
+          projectionDate: projectionDate.toISOString().split('T')[0],
+          dayNumber,
+          averageWeight: avgWeight.toFixed(3),
+          population: population.toFixed(2),
+          biomass: biomass.toFixed(2),
+          dailyFeed: dailyFeed.toFixed(3),
+          cumulativeFeed: cumulativeFeed.toFixed(3),
+          temperature: winterTemps[Math.floor(day / 30) % 12]?.toString() || "8.0",
+          currentStageId: null,
+          createdAt: new Date(),
+        };
+        this.scenarioProjections.set(projection.id, projection);
+      }
+    });
   }
 
   // Django API Methods
@@ -2690,6 +2858,16 @@ export class MemStorage implements IStorage {
 
   async getTemperatureProfiles(): Promise<TemperatureProfile[]> {
     return Array.from(this.temperatureProfiles.values());
+  }
+
+  async getTemperatureProfile(id: number): Promise<TemperatureProfile | null> {
+    return this.temperatureProfiles.get(id) || null;
+  }
+
+  async getTemperatureReadings(profileId: number): Promise<TemperatureReading[]> {
+    return Array.from(this.temperatureReadings.values()).filter(
+      reading => reading.profileId === profileId
+    );
   }
 
   async createTemperatureProfile(profile: InsertTemperatureProfile): Promise<TemperatureProfile> {

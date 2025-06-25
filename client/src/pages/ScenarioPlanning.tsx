@@ -845,7 +845,11 @@ export default function ScenarioPlanning() {
                     </div>
                   </div>
                   <div className="flex gap-2 mt-4">
-                    <Button size="sm" variant="outline">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setLocation(`/temperature-data/${profile.id}`)}
+                    >
                       View Data
                     </Button>
                     <Button size="sm" variant="outline">
