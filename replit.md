@@ -114,6 +114,11 @@ Current endpoints follow `/api/` pattern with planned migration to Django-style 
   - ✓ **Phase 4:** Interactive projection visualization with Recharts, scenario detail dialogs, performance analysis
   - ✓ Professional-grade UI following established design patterns with mobile-first responsive approach
   - ✓ All core functionality operational and ready for deployment
+- June 25, 2025. **Model Creation Wizards Implementation:**
+  - ✓ Created sophisticated multi-step wizards for TGC, FCR, and mortality model creation
+  - ✓ Implemented comprehensive validation, presets, and professional UI components
+  - ✓ Fixed JSON API communication ensuring all endpoints return proper JSON responses
+  - ✓ Cleaned up duplicate UI elements in Models tab for improved user experience
 
 ## User Preferences
 

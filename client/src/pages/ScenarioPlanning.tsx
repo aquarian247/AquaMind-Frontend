@@ -593,8 +593,7 @@ export default function ScenarioPlanning() {
             </TabsList>
 
             <TabsContent value="tgc" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Thermal Growth Coefficient Models</h3>
+              <div className="flex justify-end items-center">
                 <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/tgc-models/"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -669,8 +668,7 @@ export default function ScenarioPlanning() {
             </TabsContent>
 
             <TabsContent value="fcr" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Feed Conversion Ratio Models</h3>
+              <div className="flex justify-end items-center">
                 <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/fcr-models/"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -735,8 +733,7 @@ export default function ScenarioPlanning() {
             </TabsContent>
 
             <TabsContent value="mortality" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Mortality Models</h3>
+              <div className="flex justify-end items-center">
                 <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/mortality-models/"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
