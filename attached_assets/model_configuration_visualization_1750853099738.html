@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model Configuration</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #002b36;
+      color: #93a1a1;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .sidebar {
+      background-color: #073642;
+      width: 240px;
+      min-height: 100vh;
+    }
+    .content {
+      background-color: #002b36;
+    }
+    .card {
+      background-color: #073642;
+      border-radius: 8px;
+    }
+    .active-nav {
+      background-color: #002b36;
+      border-left: 4px solid #2aa198;
+    }
+    .btn-primary {
+      background-color: #2aa198;
+      color: #002b36;
+    }
+    .btn-secondary {
+      background-color: #073642;
+      color: #93a1a1;
+      border: 1px solid #586e75;
+    }
+    .model-card {
+      border-left: 4px solid;
+    }
+    .tgc-border {
+      border-color: #2aa198;
+    }
+    .mortality-border {
+      border-color: #d33682;
+    }
+    .fcr-border {
+      border-color: #b58900;
+    }
+    .tab-active {
+      border-bottom: 2px solid #2aa198;
+      color: #2aa198;
+    }
+    .slider-tgc::-webkit-slider-thumb {
+      background: #2aa198;
+    }
+    .slider-mortality::-webkit-slider-thumb {
+      background: #d33682;
+    }
+    .slider-fcr::-webkit-slider-thumb {
+      background: #b58900;
+    }
+    .chart-container {
+      height: 200px;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <div class="flex">
+    <!-- Sidebar -->
+    <div class="sidebar p-4">
+      <div class="flex items-center mb-8">
+        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIwIDQwQzMxLjA0NTcgNDAgNDAgMzEuMDQ1NyA0MCAyMEM0MCA4Ljk1NDMgMzEuMDQ1NyAwIDIwIDBDOC45NTQzIDAgMCA4Ljk1NDMgMCAyMEMwIDMxLjA0NTcgOC45NTQzIDQwIDIwIDQwWiIgZmlsbD0iIzJBQTE5OCIvPgo8cGF0aCBkPSJNMjAgMzBDMjUuNTIyOSAzMCAzMCAyNS41MjI5IDMwIDIwQzMwIDE0LjQ3NzEgMjUuNTIyOSAxMCAyMCAxMEMxNC40NzcxIDEwIDEwIDE0LjQ3NzEgMTAgMjBDMTAgMjUuNTIyOSAxNC40NzcxIDMwIDIwIDMwWiIgZmlsbD0iIzAwMkIzNiIvPgo8cGF0aCBkPSJNMjAgMjVDMjIuNzYxNCAyNSAyNSAyMi43NjE0IDI1IDIwQzI1IDE3LjIzODYgMjIuNzYxNCAxNSAyMCAxNUMxNy4yMzg2IDE1IDE1IDE3LjIzODYgMTUgMjBDMTUgMjIuNzYxNCAxNy4yMzg2IDI1IDIwIDI1WiIgZmlsbD0iIzJBQTE5OCIvPgo8L3N2Zz4K" alt="AquaMind Logo" class="h-8 w-8 mr-2">
+        <span class="text-xl font-semibold text-teal-400">AquaMind</span>
+      </div>
+      
+      <div class="space-y-1 mb-6">
+        <div class="p-2 hover:bg-gray-700 rounded flex items-center">
+          <i class="fas fa-tachometer-alt mr-3 text-gray-400"></i>
+          <span>Dashboard</span>
+        </div>
+        <div class="p-2 hover:bg-gray-700 rounded flex items-center">
+          <i class="fas fa-box mr-3 text-gray-400"></i>
+          <span>Batch Management</span>
+        </div>
+        <div class="p-2 hover:bg-gray-700 rounded flex items-center">
+          <i class="fas fa-dna mr-3 text-gray-400"></i>
+          <span>Broodstock</span>
+        </div>
+        <div class="p-2 hover:bg-gray-700 rounded flex items-center">
+          <i class="fas fa-warehouse mr-3 text-gray-400"></i>
+          <span>Inventory</span>
+        </div>
+        <div class="p-2 hover:bg-gray-700 rounded flex items-center">
+          <i class="fas fa-heartbeat mr-3 text-gray-400"></i>
+          <span>Health</span>
+        </div>
+        <div class="p-2 active-nav rounded flex items-center">
+          <i class="fas fa-chart-line mr-3 text-teal-400"></i>
+          <span class="text-teal-400">Scenario Planning</span>
+        </div>
+        <div class="p-2 hover:bg-gray-700 rounded flex items-center">
+          <i class="fas fa-cog mr-3 text-gray-400"></i>
+          <span>Settings</span>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-700 pt-4 mt-4">
+        <div class="p-2 hover:bg-gray-700 rounded flex items-center">
+          <i class="fas fa-question-circle mr-3 text-gray-400"></i>
+          <span>Help</span>
+        </div>
+        <div class="p-2 hover:bg-gray-700 rounded flex items-center">
+          <i class="fas fa-sign-out-alt mr-3 text-gray-400"></i>
+          <span>Logout</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="content flex-1 p-6">
+      <div class="flex items-center mb-6">
+        <a href="#" class="text-gray-400 hover:text-teal-400 mr-2">
+          <i class="fas fa-arrow-left"></i>
+        </a>
+        <div>
+          <h1 class="text-3xl font-bold text-teal-400">Configure Scenario</h1>
+          <p class="text-gray-400">Q3 High Efficiency • Batch: B-2025-06</p>
+        </div>
+      </div>
+      
+      <!-- Model Flow Diagram -->
+      <div class="card p-4 mb-6">
+        <h2 class="text-xl font-semibold text-teal-400 mb-4">Model Relationship Flow</h2>
+        <div class="flex items-center justify-between">
+          <div class="model-card tgc-border bg-gray-800 p-4 w-1/4">
+            <div class="flex items-center mb-2">
+              <div class="bg-teal-800 rounded-full p-2 mr-3">
+                <i class="fas fa-chart-line text-teal-200"></i>
+              </div>
+              <h3 class="font-medium text-teal-300">TGC Growth Model</h3>
+            </div>
+            <p class="text-xs text-gray-400">Calculates daily growth based on temperature and current weight</p>
+            <div class="mt-2 text-xs text-teal-400">Primary Output: Average Weight</div>
+          </div>
+          
+          <div class="flex items-center justify-center w-1/12">
+            <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
+          </div>
+          
+          <div class="model-card mortality-border bg-gray-800 p-4 w-1/4">
+            <div class="flex items-center mb-2">
+              <div class="bg-pink-800 rounded-full p-2 mr-3">
+                <i class="fas fa-chart-area text-pink-200"></i>
+              </div>
+              <h3 class="font-medium text-pink-300">Mortality Model</h3>
+            </div>
+            <p class="text-xs text-gray-400">Updates population based on mortality rates per lifecycle stage</p>
+            <div class="mt-2 text-xs text-pink-400">Primary Output: Population</div>
+          </div>
+          
+          <div class="flex items-center justify-center w-1/12">
+            <i class="fas fa-arrow-right text-gray-500 text-xl"></i>
+          </div>
+          
+          <div class="model-card fcr-border bg-gray-800 p-4 w-1/4">
+            <div class="flex items-center mb-2">
+              <div class="bg-yellow-800 rounded-full p-2 mr-3">
+                <i class="fas fa-balance-scale text-yellow-200"></i>
+              </div>
+              <h3 class="font-medium text-yellow-300">FCR Model</h3>
+            </div>
+            <p class="text-xs text-gray-400">Calculates feed requirements based on growth and population</p>
+            <div class="mt-2 text-xs text-yellow-400">Primary Output: Feed Consumption</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tabs -->
+      <div class="border-b border-gray-700 mb-6">
+        <div class="flex">
+          <div class="px-4 py-2 tab-active">
+            <i class="fas fa-chart-line mr-2"></i>
+            TGC Parameters
+          </div>
+          <div class="px-4 py-2 text-gray-400 hover:text-gray-300">
+            <i class="fas fa-chart-area mr-2"></i>
+            Mortality Parameters
+          </div>
+          <div class="px-4 py-2 text-gray-400 hover:text-gray-300">
+            <i class="fas fa-balance-scale mr-2"></i>
+            FCR Parameters
+          </div>
+          <div class="px-4 py-2 text-gray-400 hover:text-gray-300">
+            <i class="fas fa-cog mr-2"></i>
+            Advanced Settings
+          </div>
+        </div>
+      </div>
+      
+      <!-- TGC Parameters -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="card p-4">
+          <h3 class="font-medium text-teal-400 mb-4">TGC Parameters</h3>
+          
+          <div class="space-y-4">
+            <div>
+              <div class="flex justify-between mb-1">
+                <label class="text-sm">Base TGC Value</label>
+                <span class="text-teal-400">2.5</span>
+              </div>
+              <input type="range" min="1.5" max="3.5" step="0.1" value="2.5" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-tgc">
+              <div class="flex justify-between text-xs text-gray-500 mt-1">
+                <span>1.5 (Slow)</span>
+                <span>3.5 (Fast)</span>
+              </div>
+            </div>
+            
+            <div>
+              <div class="flex justify-between mb-1">
+                <label class="text-sm">Initial Weight (g)</label>
+                <span class="text-teal-400">50</span>
+              </div>
+              <input type="range" min="30" max="100" step="5" value="50" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-tgc">
+            </div>
+            
+            <div>
+              <div class="flex justify-between mb-1">
+                <label class="text-sm">Target Weight (kg)</label>
+                <span class="text-teal-400">4.5</span>
+              </div>
+              <input type="range" min="3.0" max="6.0" step="0.1" value="4.5" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-tgc">
+            </div>
+            
+            <div>
+              <label class="text-sm block mb-2">Temperature Profile</label>
+              <div class="grid grid-cols-3 gap-2">
+                <div class="bg-teal-800 text-teal-200 p-2 rounded text-center text-sm">Standard</div>
+                <div class="bg-gray-800 text-gray-400 p-2 rounded text-center text-sm">Optimized</div>
+                <div class="bg-gray-800 text-gray-400 p-2 rounded text-center text-sm">Custom</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card p-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-medium text-teal-400">Growth Projection</h3>
+            <div class="text-xs px-2 py-1 bg-gray-800 text-gray-400 rounded">Auto-updating</div>
+          </div>
+          
+          <div class="chart-container mb-4">
+            <canvas id="growthChart"></canvas>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="bg-gray-800 p-3 rounded">
+              <div class="text-xs text-gray-400 mb-1">Production Duration</div>
+              <div class="font-medium text-teal-400">87 days</div>
+            </div>
+            <div class="bg-gray-800 p-3 rounded">
+              <div class="text-xs text-gray-400 mb-1">Estimated Harvest Date</div>
+              <div class="font-medium text-teal-400">Sep 10, 2025</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Combined Outputs -->
+      <div class="card p-4 mb-6">
+        <h3 class="font-medium text-teal-400 mb-4">Combined Model Outputs</h3>
+        
+        <div class="grid grid-cols-3 gap-4">
+          <div class="bg-gray-800 p-3 rounded">
+            <div class="flex items-center mb-2">
+              <div class="bg-teal-800 rounded-full p-1 mr-2">
+                <i class="fas fa-weight text-teal-200 text-xs"></i>
+              </div>
+              <span class="text-sm text-teal-400">Final Average Weight</span>
+            </div>
+            <div class="text-xl font-medium">4.5 kg</div>
+          </div>
+          
+          <div class="bg-gray-800 p-3 rounded">
+            <div class="flex items-center mb-2">
+              <div class="bg-pink-800 rounded-full p-1 mr-2">
+                <i class="fas fa-users text-pink-200 text-xs"></i>
+              </div>
+              <span class="text-sm text-pink-400">Final Population</span>
+            </div>
+            <div class="text-xl font-medium">89,000</div>
+            <div class="text-xs text-gray-400">89% survival rate</div>
+          </div>
+          
+          <div class="bg-gray-800 p-3 rounded">
+            <div class="flex items-center mb-2">
+              <div class="bg-yellow-800 rounded-full p-1 mr-2">
+                <i class="fas fa-drumstick-bite text-yellow-200 text-xs"></i>
+              </div>
+              <span class="text-sm text-yellow-400">Total Feed Required</span>
+            </div>
+            <div class="text-xl font-medium">460,000 kg</div>
+            <div class="text-xs text-gray-400">FCR: 1.15</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="flex justify-between">
+        <div>
+          <button class="btn-secondary px-4 py-2 rounded mr-2">
+            <i class="fas fa-undo mr-2"></i>
+            Reset to Default
+          </button>
+          <button class="btn-secondary px-4 py-2 rounded">
+            <i class="fas fa-save mr-2"></i>
+            Save as Template
+          </button>
+        </div>
+        <div>
+          <button class="btn-secondary px-4 py-2 rounded mr-2">
+            <i class="fas fa-times mr-2"></i>
+            Cancel
+          </button>
+          <button class="btn-primary px-4 py-2 rounded">
+            <i class="fas fa-check mr-2"></i>
+            Apply Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Simulated chart data - in a real implementation, this would be populated from the model
+    document.addEventListener('DOMContentLoaded', function() {
+      const ctx = document.getElementById('growthChart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({length: 87}, (_, i) => `Day ${i+1}`),
+          datasets: [{
+            label: 'Weight (g)',
+            data: Array.from({length: 87}, (_, i) => 50 + i * (4450 / 86)),
+            borderColor: '#2aa198',
+            backgroundColor: 'rgba(42, 161, 152, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              grid: {
+                color: 'rgba(255, 255, 255, 0.1)'
+              },
+              ticks: {
+                color: '#93a1a1'
+              }
+            },
+            x: {
+              display: false
+            }
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
