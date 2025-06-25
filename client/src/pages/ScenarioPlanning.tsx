@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { ScenarioCreationDialog } from "@/components/scenario/scenario-creation-dialog";
 import { ScenarioDetailDialog } from "@/components/scenario/scenario-detail-dialog";
+import { ScenarioEditDialog } from "@/components/scenario/scenario-edit-dialog";
+import { BatchIntegrationDialog } from "@/components/scenario/batch-integration-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -218,6 +220,15 @@ export default function ScenarioPlanning() {
               New Scenario
             </Button>
           </ScenarioCreationDialog>
+          <BatchIntegrationDialog onBatchSelected={(batch) => {
+            // Handle batch selection to create new scenario
+            console.log('Selected batch for scenario:', batch);
+          }}>
+            <Button variant="outline">
+              <Fish className="h-4 w-4 mr-2" />
+              From Batch
+            </Button>
+          </BatchIntegrationDialog>
         </div>
       </div>
 
@@ -338,12 +349,23 @@ export default function ScenarioPlanning() {
         <TabsContent value="scenarios" className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <h2 className="text-2xl font-bold">Scenarios</h2>
-            <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Scenario
-              </Button>
-            </ScenarioCreationDialog>
+            <div className="flex gap-2">
+              <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Scenario
+                </Button>
+              </ScenarioCreationDialog>
+              <BatchIntegrationDialog onBatchSelected={(batch) => {
+                // Handle batch selection to create new scenario
+                console.log('Selected batch for scenario:', batch);
+              }}>
+                <Button variant="outline">
+                  <Fish className="h-4 w-4 mr-2" />
+                  From Batch
+                </Button>
+              </BatchIntegrationDialog>
+            </div>
           </div>
 
           {/* Search and Filters */}
@@ -405,12 +427,22 @@ export default function ScenarioPlanning() {
                     : "Create your first scenario to get started with growth projections"
                   }
                 </p>
-                <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create First Scenario
-                  </Button>
-                </ScenarioCreationDialog>
+                <div className="flex gap-2">
+                  <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Scenario
+                    </Button>
+                  </ScenarioCreationDialog>
+                  <BatchIntegrationDialog onBatchSelected={(batch) => {
+                    console.log('Selected batch for scenario:', batch);
+                  }}>
+                    <Button variant="outline">
+                      <Fish className="h-4 w-4 mr-2" />
+                      From Batch
+                    </Button>
+                  </BatchIntegrationDialog>
+                </div>
               </CardContent>
             </Card>
           ) : (
@@ -441,10 +473,15 @@ export default function ScenarioPlanning() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Scenario
-                          </DropdownMenuItem>
+                          <ScenarioEditDialog 
+                            scenario={scenario} 
+                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}
+                          >
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Scenario
+                            </DropdownMenuItem>
+                          </ScenarioEditDialog>
                           <DropdownMenuItem 
                             onClick={() => duplicateScenarioMutation.mutate({ 
                               scenarioId: scenario.id, 
