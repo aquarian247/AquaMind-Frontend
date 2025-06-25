@@ -1473,54 +1473,54 @@ export class MemStorage implements IStorage {
         const currentBiomass = (currentWeight * currentCount) / 1000000;
         const feedingRate = this.calculateFeedingRate(currentWeight, temperature);
         const weeklyFeedConsumption = currentBiomass * feedingRate * 7 * parseFloat(fcrModel.ratio);
-        totalFeedConsumed += feedRequired;
+        totalFeedConsumed += weeklyFeedConsumption;
         
-        // Mortality calculation (simplified based on stage)
-        const weeklyMortalityRate = this.getMortalityForWeight(currentWeight) / 52; // Convert annual to weekly
-        currentCount = Math.floor(currentCount * (1 - weeklyMortalityRate));
-        
-        // Calculate cumulative FCR
-        const totalBiomassGain = ((currentCount * newWeight) - (scenario.initialCount * parseFloat(scenario.initialWeight))) / 1000;
-        const cumulativeFcr = totalBiomassGain > 0 ? totalFeedConsumed / totalBiomassGain : 0;
+        // Calculate dynamic FCR
+        let currentFCR = parseFloat(fcrModel.ratio);
+        if (currentWeight > 2000) currentFCR *= 1.1;
+        if (temperature < 6) currentFCR *= 1.2;
 
         const projection: ScenarioProjection = {
           id: this.currentId++,
           scenarioId: scenario.id,
           projectionDate: projectionDate.toISOString().split('T')[0],
           weekNumber: week,
-          fishCount: currentCount,
-          averageWeight: parseFloat(newWeight.toFixed(3)),
-          totalBiomass: parseFloat(((currentCount * newWeight) / 1000).toFixed(2)), // tonnes
-          feedConsumed: parseFloat(feedRequired.toFixed(2)),
-          cumulativeFeed: parseFloat(totalFeedConsumed.toFixed(2)),
-          fcr: parseFloat(cumulativeFcr.toFixed(3)),
-          mortalityRate: parseFloat((weeklyMortalityRate * 100).toFixed(3)),
-          waterTemperature: parseFloat(temperature.toFixed(1)),
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          fishCount: Math.round(currentCount),
+          averageWeight: Math.round(currentWeight * 10) / 10,
+          totalBiomass: Math.round(currentBiomass * 100) / 100,
+          feedConsumed: Math.round(weeklyFeedConsumption * 100) / 100,
+          cumulativeFeed: Math.round(totalFeedConsumed * 100) / 100,
+          fcr: Math.round(currentFCR * 100) / 100,
+          mortalityRate: Math.round(weeklyMortalityRate * 10000) / 100,
+          waterTemperature: Math.round(temperature * 10) / 10,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         };
         
         this.scenarioProjections.set(projection.id, projection);
-        currentWeight = newWeight;
       }
     });
   }
   
-  // Helper method to get FCR for specific weight range based on linked models
-  private getFcrForWeight(weight: number): number {
-    if (weight < 50) return 1.0; // Fry stage
-    if (weight < 200) return 1.1; // Parr stage
-    if (weight < 500) return 1.15; // Smolt stage
-    if (weight < 1000) return 1.2; // Post-smolt
-    return 1.25; // Adult stage
-  }
-  
-  // Helper method to get mortality rate for specific weight range
-  private getMortalityForWeight(weight: number): number {
-    if (weight < 50) return 0.15; // 15% annual mortality for fry
-    if (weight < 200) return 0.08; // 8% for parr
-    if (weight < 500) return 0.05; // 5% for smolt
-    return 0.03; // 3% for adult fish
+  // Calculate realistic feeding rate based on fish size and temperature for sea cage
+  private calculateFeedingRate(weight: number, temperature: number): number {
+    // Base feeding rate as percentage of body weight per day
+    let baseRate = 0.8; // Start at 0.8% for larger smolts
+    
+    // Adjust by fish size (smaller fish eat more relative to body weight)
+    if (weight < 500) baseRate = 1.2;
+    else if (weight < 1000) baseRate = 1.0;
+    else if (weight < 2000) baseRate = 0.8;
+    else if (weight < 4000) baseRate = 0.6;
+    else baseRate = 0.4; // Large fish eat less relative to weight
+    
+    // Temperature adjustment
+    if (temperature < 4) baseRate *= 0.3; // Very slow feeding in cold water
+    else if (temperature < 6) baseRate *= 0.6;
+    else if (temperature < 8) baseRate *= 0.8;
+    else if (temperature > 16) baseRate *= 0.7; // Reduce feeding in warm water
+    
+    return baseRate / 100; // Convert to decimal
   }
 
   // Django API Methods
