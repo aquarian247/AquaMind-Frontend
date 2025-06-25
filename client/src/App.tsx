@@ -90,6 +90,7 @@ function Router() {
             <Route path="/breeding-program-details/:id" component={BreedingProgramDetails} />
             <Route path="/broodstock-container-details/:id" component={BroodstockContainerDetails} />
             <Route path="/scenario-planning" component={ScenarioPlanning} />
+            <Route path="/temperature-data/:id" component={TemperatureDataView} />
             <Route path="/inventory" component={Inventory} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/mortality-reporting" component={MortalityReporting} />

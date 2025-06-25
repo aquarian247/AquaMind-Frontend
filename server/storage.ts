@@ -1421,7 +1421,12 @@ export class MemStorage implements IStorage {
     }
 
     // Generate scenario projections for completed scenarios
-    for (let day = 0; day < 365; day += 7) { // Weekly projections
+    [scenario1, scenario4].forEach((scenario, scenarioIndex) => {
+      const durationDays = scenario.durationDays;
+      const startWeight = parseFloat(scenario.initialWeight);
+      const startCount = scenario.initialCount;
+      
+      for (let day = 0; day < durationDays; day += 7) { // Weekly projections
         const startDateObj = new Date(scenario.startDate);
         const projectionDate = new Date(startDateObj.getTime() + day * 24 * 60 * 60 * 1000);
         const dayNumber = day + 1;

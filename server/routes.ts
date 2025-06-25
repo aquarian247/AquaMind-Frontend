@@ -2914,6 +2914,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/v1/scenario-planning/temperature-profiles/:id/", async (req, res) => {
+    try {
+      const profile = await storage.getTemperatureProfile(parseInt(req.params.id));
+      if (!profile) {
+        return res.status(404).json({ error: "Temperature profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch temperature profile" });
+    }
+  });
+
+  app.get("/api/v1/scenario-planning/temperature-profiles/:id/readings/", async (req, res) => {
+    try {
+      const readings = await storage.getTemperatureReadings(parseInt(req.params.id));
+      res.json({
+        count: readings.length,
+        next: null,
+        previous: null,
+        results: readings
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch temperature readings" });
+    }re profiles" });
+    }
+  });
+
   app.post("/api/v1/scenario-planning/temperature-profiles/", async (req, res) => {
     try {
       const validatedData = insertTemperatureProfileSchema.parse(req.body);
