@@ -119,6 +119,7 @@ Current endpoints follow `/api/` pattern with planned migration to Django-style 
   - ✓ Implemented comprehensive validation, presets, and professional UI components
   - ✓ Fixed JSON API communication ensuring all endpoints return proper JSON responses
   - ✓ Cleaned up duplicate UI elements in Models tab for improved user experience
+  - ✓ Resolved duplicate model cards issue and restored proper section headers for FCR and mortality models
 
 ## User Preferences
 

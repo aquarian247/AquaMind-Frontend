@@ -668,7 +668,8 @@ export default function ScenarioPlanning() {
             </TabsContent>
 
             <TabsContent value="fcr" className="space-y-4">
-              <div className="flex justify-end items-center">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Feed Conversion Ratio Models</h3>
                 <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/fcr-models/"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -733,7 +734,8 @@ export default function ScenarioPlanning() {
             </TabsContent>
 
             <TabsContent value="mortality" className="space-y-4">
-              <div className="flex justify-end items-center">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Mortality Models</h3>
                 <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/mortality-models/"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -805,73 +807,7 @@ export default function ScenarioPlanning() {
 
 
 
-            <TabsContent value="mortality" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Mortality Models</h3>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Mortality Model
-                </Button>
-              </div>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                {mortalityModels?.results?.map((model: any) => (
-                  <Card key={model.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            <Activity className="h-5 w-5" />
-                            {model.name}
-                          </CardTitle>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {model.frequency || "Daily"} frequency • {model.description || "Mortality model"}
-                          </p>
-                        </div>
-                        <Badge variant="outline">Mortality</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                        <div>
-                          <p className="text-muted-foreground">Base Rate</p>
-                          <p className="font-medium">{model.baseRate || "0.1"}%</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Frequency</p>
-                          <p className="font-medium">{model.frequency || "Daily"}</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          Edit Model
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Copy className="h-4 w-4 mr-2" />
-                          Duplicate
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                
-                {(!mortalityModels?.results || mortalityModels.results.length === 0) && (
-                  <Card className="md:col-span-2">
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <Activity className="h-12 w-12 text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No mortality models found</h3>
-                      <p className="text-muted-foreground text-center mb-4">
-                        Create mortality models to define survival rates for different growth stages
-                      </p>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Mortality Model
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </TabsContent>
+
           </Tabs>
         </TabsContent>
 
