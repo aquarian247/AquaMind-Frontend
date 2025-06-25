@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   LineChart, 
   TrendingUp, 
@@ -15,8 +17,17 @@ import {
   Target,
   Play,
   Copy,
-  Plus
+  Plus,
+  Search,
+  Filter,
+  MoreHorizontal,
+  Edit,
+  Trash2
 } from "lucide-react";
+import { ScenarioCreationDialog } from "@/components/scenario/scenario-creation-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ScenarioPlanningKPIs {
   totalActiveScenarios: number;
@@ -62,6 +73,10 @@ interface Scenario {
 
 export default function ScenarioPlanning() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch KPIs
   const { data: kpis } = useQuery<ScenarioPlanningKPIs>({
@@ -78,10 +93,113 @@ export default function ScenarioPlanning() {
     queryKey: ["/api/v1/scenario-planning/tgc-models/"],
   });
 
-  // Fetch Scenarios
-  const { data: scenarios } = useQuery<{results: Scenario[]}>({
-    queryKey: ["/api/v1/scenario-planning/scenarios/"],
+  // Fetch FCR Models
+  const { data: fcrModels } = useQuery<{results: any[]}>({
+    queryKey: ["/api/v1/scenario-planning/fcr-models/"],
   });
+
+  // Fetch Mortality Models
+  const { data: mortalityModels } = useQuery<{results: any[]}>({
+    queryKey: ["/api/v1/scenario-planning/mortality-models/"],
+  });
+
+  // Fetch Biological Constraints
+  const { data: biologicalConstraints } = useQuery<{results: any[]}>({
+    queryKey: ["/api/v1/scenario-planning/biological-constraints/"],
+  });
+
+  // Fetch Scenarios with filtering
+  const { data: scenarios, isLoading: scenariosLoading } = useQuery<{results: Scenario[]}>({
+    queryKey: ["/api/v1/scenario-planning/scenarios/", { search: searchTerm, status: statusFilter }],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (searchTerm) params.append('search', searchTerm);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      return fetch(`/api/v1/scenario-planning/scenarios/?${params}`).then(res => res.json());
+    }
+  });
+
+  // Delete scenario mutation
+  const deleteScenarioMutation = useMutation({
+    mutationFn: async (scenarioId: number) => {
+      return apiRequest(`/api/v1/scenario-planning/scenarios/${scenarioId}/`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/dashboard/kpis/"] });
+      toast({
+        title: "Scenario Deleted",
+        description: "The scenario has been deleted successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete scenario. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Duplicate scenario mutation
+  const duplicateScenarioMutation = useMutation({
+    mutationFn: async ({ scenarioId, name }: { scenarioId: number; name: string }) => {
+      return apiRequest(`/api/v1/scenario-planning/scenarios/${scenarioId}/duplicate/`, {
+        method: "POST",
+        body: JSON.stringify({ name }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
+      toast({
+        title: "Scenario Duplicated",
+        description: "The scenario has been duplicated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to duplicate scenario. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Run projection mutation
+  const runProjectionMutation = useMutation({
+    mutationFn: async (scenarioId: number) => {
+      return apiRequest(`/api/v1/scenario-planning/scenarios/${scenarioId}/run-projection/`, {
+        method: "POST",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
+      toast({
+        title: "Projection Started",
+        description: "The scenario projection has been started.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to start projection. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const filteredScenarios = scenarios?.results?.filter(scenario => {
+    const matchesSearch = !searchTerm || 
+      scenario.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      scenario.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      scenario.genotype.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || scenario.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  }) || [];
 
   return (
     <div className="space-y-6">
@@ -93,10 +211,12 @@ export default function ScenarioPlanning() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Scenario
-          </Button>
+          <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              New Scenario
+            </Button>
+          </ScenarioCreationDialog>
         </div>
       </div>
 
@@ -215,69 +335,184 @@ export default function ScenarioPlanning() {
         </TabsContent>
 
         <TabsContent value="scenarios" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <h2 className="text-2xl font-bold">Scenarios</h2>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Scenario
-            </Button>
+            <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Scenario
+              </Button>
+            </ScenarioCreationDialog>
           </div>
-          
-          <div className="grid gap-4">
-            {scenarios?.results?.map((scenario) => (
-              <Card key={scenario.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>{scenario.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {scenario.description}
-                      </p>
-                    </div>
-                    <Badge variant={scenario.status === 'completed' ? 'default' : 'secondary'}>
-                      {scenario.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Duration</p>
-                      <p className="font-medium">{scenario.durationDays} days</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Initial Count</p>
-                      <p className="font-medium">{scenario.initialCount.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Initial Weight</p>
-                      <p className="font-medium">{scenario.initialWeight}g</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Genotype</p>
-                      <p className="font-medium">{scenario.genotype}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button size="sm" variant="outline">
-                      <LineChart className="h-4 w-4 mr-2" />
-                      View Results
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Duplicate
-                    </Button>
-                    {scenario.status === 'draft' && (
-                      <Button size="sm">
-                        <Play className="h-4 w-4 mr-2" />
-                        Run Projection
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+          {/* Search and Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search scenarios by name, description, or genotype..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="running">Running</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          {/* Scenarios Grid */}
+          {scenariosLoading ? (
+            <div className="grid gap-4">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-6 bg-muted rounded w-1/3"></div>
+                    <div className="h-4 bg-muted rounded w-2/3 mt-2"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[1, 2, 3, 4].map((j) => (
+                        <div key={j} className="space-y-2">
+                          <div className="h-3 bg-muted rounded w-1/2"></div>
+                          <div className="h-4 bg-muted rounded w-3/4"></div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : filteredScenarios.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Target className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium mb-2">No scenarios found</h3>
+                <p className="text-muted-foreground text-center mb-4">
+                  {searchTerm || statusFilter !== 'all' 
+                    ? "Try adjusting your search or filter criteria"
+                    : "Create your first scenario to get started with growth projections"
+                  }
+                </p>
+                <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Scenario
+                  </Button>
+                </ScenarioCreationDialog>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {filteredScenarios.map((scenario) => (
+                <Card key={scenario.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <CardTitle className="flex items-center gap-2">
+                          {scenario.name}
+                          <Badge variant={
+                            scenario.status === 'completed' ? 'default' : 
+                            scenario.status === 'running' ? 'secondary' :
+                            scenario.status === 'failed' ? 'destructive' : 'outline'
+                          }>
+                            {scenario.status}
+                          </Badge>
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {scenario.description}
+                        </p>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Scenario
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => duplicateScenarioMutation.mutate({ 
+                              scenarioId: scenario.id, 
+                              name: `${scenario.name} (Copy)` 
+                            })}
+                            disabled={duplicateScenarioMutation.isPending}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => deleteScenarioMutation.mutate(scenario.id)}
+                            disabled={deleteScenarioMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
+                      <div>
+                        <p className="text-muted-foreground">Duration</p>
+                        <p className="font-medium">{scenario.durationDays} days</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Initial Count</p>
+                        <p className="font-medium">{scenario.initialCount.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Initial Weight</p>
+                        <p className="font-medium">{scenario.initialWeight}g</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Genotype</p>
+                        <p className="font-medium">{scenario.genotype}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <LineChart className="h-4 w-4 mr-2" />
+                          View Results
+                        </Button>
+                        {scenario.status === 'draft' && (
+                          <Button 
+                            size="sm"
+                            onClick={() => runProjectionMutation.mutate(scenario.id)}
+                            disabled={runProjectionMutation.isPending}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            {runProjectionMutation.isPending ? "Starting..." : "Run Projection"}
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="text-xs text-muted-foreground">
+                        Created {new Date(scenario.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="models" className="space-y-4">
@@ -288,52 +523,223 @@ export default function ScenarioPlanning() {
               Create Model
             </Button>
           </div>
-          
-          <div className="grid gap-4 md:grid-cols-2">
-            {tgcModels?.results?.map((model) => (
-              <Card key={model.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Brain className="h-5 w-5" />
-                        {model.name}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {model.location} • {model.releasePeriod}
+
+          {/* Model Type Tabs */}
+          <Tabs defaultValue="tgc" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="tgc">TGC Models</TabsTrigger>
+              <TabsTrigger value="fcr">FCR Models</TabsTrigger>
+              <TabsTrigger value="mortality">Mortality Models</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="tgc" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Thermal Growth Coefficient Models</h3>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New TGC Model
+                </Button>
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                {tgcModels?.results?.map((model) => (
+                  <Card key={model.id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <Brain className="h-5 w-5" />
+                            {model.name}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {model.location} • {model.releasePeriod}
+                          </p>
+                        </div>
+                        <Badge variant="outline">TGC</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                        <div>
+                          <p className="text-muted-foreground">TGC Value</p>
+                          <p className="font-medium">{model.tgcValue}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Exponent N</p>
+                          <p className="font-medium">{model.exponentN}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Exponent M</p>
+                          <p className="font-medium">{model.exponentM}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          Edit Model
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicate
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {(!tgcModels?.results || tgcModels.results.length === 0) && (
+                  <Card className="md:col-span-2">
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <Brain className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No TGC models found</h3>
+                      <p className="text-muted-foreground text-center mb-4">
+                        Create your first TGC model to define growth parameters for scenarios
                       </p>
-                    </div>
-                    <Badge variant="outline">TGC</Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">TGC Value</p>
-                      <p className="font-medium">{model.tgcValue}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Exponent N</p>
-                      <p className="font-medium">{model.exponentN}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Exponent M</p>
-                      <p className="font-medium">{model.exponentM}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button size="sm" variant="outline">
-                      Edit Model
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Copy className="h-4 w-4 mr-2" />
-                      Duplicate
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create TGC Model
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="fcr" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Feed Conversion Ratio Models</h3>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New FCR Model
+                </Button>
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                {fcrModels?.results?.map((model: any) => (
+                  <Card key={model.id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <Calculator className="h-5 w-5" />
+                            {model.name}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {model.description || "Feed conversion model"}
+                          </p>
+                        </div>
+                        <Badge variant="outline">FCR</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                        <div>
+                          <p className="text-muted-foreground">Base FCR</p>
+                          <p className="font-medium">{model.baseFcr || "1.2"}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Stages</p>
+                          <p className="font-medium">{model.stages?.length || "3"} stages</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          Edit Model
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicate
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {(!fcrModels?.results || fcrModels.results.length === 0) && (
+                  <Card className="md:col-span-2">
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <Calculator className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No FCR models found</h3>
+                      <p className="text-muted-foreground text-center mb-4">
+                        Create feed conversion models to define feeding efficiency parameters
+                      </p>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create FCR Model
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="mortality" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">Mortality Models</h3>
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Mortality Model
+                </Button>
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                {mortalityModels?.results?.map((model: any) => (
+                  <Card key={model.id}>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="flex items-center gap-2">
+                            <Activity className="h-5 w-5" />
+                            {model.name}
+                          </CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {model.frequency || "Daily"} frequency • {model.description || "Mortality model"}
+                          </p>
+                        </div>
+                        <Badge variant="outline">Mortality</Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                        <div>
+                          <p className="text-muted-foreground">Base Rate</p>
+                          <p className="font-medium">{model.baseRate || "0.1"}%</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Frequency</p>
+                          <p className="font-medium">{model.frequency || "Daily"}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          Edit Model
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Copy className="h-4 w-4 mr-2" />
+                          Duplicate
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                {(!mortalityModels?.results || mortalityModels.results.length === 0) && (
+                  <Card className="md:col-span-2">
+                    <CardContent className="flex flex-col items-center justify-center py-12">
+                      <Activity className="h-12 w-12 text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No mortality models found</h3>
+                      <p className="text-muted-foreground text-center mb-4">
+                        Create mortality models to define survival rates for different growth stages
+                      </p>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Mortality Model
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="temperature" className="space-y-4">
@@ -392,44 +798,119 @@ export default function ScenarioPlanning() {
             </Button>
           </div>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Standard Growth Constraints</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Standard biological limits for Atlantic salmon growth stages
-              </p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Fry Stage</p>
-                    <p className="font-medium">0.1 - 5g</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Standard Growth Constraints</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Standard biological limits for Atlantic salmon growth stages
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Fry Stage</p>
+                      <p className="font-medium">0.1 - 5g</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Parr Stage</p>
+                      <p className="font-medium">5 - 50g</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Smolt Stage</p>
+                      <p className="font-medium">50 - 200g</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Adult Stage</p>
+                      <p className="font-medium">200g+</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Parr Stage</p>
-                    <p className="font-medium">5 - 50g</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Smolt Stage</p>
-                    <p className="font-medium">50 - 200g</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Adult Stage</p>
-                    <p className="font-medium">200g+</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline">
+                      Edit Constraints
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      View Details
+                    </Button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline">
-                    Edit Constraints
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    View Details
-                  </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Environmental Constraints</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Temperature and environmental parameter limits
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Optimal Temperature</p>
+                      <p className="font-medium">8 - 14°C</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Critical Temperature</p>
+                      <p className="font-medium">4 - 18°C</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Oxygen Minimum</p>
+                      <p className="font-medium">6 mg/L</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">pH Range</p>
+                      <p className="font-medium">6.0 - 8.5</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline">
+                      Configure Limits
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      Set Alerts
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Active Constraints */}
+          {biologicalConstraints?.results && biologicalConstraints.results.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Biological Constraints</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Currently configured constraints for scenario validation
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {biologicalConstraints.results.map((constraint: any, index: number) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{constraint.name || `Constraint ${index + 1}`}</p>
+                        <p className="text-sm text-muted-foreground">{constraint.description || "Custom biological constraint"}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -64,7 +64,7 @@ const navigationItems = [
     path: "/inventory",
   },
   {
-    id: 10,
+    id: 11,
     label: "Analytics",
     icon: "fas fa-chart-line",
     path: "/analytics",
