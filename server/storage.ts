@@ -339,11 +339,16 @@ export class MemStorage implements IStorage {
   private tgcModels: Map<number, TgcModel> = new Map();
   private tgcStageOverrides: Map<number, TgcStageOverride> = new Map();
   private fcrModels: Map<number, FcrModel> = new Map();
+  private fcrStages: Map<number, FcrStage> = new Map();
   private fcrModelStages: Map<number, FcrModelStage> = new Map();
   private fcrWeightOverrides: Map<number, FcrWeightOverride> = new Map();
   private mortalityModels: Map<number, MortalityModel> = new Map();
   private mortalityStageOverrides: Map<number, MortalityStageOverride> = new Map();
   private biologicalConstraints: Map<number, BiologicalConstraint> = new Map();
+  private biologicalConstraintStages: Map<number, BiologicalConstraintStage> = new Map();
+  private scenarios: Map<number, Scenario> = new Map();
+  private scenarioModelChanges: Map<number, ScenarioModelChange> = new Map();
+  private scenarioProjections: Map<number, ScenarioProjection> = new Map();
   private biologicalConstraintStages: Map<number, BiologicalConstraintStage> = new Map();
   private scenarios: Map<number, Scenario> = new Map();
   private scenarioModelChanges: Map<number, ScenarioModelChange> = new Map();
