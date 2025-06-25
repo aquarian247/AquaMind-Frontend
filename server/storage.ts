@@ -1306,20 +1306,20 @@ export class MemStorage implements IStorage {
     // Get first user for scenario creation
     const firstUser = Array.from(this.users.values())[0];
 
-    // Scenarios
+    // Realistic sea cage scenarios based on actual salmon lifecycle (starting at smolt transfer)
     const scenario1: Scenario = {
       id: this.currentId++,
-      name: "12-Month Growth Projection",
-      description: "Standard 12-month growth scenario for spring release Atlantic salmon",
+      name: "North Atlantic Sea Cage - Spring Cohort",
+      description: "18-month sea cage production cycle with Norwegian genetics, starting at smolt transfer (350g)",
       startDate: "2024-04-01",
-      durationDays: 365,
-      initialCount: 100000,
-      initialWeight: "15.000",
-      genotype: "AquaGen Atlantic",
-      supplier: "AquaGen AS",
-      tgcModelId: tgcModel1.id,
-      fcrModelId: fcrModel1.id,
-      mortalityModelId: mortalityModel1.id,
+      durationDays: 540,
+      initialCount: 2800000, // Typical survivor count at smolt transfer from 3M eggs
+      initialWeight: "350.000", // Post-smolt weight at sea transfer
+      genotype: "Norwegian Atlantic",
+      supplier: "AquaGen Norway",
+      tgcModelId: tgcModel1.id, // High-performance TGC
+      fcrModelId: fcrModel1.id, // Optimal FCR
+      mortalityModelId: mortalityModel1.id, // Low mortality
       batchId: null,
       biologicalConstraintsId: biologicalConstraint1.id,
       status: "completed",
@@ -1331,43 +1331,42 @@ export class MemStorage implements IStorage {
 
     const scenario2: Scenario = {
       id: this.currentId++,
-      name: "Premium Feed Scenario",
-      description: "Comparison scenario using premium feed with enhanced FCR",
-      startDate: "2024-04-01",
-      durationDays: 365,
-      initialCount: 100000,
-      initialWeight: "15.000",
-      genotype: "AquaGen Atlantic",
-      supplier: "AquaGen AS",
-      tgcModelId: tgcModel2.id,
-      fcrModelId: fcrModel2.id,
-      mortalityModelId: mortalityModel2.id,
+      name: "Scottish Highland Sea Cage - Premium Production",
+      description: "Premium sea cage production in Scottish highland lochs from smolt transfer (380g)",
+      startDate: "2024-06-01",
+      durationDays: 480,
+      initialCount: 2500000, // Smaller starting population for premium quality
+      initialWeight: "380.000", // Larger smolt size for premium production
+      genotype: "Scottish Select",
+      supplier: "Highland Aqua Ltd",
+      tgcModelId: tgcModel2.id, // Standard TGC
+      fcrModelId: fcrModel2.id, // Standard FCR
+      mortalityModelId: mortalityModel2.id, // Standard mortality
       batchId: null,
       biologicalConstraintsId: biologicalConstraint1.id,
-      status: "draft",
+      status: "running",
       createdBy: firstUser.id,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
     this.scenarios.set(scenario2.id, scenario2);
 
-    // Add more scenarios for demonstration
     const scenario3: Scenario = {
       id: this.currentId++,
-      name: "Scottish Site Comparison",
-      description: "Scenario modeling growth at Scottish Highlands location with cooler temperatures",
-      startDate: "2024-03-15",
-      durationDays: 420,
-      initialCount: 95000,
-      initialWeight: "12.500",
-      genotype: "SalmoBreed Plus",
-      supplier: "Scottish Salmon Company",
-      tgcModelId: tgcModel3.id,
-      fcrModelId: fcrModel1.id,
-      mortalityModelId: mortalityModel1.id,
+      name: "Faroe Islands Extended Growth - High Density",
+      description: "Extended 20-month sea cage production optimized for maximum harvest weight",
+      startDate: "2024-08-01",
+      durationDays: 600,
+      initialCount: 3200000, // Larger starting population for intensive production
+      initialWeight: "300.000", // Smaller smolt size for extended growth period
+      genotype: "Faroese Superior",
+      supplier: "Nordic Genetics",
+      tgcModelId: tgcModel3.id, // Efficient TGC
+      fcrModelId: fcrModel3.id, // Premium FCR
+      mortalityModelId: mortalityModel1.id, // Low mortality
       batchId: null,
       biologicalConstraintsId: biologicalConstraint1.id,
-      status: "active",
+      status: "draft",
       createdBy: firstUser.id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -1376,17 +1375,39 @@ export class MemStorage implements IStorage {
 
     const scenario4: Scenario = {
       id: this.currentId++,
-      name: "Eco-Efficient Production",
-      description: "Sustainable production model with eco-efficient feed and reduced environmental impact",
-      startDate: "2024-05-01",
-      durationDays: 390,
-      initialCount: 120000,
-      initialWeight: "18.000",
-      genotype: "AquaGen Atlantic",
-      supplier: "AquaGen AS",
-      tgcModelId: tgcModel4.id,
-      fcrModelId: fcrModel3.id,
-      mortalityModelId: mortalityModel2.id,
+      name: "Arctic Cold Water Trial - Research Project", 
+      description: "Research trial in low-temperature Arctic environment, challenging conditions",
+      startDate: "2024-02-01",
+      durationDays: 420,
+      initialCount: 1800000, // Research scale population
+      initialWeight: "320.000", // Standard smolt size
+      genotype: "Cold-Adapted Strain",
+      supplier: "Arctic Breeding Co",
+      tgcModelId: tgcModel4.id, // Cold-water adapted TGC
+      fcrModelId: fcrModel1.id, // Standard FCR
+      mortalityModelId: mortalityModel1.id, // Low mortality expected
+      batchId: null,
+      biologicalConstraintsId: biologicalConstraint1.id,
+      status: "failed",
+      createdBy: firstUser.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scenarios.set(scenario4.id, scenario4);
+
+    const scenario5: Scenario = {
+      id: this.currentId++,
+      name: "Organic Certified Sea Cage - Sustainable Production",
+      description: "Lower density organic sea cage farming with natural feed, extended growth period",
+      startDate: "2024-01-01",
+      durationDays: 650,
+      initialCount: 2000000, // Lower density for organic standards
+      initialWeight: "400.000", // Larger smolt for organic production quality
+      genotype: "Heritage Nordic",
+      supplier: "Sustainable Seas AS",
+      tgcModelId: tgcModel1.id, // High-performance TGC
+      fcrModelId: fcrModel2.id, // Standard FCR (organic feed)
+      mortalityModelId: mortalityModel2.id, // Standard mortality
       batchId: null,
       biologicalConstraintsId: biologicalConstraint1.id,
       status: "completed",
@@ -1394,39 +1415,10 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.scenarios.set(scenario4.id, scenario4);
-
-    // Get a batch for "from batch" scenario
-    const firstBatch = Array.from(this.batches.values())[0];
-    let scenario5: Scenario | null = null;
-    if (firstBatch) {
-      scenario5 = {
-        id: this.currentId++,
-        name: `Batch ${firstBatch.batchNumber} Growth Projection`,
-        description: "Real batch scenario based on current production data",
-        startDate: "2024-06-01",
-        durationDays: 300,
-        initialCount: firstBatch.initialCount || 85000,
-        initialWeight: firstBatch.averageWeight?.toString() || "25.000",
-        genotype: "Current Production Stock",
-        supplier: "Internal Production",
-        tgcModelId: tgcModel1.id,
-        fcrModelId: fcrModel2.id,
-        mortalityModelId: mortalityModel1.id,
-        batchId: firstBatch.id,
-        biologicalConstraintsId: biologicalConstraint1.id,
-        status: "draft",
-        createdBy: firstUser.id,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      this.scenarios.set(scenario5.id, scenario5);
-    }
+    this.scenarios.set(scenario5.id, scenario5);
 
     // Generate realistic projections for all scenarios
-    const scenariosToProject = scenario5 ? 
-      [scenario1, scenario2, scenario3, scenario4, scenario5] : 
-      [scenario1, scenario2, scenario3, scenario4];
+    const scenariosToProject = [scenario1, scenario2, scenario3, scenario4, scenario5];
     this.generateScenarioProjections(scenariosToProject);
   }
 
@@ -1462,21 +1454,25 @@ export class MemStorage implements IStorage {
           parseFloat(tempReadings[tempIndex].temperature) : 
           8 + Math.sin((week / 52) * 2 * Math.PI) * 4; // Seasonal fallback
         
-        // TGC-based growth calculation
-        // TGC = (W2^(1/3) - W1^(1/3)) / (T * days)
-        // Rearranged: W2 = (W1^(1/3) + TGC * T * days)^3
-        const days = 7;
-        const w1CubeRoot = Math.pow(currentWeight, 1/3);
-        const growthIncrement = tgcValue * temperature * days;
-        const newWeight = Math.pow(w1CubeRoot + growthIncrement, 3);
+        // Realistic salmon sea cage TGC calculation
+        if (week > 0) {
+          const tempAdjustment = Math.max(0.3, Math.min(1.2, temperature / 10));
+          const tgcCoeff = tgcValue * tempAdjustment;
+          const growthPotential = Math.max(0.5, 1.5 - (currentWeight / 4000));
+          const weeklyGrowthRate = tgcCoeff * Math.pow(currentWeight / 1000, 0.3) * growthPotential * 25;
+          currentWeight = Math.min(currentWeight + weeklyGrowthRate, 7500); // Cap at 7.5kg
+        }
         
-        // FCR-based feed calculation
-        const weightGain = newWeight - currentWeight;
-        const biomassGain = (weightGain * currentCount) / 1000; // kg
+        // Weekly mortality for sea cage
+        let weeklyMortalityRate = parseFloat(mortalityModel.weeklyRate) / 100;
+        if (week < 8) weeklyMortalityRate *= 1.5;
+        if (week > 40) weeklyMortalityRate *= 0.7;
+        currentCount = Math.floor(currentCount * (1 - weeklyMortalityRate));
         
-        // Get FCR for current weight stage
-        const fcr = this.getFcrForWeight(currentWeight);
-        const feedRequired = biomassGain * fcr;
+        // Feed calculation for sea cage
+        const currentBiomass = (currentWeight * currentCount) / 1000000;
+        const feedingRate = this.calculateFeedingRate(currentWeight, temperature);
+        const weeklyFeedConsumption = currentBiomass * feedingRate * 7 * parseFloat(fcrModel.ratio);
         totalFeedConsumed += feedRequired;
         
         // Mortality calculation (simplified based on stage)

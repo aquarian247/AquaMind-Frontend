@@ -205,30 +205,30 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
-                    Projection Summary
+                    Sea Cage Production Summary
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div>
-                      <p className="text-muted-foreground">Final Weight</p>
-                      <p className="text-xl font-bold">{summary?.finalWeight?.toFixed(1) || 0}g</p>
+                      <p className="text-muted-foreground">Harvest Weight</p>
+                      <p className="text-xl font-bold">{summary?.finalWeight ? (summary.finalWeight / 1000).toFixed(1) : 0}kg</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Survival Count</p>
-                      <p className="text-xl font-bold">{summary?.finalCount?.toLocaleString() || 0}</p>
+                      <p className="text-muted-foreground">Harvest Count</p>
+                      <p className="text-xl font-bold">{summary?.finalCount ? (summary.finalCount / 1000000).toFixed(1) : 0}M</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Final Biomass</p>
-                      <p className="text-xl font-bold">{((summary?.totalBiomass || 0) / 1000).toFixed(1)}t</p>
+                      <p className="text-muted-foreground">Total Biomass</p>
+                      <p className="text-xl font-bold">{((summary?.totalBiomass || 0) / 1000).toFixed(0)}t</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Final FCR</p>
                       <p className="text-xl font-bold">{summary?.avgFcr?.toFixed(2) || 0}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Total Feed</p>
-                      <p className="text-xl font-bold">{summary?.totalFeed?.toFixed(1) || 0}t</p>
+                      <p className="text-muted-foreground">Feed Consumption</p>
+                      <p className="text-xl font-bold">{summary?.totalFeed?.toFixed(0) || 0}t</p>
                     </div>
                   </div>
                 </CardContent>
@@ -427,10 +427,10 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
                       <div className="space-y-2">
                         <h4 className="font-medium">Key Insights</h4>
                         <ul className="space-y-1 text-sm text-muted-foreground">
-                          <li>• Growth rate is {summary ? ((summary.finalWeight / parseFloat(scenario.initialWeight)) * 100).toFixed(0) : 0}x initial weight over {scenario.durationDays} days</li>
-                          <li>• Feed conversion efficiency of {summary?.avgFcr?.toFixed(2) || 0} is within optimal range</li>
-                          <li>• Mortality rate of {summary ? ((summary.totalMortality / scenario.initialCount) * 100).toFixed(1) : 0}% requires attention</li>
-                          <li>• Total biomass production of {summary ? (summary.totalBiomass / 1000).toFixed(1) : 0} tonnes</li>
+                          <li>• Growth from smolt transfer ({parseFloat(scenario.initialWeight)/1000}kg) to harvest weight ({summary ? (summary.finalWeight / 1000).toFixed(1) : 0}kg)</li>
+                          <li>• Feed conversion ratio of {summary?.avgFcr?.toFixed(2) || 0} demonstrates {(summary?.avgFcr || 0) < 1.3 ? 'excellent' : (summary?.avgFcr || 0) < 1.5 ? 'good' : 'acceptable'} efficiency</li>
+                          <li>• Sea cage survival rate of {summary ? (((scenario.initialCount - summary.totalMortality) / scenario.initialCount) * 100).toFixed(1) : 0}% over {Math.round(scenario.durationDays/30)} months</li>
+                          <li>• Total feed consumption of {summary?.totalFeed?.toFixed(0) || 0} tonnes for {summary ? (summary.totalBiomass / 1000).toFixed(0) : 0}t biomass production</li>
                         </ul>
                       </div>
                     </div>

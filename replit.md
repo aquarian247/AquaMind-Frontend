@@ -120,14 +120,14 @@ Current endpoints follow `/api/` pattern with planned migration to Django-style 
   - ✓ Fixed JSON API communication ensuring all endpoints return proper JSON responses
   - ✓ Cleaned up duplicate UI elements in Models tab for improved user experience
   - ✓ Resolved duplicate model cards issue and restored proper section headers for FCR and mortality models
-- June 25, 2025. **Scenario Planning Module Complete with Rich Sample Data:**
-  - ✓ Added comprehensive sample data: 4 TGC models, 3 FCR models, 3 mortality models, 5 realistic scenarios
-  - ✓ Implemented temperature data view page with interactive charts and detailed statistics
-  - ✓ Fixed all data initialization issues and API endpoint responses
-  - ✓ Generated realistic projection data with growth curves and feed consumption charts
-  - ✓ Resolved setLocation navigation error for seamless user experience
-  - ✓ Fixed scenario detail dialog data structure errors (finalWeight, totalBiomass) with proper API integration
-  - ✓ Module ready for production deployment with full demonstration capabilities
+- June 25, 2025. **Scenario Planning Module Complete with Realistic Salmon Aquaculture Data:**
+  - ✓ Updated all scenarios to reflect realistic sea cage production (smolt transfer to harvest)
+  - ✓ Implemented proper salmon lifecycle: 2-3M smolt population, 300-400g start weight, 5-7kg harvest weight
+  - ✓ Fixed TGC-based growth calculations with temperature profiles and realistic sea cage conditions
+  - ✓ Added feed consumption tracking with dynamic FCR calculations based on fish size and temperature
+  - ✓ Enhanced projection charts with proper aquaculture metrics and feed consumption cards
+  - ✓ All scenarios now properly linked to existing TGC, FCR, and mortality models as per PRS requirements
+  - ✓ Ready for deployment with professional-grade salmon aquaculture demonstration data
 
 ## User Preferences
 
