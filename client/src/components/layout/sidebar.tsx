@@ -70,7 +70,7 @@ const navigationItems = [
     path: "/analytics",
   },
   {
-    id: 10,
+    id: 12,
     label: "Reports",
     icon: "fas fa-file-alt",
     path: "/reports",

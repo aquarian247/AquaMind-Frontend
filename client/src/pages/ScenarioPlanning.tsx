@@ -25,6 +25,7 @@ import {
   Trash2
 } from "lucide-react";
 import { ScenarioCreationDialog } from "@/components/scenario/scenario-creation-dialog";
+import { ScenarioDetailDialog } from "@/components/scenario/scenario-detail-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -488,10 +489,12 @@ export default function ScenarioPlanning() {
                     
                     <div className="flex items-center justify-between">
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline">
-                          <LineChart className="h-4 w-4 mr-2" />
-                          View Results
-                        </Button>
+                        <ScenarioDetailDialog scenario={scenario}>
+                          <Button size="sm" variant="outline">
+                            <LineChart className="h-4 w-4 mr-2" />
+                            View Results
+                          </Button>
+                        </ScenarioDetailDialog>
                         {scenario.status === 'draft' && (
                           <Button 
                             size="sm"

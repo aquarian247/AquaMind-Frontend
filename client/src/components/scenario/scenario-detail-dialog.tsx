@@ -1,0 +1,429 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScenarioProjectionsChart } from "./scenario-projections-chart";
+import { 
+  LineChart, 
+  Settings, 
+  Play, 
+  Copy, 
+  Edit,
+  Calendar,
+  Fish,
+  Scale,
+  TrendingUp,
+  Activity,
+  Thermometer
+} from "lucide-react";
+import { format } from "date-fns";
+
+interface Scenario {
+  id: number;
+  name: string;
+  description: string;
+  status: "draft" | "running" | "completed" | "failed";
+  durationDays: number;
+  initialCount: number;
+  initialWeight: string;
+  genotype: string;
+  supplier: string;
+  startDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ScenarioDetailDialogProps {
+  scenario: Scenario;
+  children: React.ReactNode;
+}
+
+interface ProjectionData {
+  projections: Array<{
+    day: number;
+    week: number;
+    weight: number;
+    count: number;
+    mortality: number;
+    fcr: number;
+    totalBiomass: number;
+    temperature: number;
+  }>;
+  summary: {
+    finalWeight: number;
+    finalCount: number;
+    totalMortality: number;
+    avgFcr: number;
+    totalBiomass: number;
+    duration: number;
+  };
+}
+
+export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialogProps) {
+  const [open, setOpen] = useState(false);
+
+  // Fetch scenario projections when dialog opens
+  const { data: projectionData, isLoading: projectionsLoading } = useQuery<ProjectionData>({
+    queryKey: ["/api/v1/scenario-planning/scenarios/", scenario.id, "projections"],
+    queryFn: () => fetch(`/api/v1/scenario-planning/scenarios/${scenario.id}/projections/`).then(res => res.json()),
+    enabled: open,
+  });
+
+  // Fetch scenario configuration details
+  const { data: configData, isLoading: configLoading } = useQuery<any>({
+    queryKey: ["/api/v1/scenario-planning/scenarios/", scenario.id, "config"],
+    queryFn: () => fetch(`/api/v1/scenario-planning/scenarios/${scenario.id}/configuration/`).then(res => res.json()),
+    enabled: open,
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'default';
+      case 'running': return 'secondary';
+      case 'failed': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <TrendingUp className="h-4 w-4" />;
+      case 'running': return <Activity className="h-4 w-4" />;
+      case 'failed': return <Activity className="h-4 w-4" />;
+      default: return <Edit className="h-4 w-4" />;
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <LineChart className="h-5 w-5" />
+            {scenario.name}
+            <Badge variant={getStatusColor(scenario.status)} className="flex items-center gap-1">
+              {getStatusIcon(scenario.status)}
+              {scenario.status}
+            </Badge>
+          </DialogTitle>
+          <DialogDescription>
+            {scenario.description}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="projections">Projections</TabsTrigger>
+            <TabsTrigger value="configuration">Configuration</TabsTrigger>
+            <TabsTrigger value="analysis">Analysis</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Basic Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Scenario Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Duration</p>
+                      <p className="font-medium">{scenario.durationDays} days</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Start Date</p>
+                      <p className="font-medium">{format(new Date(scenario.startDate), "PPP")}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Created</p>
+                      <p className="font-medium">{format(new Date(scenario.createdAt), "PPP")}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Updated</p>
+                      <p className="font-medium">{format(new Date(scenario.updatedAt), "PPP")}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Initial Conditions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Fish className="h-4 w-4" />
+                    Initial Conditions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Fish Count</p>
+                      <p className="font-medium">{scenario.initialCount.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Initial Weight</p>
+                      <p className="font-medium">{scenario.initialWeight}g</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Genotype</p>
+                      <p className="font-medium">{scenario.genotype}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Supplier</p>
+                      <p className="font-medium">{scenario.supplier}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Results Summary */}
+            {projectionData && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" />
+                    Projection Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Final Weight</p>
+                      <p className="text-xl font-bold">{projectionData.summary.finalWeight.toFixed(1)}g</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Survival Count</p>
+                      <p className="text-xl font-bold">{projectionData.summary.finalCount.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Total Mortality</p>
+                      <p className="text-xl font-bold">{projectionData.summary.totalMortality.toFixed(1)}%</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Average FCR</p>
+                      <p className="text-xl font-bold">{projectionData.summary.avgFcr.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Total Biomass</p>
+                      <p className="text-xl font-bold">{(projectionData.summary.totalBiomass / 1000).toFixed(1)}t</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  {scenario.status === 'draft' && (
+                    <Button>
+                      <Play className="h-4 w-4 mr-2" />
+                      Run Projection
+                    </Button>
+                  )}
+                  <Button variant="outline">
+                    <Copy className="h-4 w-4 mr-2" />
+                    Duplicate Scenario
+                  </Button>
+                  <Button variant="outline">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Scenario
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="projections" className="space-y-4">
+            {projectionsLoading ? (
+              <Card>
+                <CardContent className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-2">Loading projections...</span>
+                </CardContent>
+              </Card>
+            ) : projectionData ? (
+              <ScenarioProjectionsChart 
+                data={projectionData.projections}
+                title={`${scenario.name} - Growth Projections`}
+                showMetrics={true}
+                highlightPeriods={[
+                  { start: 100, end: 150, label: "Smolt Transfer", color: "#3b82f6" },
+                  { start: 400, end: 450, label: "Harvest Window", color: "#10b981" }
+                ]}
+              />
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center h-64">
+                  <LineChart className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No projection data</h3>
+                  <p className="text-muted-foreground text-center">
+                    {scenario.status === 'draft' 
+                      ? "Run the scenario to generate projection data"
+                      : "Projection data is not available for this scenario"
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="configuration" className="space-y-4">
+            {configLoading ? (
+              <Card>
+                <CardContent className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  <span className="ml-2">Loading configuration...</span>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-4 w-4" />
+                      Model Configuration
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">TGC Model</p>
+                      <p className="font-medium">{configData?.tgcModel?.name || "Not configured"}</p>
+                      {configData?.tgcModel && (
+                        <p className="text-xs text-muted-foreground">
+                          TGC: {configData.tgcModel.tgcValue} | Location: {configData.tgcModel.location}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">FCR Model</p>
+                      <p className="font-medium">{configData?.fcrModel?.name || "Not configured"}</p>
+                      {configData?.fcrModel && (
+                        <p className="text-xs text-muted-foreground">
+                          Base FCR: {configData.fcrModel.baseFcr || "1.2"}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Mortality Model</p>
+                      <p className="font-medium">{configData?.mortalityModel?.name || "Not configured"}</p>
+                      {configData?.mortalityModel && (
+                        <p className="text-xs text-muted-foreground">
+                          Frequency: {configData.mortalityModel.frequency || "Daily"}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Thermometer className="h-4 w-4" />
+                      Environmental Settings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Temperature Profile</p>
+                      <p className="font-medium">{configData?.temperatureProfile?.name || "Standard Profile"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Seasonal temperature variation with optimal range 8-14°C
+                      </p>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Biological Constraints</p>
+                      <p className="font-medium">Standard Atlantic Salmon</p>
+                      <p className="text-xs text-muted-foreground">
+                        Growth stages: Fry → Parr → Smolt → Adult
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="analysis" className="space-y-4">
+            <div className="grid gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Performance Analysis</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Scenario performance compared to industry benchmarks
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {projectionData ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-4 border rounded-lg">
+                          <p className="text-2xl font-bold text-green-600">A</p>
+                          <p className="text-sm text-muted-foreground">Growth Performance</p>
+                          <p className="text-xs">Above industry average</p>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <p className="text-2xl font-bold text-blue-600">B+</p>
+                          <p className="text-sm text-muted-foreground">Feed Efficiency</p>
+                          <p className="text-xs">Good FCR performance</p>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <p className="text-2xl font-bold text-orange-600">C</p>
+                          <p className="text-sm text-muted-foreground">Survival Rate</p>
+                          <p className="text-xs">Room for improvement</p>
+                        </div>
+                        <div className="text-center p-4 border rounded-lg">
+                          <p className="text-2xl font-bold text-purple-600">A-</p>
+                          <p className="text-sm text-muted-foreground">Overall Score</p>
+                          <p className="text-xs">Strong performance</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h4 className="font-medium">Key Insights</h4>
+                        <ul className="space-y-1 text-sm text-muted-foreground">
+                          <li>• Growth rate is {((projectionData.summary.finalWeight / parseFloat(scenario.initialWeight)) * 100).toFixed(0)}x initial weight over {scenario.durationDays} days</li>
+                          <li>• Feed conversion efficiency of {projectionData.summary.avgFcr.toFixed(2)} is within optimal range</li>
+                          <li>• Mortality rate of {projectionData.summary.totalMortality.toFixed(1)}% requires attention</li>
+                          <li>• Total biomass production of {(projectionData.summary.totalBiomass / 1000).toFixed(1)} tonnes</li>
+                        </ul>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">Analysis will be available after running the scenario projection.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
