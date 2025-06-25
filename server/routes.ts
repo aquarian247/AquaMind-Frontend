@@ -2880,6 +2880,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scenario Planning API endpoints
+  app.get("/api/v1/scenario-planning/dashboard/kpis/", async (req, res) => {
+    try {
+      const scenarios = await storage.getScenarios();
+      const activeScenarios = scenarios.filter(s => s.status === 'running' || s.status === 'draft').length;
+      const inProgressScenarios = scenarios.filter(s => s.status === 'running').length;
+      const completedProjections = scenarios.filter(s => s.status === 'completed').length;
+      const avgDuration = scenarios.length > 0 ? scenarios.reduce((sum, s) => sum + s.durationDays, 0) / scenarios.length : 0;
+
+      res.json({
+        totalActiveScenarios: activeScenarios,
+        scenariosInProgress: inProgressScenarios,
+        completedProjections: completedProjections,
+        averageProjectionDuration: Math.round(avgDuration)
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch scenario KPIs" });
+    }
+  });
+
+  app.get("/api/v1/scenario-planning/temperature-profiles/", async (req, res) => {
+    try {
+      const profiles = await storage.getTemperatureProfiles();
+      res.json({
+        count: profiles.length,
+        next: null,
+        previous: null,
+        results: profiles
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch temperature profiles" });
+    }
+  });
+
+  app.post("/api/v1/scenario-planning/temperature-profiles/", async (req, res) => {
+    try {
+      const validatedData = insertTemperatureProfileSchema.parse(req.body);
+      const profile = await storage.createTemperatureProfile(validatedData);
+      res.status(201).json(profile);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid temperature profile data" });
+    }
+  });
+
+  app.get("/api/v1/scenario-planning/tgc-models/", async (req, res) => {
+    try {
+      const models = await storage.getTgcModels();
+      res.json({
+        count: models.length,
+        next: null,
+        previous: null,
+        results: models
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch TGC models" });
+    }
+  });
+
+  app.post("/api/v1/scenario-planning/tgc-models/", async (req, res) => {
+    try {
+      const validatedData = insertTgcModelSchema.parse(req.body);
+      const model = await storage.createTgcModel(validatedData);
+      res.status(201).json(model);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid TGC model data" });
+    }
+  });
+
+  app.get("/api/v1/scenario-planning/fcr-models/", async (req, res) => {
+    try {
+      const models = await storage.getFcrModels();
+      res.json({
+        count: models.length,
+        next: null,
+        previous: null,
+        results: models
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch FCR models" });
+    }
+  });
+
+  app.post("/api/v1/scenario-planning/fcr-models/", async (req, res) => {
+    try {
+      const validatedData = insertFcrModelSchema.parse(req.body);
+      const model = await storage.createFcrModel(validatedData);
+      res.status(201).json(model);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid FCR model data" });
+    }
+  });
+
+  app.get("/api/v1/scenario-planning/mortality-models/", async (req, res) => {
+    try {
+      const models = await storage.getMortalityModels();
+      res.json({
+        count: models.length,
+        next: null,
+        previous: null,
+        results: models
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch mortality models" });
+    }
+  });
+
+  app.post("/api/v1/scenario-planning/mortality-models/", async (req, res) => {
+    try {
+      const validatedData = insertMortalityModelSchema.parse(req.body);
+      const model = await storage.createMortalityModel(validatedData);
+      res.status(201).json(model);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid mortality model data" });
+    }
+  });
+
+  app.get("/api/v1/scenario-planning/biological-constraints/", async (req, res) => {
+    try {
+      const constraints = await storage.getBiologicalConstraints();
+      res.json({
+        count: constraints.length,
+        next: null,
+        previous: null,
+        results: constraints
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch biological constraints" });
+    }
+  });
+
+  app.post("/api/v1/scenario-planning/biological-constraints/", async (req, res) => {
+    try {
+      const validatedData = insertBiologicalConstraintSchema.parse(req.body);
+      const constraint = await storage.createBiologicalConstraint(validatedData);
+      res.status(201).json(constraint);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid biological constraint data" });
+    }
+  });
+
+  app.get("/api/v1/scenario-planning/scenarios/", async (req, res) => {
+    try {
+      const scenarios = await storage.getScenarios();
+      res.json({
+        count: scenarios.length,
+        next: null,
+        previous: null,
+        results: scenarios
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch scenarios" });
+    }
+  });
+
+  app.post("/api/v1/scenario-planning/scenarios/", async (req, res) => {
+    try {
+      const validatedData = insertScenarioSchema.parse(req.body);
+      const scenario = await storage.createScenario(validatedData);
+      res.status(201).json(scenario);
+    } catch (error) {
+      res.status(400).json({ error: "Invalid scenario data" });
+    }
+  });
+
+  app.delete("/api/v1/scenario-planning/scenarios/:id/", async (req, res) => {
+    try {
+      const scenarioId = parseInt(req.params.id);
+      await storage.deleteScenario(scenarioId);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete scenario" });
+    }
+  });
+
+  app.get("/api/v1/scenario-planning/stages/", async (req, res) => {
+    try {
+      const stages = await storage.getStages();
+      res.json({
+        count: stages.length,
+        next: null,
+        previous: null,
+        results: stages
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stages" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
