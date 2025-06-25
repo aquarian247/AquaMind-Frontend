@@ -349,9 +349,6 @@ export class MemStorage implements IStorage {
   private scenarios: Map<number, Scenario> = new Map();
   private scenarioModelChanges: Map<number, ScenarioModelChange> = new Map();
   private scenarioProjections: Map<number, ScenarioProjection> = new Map();
-  private biologicalConstraintStages: Map<number, BiologicalConstraintStage> = new Map();
-  private scenarios: Map<number, Scenario> = new Map();
-  private scenarioModelChanges: Map<number, ScenarioModelChange> = new Map();
   private scenarioProjections: Map<number, ScenarioProjection> = new Map();
   
   private currentId = 1;
