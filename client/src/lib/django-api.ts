@@ -1,14 +1,12 @@
 // Django API Integration Layer
 import { apiRequest } from "./queryClient";
 import { DJANGO_ENDPOINTS } from "./config";
-
-// Django API Response Types
-export interface DjangoListResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-}
+import type { 
+  DjangoListResponse, Geography, Area, Container, Sensor, Species, LifecycleStage, 
+  Batch, BatchContainerAssignment, BatchTransfer, GrowthSample, MortalityEvent,
+  Feed, FeedPurchase, FeedStock, FeedingEvent, HealthRecord, HealthAssessment,
+  LabSample, EnvironmentalReading, WeatherData
+} from "./types/django";
 
 export interface DjangoErrorResponse {
   detail?: string;
@@ -44,13 +42,13 @@ export class DjangoApiClient {
   }
 
   // Infrastructure API methods
-  async getGeographies() {
-    return this.getList(DJANGO_ENDPOINTS.GEOGRAPHIES);
+  async getGeographies(): Promise<DjangoListResponse<Geography>> {
+    return this.getList<Geography>(DJANGO_ENDPOINTS.GEOGRAPHIES);
   }
 
-  async getAreas(geographyId?: number) {
+  async getAreas(geographyId?: number): Promise<DjangoListResponse<Area>> {
     const params = geographyId ? { geography: geographyId } : {};
-    return this.getList(DJANGO_ENDPOINTS.AREAS, params);
+    return this.getList<Area>(DJANGO_ENDPOINTS.AREAS, params);
   }
 
   async getStations(geographyId?: number) {
@@ -63,58 +61,58 @@ export class DjangoApiClient {
     return this.getList(DJANGO_ENDPOINTS.HALLS, params);
   }
 
-  async getContainers(filters?: { hall?: number; area?: number; container_type?: string; active?: boolean }) {
-    return this.getList(DJANGO_ENDPOINTS.CONTAINERS, filters);
+  async getContainers(filters?: { hall?: number; area?: number; container_type?: string; active?: boolean }): Promise<DjangoListResponse<Container>> {
+    return this.getList<Container>(DJANGO_ENDPOINTS.CONTAINERS, filters);
   }
 
-  async getSensors(containerId?: number) {
+  async getSensors(containerId?: number): Promise<DjangoListResponse<Sensor>> {
     const params = containerId ? { container: containerId } : {};
-    return this.getList(DJANGO_ENDPOINTS.SENSORS, params);
+    return this.getList<Sensor>(DJANGO_ENDPOINTS.SENSORS, params);
   }
 
   // Batch Management API methods
-  async getBatches(filters?: { species?: number; lifecycle_stage?: number; status?: string }) {
-    return this.getList(DJANGO_ENDPOINTS.BATCHES, filters);
+  async getBatches(filters?: { species?: number; lifecycle_stage?: number; status?: string }): Promise<DjangoListResponse<Batch>> {
+    return this.getList<Batch>(DJANGO_ENDPOINTS.BATCHES, filters);
   }
 
-  async getBatch(id: number) {
-    return this.get(`${DJANGO_ENDPOINTS.BATCHES}${id}/`);
+  async getBatch(id: number): Promise<Batch> {
+    return this.get<Batch>(`${DJANGO_ENDPOINTS.BATCHES}${id}/`);
   }
 
-  async createBatch(data: any) {
-    return this.post(DJANGO_ENDPOINTS.BATCHES, data);
+  async createBatch(data: any): Promise<Batch> {
+    return this.post<Batch>(DJANGO_ENDPOINTS.BATCHES, data);
   }
 
-  async updateBatch(id: number, data: any) {
-    return this.patch(`${DJANGO_ENDPOINTS.BATCHES}${id}/`, data);
+  async updateBatch(id: number, data: any): Promise<Batch> {
+    return this.patch<Batch>(`${DJANGO_ENDPOINTS.BATCHES}${id}/`, data);
   }
 
-  async getSpecies() {
-    return this.getList(DJANGO_ENDPOINTS.SPECIES);
+  async getSpecies(): Promise<DjangoListResponse<Species>> {
+    return this.getList<Species>(DJANGO_ENDPOINTS.SPECIES);
   }
 
-  async getLifecycleStages() {
-    return this.getList(DJANGO_ENDPOINTS.LIFECYCLE_STAGES);
+  async getLifecycleStages(): Promise<DjangoListResponse<LifecycleStage>> {
+    return this.getList<LifecycleStage>(DJANGO_ENDPOINTS.LIFECYCLE_STAGES);
   }
 
-  async getBatchAssignments(batchId?: number) {
+  async getBatchAssignments(batchId?: number): Promise<DjangoListResponse<BatchContainerAssignment>> {
     const params = batchId ? { batch: batchId } : {};
-    return this.getList(DJANGO_ENDPOINTS.BATCH_ASSIGNMENTS, params);
+    return this.getList<BatchContainerAssignment>(DJANGO_ENDPOINTS.BATCH_ASSIGNMENTS, params);
   }
 
-  async getBatchTransfers(batchId?: number) {
+  async getBatchTransfers(batchId?: number): Promise<DjangoListResponse<BatchTransfer>> {
     const params = batchId ? { source_batch: batchId } : {};
-    return this.getList(DJANGO_ENDPOINTS.BATCH_TRANSFERS, params);
+    return this.getList<BatchTransfer>(DJANGO_ENDPOINTS.BATCH_TRANSFERS, params);
   }
 
-  async getGrowthSamples(assignmentId?: number) {
+  async getGrowthSamples(assignmentId?: number): Promise<DjangoListResponse<GrowthSample>> {
     const params = assignmentId ? { assignment: assignmentId } : {};
-    return this.getList(DJANGO_ENDPOINTS.GROWTH_SAMPLES, params);
+    return this.getList<GrowthSample>(DJANGO_ENDPOINTS.GROWTH_SAMPLES, params);
   }
 
-  async getMortalityEvents(batchId?: number) {
+  async getMortalityEvents(batchId?: number): Promise<DjangoListResponse<MortalityEvent>> {
     const params = batchId ? { batch: batchId } : {};
-    return this.getList(DJANGO_ENDPOINTS.MORTALITY_EVENTS, params);
+    return this.getList<MortalityEvent>(DJANGO_ENDPOINTS.MORTALITY_EVENTS, params);
   }
 
   // Inventory API methods
@@ -190,10 +188,20 @@ export class DjangoApiClient {
   }
 
   // Dashboard aggregation methods (these would need custom Django views)
-  async getDashboardKPIs() {
+  async getDashboardKPIs(): Promise<{
+    totalFish: number;
+    healthRate: number;
+    avgWaterTemp: number;
+    nextFeedingHours: number;
+  }> {
     try {
       // Try Django dashboard endpoint first
-      return this.get('/api/v1/dashboard/kpis/');
+      return this.get<{
+        totalFish: number;
+        healthRate: number;
+        avgWaterTemp: number;
+        nextFeedingHours: number;
+      }>('/api/v1/dashboard/kpis/');
     } catch (error) {
       // Fallback to calculating from individual endpoints
       const [batches, healthRecords] = await Promise.all([
@@ -202,8 +210,8 @@ export class DjangoApiClient {
       ]);
 
       // Calculate KPIs from available data
-      const totalFish = batches.results.reduce((sum, batch) => sum + (batch.population_count || 0), 0);
-      const healthyBatches = batches.results.filter(batch => batch.status === 'ACTIVE').length;
+      const totalFish = batches.results.reduce((sum, batch: Batch) => sum + (batch.population_count || 0), 0);
+      const healthyBatches = batches.results.filter((batch: Batch) => batch.status === 'ACTIVE').length;
       const healthRate = batches.results.length > 0 ? (healthyBatches / batches.results.length) * 100 : 0;
 
       return {
@@ -215,13 +223,27 @@ export class DjangoApiClient {
     }
   }
 
-  async getFarmSites() {
+  async getFarmSites(): Promise<Array<{
+    id: number;
+    name: string;
+    location: string;
+    status: string;
+    fishCount: number;
+    healthStatus: string;
+  }>> {
     try {
-      return this.get('/api/v1/dashboard/farm-sites/');
+      return this.get<Array<{
+        id: number;
+        name: string;
+        location: string;
+        status: string;
+        fishCount: number;
+        healthStatus: string;
+      }>>('/api/v1/dashboard/farm-sites/');
     } catch (error) {
       // Fallback to areas as farm sites
       const areas = await this.getAreas();
-      return areas.results.map(area => ({
+      return areas.results.map((area: Area) => ({
         id: area.id,
         name: area.name,
         location: `${area.latitude}, ${area.longitude}`,

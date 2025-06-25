@@ -56,10 +56,10 @@ export const api = {
       });
       
       return {
-        labels: readings.results.map(r => new Date(r.reading_time).toLocaleDateString()),
+        labels: readings.results.map((r: any) => new Date(r.reading_time).toLocaleDateString()),
         datasets: [{
           label: 'Water Temperature',
-          data: readings.results.map(r => r.value),
+          data: readings.results.map((r: any) => r.value),
           borderColor: 'rgb(75, 192, 192)',
           backgroundColor: 'rgba(75, 192, 192, 0.2)'
         }]
@@ -75,10 +75,10 @@ export const api = {
       const samples = await djangoApi.getGrowthSamples();
       
       return {
-        labels: samples.results.map(s => new Date(s.sample_date).toLocaleDateString()),
+        labels: samples.results.map((s: any) => new Date(s.sample_date).toLocaleDateString()),
         datasets: [{
           label: 'Average Weight (g)',
-          data: samples.results.map(s => s.avg_weight_g),
+          data: samples.results.map((s: any) => s.avg_weight_g),
           borderColor: 'rgb(54, 162, 235)',
           backgroundColor: 'rgba(54, 162, 235, 0.2)'
         }]
