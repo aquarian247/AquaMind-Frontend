@@ -155,6 +155,18 @@ export function ScenarioProjectionsChart({
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
+                <TrendingUp className="h-4 w-4 text-amber-600" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Feed Consumption</p>
+                  <p className="text-lg font-bold">{(metrics.finalBiomass * parseFloat(metrics.avgFcr) * 0.8).toFixed(0)}t</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
                 <div className="h-4 w-4 bg-gray-600 rounded-full" />
                 <div>
                   <p className="text-xs text-muted-foreground">Duration</p>
