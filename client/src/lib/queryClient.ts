@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { API_CONFIG, getApiUrl } from "./config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -7,14 +8,62 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+// Get CSRF token for Django requests
+async function getCsrfToken(): Promise<string | null> {
+  if (!API_CONFIG.USE_DJANGO_API) return null;
+  
+  const cookies = document.cookie.split(';');
+  const csrfCookie = cookies.find(cookie => 
+    cookie.trim().startsWith(API_CONFIG.CSRF_COOKIE_NAME + '=')
+  );
+  
+  if (csrfCookie) {
+    return csrfCookie.split('=')[1];
+  }
+  
+  // If no CSRF token found, fetch it from Django
+  try {
+    await fetch(getApiUrl('/api/v1/auth/csrf/'), {
+      method: 'GET',
+      credentials: 'include',
+    });
+    
+    // Try again after fetching
+    const newCookies = document.cookie.split(';');
+    const newCsrfCookie = newCookies.find(cookie => 
+      cookie.trim().startsWith(API_CONFIG.CSRF_COOKIE_NAME + '=')
+    );
+    
+    return newCsrfCookie ? newCsrfCookie.split('=')[1] : null;
+  } catch (error) {
+    console.warn('Failed to fetch CSRF token:', error);
+    return null;
+  }
+}
+
 export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const fullUrl = getApiUrl(url);
+  const headers: Record<string, string> = {};
+  
+  if (data) {
+    headers["Content-Type"] = "application/json";
+  }
+  
+  // Add CSRF token for Django requests
+  if (API_CONFIG.USE_DJANGO_API && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
+    const csrfToken = await getCsrfToken();
+    if (csrfToken) {
+      headers[API_CONFIG.CSRF_HEADER_NAME] = csrfToken;
+    }
+  }
+
+  const res = await fetch(fullUrl, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
