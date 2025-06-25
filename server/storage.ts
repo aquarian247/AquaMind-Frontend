@@ -1398,8 +1398,9 @@ export class MemStorage implements IStorage {
 
     // Get a batch for "from batch" scenario
     const firstBatch = Array.from(this.batches.values())[0];
+    let scenario5: Scenario | null = null;
     if (firstBatch) {
-      const scenario5: Scenario = {
+      scenario5 = {
         id: this.currentId++,
         name: `Batch ${firstBatch.batchNumber} Growth Projection`,
         description: "Real batch scenario based on current production data",
@@ -1423,7 +1424,10 @@ export class MemStorage implements IStorage {
     }
 
     // Generate realistic projections for all scenarios
-    this.generateScenarioProjections([scenario1, scenario2, scenario3, scenario4, scenario5]);
+    const scenariosToProject = scenario5 ? 
+      [scenario1, scenario2, scenario3, scenario4, scenario5] : 
+      [scenario1, scenario2, scenario3, scenario4];
+    this.generateScenarioProjections(scenariosToProject);
   }
 
   // Generate realistic scenario projections based on linked models
@@ -2827,7 +2831,7 @@ export class MemStorage implements IStorage {
       projections = projections.filter(p => p.projectionDate <= endDate);
     }
     
-    return projections.sort((a, b) => a.dayNumber - b.dayNumber);
+    return projections.sort((a, b) => a.weekNumber - b.weekNumber);
   }
 
   async getScenarioChartData(
@@ -2859,15 +2863,15 @@ export class MemStorage implements IStorage {
           yAxisID: "y"
         },
         {
-          label: "Population",
-          data: projections.map(p => parseFloat(p.population)),
+          label: "Fish Count",
+          data: projections.map(p => p.fishCount),
           borderColor: "#10B981",
           backgroundColor: "rgba(16, 185, 129, 0.1)",
           yAxisID: "y1"
         },
         {
-          label: "Biomass (kg)",
-          data: projections.map(p => parseFloat(p.biomass)),
+          label: "Total Biomass (tonnes)",
+          data: projections.map(p => parseFloat(p.totalBiomass.toString())),
           borderColor: "#F59E0B",
           backgroundColor: "rgba(245, 158, 11, 0.1)",
           yAxisID: "y2"
