@@ -43,24 +43,23 @@ interface ScenarioDetailDialogProps {
 }
 
 interface ProjectionData {
-  projections: Array<{
-    day: number;
-    week: number;
-    weight: number;
-    count: number;
-    mortality: number;
+  count: number;
+  results: Array<{
+    id: number;
+    scenarioId: number;
+    projectionDate: string;
+    weekNumber: number;
+    fishCount: number;
+    averageWeight: number;
+    totalBiomass: number;
+    feedConsumed: number;
+    cumulativeFeed: number;
     fcr: number;
-    totalBiomass: number;
-    temperature: number;
+    mortalityRate: number;
+    waterTemperature: number;
+    createdAt: string;
+    updatedAt: string;
   }>;
-  summary: {
-    finalWeight: number;
-    finalCount: number;
-    totalMortality: number;
-    avgFcr: number;
-    totalBiomass: number;
-    duration: number;
-  };
 }
 
 export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialogProps) {
@@ -72,6 +71,17 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
     queryFn: () => fetch(`/api/v1/scenario-planning/scenarios/${scenario.id}/projections/`).then(res => res.json()),
     enabled: open,
   });
+
+  // Calculate summary data from projections
+  const summary = projectionData?.results ? {
+    finalWeight: projectionData.results[projectionData.results.length - 1]?.averageWeight || 0,
+    finalCount: projectionData.results[projectionData.results.length - 1]?.fishCount || 0,
+    totalMortality: scenario.initialCount - (projectionData.results[projectionData.results.length - 1]?.fishCount || scenario.initialCount),
+    avgFcr: projectionData.results[projectionData.results.length - 1]?.fcr || 0,
+    totalBiomass: projectionData.results[projectionData.results.length - 1]?.totalBiomass || 0,
+    duration: projectionData.results.length,
+    totalFeed: projectionData.results[projectionData.results.length - 1]?.cumulativeFeed || 0
+  } : null;
 
   // Fetch scenario configuration details
   const { data: configData, isLoading: configLoading } = useQuery<any>({
@@ -202,19 +212,19 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Final Weight</p>
-                      <p className="text-xl font-bold">{projectionData.summary.finalWeight.toFixed(1)}g</p>
+                      <p className="text-xl font-bold">{summary?.finalWeight?.toFixed(1) || 0}g</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Survival Count</p>
-                      <p className="text-xl font-bold">{projectionData.summary.finalCount.toLocaleString()}</p>
+                      <p className="text-xl font-bold">{summary?.finalCount?.toLocaleString() || 0}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Total Mortality</p>
                       <p className="text-xl font-bold">{projectionData.summary.totalMortality.toFixed(1)}%</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Average FCR</p>
-                      <p className="text-xl font-bold">{projectionData.summary.avgFcr.toFixed(2)}</p>
+                      <p className="text-muted-foreground">Final FCR</p>
+                      <p className="text-xl font-bold">{summary?.avgFcr?.toFixed(2) || 0}</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Total Biomass</p>
@@ -259,9 +269,18 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
                   <span className="ml-2">Loading projections...</span>
                 </CardContent>
               </Card>
-            ) : projectionData ? (
+            ) : projectionData?.results ? (
               <ScenarioProjectionsChart 
-                data={projectionData.projections}
+                data={projectionData.results.map(p => ({
+                  day: p.weekNumber * 7,
+                  week: p.weekNumber,
+                  weight: p.averageWeight,
+                  count: p.fishCount,
+                  mortality: p.mortalityRate,
+                  fcr: p.fcr,
+                  totalBiomass: p.totalBiomass,
+                  temperature: p.waterTemperature
+                }))}
                 title={`${scenario.name} - Growth Projections`}
                 showMetrics={true}
                 highlightPeriods={[
