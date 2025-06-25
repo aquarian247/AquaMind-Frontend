@@ -1422,44 +1422,105 @@ export class MemStorage implements IStorage {
       this.scenarios.set(scenario5.id, scenario5);
     }
 
-    // Generate scenario projections for completed scenarios
-    [scenario1, scenario4].forEach((scenario, scenarioIndex) => {
-      const durationDays = scenario.durationDays;
-      const startWeight = parseFloat(scenario.initialWeight);
-      const startCount = scenario.initialCount;
+    // Generate realistic projections for all scenarios
+    this.generateScenarioProjections([scenario1, scenario2, scenario3, scenario4, scenario5]);
+  }
+
+  // Generate realistic scenario projections based on linked models
+  private generateScenarioProjections(scenarios: Scenario[]) {
+    scenarios.forEach(scenario => {
+      const tgcModel = this.tgcModels.get(scenario.tgcModelId);
+      const fcrModel = this.fcrModels.get(scenario.fcrModelId);
+      const mortalityModel = this.mortalityModels.get(scenario.mortalityModelId);
       
-      for (let day = 0; day < durationDays; day += 7) { // Weekly projections
-        const startDateObj = new Date(scenario.startDate);
-        const projectionDate = new Date(startDateObj.getTime() + day * 24 * 60 * 60 * 1000);
-        const dayNumber = day + 1;
+      if (!tgcModel || !fcrModel || !mortalityModel) return;
+      
+      const tgcValue = parseFloat(tgcModel.tgcValue);
+      const startDate = new Date(scenario.startDate);
+      let currentWeight = parseFloat(scenario.initialWeight);
+      let currentCount = scenario.initialCount;
+      let totalFeedConsumed = 0;
+      
+      // Get temperature profile - using first available profile for demo
+      const tempProfile = Array.from(this.temperatureProfiles.values())[0];
+      const tempReadings = Array.from(this.temperatureReadings.values())
+        .filter(r => r.profileId === tempProfile?.id)
+        .sort((a, b) => new Date(a.readingDate).getTime() - new Date(b.readingDate).getTime());
+      
+      // Generate weekly projections over scenario duration
+      for (let week = 0; week < Math.ceil(scenario.durationDays / 7); week++) {
+        const projectionDate = new Date(startDate);
+        projectionDate.setDate(startDate.getDate() + (week * 7));
         
-        // Different growth patterns for different scenarios
-        const growthRate = scenarioIndex === 0 ? 0.8 : 0.9; // Second scenario grows faster
-        const mortalityRate = scenarioIndex === 0 ? 0.00015 : 0.00008; // Second scenario lower mortality
+        // Get temperature for this week (cycle through available data)
+        const tempIndex = week % (tempReadings.length || 12);
+        const temperature = tempReadings[tempIndex] ? 
+          parseFloat(tempReadings[tempIndex].temperature) : 
+          8 + Math.sin((week / 52) * 2 * Math.PI) * 4; // Seasonal fallback
         
-        const avgWeight = startWeight + (day * growthRate) + (Math.random() * 1.5 - 0.75);
-        const population = startCount * (1 - day * mortalityRate);
-        const biomass = avgWeight * population / 1000; // in kg
-        const dailyFeed = biomass * 0.015; // 1.5% body weight
-        const cumulativeFeed = dailyFeed * dayNumber;
+        // TGC-based growth calculation
+        // TGC = (W2^(1/3) - W1^(1/3)) / (T * days)
+        // Rearranged: W2 = (W1^(1/3) + TGC * T * days)^3
+        const days = 7;
+        const w1CubeRoot = Math.pow(currentWeight, 1/3);
+        const growthIncrement = tgcValue * temperature * days;
+        const newWeight = Math.pow(w1CubeRoot + growthIncrement, 3);
+        
+        // FCR-based feed calculation
+        const weightGain = newWeight - currentWeight;
+        const biomassGain = (weightGain * currentCount) / 1000; // kg
+        
+        // Get FCR for current weight stage
+        const fcr = this.getFcrForWeight(currentWeight);
+        const feedRequired = biomassGain * fcr;
+        totalFeedConsumed += feedRequired;
+        
+        // Mortality calculation (simplified based on stage)
+        const weeklyMortalityRate = this.getMortalityForWeight(currentWeight) / 52; // Convert annual to weekly
+        currentCount = Math.floor(currentCount * (1 - weeklyMortalityRate));
+        
+        // Calculate cumulative FCR
+        const totalBiomassGain = ((currentCount * newWeight) - (scenario.initialCount * parseFloat(scenario.initialWeight))) / 1000;
+        const cumulativeFcr = totalBiomassGain > 0 ? totalFeedConsumed / totalBiomassGain : 0;
 
         const projection: ScenarioProjection = {
           id: this.currentId++,
           scenarioId: scenario.id,
           projectionDate: projectionDate.toISOString().split('T')[0],
-          dayNumber,
-          averageWeight: avgWeight.toFixed(3),
-          population: population.toFixed(2),
-          biomass: biomass.toFixed(2),
-          dailyFeed: dailyFeed.toFixed(3),
-          cumulativeFeed: cumulativeFeed.toFixed(3),
-          temperature: winterTemps[Math.floor(day / 30) % 12]?.toString() || "8.0",
-          currentStageId: null,
+          weekNumber: week,
+          fishCount: currentCount,
+          averageWeight: parseFloat(newWeight.toFixed(3)),
+          totalBiomass: parseFloat(((currentCount * newWeight) / 1000).toFixed(2)), // tonnes
+          feedConsumed: parseFloat(feedRequired.toFixed(2)),
+          cumulativeFeed: parseFloat(totalFeedConsumed.toFixed(2)),
+          fcr: parseFloat(cumulativeFcr.toFixed(3)),
+          mortalityRate: parseFloat((weeklyMortalityRate * 100).toFixed(3)),
+          waterTemperature: parseFloat(temperature.toFixed(1)),
           createdAt: new Date(),
+          updatedAt: new Date(),
         };
+        
         this.scenarioProjections.set(projection.id, projection);
+        currentWeight = newWeight;
       }
     });
+  }
+  
+  // Helper method to get FCR for specific weight range based on linked models
+  private getFcrForWeight(weight: number): number {
+    if (weight < 50) return 1.0; // Fry stage
+    if (weight < 200) return 1.1; // Parr stage
+    if (weight < 500) return 1.15; // Smolt stage
+    if (weight < 1000) return 1.2; // Post-smolt
+    return 1.25; // Adult stage
+  }
+  
+  // Helper method to get mortality rate for specific weight range
+  private getMortalityForWeight(weight: number): number {
+    if (weight < 50) return 0.15; // 15% annual mortality for fry
+    if (weight < 200) return 0.08; // 8% for parr
+    if (weight < 500) return 0.05; // 5% for smolt
+    return 0.03; // 3% for adult fish
   }
 
   // Django API Methods
