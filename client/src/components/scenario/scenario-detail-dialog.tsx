@@ -220,7 +220,7 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
                     </div>
                     <div>
                       <p className="text-muted-foreground">Final Biomass</p>
-                      <p className="text-xl font-bold">{(summary?.totalBiomass || 0) / 1000}t</p>
+                      <p className="text-xl font-bold">{((summary?.totalBiomass || 0) / 1000).toFixed(1)}t</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Final FCR</p>
@@ -427,10 +427,10 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
                       <div className="space-y-2">
                         <h4 className="font-medium">Key Insights</h4>
                         <ul className="space-y-1 text-sm text-muted-foreground">
-                          <li>• Growth rate is {((projectionData.summary.finalWeight / parseFloat(scenario.initialWeight)) * 100).toFixed(0)}x initial weight over {scenario.durationDays} days</li>
-                          <li>• Feed conversion efficiency of {projectionData.summary.avgFcr.toFixed(2)} is within optimal range</li>
-                          <li>• Mortality rate of {projectionData.summary.totalMortality.toFixed(1)}% requires attention</li>
-                          <li>• Total biomass production of {(projectionData.summary.totalBiomass / 1000).toFixed(1)} tonnes</li>
+                          <li>• Growth rate is {summary ? ((summary.finalWeight / parseFloat(scenario.initialWeight)) * 100).toFixed(0) : 0}x initial weight over {scenario.durationDays} days</li>
+                          <li>• Feed conversion efficiency of {summary?.avgFcr?.toFixed(2) || 0} is within optimal range</li>
+                          <li>• Mortality rate of {summary ? ((summary.totalMortality / scenario.initialCount) * 100).toFixed(1) : 0}% requires attention</li>
+                          <li>• Total biomass production of {summary ? (summary.totalBiomass / 1000).toFixed(1) : 0} tonnes</li>
                         </ul>
                       </div>
                     </div>
