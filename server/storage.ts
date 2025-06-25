@@ -132,6 +132,141 @@ export interface IStorage {
     avgWaterTemp: number;
     nextFeedingHours: number;
   }>;
+
+  // Scenario Planning API
+  // Temperature Profiles
+  getTemperatureProfiles(search?: string, ordering?: string): Promise<TemperatureProfile[]>;
+  getTemperatureProfile(id: number): Promise<TemperatureProfile | undefined>;
+  createTemperatureProfile(profile: InsertTemperatureProfile): Promise<TemperatureProfile>;
+  getTemperatureProfileStatistics(id: number): Promise<{
+    profileId: number;
+    name: string;
+    statistics: {
+      min: number;
+      max: number;
+      avg: number;
+      stdDev: number;
+      median: number;
+      count: number;
+      dateRange: { start: string; end: string };
+    };
+    monthlyAverages: Array<{ month: string; avgTemp: number }>;
+  }>;
+  createTemperatureReadings(profileId: number, readings: InsertTemperatureReading[]): Promise<TemperatureReading[]>;
+
+  // TGC Models
+  getTgcModels(location?: string, releasePeriod?: string, search?: string, ordering?: string): Promise<TgcModel[]>;
+  getTgcModel(id: number): Promise<TgcModel | undefined>;
+  createTgcModel(model: InsertTgcModel): Promise<TgcModel>;
+  duplicateTgcModel(id: number, newName: string): Promise<TgcModel>;
+  getTgcModelTemplates(): Promise<Array<{
+    name: string;
+    location: string;
+    releasePeriod: string;
+    tgcValue: number;
+    exponentN: number;
+    exponentM: number;
+    description: string;
+  }>>;
+
+  // FCR Models
+  getFcrModels(search?: string, ordering?: string): Promise<FcrModel[]>;
+  getFcrModel(id: number): Promise<FcrModel | undefined>;
+  createFcrModel(model: InsertFcrModel): Promise<FcrModel>;
+  getFcrModelStageSummary(id: number): Promise<{
+    modelId: number;
+    modelName: string;
+    totalStages: number;
+    totalDuration: number;
+    averageFcr: number;
+    stages: Array<{
+      stageName: string;
+      fcrValue: number;
+      durationDays: number;
+      weightRange: { min: number; max: number };
+      overrideCount: number;
+    }>;
+  }>;
+
+  // Mortality Models
+  getMortalityModels(frequency?: string, search?: string, ordering?: string): Promise<MortalityModel[]>;
+  getMortalityModel(id: number): Promise<MortalityModel | undefined>;
+  createMortalityModel(model: InsertMortalityModel): Promise<MortalityModel>;
+
+  // Biological Constraints
+  getBiologicalConstraints(search?: string, ordering?: string): Promise<BiologicalConstraint[]>;
+  getBiologicalConstraint(id: number): Promise<BiologicalConstraint | undefined>;
+  createBiologicalConstraint(constraint: InsertBiologicalConstraint): Promise<BiologicalConstraint>;
+
+  // Scenarios
+  getScenarios(
+    all?: boolean,
+    startDate?: string,
+    tgcModelLocation?: string,
+    search?: string,
+    ordering?: string
+  ): Promise<Scenario[]>;
+  getScenario(id: number): Promise<Scenario | undefined>;
+  createScenario(scenario: InsertScenario): Promise<Scenario>;
+  duplicateScenario(
+    id: number,
+    newName: string,
+    includeProjections?: boolean,
+    includeModelChanges?: boolean
+  ): Promise<Scenario>;
+  createScenarioFromBatch(
+    batchId: number,
+    scenarioName: string,
+    durationDays: number,
+    useCurrentModels?: boolean
+  ): Promise<Scenario>;
+  runScenarioProjection(id: number): Promise<{
+    success: boolean;
+    summary: {
+      totalDays: number;
+      finalWeight: number;
+      finalPopulation: number;
+      finalBiomass: number;
+      totalFeedConsumed: number;
+      overallFcr: number;
+      survivalRate: number;
+      stagesReached: string[];
+    };
+    warnings: string[];
+    message: string;
+  }>;
+
+  // Scenario Projections
+  getScenarioProjections(
+    scenarioId: number,
+    startDate?: string,
+    endDate?: string,
+    aggregation?: string
+  ): Promise<ScenarioProjection[]>;
+  getScenarioChartData(
+    scenarioId: number,
+    metrics?: string[],
+    chartType?: string,
+    aggregation?: string
+  ): Promise<{
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      borderColor: string;
+      backgroundColor: string;
+      yAxisID?: string;
+    }>;
+    options: any;
+  }>;
+
+  // Scenario Planning Dashboard KPIs
+  getScenarioPlanningKPIs(): Promise<{
+    totalActiveScenarios: number;
+    scenariosInProgress: number;
+    completedProjections: number;
+    averageProjectionDuration: number;
+  }>;
 }
 
 export class MemStorage implements IStorage {
@@ -180,6 +315,22 @@ export class MemStorage implements IStorage {
   private farmSites: Map<number, FarmSite> = new Map();
   private pens: Map<number, Pen> = new Map();
   private alerts: Map<number, Alert> = new Map();
+  
+  // Scenario Planning data stores
+  private temperatureProfiles: Map<number, TemperatureProfile> = new Map();
+  private temperatureReadings: Map<number, TemperatureReading> = new Map();
+  private tgcModels: Map<number, TgcModel> = new Map();
+  private tgcStageOverrides: Map<number, TgcStageOverride> = new Map();
+  private fcrModels: Map<number, FcrModel> = new Map();
+  private fcrModelStages: Map<number, FcrModelStage> = new Map();
+  private fcrWeightOverrides: Map<number, FcrWeightOverride> = new Map();
+  private mortalityModels: Map<number, MortalityModel> = new Map();
+  private mortalityStageOverrides: Map<number, MortalityStageOverride> = new Map();
+  private biologicalConstraints: Map<number, BiologicalConstraint> = new Map();
+  private biologicalConstraintStages: Map<number, BiologicalConstraintStage> = new Map();
+  private scenarios: Map<number, Scenario> = new Map();
+  private scenarioModelChanges: Map<number, ScenarioModelChange> = new Map();
+  private scenarioProjections: Map<number, ScenarioProjection> = new Map();
   
   private currentId = 1;
 

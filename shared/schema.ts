@@ -651,3 +651,271 @@ export type InsertGrowthSample = z.infer<typeof insertGrowthSampleSchema>;
 export const insertMortalityEventSchema = createInsertSchema(mortalityEvents);
 export type MortalityEvent = typeof mortalityEvents.$inferSelect;
 export type InsertMortalityEvent = z.infer<typeof insertMortalityEventSchema>;
+
+// Scenario Planning Tables
+
+// Temperature Profiles for TGC calculations
+export const temperatureProfiles = pgTable("temperature_profiles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Temperature readings within profiles
+export const temperatureReadings = pgTable("temperature_readings", {
+  id: serial("id").primaryKey(),
+  profileId: integer("profile_id").references(() => temperatureProfiles.id).notNull(),
+  readingDate: date("reading_date").notNull(),
+  temperature: decimal("temperature", { precision: 5, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// TGC Models for growth calculations
+export const tgcModels = pgTable("tgc_models", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  location: text("location"),
+  releasePeriod: text("release_period"),
+  tgcValue: decimal("tgc_value", { precision: 5, scale: 3 }).notNull(),
+  exponentN: decimal("exponent_n", { precision: 5, scale: 3 }).notNull().default("1.0"),
+  exponentM: decimal("exponent_m", { precision: 5, scale: 3 }).notNull().default("0.333"),
+  profileId: integer("profile_id").references(() => temperatureProfiles.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// TGC Model stage overrides
+export const tgcStageOverrides = pgTable("tgc_stage_overrides", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").references(() => tgcModels.id).notNull(),
+  lifecycleStage: text("lifecycle_stage").notNull(),
+  tgcValue: decimal("tgc_value", { precision: 5, scale: 3 }).notNull(),
+  temperatureExponent: decimal("temperature_exponent", { precision: 5, scale: 3 }).notNull(),
+  weightExponent: decimal("weight_exponent", { precision: 5, scale: 3 }).notNull(),
+});
+
+// FCR Models for feed conversion ratios
+export const fcrModels = pgTable("fcr_models", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// FCR Model stages
+export const fcrModelStages = pgTable("fcr_model_stages", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").references(() => fcrModels.id).notNull(),
+  stageId: integer("stage_id").references(() => stages.id).notNull(),
+  fcrValue: decimal("fcr_value", { precision: 5, scale: 3 }).notNull(),
+  durationDays: integer("duration_days").notNull(),
+});
+
+// FCR Weight overrides
+export const fcrWeightOverrides = pgTable("fcr_weight_overrides", {
+  id: serial("id").primaryKey(),
+  stageId: integer("stage_id").references(() => fcrModelStages.id).notNull(),
+  minWeightG: decimal("min_weight_g", { precision: 8, scale: 3 }).notNull(),
+  maxWeightG: decimal("max_weight_g", { precision: 8, scale: 3 }).notNull(),
+  fcrValue: decimal("fcr_value", { precision: 5, scale: 3 }).notNull(),
+});
+
+// Mortality Models
+export const mortalityModels = pgTable("mortality_models", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  frequency: text("frequency").notNull(), // 'daily' or 'weekly'
+  rate: decimal("rate", { precision: 8, scale: 5 }).notNull(), // percentage as decimal
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Mortality stage overrides
+export const mortalityStageOverrides = pgTable("mortality_stage_overrides", {
+  id: serial("id").primaryKey(),
+  modelId: integer("model_id").references(() => mortalityModels.id).notNull(),
+  lifecycleStage: text("lifecycle_stage").notNull(),
+  dailyRatePercent: decimal("daily_rate_percent", { precision: 8, scale: 5 }),
+  weeklyRatePercent: decimal("weekly_rate_percent", { precision: 8, scale: 5 }),
+});
+
+// Biological Constraints
+export const biologicalConstraints = pgTable("biological_constraints", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Biological Constraint stage rules
+export const biologicalConstraintStages = pgTable("biological_constraint_stages", {
+  id: serial("id").primaryKey(),
+  constraintId: integer("constraint_id").references(() => biologicalConstraints.id).notNull(),
+  stageId: integer("stage_id").references(() => stages.id).notNull(),
+  minWeightG: decimal("min_weight_g", { precision: 8, scale: 3 }).notNull(),
+  maxWeightG: decimal("max_weight_g", { precision: 8, scale: 3 }).notNull(),
+});
+
+// Scenarios
+export const scenarios = pgTable("scenarios", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  startDate: date("start_date").notNull(),
+  durationDays: integer("duration_days").notNull(),
+  initialCount: integer("initial_count").notNull(),
+  initialWeight: decimal("initial_weight", { precision: 8, scale: 3 }).notNull(),
+  genotype: text("genotype"),
+  supplier: text("supplier"),
+  tgcModelId: integer("tgc_model_id").references(() => tgcModels.id).notNull(),
+  fcrModelId: integer("fcr_model_id").references(() => fcrModels.id).notNull(),
+  mortalityModelId: integer("mortality_model_id").references(() => mortalityModels.id).notNull(),
+  batchId: integer("batch_id").references(() => batches.id),
+  biologicalConstraintsId: integer("biological_constraints_id").references(() => biologicalConstraints.id),
+  status: text("status").notNull().default("draft"), // draft, running, completed, failed
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Scenario model changes during projection
+export const scenarioModelChanges = pgTable("scenario_model_changes", {
+  id: serial("id").primaryKey(),
+  scenarioId: integer("scenario_id").references(() => scenarios.id).notNull(),
+  changeDay: integer("change_day").notNull(),
+  newTgcModelId: integer("new_tgc_model_id").references(() => tgcModels.id),
+  newFcrModelId: integer("new_fcr_model_id").references(() => fcrModels.id),
+  newMortalityModelId: integer("new_mortality_model_id").references(() => mortalityModels.id),
+});
+
+// Scenario Projections - daily calculated results
+export const scenarioProjections = pgTable("scenario_projections", {
+  id: serial("id").primaryKey(),
+  scenarioId: integer("scenario_id").references(() => scenarios.id).notNull(),
+  projectionDate: date("projection_date").notNull(),
+  dayNumber: integer("day_number").notNull(),
+  averageWeight: decimal("average_weight", { precision: 10, scale: 3 }).notNull(),
+  population: decimal("population", { precision: 12, scale: 2 }).notNull(),
+  biomass: decimal("biomass", { precision: 12, scale: 2 }).notNull(),
+  dailyFeed: decimal("daily_feed", { precision: 10, scale: 3 }).notNull(),
+  cumulativeFeed: decimal("cumulative_feed", { precision: 12, scale: 3 }).notNull(),
+  temperature: decimal("temperature", { precision: 5, scale: 2 }),
+  currentStageId: integer("current_stage_id").references(() => stages.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Scenario Planning Insert Schemas
+export const insertTemperatureProfileSchema = createInsertSchema(temperatureProfiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTemperatureReadingSchema = createInsertSchema(temperatureReadings).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTgcModelSchema = createInsertSchema(tgcModels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTgcStageOverrideSchema = createInsertSchema(tgcStageOverrides).omit({
+  id: true,
+});
+
+export const insertFcrModelSchema = createInsertSchema(fcrModels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFcrModelStageSchema = createInsertSchema(fcrModelStages).omit({
+  id: true,
+});
+
+export const insertFcrWeightOverrideSchema = createInsertSchema(fcrWeightOverrides).omit({
+  id: true,
+});
+
+export const insertMortalityModelSchema = createInsertSchema(mortalityModels).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMortalityStageOverrideSchema = createInsertSchema(mortalityStageOverrides).omit({
+  id: true,
+});
+
+export const insertBiologicalConstraintSchema = createInsertSchema(biologicalConstraints).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBiologicalConstraintStageSchema = createInsertSchema(biologicalConstraintStages).omit({
+  id: true,
+});
+
+export const insertScenarioSchema = createInsertSchema(scenarios).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertScenarioModelChangeSchema = createInsertSchema(scenarioModelChanges).omit({
+  id: true,
+});
+
+export const insertScenarioProjectionSchema = createInsertSchema(scenarioProjections).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Scenario Planning Types
+export type TemperatureProfile = typeof temperatureProfiles.$inferSelect;
+export type InsertTemperatureProfile = z.infer<typeof insertTemperatureProfileSchema>;
+
+export type TemperatureReading = typeof temperatureReadings.$inferSelect;
+export type InsertTemperatureReading = z.infer<typeof insertTemperatureReadingSchema>;
+
+export type TgcModel = typeof tgcModels.$inferSelect;
+export type InsertTgcModel = z.infer<typeof insertTgcModelSchema>;
+
+export type TgcStageOverride = typeof tgcStageOverrides.$inferSelect;
+export type InsertTgcStageOverride = z.infer<typeof insertTgcStageOverrideSchema>;
+
+export type FcrModel = typeof fcrModels.$inferSelect;
+export type InsertFcrModel = z.infer<typeof insertFcrModelSchema>;
+
+export type FcrModelStage = typeof fcrModelStages.$inferSelect;
+export type InsertFcrModelStage = z.infer<typeof insertFcrModelStageSchema>;
+
+export type FcrWeightOverride = typeof fcrWeightOverrides.$inferSelect;
+export type InsertFcrWeightOverride = z.infer<typeof insertFcrWeightOverrideSchema>;
+
+export type MortalityModel = typeof mortalityModels.$inferSelect;
+export type InsertMortalityModel = z.infer<typeof insertMortalityModelSchema>;
+
+export type MortalityStageOverride = typeof mortalityStageOverrides.$inferSelect;
+export type InsertMortalityStageOverride = z.infer<typeof insertMortalityStageOverrideSchema>;
+
+export type BiologicalConstraint = typeof biologicalConstraints.$inferSelect;
+export type InsertBiologicalConstraint = z.infer<typeof insertBiologicalConstraintSchema>;
+
+export type BiologicalConstraintStage = typeof biologicalConstraintStages.$inferSelect;
+export type InsertBiologicalConstraintStage = z.infer<typeof insertBiologicalConstraintStageSchema>;
+
+export type Scenario = typeof scenarios.$inferSelect;
+export type InsertScenario = z.infer<typeof insertScenarioSchema>;
+
+export type ScenarioModelChange = typeof scenarioModelChanges.$inferSelect;
+export type InsertScenarioModelChange = z.infer<typeof insertScenarioModelChangeSchema>;
+
+export type ScenarioProjection = typeof scenarioProjections.$inferSelect;
+export type InsertScenarioProjection = z.infer<typeof insertScenarioProjectionSchema>;

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .slide-container {
+        width: 1280px;
+        min-height: 720px;
+        background: #002b36;
+        color: #93a1a1;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        overflow: hidden;
+        position: relative;
+      }
+      .content-area {
+        background-color: #002b36;
+        min-height: 720px;
+      }
+      .card {
+        background-color: #073642;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      }
+      .tab-active {
+        border-bottom: 2px solid #2aa198;
+        color: #2aa198;
+      }
+      .chart-container {
+        height: 240px;
+        position: relative;
+      }
+      .scenario-card {
+        border-left: 4px solid;
+      }
+      .scenario-1 {
+        border-color: #2aa198;
+      }
+      .scenario-2 {
+        border-color: #d33682;
+      }
+      .scenario-3 {
+        border-color: #b58900;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container p-8">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h1 class="text-3xl font-bold text-teal-400 mb-1">Scenario Comparison</h1>
+          <p class="text-gray-400">Comparing 3 scenarios for Batch: B-2025-06</p>
+        </div>
+        <div class="flex space-x-4">
+          <button class="bg-blue-700 hover:bg-blue-600 text-white py-2 px-4 rounded flex items-center">
+            <i class="fas fa-file-export mr-2"></i>
+            <span>Export Comparison</span>
+          </button>
+          <button class="bg-green-700 hover:bg-green-600 text-white py-2 px-4 rounded flex items-center">
+            <i class="fas fa-check-circle mr-2"></i>
+            <span>Select Scenario</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Scenario Selection -->
+      <div class="card p-4 mb-6">
+        <h2 class="text-xl font-semibold text-teal-400 mb-4">Selected Scenarios</h2>
+        <div class="grid grid-cols-3 gap-4">
+          <!-- Scenario 1 -->
+          <div class="bg-gray-800 p-3 rounded scenario-card scenario-1">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center">
+                <div class="bg-teal-800 rounded-full p-1 mr-2">
+                  <i class="fas fa-chart-line text-teal-200 text-xs"></i>
+                </div>
+                <h3 class="font-medium text-teal-400">Q3 Production Plan</h3>
+              </div>
+              <div class="flex items-center">
+                <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs mr-2">Active</span>
+                <input type="checkbox" checked class="form-checkbox h-4 w-4 text-teal-600 rounded">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-gray-500">Harvest:</span>
+                <span class="ml-1">Sep 15, 2025</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Final Weight:</span>
+                <span class="ml-1">4.5kg</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Biomass:</span>
+                <span class="ml-1">405,000kg</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Feed:</span>
+                <span class="ml-1">486,000kg</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Scenario 2 -->
+          <div class="bg-gray-800 p-3 rounded scenario-card scenario-2">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center">
+                <div class="bg-pink-800 rounded-full p-1 mr-2">
+                  <i class="fas fa-chart-line text-pink-200 text-xs"></i>
+                </div>
+                <h3 class="font-medium text-pink-400">Q3 High Efficiency</h3>
+              </div>
+              <div class="flex items-center">
+                <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs mr-2">Active</span>
+                <input type="checkbox" checked class="form-checkbox h-4 w-4 text-pink-600 rounded">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-gray-500">Harvest:</span>
+                <span class="ml-1">Sep 10, 2025</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Final Weight:</span>
+                <span class="ml-1">4.5kg</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Biomass:</span>
+                <span class="ml-1">400,500kg</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Feed:</span>
+                <span class="ml-1">460,000kg</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Scenario 3 -->
+          <div class="bg-gray-800 p-3 rounded scenario-card scenario-3">
+            <div class="flex justify-between items-center mb-2">
+              <div class="flex items-center">
+                <div class="bg-yellow-800 rounded-full p-1 mr-2">
+                  <i class="fas fa-chart-line text-yellow-200 text-xs"></i>
+                </div>
+                <h3 class="font-medium text-yellow-400">Q3 Accelerated</h3>
+              </div>
+              <div class="flex items-center">
+                <span class="px-2 py-1 bg-yellow-900 text-yellow-300 rounded-full text-xs mr-2">Draft</span>
+                <input type="checkbox" checked class="form-checkbox h-4 w-4 text-yellow-600 rounded">
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span class="text-gray-500">Harvest:</span>
+                <span class="ml-1">Aug 30, 2025</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Final Weight:</span>
+                <span class="ml-1">4.5kg</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Biomass:</span>
+                <span class="ml-1">396,000kg</span>
+              </div>
+              <div>
+                <span class="text-gray-500">Feed:</span>
+                <span class="ml-1">495,000kg</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Comparison Charts -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <!-- Growth Comparison -->
+        <div class="card p-4">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-teal-400">Growth Comparison</h3>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs px-2 py-1 bg-gray-900 text-gray-300 rounded">TGC Model</span>
+              <button class="text-gray-400 hover:text-teal-400">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="growthComparisonChart"></canvas>
+          </div>
+          <div class="flex justify-between items-center mt-2 text-xs">
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-teal-500 rounded-full mr-1"></div>
+              <span>Standard: 92 days</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-pink-500 rounded-full mr-1"></div>
+              <span>High Efficiency: 87 days</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+              <span>Accelerated: 76 days</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Feed Comparison -->
+        <div class="card p-4">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-yellow-400">Feed Consumption Comparison</h3>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs px-2 py-1 bg-gray-900 text-gray-300 rounded">FCR Model</span>
+              <button class="text-gray-400 hover:text-yellow-400">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="feedComparisonChart"></canvas>
+          </div>
+          <div class="flex justify-between items-center mt-2 text-xs">
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-teal-500 rounded-full mr-1"></div>
+              <span>Standard: 486,000kg</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-pink-500 rounded-full mr-1"></div>
+              <span>High Efficiency: 460,000kg</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+              <span>Accelerated: 495,000kg</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Biomass Comparison -->
+        <div class="card p-4">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-blue-400">Biomass Comparison</h3>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs px-2 py-1 bg-gray-900 text-gray-300 rounded">Combined</span>
+              <button class="text-gray-400 hover:text-blue-400">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="biomassComparisonChart"></canvas>
+          </div>
+          <div class="flex justify-between items-center mt-2 text-xs">
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-teal-500 rounded-full mr-1"></div>
+              <span>Standard: 405,000kg</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-pink-500 rounded-full mr-1"></div>
+              <span>High Efficiency: 400,500kg</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+              <span>Accelerated: 396,000kg</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- FCR Comparison -->
+        <div class="card p-4">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-medium text-purple-400">FCR Comparison</h3>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs px-2 py-1 bg-gray-900 text-gray-300 rounded">Efficiency</span>
+              <button class="text-gray-400 hover:text-purple-400">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="fcrComparisonChart"></canvas>
+          </div>
+          <div class="flex justify-between items-center mt-2 text-xs">
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-teal-500 rounded-full mr-1"></div>
+              <span>Standard: 1.20</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-pink-500 rounded-full mr-1"></div>
+              <span>High Efficiency: 1.15</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-3 h-3 bg-yellow-500 rounded-full mr-1"></div>
+              <span>Accelerated: 1.25</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Key Metrics Comparison Table -->
+      <div class="card p-6">
+        <h3 class="font-medium text-teal-400 mb-4">Key Metrics Comparison</h3>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead>
+              <tr class="border-b border-gray-700">
+                <th class="py-2 px-4 text-left">Metric</th>
+                <th class="py-2 px-4 text-left">Q3 Production Plan</th>
+                <th class="py-2 px-4 text-left">Q3 High Efficiency</th>
+                <th class="py-2 px-4 text-left">Q3 Accelerated</th>
+                <th class="py-2 px-4 text-left">Difference (Best vs. Worst)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-gray-800 hover:bg-gray-800">
+                <td class="py-2 px-4 font-medium">Production Duration</td>
+                <td class="py-2 px-4">92 days</td>
+                <td class="py-2 px-4">87 days</td>
+                <td class="py-2 px-4 text-yellow-400 font-medium">76 days</td>
+                <td class="py-2 px-4 text-green-400">-16 days (17.4% faster)</td>
+              </tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800">
+                <td class="py-2 px-4 font-medium">Final Biomass</td>
+                <td class="py-2 px-4 text-teal-400 font-medium">405,000 kg</td>
+                <td class="py-2 px-4">400,500 kg</td>
+                <td class="py-2 px-4">396,000 kg</td>
+                <td class="py-2 px-4 text-green-400">+9,000 kg (2.3% more)</td>
+              </tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800">
+                <td class="py-2 px-4 font-medium">Total Feed</td>
+                <td class="py-2 px-4">486,000 kg</td>
+                <td class="py-2 px-4 text-pink-400 font-medium">460,000 kg</td>
+                <td class="py-2 px-4">495,000 kg</td>
+                <td class="py-2 px-4 text-green-400">-35,000 kg (7.1% less)</td>
+              </tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800">
+                <td class="py-2 px-4 font-medium">Average FCR</td>
+                <td class="py-2 px-4">1.20</td>
+                <td class="py-2 px-4 text-pink-400 font-medium">1.15</td>
+                <td class="py-2 px-4">1.25</td>
+                <td class="py-2 px-4 text-green-400">-0.10 (8.0% better)</td>
+              </tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800">
+                <td class="py-2 px-4 font-medium">Feed Cost</td>
+                <td class="py-2 px-4">$583,200</td>
+                <td class="py-2 px-4 text-pink-400 font-medium">$552,000</td>
+                <td class="py-2 px-4">$594,000</td>
+                <td class="py-2 px-4 text-green-400">-$42,000 (7.1% savings)</td>
+              </tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800">
+                <td class="py-2 px-4 font-medium">Survival Rate</td>
+                <td class="py-2 px-4">90%</td>
+                <td class="py-2 px-4">89%</td>
+                <td class="py-2 px-4 text-yellow-400 font-medium">88%</td>
+                <td class="py-2 px-4 text-red-400">-2.0% (2.2% worse)</td>
+              </tr>
+              <tr class="border-b border-gray-800 hover:bg-gray-800">
+                <td class="py-2 px-4 font-medium">Production Cost per kg</td>
+                <td class="py-2 px-4">$1.44</td>
+                <td class="py-2 px-4 text-pink-400 font-medium">$1.38</td>
+                <td class="py-2 px-4">$1.50</td>
+                <td class="py-2 px-4 text-green-400">-$0.12 (8.0% savings)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="mt-6">
+          <h4 class="font-medium text-teal-400 mb-2">Recommendation</h4>
+          <div class="bg-gray-800 p-4 rounded">
+            <p class="mb-2">Based on the comparison, the <span class="text-pink-400 font-medium">Q3 High Efficiency</span> scenario offers the best balance of:</p>
+            <ul class="list-disc pl-5 space-y-1 text-sm">
+              <li>Reduced feed costs (-$31,200 compared to standard plan)</li>
+              <li>Improved FCR (1.15 vs 1.20 standard)</li>
+              <li>Shorter production cycle (87 days vs 92 days standard)</li>
+              <li>Minimal impact on final biomass (only 1.1% reduction)</li>
+            </ul>
+            <p class="mt-2 text-sm">The accelerated growth scenario offers the fastest production time but at the expense of higher feed costs and lower survival rates.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Simulated chart data - in a real implementation, this would be populated from the scenario data
+      document.addEventListener('DOMContentLoaded', function() {
+        // Growth Comparison Chart
+        const growthCtx = document.getElementById('growthComparisonChart').getContext('2d');
+        new Chart(growthCtx, {
+          type: 'line',
+          data: {
+            labels: Array.from({length: 92}, (_, i) => `Day ${i+1}`),
+            datasets: [
+              {
+                label: 'Standard',
+                data: Array.from({length: 92}, (_, i) => 50 + i * (4450 / 91)),
+                borderColor: '#2aa198',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              },
+              {
+                label: 'High Efficiency',
+                data: Array.from({length: 87}, (_, i) => 50 + i * (4450 / 86)),
+                borderColor: '#d33682',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              },
+              {
+                label: 'Accelerated',
+                data: Array.from({length: 76}, (_, i) => 50 + i * (4450 / 75)),
+                borderColor: '#b58900',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  color: '#93a1a1'
+                }
+              },
+              x: {
+                display: false
+              }
+            }
+          }
+        });
+        
+        // Feed Comparison Chart
+        const feedCtx = document.getElementById('feedComparisonChart').getContext('2d');
+        new Chart(feedCtx, {
+          type: 'line',
+          data: {
+            labels: Array.from({length: 92}, (_, i) => `Day ${i+1}`),
+            datasets: [
+              {
+                label: 'Standard',
+                data: Array.from({length: 92}, (_, i) => {
+                  const dailyGrowth = 4450 / 91;
+                  const population = 100000 - (i * 108);
+                  const fcr = 1.2;
+                  return (dailyGrowth * fcr * population) / 1000;
+                }),
+                borderColor: '#2aa198',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              },
+              {
+                label: 'High Efficiency',
+                data: Array.from({length: 87}, (_, i) => {
+                  const dailyGrowth = 4450 / 86;
+                  const population = 100000 - (i * 126);
+                  const fcr = 1.15;
+                  return (dailyGrowth * fcr * population) / 1000;
+                }),
+                borderColor: '#d33682',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              },
+              {
+                label: 'Accelerated',
+                data: Array.from({length: 76}, (_, i) => {
+                  const dailyGrowth = 4450 / 75;
+                  const population = 100000 - (i * 158);
+                  const fcr = 1.25;
+                  return (dailyGrowth * fcr * population) / 1000;
+                }),
+                borderColor: '#b58900',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  color: '#93a1a1'
+                }
+              },
+              x: {
+                display: false
+              }
+            }
+          }
+        });
+        
+        // Biomass Comparison Chart
+        const biomassCtx = document.getElementById('biomassComparisonChart').getContext('2d');
+        new Chart(biomassCtx, {
+          type: 'line',
+          data: {
+            labels: Array.from({length: 92}, (_, i) => `Day ${i+1}`),
+            datasets: [
+              {
+                label: 'Standard',
+                data: Array.from({length: 92}, (_, i) => {
+                  const weight = 50 + i * (4450 / 91);
+                  const population = 100000 - (i * 108);
+                  return (weight * population) / 1000;
+                }),
+                borderColor: '#2aa198',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              },
+              {
+                label: 'High Efficiency',
+                data: Array.from({length: 87}, (_, i) => {
+                  const weight = 50 + i * (4450 / 86);
+                  const population = 100000 - (i * 126);
+                  return (weight * population) / 1000;
+                }),
+                borderColor: '#d33682',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              },
+              {
+                label: 'Accelerated',
+                data: Array.from({length: 76}, (_, i) => {
+                  const weight = 50 + i * (4450 / 75);
+                  const population = 100000 - (i * 158);
+                  return (weight * population) / 1000;
+                }),
+                borderColor: '#b58900',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  color: '#93a1a1'
+                }
+              },
+              x: {
+                display: false
+              }
+            }
+          }
+        });
+        
+        // FCR Comparison Chart
+        const fcrCtx = document.getElementById('fcrComparisonChart').getContext('2d');
+        new Chart(fcrCtx, {
+          type: 'line',
+          data: {
+            labels: Array.from({length: 92}, (_, i) => `Day ${i+1}`),
+            datasets: [
+              {
+                label: 'Standard',
+                data: Array.from({length: 92}, (_, i) => 1.2 + (i > 60 ? 0.05 * ((i-60)/32) : 0)),
+                borderColor: '#2aa198',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              },
+              {
+                label: 'High Efficiency',
+                data: Array.from({length: 87}, (_, i) => 1.15 + (i > 60 ? 0.05 * ((i-60)/27) : 0)),
+                borderColor: '#d33682',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              },
+              {
+                label: 'Accelerated',
+                data: Array.from({length: 76}, (_, i) => 1.25 + (i > 50 ? 0.05 * ((i-50)/26) : 0)),
+                borderColor: '#b58900',
+                backgroundColor: 'transparent',
+                tension: 0.4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                min: 1.0,
+                max: 1.4,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: {
+                  color: '#93a1a1'
+                }
+              },
+              x: {
+                display: false
+              }
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
