@@ -22,7 +22,8 @@ import {
   Filter,
   MoreHorizontal,
   Edit,
-  Trash2
+  Trash2,
+  Fish
 } from "lucide-react";
 import { ScenarioCreationDialog } from "@/components/scenario/scenario-creation-dialog";
 import { ScenarioDetailDialog } from "@/components/scenario/scenario-detail-dialog";
