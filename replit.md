@@ -127,6 +127,7 @@ Current endpoints follow `/api/` pattern with planned migration to Django-style 
   - ✓ Added feed consumption tracking with dynamic FCR calculations based on fish size and temperature
   - ✓ Enhanced projection charts with proper aquaculture metrics and feed consumption cards
   - ✓ All scenarios now properly linked to existing TGC, FCR, and mortality models as per PRS requirements
+  - ✓ Converted scenario detail from popup dialog to dedicated page following Batch Management pattern
   - ✓ Ready for deployment with professional-grade salmon aquaculture demonstration data
 
 ## User Preferences
