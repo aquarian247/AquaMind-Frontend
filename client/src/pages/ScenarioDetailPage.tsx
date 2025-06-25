@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScenarioProjectionsChart } from "@/components/scenario/scenario-projections-chart";
-import { TemperatureDataView } from "@/components/scenario/temperature-data-view";
+// Temperature data view will be implemented inline
 
 export function ScenarioDetailPage() {
   const { id } = useParams();
@@ -367,7 +367,11 @@ export function ScenarioDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <TemperatureDataView />
+              <div className="text-center py-8 text-muted-foreground">
+                <Thermometer className="h-12 w-12 mx-auto mb-4" />
+                <p>Temperature profile visualization will be displayed here</p>
+                <p className="text-sm">Integration with temperature data view coming soon</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

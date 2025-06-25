@@ -27,7 +27,7 @@ import {
   Fish
 } from "lucide-react";
 import { ScenarioCreationDialog } from "@/components/scenario/scenario-creation-dialog";
-import { ScenarioDetailDialog } from "@/components/scenario/scenario-detail-dialog";
+
 import { ScenarioEditDialog } from "@/components/scenario/scenario-edit-dialog";
 import { BatchIntegrationDialog } from "@/components/scenario/batch-integration-dialog";
 import { TgcModelCreationDialog } from "@/components/scenario/tgc-model-creation-dialog";
@@ -532,12 +532,14 @@ export default function ScenarioPlanning() {
                     
                     <div className="flex items-center justify-between">
                       <div className="flex gap-2">
-                        <ScenarioDetailDialog scenario={scenario}>
-                          <Button size="sm" variant="outline">
-                            <LineChart className="h-4 w-4 mr-2" />
-                            View Results
-                          </Button>
-                        </ScenarioDetailDialog>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => setLocation(`/scenario-planning/scenarios/${scenario.id}`)}
+                        >
+                          <LineChart className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
                         {scenario.status === 'draft' && (
                           <Button 
                             size="sm"

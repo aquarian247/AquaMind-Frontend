@@ -36,6 +36,7 @@ import BroodstockPopulation from "@/pages/broodstock-population";
 import BreedingProgramDetails from "@/pages/breeding-program-details";
 import BroodstockContainerDetails from "@/pages/broodstock-container-details";
 import ScenarioPlanning from "@/pages/ScenarioPlanning";
+import { ScenarioDetailPage } from "@/pages/ScenarioDetailPage";
 import NotFound from "@/pages/not-found";
 
 import Sidebar from "@/components/layout/sidebar";
@@ -92,6 +93,7 @@ function Router() {
             <Route path="/breeding-program-details/:id" component={BreedingProgramDetails} />
             <Route path="/broodstock-container-details/:id" component={BroodstockContainerDetails} />
             <Route path="/scenario-planning" component={ScenarioPlanning} />
+            <Route path="/scenario-planning/scenarios/:id" component={ScenarioDetailPage} />
             <Route path="/temperature-data/:id">
               <Suspense fallback={<div>Loading...</div>}>
                 <TemperatureDataView />
