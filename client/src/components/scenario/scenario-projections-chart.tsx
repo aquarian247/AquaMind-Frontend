@@ -224,6 +224,7 @@ export function ScenarioProjectionsChart({
                   stroke={period.color}
                   strokeDasharray="5 5"
                   label={{ value: period.label, position: "top" }}
+                  yAxisId="weight"
                 />
               ))}
               
