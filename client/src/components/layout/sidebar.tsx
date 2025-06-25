@@ -53,12 +53,18 @@ const navigationItems = [
   },
   {
     id: 8,
+    label: "Scenario Planning",
+    icon: "fas fa-calculator",
+    path: "/scenario-planning",
+  },
+  {
+    id: 9,
     label: "Inventory",
     icon: "fas fa-boxes",
     path: "/inventory",
   },
   {
-    id: 9,
+    id: 10,
     label: "Analytics",
     icon: "fas fa-chart-line",
     path: "/analytics",

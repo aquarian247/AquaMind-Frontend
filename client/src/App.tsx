@@ -33,6 +33,7 @@ import BroodstockGenetic from "@/pages/broodstock-genetic";
 import BroodstockPopulation from "@/pages/broodstock-population";
 import BreedingProgramDetails from "@/pages/breeding-program-details";
 import BroodstockContainerDetails from "@/pages/broodstock-container-details";
+import ScenarioPlanning from "@/pages/ScenarioPlanning";
 import NotFound from "@/pages/not-found";
 
 import Sidebar from "@/components/layout/sidebar";
@@ -88,6 +89,7 @@ function Router() {
             <Route path="/broodstock/population" component={BroodstockPopulation} />
             <Route path="/breeding-program-details/:id" component={BreedingProgramDetails} />
             <Route path="/broodstock-container-details/:id" component={BroodstockContainerDetails} />
+            <Route path="/scenario-planning" component={ScenarioPlanning} />
             <Route path="/inventory" component={Inventory} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/mortality-reporting" component={MortalityReporting} />
