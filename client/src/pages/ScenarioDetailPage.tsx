@@ -164,7 +164,7 @@ export function ScenarioDetailPage() {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="projections">Projections</TabsTrigger>
           <TabsTrigger value="configuration">Configuration</TabsTrigger>
