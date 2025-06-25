@@ -3094,6 +3094,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Scenario Projections endpoint
+  app.get("/api/v1/scenario-planning/scenarios/:id/projections/", async (req, res) => {
+    try {
+      const scenarioId = parseInt(req.params.id);
+      const { start_date, end_date, aggregation } = req.query;
+      
+      const projections = await storage.getScenarioProjections(
+        scenarioId,
+        start_date as string,
+        end_date as string,
+        aggregation as string
+      );
+      
+      res.json({
+        count: projections.length,
+        next: null,
+        previous: null,
+        results: projections
+      });
+    } catch (error) {
+      console.error('Error fetching scenario projections:', error);
+      res.status(500).json({ error: "Failed to fetch scenario projections" });
+    }
+  });
+
+  // Scenario Configuration endpoint
+  app.get("/api/v1/scenario-planning/scenarios/:id/configuration/", async (req, res) => {
+    try {
+      const scenarioId = parseInt(req.params.id);
+      const scenario = await storage.getScenario(scenarioId);
+      
+      if (!scenario) {
+        return res.status(404).json({ error: "Scenario not found" });
+      }
+
+      const tgcModel = await storage.getTgcModel(scenario.tgcModelId);
+      const fcrModel = await storage.getFcrModel(scenario.fcrModelId);
+      const mortalityModel = await storage.getMortalityModel(scenario.mortalityModelId);
+      
+      res.json({
+        scenario,
+        models: {
+          tgc: tgcModel,
+          fcr: fcrModel,
+          mortality: mortalityModel
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching scenario configuration:', error);
+      res.status(500).json({ error: "Failed to fetch scenario configuration" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
