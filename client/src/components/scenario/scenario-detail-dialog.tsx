@@ -219,8 +219,8 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
                       <p className="text-xl font-bold">{summary?.finalCount?.toLocaleString() || 0}</p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Total Mortality</p>
-                      <p className="text-xl font-bold">{projectionData.summary.totalMortality.toFixed(1)}%</p>
+                      <p className="text-muted-foreground">Final Biomass</p>
+                      <p className="text-xl font-bold">{summary?.totalBiomass?.toFixed(1) || 0}t</p>
                     </div>
                     <div>
                       <p className="text-muted-foreground">Final FCR</p>
