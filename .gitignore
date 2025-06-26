@@ -103,6 +103,12 @@ temp/
 # Vite
 vite.config.ts.*
 
+# Git repository metadata (never commit .git folder)
+.git/
+
+# Development and chat session assets
+attached_assets/
+
 # Replit specific
 .replit
 replit.nix
