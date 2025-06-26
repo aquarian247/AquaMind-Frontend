@@ -58,20 +58,67 @@ VITE_LOG_LEVEL=error
 
 ## Django Backend Requirements
 
-Your Django backend needs these endpoints for full compatibility:
+Your Django backend needs these endpoints for full compatibility across all 8 active apps:
 
 ### Authentication
 - `POST /api/v1/auth/login/` - User login
 - `GET /api/v1/auth/csrf/` - CSRF token
 - `GET /api/v1/auth/user/` - Current user info
 
-### Core Data Models
+### Infrastructure App
 - `GET /api/v1/infrastructure/geographies/`
 - `GET /api/v1/infrastructure/areas/`
 - `GET /api/v1/infrastructure/containers/`
+- `GET /api/v1/infrastructure/sensors/`
+
+### Batch Management App
 - `GET /api/v1/batch/batches/`
 - `GET /api/v1/batch/species/`
+- `GET /api/v1/batch/lifecycle-stages/`
+- `GET /api/v1/batch/container-assignments/`
+- `GET /api/v1/batch/transfers/`
+- `GET /api/v1/batch/growth-samples/`
+- `GET /api/v1/batch/mortality-events/`
+
+### Inventory App
 - `GET /api/v1/inventory/feed/`
+- `GET /api/v1/inventory/purchases/`
+- `GET /api/v1/inventory/stock/`
+- `GET /api/v1/inventory/feeding-events/`
+
+### Health App
+- `GET /api/v1/health/records/`
+- `GET /api/v1/health/assessments/`
+- `GET /api/v1/health/lab-samples/`
+
+### Environmental App (Section 3.1.5)
+- `GET /api/v1/environmental/readings/`
+- `GET /api/v1/environmental/parameters/`
+- `GET /api/v1/environmental/weather/`
+- `GET /api/v1/environmental/photoperiod/`
+
+### Broodstock App (Section 3.1.8)
+- `GET /api/v1/broodstock/fish/`
+- `GET /api/v1/broodstock/breeding-plans/`
+- `GET /api/v1/broodstock/breeding-pairs/`
+- `GET /api/v1/broodstock/egg-production/`
+- `GET /api/v1/broodstock/egg-suppliers/`
+- `GET /api/v1/broodstock/fish-movements/`
+- `GET /api/v1/broodstock/maintenance-tasks/`
+
+### Scenario Planning App (Section 3.3.1)
+- `GET /api/v1/scenario/scenarios/`
+- `GET /api/v1/scenario/tgc-models/`
+- `GET /api/v1/scenario/fcr-models/`
+- `GET /api/v1/scenario/mortality-models/`
+- `GET /api/v1/scenario/projections/`
+- `GET /api/v1/scenario/templates/`
+
+### Users App (Section 3.1.6)
+- `GET /api/v1/users/users/`
+- `GET /api/v1/users/profiles/`
+- `GET /api/v1/users/groups/`
+- `GET /api/v1/users/permissions/`
 
 ### Response Format
 All list endpoints should return Django REST Framework pagination:

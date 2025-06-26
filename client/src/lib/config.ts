@@ -60,12 +60,38 @@ export const DJANGO_ENDPOINTS = {
   HEALTH_ASSESSMENTS: '/api/v1/health/assessments/',
   LAB_SAMPLES: '/api/v1/health/lab-samples/',
   
-  // Environmental endpoints
+  // Environmental endpoints (Section 3.1.5)
   ENVIRONMENTAL_READINGS: '/api/v1/environmental/readings/',
+  ENVIRONMENTAL_PARAMETERS: '/api/v1/environmental/parameters/',
   WEATHER_DATA: '/api/v1/environmental/weather/',
+  PHOTOPERIOD_DATA: '/api/v1/environmental/photoperiod/',
+  
+  // Broodstock endpoints (Section 3.1.8)
+  BROODSTOCK_FISH: '/api/v1/broodstock/fish/',
+  BREEDING_PLANS: '/api/v1/broodstock/breeding-plans/',
+  BREEDING_PAIRS: '/api/v1/broodstock/breeding-pairs/',
+  EGG_PRODUCTION: '/api/v1/broodstock/egg-production/',
+  EGG_SUPPLIERS: '/api/v1/broodstock/egg-suppliers/',
+  FISH_MOVEMENTS: '/api/v1/broodstock/fish-movements/',
+  MAINTENANCE_TASKS: '/api/v1/broodstock/maintenance-tasks/',
+  
+  // Scenario Planning endpoints (Section 3.3.1)
+  SCENARIOS: '/api/v1/scenario/scenarios/',
+  TGC_MODELS: '/api/v1/scenario/tgc-models/',
+  FCR_MODELS: '/api/v1/scenario/fcr-models/',
+  MORTALITY_MODELS: '/api/v1/scenario/mortality-models/',
+  SCENARIO_PROJECTIONS: '/api/v1/scenario/projections/',
+  MODEL_TEMPLATES: '/api/v1/scenario/templates/',
+  
+  // User Management endpoints (Section 3.1.6)
+  USERS: '/api/v1/users/users/',
+  USER_PROFILES: '/api/v1/users/profiles/',
+  GROUPS: '/api/v1/users/groups/',
+  PERMISSIONS: '/api/v1/users/permissions/',
   
   // User authentication
   AUTH_LOGIN: '/api/v1/auth/login/',
   AUTH_LOGOUT: '/api/v1/auth/logout/',
   AUTH_USER: '/api/v1/auth/user/',
+  AUTH_CSRF: '/api/v1/auth/csrf/',
 } as const;

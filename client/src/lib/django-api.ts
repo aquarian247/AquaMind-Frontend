@@ -5,7 +5,10 @@ import type {
   DjangoListResponse, Geography, Area, Container, Sensor, Species, LifecycleStage, 
   Batch, BatchContainerAssignment, BatchTransfer, GrowthSample, MortalityEvent,
   Feed, FeedPurchase, FeedStock, FeedingEvent, HealthRecord, HealthAssessment,
-  LabSample, EnvironmentalReading, WeatherData
+  LabSample, EnvironmentalReading, EnvironmentalParameter, WeatherData, PhotoperiodData,
+  BroodstockFish, BreedingPlan, BreedingPair, EggProduction, EggSupplier,
+  Scenario, TGCModel, FCRModel, MortalityModel, ScenarioProjection,
+  User, UserProfile
 } from "./types/django";
 
 export interface DjangoErrorResponse {

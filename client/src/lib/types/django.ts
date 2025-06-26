@@ -272,3 +272,242 @@ export interface WeatherData {
   weather_condition: string;
   created_at: string;
 }
+
+export interface EnvironmentalParameter {
+  id: number;
+  name: string;
+  unit: string;
+  min_safe_value?: number;
+  max_safe_value?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PhotoperiodData {
+  id: number;
+  area: number;
+  date: string;
+  sunrise_time: string;
+  sunset_time: string;
+  daylight_hours: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Broodstock Types (Section 3.1.8)
+export interface BroodstockFish {
+  id: number;
+  fish_id: string;
+  container: number;
+  traits?: Record<string, any>;
+  health_status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BreedingPlan {
+  id: number;
+  name: string;
+  start_date: string;
+  end_date?: string;
+  objectives?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BreedingTraitPriority {
+  id: number;
+  breeding_plan: number;
+  trait_name: string;
+  weight: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BreedingPair {
+  id: number;
+  breeding_plan: number;
+  male_fish: number;
+  female_fish: number;
+  pairing_date: string;
+  expected_progeny_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EggProduction {
+  id: number;
+  egg_batch_id: string;
+  breeding_pair?: number;
+  egg_count: number;
+  production_date: string;
+  destination_station?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EggSupplier {
+  id: number;
+  name: string;
+  certifications?: string;
+  contact_info?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExternalEggBatch {
+  id: number;
+  egg_batch_id: string;
+  supplier: number;
+  batch_number: string;
+  provenance_data?: Record<string, any>;
+  acquisition_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BatchParentage {
+  id: number;
+  batch: number;
+  egg_batch_id: string;
+  parentage_type: string; // 'internal' or 'external'
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FishMovement {
+  id: number;
+  fish: number;
+  from_container?: number;
+  to_container: number;
+  movement_date: string;
+  responsible_user: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaintenanceTask {
+  id: number;
+  container: number;
+  task_type: string;
+  scheduled_date: string;
+  completed_date?: string;
+  notes?: string;
+  assigned_user?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Scenario Planning Types (Section 3.3.1)
+export interface Scenario {
+  id: number;
+  name: string;
+  description?: string;
+  tgc_model: number;
+  fcr_model: number;
+  mortality_model: number;
+  start_date: string;
+  duration_days: number;
+  initial_fish_count: number;
+  initial_weight_g?: number;
+  batch?: number;
+  genotype?: string;
+  supplier?: string;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TGCModel {
+  id: number;
+  name: string;
+  location: string;
+  release_period: string;
+  temperature_profile: Record<string, any>;
+  growth_coefficients: Record<string, any>;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FCRModel {
+  id: number;
+  name: string;
+  stage_fcr_values: Record<string, any>;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MortalityModel {
+  id: number;
+  name: string;
+  mortality_rates: Record<string, any>;
+  frequency: string; // 'daily' or 'weekly'
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScenarioProjection {
+  id: number;
+  scenario: number;
+  projection_date: string;
+  fish_count: number;
+  avg_weight_g: number;
+  biomass_kg: number;
+  feed_consumption_kg?: number;
+  fcr_actual?: number;
+  created_at: string;
+}
+
+export interface ModelTemplate {
+  id: number;
+  model_type: string; // 'tgc', 'fcr', 'mortality'
+  name: string;
+  description?: string;
+  template_data: Record<string, any>;
+  is_system_template: boolean;
+  created_by?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Users Types (Section 3.1.6)
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+  is_staff: boolean;
+  is_superuser: boolean;
+  date_joined: string;
+  last_login?: string;
+}
+
+export interface UserProfile {
+  id: number;
+  user: number;
+  role: string; // 'Admin', 'Operator', 'Manager', 'Executive', 'Veterinarian'
+  geography?: number;
+  subsidiary?: string; // 'Broodstock', 'Freshwater', 'Farming', 'Logistics'
+  phone?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Group {
+  id: number;
+  name: string;
+  permissions: number[];
+}
+
+export interface Permission {
+  id: number;
+  name: string;
+  content_type: number;
+  codename: string;
+}
