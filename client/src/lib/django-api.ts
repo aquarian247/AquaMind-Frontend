@@ -1,15 +1,60 @@
-// Django API Integration Layer
+/**
+ * Django API Integration Layer  – Migration Wrapper
+ *
+ * NOTE:
+ * This file is currently acting as a shim while we migrate from the
+ * hand-crafted `apiRequest` helpers + custom TypeScript interfaces to the
+ * auto-generated OpenAPI client (`openapi-typescript-codegen`).
+ *
+ * 1.  All domain models & list response types are re-exported from
+ *     `client/src/api` which itself re-exports the generated client (`/generated`).
+ * 2.  Existing method signatures are preserved so the rest of the codebase
+ *     compiles without changes.  Internal implementations can be gradually
+ *     swapped to use `ApiService` instead of `apiRequest`.
+ * 3.  Once every call path is migrated we can delete this wrapper and
+ *     reference the generated client directly.
+ */
+
 import { apiRequest } from "./queryClient";
 import { DJANGO_ENDPOINTS } from "./config";
-import type { 
-  DjangoListResponse, Geography, Area, Container, Sensor, Species, LifecycleStage, 
-  Batch, BatchContainerAssignment, BatchTransfer, GrowthSample, MortalityEvent,
-  Feed, FeedPurchase, FeedStock, FeedingEvent, HealthRecord, HealthAssessment,
-  LabSample, EnvironmentalReading, EnvironmentalParameter, WeatherData, PhotoperiodData,
-  BroodstockFish, BreedingPlan, BreedingPair, EggProduction, EggSupplier,
-  Scenario, TGCModel, FCRModel, MortalityModel, ScenarioProjection,
-  User, UserProfile
-} from "./types/django";
+
+// Re-exported/generated types
+import type {
+  DjangoListResponse,
+  Geography,
+  Area,
+  Container,
+  Sensor,
+  Species,
+  LifeCycleStage as LifecycleStage,
+  Batch,
+  BatchContainerAssignment,
+  BatchTransfer,
+  GrowthSample,
+  MortalityEvent,
+  Feed,
+  FeedPurchase,
+  FeedStock,
+  FeedingEvent,
+  EnvironmentalReading,
+  EnvironmentalParameter,
+  WeatherData,
+  PhotoperiodData,
+  BroodstockFish,
+  BreedingPlan,
+  BreedingPair,
+  EggProduction,
+  EggSupplier,
+  Scenario,
+  TGCModel,
+  FCRModel,
+  MortalityModel,
+  User,
+  UserProfile,
+} from "../api";
+
+// Generated client (not yet wired into every method – will replace apiRequest gradually)
+import { ApiService } from "../api";
 
 export interface DjangoErrorResponse {
   detail?: string;
