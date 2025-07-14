@@ -967,7 +967,8 @@ export default function BatchManagement() {
         </TabsContent>
 
         <TabsContent value="containers">
-          <BatchContainerView selectedBatch={selectedBatch} />
+          {/* Convert `null` → `undefined` to satisfy the component’s prop type */}
+          <BatchContainerView selectedBatch={selectedBatch ?? undefined} />
         </TabsContent>
 
         <TabsContent value="medical">

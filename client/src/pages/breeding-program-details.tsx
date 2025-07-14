@@ -58,7 +58,7 @@ export default function BreedingProgramDetails() {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: programs, isLoading } = useQuery({
+  const { data: programs, isLoading } = useQuery<{ results: BreedingProgram[] }>({
     queryKey: ['/api/v1/broodstock/programs/'],
   });
 
@@ -83,7 +83,7 @@ export default function BreedingProgramDetails() {
   };
 
   const geneticGainChartData = {
-    labels: program.geneticGain.map((_, index) => `G${index + 1}`),
+    labels: program.geneticGain.map((_value: number, index: number) => `G${index + 1}`),
     datasets: [{
       label: 'Genetic Gain (%)',
       data: program.geneticGain,
@@ -328,7 +328,7 @@ export default function BreedingProgramDetails() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {program.geneticGain.map((gain, index) => (
+                  {program.geneticGain.map((gain: number, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <span className="font-medium">Generation {index + 1}</span>
                       <div className="flex items-center gap-2">
@@ -396,7 +396,7 @@ export default function BreedingProgramDetails() {
                   </div>
                 </div>
                 
-                {program.geneticGain.map((gain, index) => (
+                  {program.geneticGain.map((gain: number, index: number) => (
                   <div key={index} className="flex items-center space-x-4">
                     <div className={`w-3 h-3 rounded-full ${
                       index < program.currentGeneration - 1 ? 'bg-green-500' : 

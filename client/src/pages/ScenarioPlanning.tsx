@@ -131,9 +131,10 @@ export default function ScenarioPlanning() {
   // Delete scenario mutation
   const deleteScenarioMutation = useMutation({
     mutationFn: async (scenarioId: number) => {
-      return apiRequest(`/api/v1/scenario-planning/scenarios/${scenarioId}/`, {
-        method: "DELETE",
-      });
+      return apiRequest(
+        "DELETE",
+        `/api/v1/scenario-planning/scenarios/${scenarioId}/`
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
@@ -155,10 +156,11 @@ export default function ScenarioPlanning() {
   // Duplicate scenario mutation
   const duplicateScenarioMutation = useMutation({
     mutationFn: async ({ scenarioId, name }: { scenarioId: number; name: string }) => {
-      return apiRequest(`/api/v1/scenario-planning/scenarios/${scenarioId}/duplicate/`, {
-        method: "POST",
-        body: JSON.stringify({ name }),
-      });
+      return apiRequest(
+        "POST",
+        `/api/v1/scenario-planning/scenarios/${scenarioId}/duplicate/`,
+        { name }
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
@@ -179,9 +181,10 @@ export default function ScenarioPlanning() {
   // Run projection mutation
   const runProjectionMutation = useMutation({
     mutationFn: async (scenarioId: number) => {
-      return apiRequest(`/api/v1/scenario-planning/scenarios/${scenarioId}/run-projection/`, {
-        method: "POST",
-      });
+      return apiRequest(
+        "POST",
+        `/api/v1/scenario-planning/scenarios/${scenarioId}/run-projection/`
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
