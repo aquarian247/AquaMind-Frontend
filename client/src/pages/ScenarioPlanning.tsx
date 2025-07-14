@@ -64,7 +64,9 @@ interface TgcModel {
   updatedAt: string;
 }
 
-interface Scenario {
+// NOTE: renamed to avoid clashing with the `Scenario` interface that exists
+// inside `components/scenario/scenario-edit-dialog.tsx`
+interface LocalScenario {
   id: number;
   name: string;
   description: string;
@@ -118,7 +120,7 @@ export default function ScenarioPlanning() {
   });
 
   // Fetch Scenarios with filtering
-  const { data: scenarios, isLoading: scenariosLoading } = useQuery<{results: Scenario[]}>({
+  const { data: scenarios, isLoading: scenariosLoading } = useQuery<{results: LocalScenario[]}>({
     queryKey: ["/api/v1/scenario-planning/scenarios/", { search: searchTerm, status: statusFilter }],
     queryFn: () => {
       const params = new URLSearchParams();

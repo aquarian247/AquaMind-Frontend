@@ -9,8 +9,36 @@ import { Bar, Scatter } from "react-chartjs-2";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
+// Define types for the genetic trait data
+interface GenomicMarker {
+  type: string;
+  positions: number[];
+}
+
+interface SnpAnalysis {
+  totalSnps: number;
+  analyzedTraits: number;
+  genomicMarkers: GenomicMarker[];
+}
+
+interface CorrelationMatrix {
+  traits: string[];
+  correlations: number[][];
+}
+
+interface TraitPerformance {
+  labels: string[];
+  currentGeneration: number[];
+}
+
+interface GeneticTraitData {
+  correlationMatrix: CorrelationMatrix;
+  snpAnalysis: SnpAnalysis;
+  traitPerformance: TraitPerformance;
+}
+
 function BroodstockGenetic() {
-  const { data: traitData, isLoading } = useQuery({
+  const { data: traitData, isLoading } = useQuery<GeneticTraitData>({
     queryKey: ['/api/v1/broodstock/genetic/traits/'],
   });
 
@@ -95,7 +123,7 @@ function BroodstockGenetic() {
 
   // SNP Browser visualization
   const snpData = traitData?.snpAnalysis ? {
-    datasets: traitData.snpAnalysis.genomicMarkers.map((marker: any, index: number) => ({
+    datasets: traitData.snpAnalysis.genomicMarkers.map((marker: GenomicMarker, index: number) => ({
       label: marker.type.charAt(0).toUpperCase() + marker.type.slice(1),
       data: marker.positions.map((pos: number) => ({ x: pos * 100, y: index + 1 })),
       backgroundColor: ['#3B82F6', '#EF4444', '#10B981', '#F59E0B'][index % 4],

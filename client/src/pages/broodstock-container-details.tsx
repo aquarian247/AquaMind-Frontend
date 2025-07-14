@@ -71,7 +71,7 @@ export default function BroodstockContainerDetails() {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: containersData, isLoading } = useQuery({
+  const { data: containersData, isLoading } = useQuery<{ results: BroodstockContainer[] }>({
     queryKey: ['/api/v1/broodstock/containers/'],
   });
 
