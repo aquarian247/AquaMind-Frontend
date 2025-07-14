@@ -17,7 +17,6 @@ import {
   CheckCircle, 
   AlertCircle,
   BarChart3,
-  DNA,
   Microscope,
   Target,
   Plus,
@@ -85,7 +84,19 @@ function BroodstockDashboard() {
     queryKey: ['/api/v1/broodstock/tasks/'],
   });
 
-  const { data: traitData, isLoading: traitsLoading } = useQuery({
+  // ------------------------------------------------------------------
+  // Genetic trait data shape (minimal for this dashboard)
+  // ------------------------------------------------------------------
+  interface GeneticTraitData {
+    traitPerformance: {
+      labels: string[];
+      currentGeneration: number[];
+      targetProfile: number[];
+    };
+    // other properties from the endpoint are ignored here
+  }
+
+  const { data: traitData, isLoading: traitsLoading } = useQuery<GeneticTraitData>({
     queryKey: ['/api/v1/broodstock/genetic/traits/'],
   });
 

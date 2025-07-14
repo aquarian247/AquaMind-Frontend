@@ -29,7 +29,31 @@ ChartJS.register(
 );
 
 function BroodstockPrograms() {
-  const { data: programs, isLoading } = useQuery({
+  // --------------------------------------------------------------------
+  // Types
+  // --------------------------------------------------------------------
+  interface Program {
+    id: number;
+    name: string;
+    description: string;
+    status: string;
+    currentGeneration: number;
+    targetGeneration: number;
+    progress: number;
+    populationSize: number;
+    startDate: string;
+    geneticGain: number[];
+    traitWeights: Record<string, number>;
+    leadGeneticist: string;
+  }
+
+  // Paginated response type
+  interface PaginatedPrograms {
+    count: number;
+    results: Program[];
+  }
+
+  const { data: programs, isLoading } = useQuery<PaginatedPrograms>({
     queryKey: ['/api/v1/broodstock/programs/'],
   });
 
