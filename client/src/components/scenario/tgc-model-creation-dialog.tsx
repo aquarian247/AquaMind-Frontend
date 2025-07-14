@@ -91,18 +91,21 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
 
   const createTgcModelMutation = useMutation({
     mutationFn: async (data: TgcModelFormData) => {
-      return apiRequest("/api/v1/scenario-planning/tgc-models/", {
-        method: "POST",
-        body: {
-          name: data.name,
-          location: data.location,
-          releasePeriod: data.releasePeriod,
-          tgcValue: data.tgcValue,
-          exponentN: data.exponentN,
-          exponentM: data.exponentM,
-          profileId: data.profileId,
-        },
-      });
+      const payload = {
+        name: data.name,
+        location: data.location,
+        releasePeriod: data.releasePeriod,
+        tgcValue: data.tgcValue,
+        exponentN: data.exponentN,
+        exponentM: data.exponentM,
+        profileId: data.profileId,
+      };
+
+      return apiRequest(
+        "POST",
+        "/api/v1/scenario-planning/tgc-models/",
+        payload,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/tgc-models/"] });

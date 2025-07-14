@@ -8,16 +8,78 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScenarioProjectionsChart } from "@/components/scenario/scenario-projections-chart";
 // Temperature data view will be implemented inline
 
+// Define interfaces for API response types
+interface TGCModel {
+  id: number;
+  name: string;
+  location: string;
+  tgc_value: string;
+  release_period?: string;
+}
+
+interface FCRModel {
+  id: number;
+  name: string;
+  description: string;
+  ratio?: number;
+}
+
+interface MortalityModel {
+  id: number;
+  name: string;
+  description?: string;
+  weekly_rate: number;
+  daily_rate?: number;
+}
+
+interface Scenario {
+  id: number;
+  name: string;
+  description: string;
+  status: string;
+  durationDays: number;
+  initialCount: number;
+  initialWeight: string;
+  genotype: string;
+  supplier: string;
+  startDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ScenarioConfigResponse {
+  scenario: Scenario;
+  tgc_model?: TGCModel;
+  fcr_model?: FCRModel;
+  mortality_model?: MortalityModel;
+  temperature_profile?: any;
+}
+
+interface ProjectionPoint {
+  weekNumber: number;
+  averageWeight: number;
+  fishCount: number;
+  mortalityRate: number;
+  fcr: number;
+  totalBiomass: number;
+  waterTemperature: number;
+  cumulativeFeed: number;
+}
+
+interface ProjectionsResponse {
+  results: ProjectionPoint[];
+}
+
 export function ScenarioDetailPage() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
 
-  const { data: scenario, isLoading: scenarioLoading } = useQuery({
+  const { data: scenario, isLoading: scenarioLoading } = useQuery<ScenarioConfigResponse>({
     queryKey: [`/api/v1/scenario-planning/scenarios/${id}/configuration/`],
     enabled: !!id,
   });
 
-  const { data: projectionData, isLoading: projectionsLoading } = useQuery({
+  const { data: projectionData, isLoading: projectionsLoading } = useQuery<ProjectionsResponse>({
     queryKey: [`/api/v1/scenario-planning/scenarios/${id}/projections/`],
     enabled: !!id,
   });
@@ -275,7 +337,7 @@ export function ScenarioDetailPage() {
         <TabsContent value="projections" className="space-y-6">
           {projections.length > 0 ? (
             <ScenarioProjectionsChart
-              data={projections.map(p => ({
+              data={projections.map((p: ProjectionPoint) => ({
                 day: p.weekNumber * 7,
                 week: p.weekNumber,
                 weight: p.averageWeight,
@@ -308,11 +370,11 @@ export function ScenarioDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">{scenario.tgc_model?.name}</p>
-                  <p className="text-xs text-muted-foreground">{scenario.tgc_model?.location}</p>
+                  <p className="text-sm font-medium">{scenario.tgc_model?.name || "Not configured"}</p>
+                  <p className="text-xs text-muted-foreground">{scenario.tgc_model?.location || "-"}</p>
                   <div className="text-xs">
                     <span className="text-muted-foreground">TGC Value: </span>
-                    <span className="font-medium">{scenario.tgc_model?.tgc_value}</span>
+                    <span className="font-medium">{scenario.tgc_model?.tgc_value || "-"}</span>
                   </div>
                 </div>
               </CardContent>
@@ -327,11 +389,11 @@ export function ScenarioDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">{scenario.fcr_model?.name}</p>
-                  <p className="text-xs text-muted-foreground">{scenario.fcr_model?.description}</p>
+                  <p className="text-sm font-medium">{scenario.fcr_model?.name || "Not configured"}</p>
+                  <p className="text-xs text-muted-foreground">{scenario.fcr_model?.description || "-"}</p>
                   <div className="text-xs">
                     <span className="text-muted-foreground">FCR Ratio: </span>
-                    <span className="font-medium">{scenario.fcr_model?.ratio}</span>
+                    <span className="font-medium">{scenario.fcr_model?.ratio || "-"}</span>
                   </div>
                 </div>
               </CardContent>
@@ -346,11 +408,11 @@ export function ScenarioDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">{scenario.mortality_model?.name}</p>
-                  <p className="text-xs text-muted-foreground">{scenario.mortality_model?.description}</p>
+                  <p className="text-sm font-medium">{scenario.mortality_model?.name || "Not configured"}</p>
+                  <p className="text-xs text-muted-foreground">{scenario.mortality_model?.description || "-"}</p>
                   <div className="text-xs">
                     <span className="text-muted-foreground">Weekly Rate: </span>
-                    <span className="font-medium">{scenario.mortality_model?.weekly_rate}%</span>
+                    <span className="font-medium">{scenario.mortality_model?.weekly_rate || "-"}%</span>
                   </div>
                 </div>
               </CardContent>

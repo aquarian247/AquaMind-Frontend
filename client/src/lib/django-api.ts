@@ -258,7 +258,10 @@ export class DjangoApiClient {
       ]);
 
       // Calculate KPIs from available data
-      const totalFish = batches.results.reduce((sum, batch: Batch) => sum + (batch.population_count || 0), 0);
+      const totalFish = batches.results.reduce(
+        (sum, batch: Batch) => sum + (batch.population_count ?? 0),
+        0,
+      );
       const healthyBatches = batches.results.filter((batch: Batch) => batch.status === 'ACTIVE').length;
       const healthRate = batches.results.length > 0 ? (healthyBatches / batches.results.length) * 100 : 0;
 
