@@ -68,19 +68,51 @@ function BroodstockDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const isMobile = useIsMobile();
-  const { data: kpis, isLoading: kpisLoading } = useQuery({
+  // ------------------------------------------------------------------
+  // API Response Types
+  // ------------------------------------------------------------------
+  interface KPIData {
+    activeBroodstockPairs: number;
+    broodstockPopulation: number;
+    totalProgenyCount: number;
+    geneticDiversityIndex: number;
+    pendingSelections: number;
+    averageGeneticGain: number;
+  }
+
+  interface Program {
+    id: number;
+    name: string;
+    description: string;
+    status: string;
+    currentGeneration: number;
+    targetGeneration: number;
+    progress: number;
+    populationSize: number;
+    startDate: string;
+    leadGeneticist: string;
+    geneticGain: number[];
+    traitWeights: Record<string, number>;
+  }
+
+  type Paginated<T> = {
+    count: number;
+    results: T[];
+  };
+
+  const { data: kpis, isLoading: kpisLoading } = useQuery<KPIData>({
     queryKey: ['/api/v1/broodstock/dashboard/kpis/'],
   });
 
-  const { data: programs, isLoading: programsLoading } = useQuery({
+  const { data: programs, isLoading: programsLoading } = useQuery<Paginated<Program>>({
     queryKey: ['/api/v1/broodstock/programs/'],
   });
 
-  const { data: activities, isLoading: activitiesLoading } = useQuery({
+  const { data: activities, isLoading: activitiesLoading } = useQuery<Paginated<any>>({
     queryKey: ['/api/v1/broodstock/activities/'],
   });
 
-  const { data: tasks, isLoading: tasksLoading } = useQuery({
+  const { data: tasks, isLoading: tasksLoading } = useQuery<Paginated<any>>({
     queryKey: ['/api/v1/broodstock/tasks/'],
   });
 

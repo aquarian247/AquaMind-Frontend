@@ -309,7 +309,8 @@ function BroodstockPrograms() {
           <div className="space-y-6">
             {programs?.results?.map((program: any, index: number) => (
               <div key={program.id} className="relative">
-                {index < programs.results.length - 1 && (
+                {/* Safely handle the case where programs or results might be undefined */}
+                {index < ((programs?.results?.length ?? 0) - 1) && (
                   <div className="absolute left-4 top-8 w-0.5 h-16 bg-gray-300 dark:bg-gray-600"></div>
                 )}
                 <div className="flex items-start space-x-4">
