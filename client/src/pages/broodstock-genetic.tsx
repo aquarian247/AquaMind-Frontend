@@ -81,6 +81,9 @@ function BroodstockGenetic() {
     }]
   } : null;
 
+  // Safely derive trait count for axis limits
+  const traitCount = traitData?.correlationMatrix?.traits?.length ?? 0;
+
   const correlationOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -103,7 +106,7 @@ function BroodstockGenetic() {
         type: 'linear' as const,
         position: 'bottom' as const,
         min: -0.5,
-        max: traitData?.correlationMatrix.traits.length - 0.5,
+        max: traitCount - 0.5,
         ticks: {
           stepSize: 1,
           callback: (value: any) => traitData?.correlationMatrix.traits[value] || ''
@@ -112,7 +115,7 @@ function BroodstockGenetic() {
       y: {
         type: 'linear' as const,
         min: -0.5,
-        max: traitData?.correlationMatrix.traits.length - 0.5,
+        max: traitCount - 0.5,
         ticks: {
           stepSize: 1,
           callback: (value: any) => traitData?.correlationMatrix.traits[value] || ''

@@ -76,7 +76,12 @@ interface LocalScenario {
   initialWeight: string;
   genotype: string;
   supplier: string;
-  status: string;
+  /** 
+   * Match the exact status union used by the Scenario interface in
+   * `scenario-edit-dialog.tsx` to avoid type-mismatch errors when passing
+   * a `LocalScenario` to components that expect that stricter type.
+   */
+  status: "draft" | "running" | "completed" | "failed";
   createdAt: string;
   updatedAt: string;
 }

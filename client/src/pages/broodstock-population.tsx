@@ -9,7 +9,7 @@ import { useState } from "react";
 function BroodstockPopulation() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
-  const { data: containers, isLoading } = useQuery({
+  const { data: containers, isLoading } = useQuery<{ count: number; results: any[] }>({
     queryKey: ['/api/v1/broodstock/containers/'],
   });
 
