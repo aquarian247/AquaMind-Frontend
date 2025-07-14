@@ -24,7 +24,19 @@ export const setAuthToken = (token: string | null) => {
     };
   } else {
     // Remove Authorization header when token is null
-    const { Authorization, ...headers } = OpenAPI.HEADERS || {};
+    // Handle the case where HEADERS might be a Resolver function
+    const currentHeaders = OpenAPI.HEADERS || {};
+    const headers: Record<string, string> = {};
+    
+    // Copy all headers except Authorization
+    if (typeof currentHeaders === 'object') {
+      Object.entries(currentHeaders).forEach(([key, value]) => {
+        if (key !== 'Authorization') {
+          headers[key] = value;
+        }
+      });
+    }
+    
     OpenAPI.HEADERS = headers;
   }
 };
