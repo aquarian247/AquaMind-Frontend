@@ -140,14 +140,16 @@ export function MortalityModelCreationDialog({ children, onSuccess }: MortalityM
 
   const createMortalityModelMutation = useMutation({
     mutationFn: async (data: MortalityModelFormData) => {
-      return apiRequest("/api/v1/scenario-planning/mortality-models/", {
-        method: "POST",
-        body: {
+      // apiRequest signature: (method, url, data)
+      return apiRequest(
+        "POST",
+        "/api/v1/scenario-planning/mortality-models/",
+        {
           name: data.name,
           frequency: data.frequency,
           rate: data.rate,
-        },
-      });
+        }
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/mortality-models/"] });

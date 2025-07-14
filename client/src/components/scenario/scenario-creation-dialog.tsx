@@ -111,10 +111,7 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
         ...data,
         startDate: data.startDate.toISOString().split('T')[0],
       };
-      return apiRequest("/api/v1/scenario-planning/scenarios/", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      });
+      return apiRequest("POST", "/api/v1/scenario-planning/scenarios/", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
@@ -183,6 +180,7 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
                       placeholder="Describe the scenario objectives and parameters"
                       className="min-h-[100px]"
                       {...field} 
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -296,6 +294,7 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
                         max="5000"
                         step="0.1"
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -311,7 +310,7 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Genotype</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select genotype" />
@@ -335,7 +334,7 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Supplier</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select supplier" />
@@ -366,7 +365,10 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
                 name="tgcModelId"
                 render={({ field }) => (
                   <FormItem>
-                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      value={field.value?.toString() || undefined}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select TGC model" />
@@ -393,7 +395,10 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
                 name="fcrModelId"
                 render={({ field }) => (
                   <FormItem>
-                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      value={field.value?.toString() || undefined}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select FCR model" />
@@ -420,7 +425,10 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
                 name="mortalityModelId"
                 render={({ field }) => (
                   <FormItem>
-                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      value={field.value?.toString() || undefined}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select mortality model" />
@@ -447,7 +455,10 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
                 name="temperatureProfileId"
                 render={({ field }) => (
                   <FormItem>
-                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      value={field.value?.toString() || undefined}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select temperature profile" />

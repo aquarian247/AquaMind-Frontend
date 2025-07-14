@@ -71,7 +71,11 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
   const [filters, setFilters] = useState<FilterState>({});
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
-  const updateFilter = (key: keyof FilterState, value: string | undefined) => {
+  // Generic helper ensures the value matches the specific key’s type
+  const updateFilter = <K extends keyof FilterState>(
+    key: K,
+    value: FilterState[K] | undefined,
+  ) => {
     const newFilters = { ...filters };
     
     // Handle "all" values as undefined (clear filter)
@@ -122,7 +126,12 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Region</label>
-              <Select value={filters.region || ""} onValueChange={(v) => updateFilter('region', v || undefined)}>
+              <Select
+                value={filters.region || ""}
+                onValueChange={(v) =>
+                  updateFilter('region', v === 'all' ? undefined : v)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
@@ -142,7 +151,15 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
 
             <div>
               <label className="text-sm font-medium mb-2 block">Site Type</label>
-              <Select value={filters.siteType || ""} onValueChange={(v) => updateFilter('siteType', v || undefined)}>
+              <Select
+                value={filters.siteType || ""}
+                onValueChange={(v) =>
+                  updateFilter(
+                    'siteType',
+                    v === 'all' ? undefined : (v as 'freshwater' | 'seawater'),
+                  )
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
@@ -168,7 +185,9 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
               <label className="text-sm font-medium mb-2 block">Specific Site</label>
               <Select 
                 value={filters.site || ""} 
-                onValueChange={(v) => updateFilter('site', v || undefined)}
+                onValueChange={(v) =>
+                  updateFilter('site', v === 'all' ? undefined : v)
+                }
                 disabled={!selectedRegion}
               >
                 <SelectTrigger>
@@ -200,7 +219,12 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
                   placeholder="Search batches, containers..."
                   className="pl-9"
                   value={filters.searchTerm || ""}
-                  onChange={(e) => updateFilter('searchTerm', e.target.value || undefined)}
+                  onChange={(e) =>
+                    updateFilter(
+                      'searchTerm',
+                      e.target.value ? e.target.value : undefined,
+                    )
+                  }
                 />
               </div>
             </div>

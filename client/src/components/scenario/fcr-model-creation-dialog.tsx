@@ -107,13 +107,14 @@ export function FcrModelCreationDialog({ children, onSuccess }: FcrModelCreation
 
   const createFcrModelMutation = useMutation({
     mutationFn: async (data: FcrModelFormData) => {
-      return apiRequest("/api/v1/scenario-planning/fcr-models/", {
-        method: "POST",
-        body: {
+      return apiRequest(
+        "POST",
+        "/api/v1/scenario-planning/fcr-models/",
+        {
           name: data.name,
           description: data.description,
-        },
-      });
+        }
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/fcr-models/"] });
