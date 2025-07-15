@@ -190,7 +190,7 @@ export default function MortalityReporting() {
                             <Skeleton className="h-4 w-full" />
                           </div>
                         ) : (
-                          farmSites?.map((site) => (
+                          farmSites?.map((site: FarmSite) => (
                             <SelectItem key={site.id} value={site.id.toString()}>
                               {site.name} - {site.location}
                             </SelectItem>
@@ -230,7 +230,7 @@ export default function MortalityReporting() {
                             <Skeleton className="h-4 w-full" />
                           </div>
                         ) : (
-                          pens?.map((pen) => (
+                          pens?.map((pen: Pen) => (
                             <SelectItem key={pen.id} value={pen.id.toString()}>
                               {pen.name} - Capacity: {pen.capacity?.toLocaleString()}
                             </SelectItem>
