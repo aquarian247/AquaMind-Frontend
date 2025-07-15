@@ -47,6 +47,10 @@ import {
   Title,
 } from 'chart.js';
 import { useIsMobile } from "@/hooks/use-mobile";
+/* ---------------------------------------------------------------------------
+ * Generated API types
+ * ------------------------------------------------------------------------- */
+import type { PaginatedContainerList } from "@/api/generated/models/PaginatedContainerList";
 
 ChartJS.register(
   RadialLinearScale,
@@ -126,13 +130,17 @@ function BroodstockDashboard() {
       targetProfile: number[];
     };
     // other properties from the endpoint are ignored here
+    snpAnalysis?: {
+      totalSnps?: number;
+      analyzedTraits?: number;
+    };
   }
 
   const { data: traitData, isLoading: traitsLoading } = useQuery<GeneticTraitData>({
     queryKey: ['/api/v1/broodstock/genetic/traits/'],
   });
 
-  const { data: containers, isLoading: containersLoading } = useQuery({
+  const { data: containers, isLoading: containersLoading } = useQuery<PaginatedContainerList>({
     queryKey: ['/api/v1/broodstock/containers/'],
   });
 
@@ -416,7 +424,7 @@ function BroodstockDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {programs?.results?.slice(0, 3).map((program: any) => (
+                  {programs?.results?.slice(0, 3).map((program: Program) => (
                     <div key={program.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
                         <div className="flex-1">
@@ -545,7 +553,7 @@ function BroodstockDashboard() {
                       Active Programs
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {programs?.results?.filter((p: any) => p.status === 'active').length || 0}
+                      {programs?.results?.filter((p: Program) => p.status === 'active').length || 0}
                     </p>
                   </div>
                   <TrendingUp className="w-8 h-8 text-green-500" />
@@ -561,7 +569,9 @@ function BroodstockDashboard() {
                       Total Population
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {programs?.results?.reduce((sum: number, p: any) => sum + p.populationSize, 0)?.toLocaleString() || 0}
+                      {(programs?.results ?? [])
+                        .reduce((sum: number, p: Program) => sum + p.populationSize, 0)
+                        .toLocaleString()}
                     </p>
                   </div>
                   <Users className="w-8 h-8 text-blue-500" />
@@ -577,7 +587,12 @@ function BroodstockDashboard() {
                       Avg Progress
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {Math.round(programs?.results?.reduce((sum: number, p: any) => sum + p.progress, 0) / (programs?.results?.length || 1)) || 0}%
+                      {Math.round(
+                        (programs?.results ?? []).reduce(
+                          (sum: number, p: Program) => sum + p.progress,
+                          0
+                        ) / ((programs?.results?.length ?? 1) || 1)
+                      )}%
                     </p>
                   </div>
                   <Target className="w-8 h-8 text-purple-500" />
@@ -588,7 +603,7 @@ function BroodstockDashboard() {
 
           {/* Programs Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {programs?.results?.map((program: any) => (
+            {programs?.results?.map((program: Program) => (
               <Card key={program.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
@@ -690,7 +705,7 @@ function BroodstockDashboard() {
                         .slice(0, 3)
                         .map(([trait, weight]) => (
                           <Badge key={trait} variant="outline" className="text-xs">
-                            {trait.replace(/([A-Z])/g, ' $1').trim()} {weight}%
+                            {trait.replace(/([A-Z])/g, ' $1').trim()} {weight as number}%
                           </Badge>
                         ))}
                     </div>
@@ -928,7 +943,10 @@ function BroodstockDashboard() {
                       Optimal Status
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {Math.floor((containers?.results?.filter((c: any) => c.environmentalStatus === 'optimal').length || 0) / (containers?.count || 1) * 100)}%
+                      {Math.floor(
+                        ((containers?.results?.filter(c => c.environmentalStatus === 'optimal').length || 0) / 
+                        (containers?.count || 1)) * 100
+                      )}%
                     </p>
                   </div>
                   <Activity className="w-8 h-8 text-green-500" />
@@ -944,8 +962,9 @@ function BroodstockDashboard() {
                       Avg Temperature
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {containers?.results ? 
-                        (containers.results.reduce((sum: number, c: any) => sum + parseFloat(c.temperature), 0) / containers.results.length).toFixed(1) 
+                      {containers?.results && containers.results.length > 0
+                        ? (containers.results.reduce((sum: number, c: any) => sum + parseFloat(c.temperature), 0) / 
+                           containers.results.length).toFixed(1)
                         : '0.0'}°C
                     </p>
                   </div>
@@ -962,7 +981,9 @@ function BroodstockDashboard() {
                       Total Fish
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {containers?.results?.reduce((sum: number, c: any) => sum + c.fishCount, 0)?.toLocaleString() || 0}
+                      {(containers?.results ?? [])
+                        .reduce((sum: number, c: any) => sum + c.fishCount, 0)
+                        .toLocaleString()}
                     </p>
                   </div>
                   <Users className="w-8 h-8 text-purple-500" />

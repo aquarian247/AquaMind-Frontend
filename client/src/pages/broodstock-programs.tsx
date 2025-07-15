@@ -142,7 +142,9 @@ function BroodstockPrograms() {
                   Total Population
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {programs?.results?.reduce((sum: number, p: any) => sum + p.populationSize, 0)?.toLocaleString() || 0}
+                  {(programs?.results ?? [])
+                    .reduce((sum: number, p: Program) => sum + p.populationSize, 0)
+                    .toLocaleString()}
                 </p>
               </div>
               <Users className="w-8 h-8 text-blue-500" />
@@ -158,7 +160,12 @@ function BroodstockPrograms() {
                   Avg Progress
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {Math.round(programs?.results?.reduce((sum: number, p: any) => sum + p.progress, 0) / (programs?.results?.length || 1)) || 0}%
+                  {Math.round(
+                    (programs?.results ?? []).reduce(
+                      (sum: number, p: Program) => sum + p.progress,
+                      0,
+                    ) / ((programs?.results?.length ?? 1) || 1),
+                  )}
                 </p>
               </div>
               <Target className="w-8 h-8 text-purple-500" />
@@ -269,12 +276,12 @@ function BroodstockPrograms() {
                   Primary Traits
                 </p>
                 <div className="flex flex-wrap gap-1">
-                  {Object.entries(program.traitWeights)
+                  {(Object.entries(program.traitWeights) as [string, number][])
                     .sort(([,a], [,b]) => (b as number) - (a as number))
                     .slice(0, 3)
                     .map(([trait, weight]) => (
                       <Badge key={trait} variant="outline" className="text-xs">
-                        {trait.replace(/([A-Z])/g, ' $1').trim()} {weight}%
+                        {trait.replace(/([A-Z])/g, ' $1').trim()} {(weight as number)}%
                       </Badge>
                     ))}
                 </div>
