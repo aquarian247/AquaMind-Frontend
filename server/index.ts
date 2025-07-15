@@ -1,5 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { createServer as createHttpServer } from "http";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import { registerMockApiRoutes, shouldUseMockApi } from "./mock-api";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
@@ -37,7 +39,26 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  // Decide which API backend to use
+  if (shouldUseMockApi()) {
+    log("🔌 Using MOCK API (Express in-process)");
+    registerMockApiRoutes(app);
+  } else {
+    const target = process.env.DJANGO_API_URL || "http://localhost:8000";
+    log(`🔀 Proxying API requests to Django backend at ${target}`);
+    app.use(
+      "/api",
+      createProxyMiddleware({
+        target,
+        changeOrigin: true,
+        // keep original path (/api/…) unchanged
+        pathRewrite: { "^/api": "/api" },
+      })
+    );
+  }
+
+  // Create HTTP server (previously returned by registerRoutes)
+  const server = createHttpServer(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
