@@ -554,7 +554,7 @@ export default function Inventory() {
                   {containerStock.slice(0, 5).map((stock) => (
                     <div key={stock.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium">Container {stock.containerId}</p>
+                        <p className="font-medium">Container {stock.feed_container}</p>
                         <p className="text-sm text-gray-600">{parseFloat(stock.quantityKg).toLocaleString()} kg</p>
                       </div>
                       <Progress 

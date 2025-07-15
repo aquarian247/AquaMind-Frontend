@@ -41,6 +41,21 @@ const MORTALITY_CAUSES = [
 ];
 
 export default function MortalityReporting() {
+  /* ------------------------------------------------------------------
+   * Local helpers – minimal shapes returned by /api endpoints we call
+   * ------------------------------------------------------------------ */
+  interface FarmSite {
+    id: number;
+    name: string;
+    location: string;
+  }
+
+  interface Pen {
+    id: number;
+    name: string;
+    capacity?: number | null;
+  }
+
   const [selectedFarmSite, setSelectedFarmSite] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();

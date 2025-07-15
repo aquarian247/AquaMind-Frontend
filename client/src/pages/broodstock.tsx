@@ -940,11 +940,11 @@ function BroodstockDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Optimal Status
+                      Active Containers
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                       {Math.floor(
-                        ((containers?.results?.filter(c => c.environmentalStatus === 'optimal').length || 0) / 
+                        ((containers?.results?.filter(c => c.active).length || 0) /
                         (containers?.count || 1)) * 100
                       )}%
                     </p>
@@ -1007,9 +1007,9 @@ function BroodstockDashboard() {
                           {container.location || 'Location not specified'}
                         </CardDescription>
                       </div>
-                      <Badge className={container.environmentalStatus === 'optimal' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
+                      <Badge className={container.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
                         <Activity className="w-3 h-3 mr-1" />
-                        <span className="text-xs">{container.environmentalStatus}</span>
+                        <span className="text-xs">{container.active ? 'Active' : 'Inactive'}</span>
                       </Badge>
                     </div>
                   </CardHeader>
@@ -1124,8 +1124,8 @@ function BroodstockDashboard() {
                           <td className="py-3 px-2">{container.oxygen} mg/L</td>
                           <td className="py-3 px-2">{container.ph}</td>
                           <td className="py-3 px-2">
-                            <Badge className={container.environmentalStatus === 'optimal' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                              {container.environmentalStatus}
+                            <Badge className={container.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                              {container.active ? 'Active' : 'Inactive'}
                             </Badge>
                           </td>
                           <td className="py-3 px-2">
