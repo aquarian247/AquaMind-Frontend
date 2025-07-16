@@ -156,11 +156,7 @@ export const getHeaders = async (config: OpenAPIConfig, options: ApiRequestOptio
         }), {} as Record<string, string>);
 
     if (isStringWithValue(token)) {
-        /* Updated to align with new backend authentication scheme
-         * All endpoints (except auth) now expect the header:
-         *     Authorization: Token <token>
-         */
-        headers['Authorization'] = `Token ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
     }
 
     if (isStringWithValue(username) && isStringWithValue(password)) {
