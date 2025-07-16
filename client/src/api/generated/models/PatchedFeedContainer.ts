@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ContainerTypeEnum } from './ContainerTypeEnum';
 /**
  * Serializer for the FeedContainer model.
  */
@@ -20,7 +19,7 @@ export type PatchedFeedContainer = {
      * * `TANK` - Tank
      * * `OTHER` - Other
      */
-    container_type?: ContainerTypeEnum;
+    container_type?: 'SILO' | 'BARGE' | 'TANK' | 'OTHER';
     /**
      * Human-readable display name for the container type.
      */

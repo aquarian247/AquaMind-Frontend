@@ -2,8 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BatchTypeEnum } from './BatchTypeEnum';
-import type { StatusEnum } from './StatusEnum';
 /**
  * Serializer for the Batch model.
  *
@@ -40,14 +38,14 @@ export type PatchedBatch = {
      * * `COMPLETED` - Completed
      * * `TERMINATED` - Terminated
      */
-    status?: StatusEnum;
+    status?: 'ACTIVE' | 'COMPLETED' | 'TERMINATED';
     /**
      * Type or category of the batch. Refer to model choices (e.g., 'Production', 'Experimental').
      *
      * * `STANDARD` - Standard
      * * `MIXED` - Mixed Population
      */
-    batch_type?: BatchTypeEnum;
+    batch_type?: 'STANDARD' | 'MIXED';
     /**
      * Date when the batch officially started or was created (YYYY-MM-DD).
      */
@@ -75,22 +73,22 @@ export type PatchedBatch = {
     /**
      * Total current biomass in kilograms for this batch, calculated from active assignments and formatted to two decimal places (read-only).
      */
-    readonly calculated_biomass_kg?: string;
+    readonly calculated_biomass_kg?: number;
     /**
      * Current average weight in grams for individuals in this batch, calculated from active assignments and formatted to two decimal places (read-only).
      */
-    readonly calculated_avg_weight_g?: string;
+    readonly calculated_avg_weight_g?: number;
     /**
      * The current lifecycle stage of the batch (ID, name, order), determined by the latest active assignment (read-only).
      */
-    readonly current_lifecycle_stage?: string;
+    readonly current_lifecycle_stage?: any;
     /**
      * Number of days the batch has been in production since its start date (read-only).
      */
-    readonly days_in_production?: string;
+    readonly days_in_production?: number;
     /**
      * List of IDs of containers currently actively holding this batch (read-only).
      */
-    readonly active_containers?: string;
+    readonly active_containers?: Array<number>;
 };
 

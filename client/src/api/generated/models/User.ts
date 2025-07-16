@@ -2,9 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { GeographyEnum } from './GeographyEnum';
-import type { RoleEnum } from './RoleEnum';
-import type { SubsidiaryEnum } from './SubsidiaryEnum';
 import type { UserProfile } from './UserProfile';
 /**
  * Serializer for the User model.
@@ -21,9 +18,30 @@ export type User = {
     email: string;
     full_name?: string;
     phone?: string;
-    geography?: GeographyEnum;
-    subsidiary?: SubsidiaryEnum;
-    role?: RoleEnum;
+    /**
+     * * `FO` - Faroe Islands
+     * * `SC` - Scotland
+     * * `ALL` - All Geographies
+     */
+    geography?: 'FO' | 'SC' | 'ALL';
+    /**
+     * * `BS` - Broodstock
+     * * `FW` - Freshwater
+     * * `FM` - Farming
+     * * `LG` - Logistics
+     * * `ALL` - All Subsidiaries
+     */
+    subsidiary?: 'BS' | 'FW' | 'FM' | 'LG' | 'ALL';
+    /**
+     * * `ADMIN` - Administrator
+     * * `MGR` - Manager
+     * * `OPR` - Operator
+     * * `VET` - Veterinarian
+     * * `QA` - Quality Assurance
+     * * `FIN` - Finance
+     * * `VIEW` - Viewer
+     */
+    role?: 'ADMIN' | 'MGR' | 'OPR' | 'VET' | 'QA' | 'FIN' | 'VIEW';
     password?: string;
     /**
      * Designates whether this user should be treated as active. Unselect this instead of deleting accounts.

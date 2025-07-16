@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ExternalEggBatch } from './ExternalEggBatch';
-import type { SourceTypeEnum } from './SourceTypeEnum';
 /**
  * Serializer for egg production.
  */
@@ -36,7 +35,7 @@ export type PatchedEggProduction = {
      * * `internal` - Internal
      * * `external` - External
      */
-    source_type?: SourceTypeEnum;
+    source_type?: 'internal' | 'external';
     readonly external_batch?: ExternalEggBatch;
     readonly batch_assignment_count?: number;
     readonly created_at?: string;

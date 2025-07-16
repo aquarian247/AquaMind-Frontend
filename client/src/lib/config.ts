@@ -19,6 +19,31 @@ export const API_CONFIG = {
   RETRY_DELAY: 1000,
 } as const;
 
+/**
+ * Generated-client runtime configuration
+ */
+import { OpenAPI } from '../api';
+
+/**
+ * Retrieve the auth token (if any) from localStorage.
+ * The backend expects a header:
+ *     Authorization: Token <token>
+ * Returning `undefined` means “unauthenticated request”.
+ */
+export const getAuthToken = (): string | undefined => {
+  try {
+    return localStorage.getItem('authToken') || undefined;
+  } catch {
+    // SSR / sandboxed environment – no localStorage
+    return undefined;
+  }
+};
+
+// Configure the generated API client so every request uses the correct base
+// URL and pulls a fresh token at call-time.
+OpenAPI.BASE = API_CONFIG.DJANGO_API_URL;
+OpenAPI.TOKEN = getAuthToken;
+
 export const getApiUrl = (endpoint: string): string => {
   if (API_CONFIG.USE_DJANGO_API) {
     const baseUrl = API_CONFIG.DJANGO_API_URL;

@@ -113,6 +113,9 @@ attached_assets/
 .replit
 replit.nix
 
+# Internal planning prompts
+next_session_prompt.md
+
 # Development databases
 *.db
 *.sqlite

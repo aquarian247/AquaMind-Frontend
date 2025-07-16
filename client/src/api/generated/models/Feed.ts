@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SizeCategoryEnum } from './SizeCategoryEnum';
 /**
  * Serializer for the Feed model.
  *
@@ -12,7 +11,13 @@ export type Feed = {
     readonly id: number;
     name: string;
     brand: string;
-    size_category: SizeCategoryEnum;
+    /**
+     * * `MICRO` - Micro
+     * * `SMALL` - Small
+     * * `MEDIUM` - Medium
+     * * `LARGE` - Large
+     */
+    size_category: 'MICRO' | 'SMALL' | 'MEDIUM' | 'LARGE';
     /**
      * Pellet size in millimeters
      */

@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CategoryEnum } from './CategoryEnum';
 /**
  * Serializer for the ContainerType model.
  */
@@ -20,7 +19,7 @@ export type ContainerType = {
      * * `TRAY` - Tray
      * * `OTHER` - Other
      */
-    category: CategoryEnum;
+    category: 'TANK' | 'PEN' | 'TRAY' | 'OTHER';
     /**
      * Human-readable display name for the category.
      */

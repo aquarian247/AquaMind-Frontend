@@ -379,11 +379,24 @@ export function registerMockApiRoutes(app: any) {
 
 // Helper to determine if mock API should be used
 export function shouldUseMockApi(): boolean {
-  // Check environment variables
-  const useMock = process.env.USE_MOCK_API === 'true' || 
-                  process.env.VITE_USE_MOCK_API === 'true' || 
-                  !process.env.VITE_USE_DJANGO_API;
-  
+  /*
+   * Prioritise the VITE_USE_DJANGO_API flag.  If it is explicitly set to 'true'
+   * we must proxy to the real Django backend, regardless of any other flags.
+   */
+  if (process.env.VITE_USE_DJANGO_API === 'true') {
+    console.log('🔄 API Mode: Django');
+    return false; // do NOT use mock ‑ proxy to Django
+  }
+
+  /*
+   * Fallback logic: honour VITE_USE_MOCK_API (and keep compatibility with the
+   * older USE_MOCK_API flag).  If neither flag is set, default to *not* using
+   * the mock API so that developers notice missing env-var configuration.
+   */
+  const useMock =
+    process.env.VITE_USE_MOCK_API === 'true' ||
+    process.env.USE_MOCK_API === 'true';
+
   console.log(`🔄 API Mode: ${useMock ? 'Mock' : 'Django'}`);
   return useMock;
 }

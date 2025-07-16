@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TransferTypeEnum } from './TransferTypeEnum';
 /**
  * Serializer for the BatchTransfer model.
  */
@@ -17,7 +16,14 @@ export type PatchedBatchTransfer = {
     readonly destination_container_name?: string;
     readonly source_batch_info?: string;
     readonly destination_batch_info?: string;
-    transfer_type?: TransferTypeEnum;
+    /**
+     * * `CONTAINER` - Container Transfer
+     * * `LIFECYCLE` - Lifecycle Stage Change
+     * * `SPLIT` - Batch Split
+     * * `MERGE` - Batch Merge
+     * * `MIXED_TRANSFER` - Mixed Batch Transfer
+     */
+    transfer_type?: 'CONTAINER' | 'LIFECYCLE' | 'SPLIT' | 'MERGE' | 'MIXED_TRANSFER';
     transfer_date?: string;
     /**
      * Population count before transfer

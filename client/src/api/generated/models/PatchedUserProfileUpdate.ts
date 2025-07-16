@@ -2,11 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DateFormatPreferenceEnum } from './DateFormatPreferenceEnum';
-import type { GeographyEnum } from './GeographyEnum';
-import type { LanguagePreferenceEnum } from './LanguagePreferenceEnum';
-import type { RoleEnum } from './RoleEnum';
-import type { SubsidiaryEnum } from './SubsidiaryEnum';
 /**
  * Serializer for updating UserProfile information.
  *
@@ -26,7 +21,7 @@ export type PatchedUserProfileUpdate = {
      * * `SC` - Scotland
      * * `ALL` - All Geographies
      */
-    geography?: GeographyEnum;
+    geography?: 'FO' | 'SC' | 'ALL';
     /**
      * Subsidiary access level
      *
@@ -36,7 +31,7 @@ export type PatchedUserProfileUpdate = {
      * * `LG` - Logistics
      * * `ALL` - All Subsidiaries
      */
-    subsidiary?: SubsidiaryEnum;
+    subsidiary?: 'BS' | 'FW' | 'FM' | 'LG' | 'ALL';
     /**
      * User role and permission level
      *
@@ -48,8 +43,18 @@ export type PatchedUserProfileUpdate = {
      * * `FIN` - Finance
      * * `VIEW` - Viewer
      */
-    role?: RoleEnum;
-    language_preference?: LanguagePreferenceEnum;
-    date_format_preference?: DateFormatPreferenceEnum;
+    role?: 'ADMIN' | 'MGR' | 'OPR' | 'VET' | 'QA' | 'FIN' | 'VIEW';
+    /**
+     * * `en` - English
+     * * `fo` - Faroese
+     * * `da` - Danish
+     */
+    language_preference?: 'en' | 'fo' | 'da';
+    /**
+     * * `DMY` - DD/MM/YYYY
+     * * `MDY` - MM/DD/YYYY
+     * * `YMD` - YYYY-MM-DD
+     */
+    date_format_preference?: 'DMY' | 'MDY' | 'YMD';
 };
 

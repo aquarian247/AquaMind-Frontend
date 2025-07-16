@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { HealthStatusEnum } from './HealthStatusEnum';
 /**
  * Serializer for broodstock fish.
  */
@@ -25,7 +24,7 @@ export type BroodstockFish = {
      * * `sick` - Sick
      * * `deceased` - Deceased
      */
-    health_status?: HealthStatusEnum;
+    health_status?: 'healthy' | 'monitored' | 'sick' | 'deceased';
     readonly movement_count: number;
     readonly created_at: string;
     readonly updated_at: string;

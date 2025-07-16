@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { MethodEnum } from './MethodEnum';
 /**
  * Serializer for the FeedingEvent model.
  *
@@ -49,7 +48,12 @@ export type PatchedFeedingEvent = {
      * Cost of feed consumed (calculated via FIFO)
      */
     readonly feed_cost?: string;
-    method?: MethodEnum;
+    /**
+     * * `MANUAL` - Manual
+     * * `AUTOMATIC` - Automatic Feeder
+     * * `BROADCAST` - Broadcast
+     */
+    method?: 'MANUAL' | 'AUTOMATIC' | 'BROADCAST';
     notes?: string;
     recorded_by?: number | null;
     readonly recorded_by_username?: string;

@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TreatmentTypeEnum } from './TreatmentTypeEnum';
 /**
  * Serializer for the Treatment model.
  *
@@ -43,7 +42,7 @@ export type Treatment = {
      * * `physical` - Physical Treatment
      * * `other` - Other
      */
-    treatment_type: TreatmentTypeEnum;
+    treatment_type: 'medication' | 'vaccination' | 'physical' | 'other';
     /**
      * Specific vaccination type if treatment_type is 'vaccination'.
      */

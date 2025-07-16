@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { StationTypeEnum } from './StationTypeEnum';
 /**
  * Serializer for the FreshwaterStation model.
  */
@@ -18,7 +17,7 @@ export type PatchedFreshwaterStation = {
      * * `FRESHWATER` - Freshwater
      * * `BROODSTOCK` - Broodstock
      */
-    station_type?: StationTypeEnum;
+    station_type?: 'FRESHWATER' | 'BROODSTOCK';
     /**
      * Human-readable display name for the station type.
      */

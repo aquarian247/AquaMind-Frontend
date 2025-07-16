@@ -2,8 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { DateFormatPreferenceEnum } from './DateFormatPreferenceEnum';
-import type { LanguagePreferenceEnum } from './LanguagePreferenceEnum';
 /**
  * Serializer for the UserProfile model.
  *
@@ -14,8 +12,18 @@ export type UserProfile = {
     profile_picture?: string | null;
     job_title?: string | null;
     department?: string | null;
-    language_preference?: LanguagePreferenceEnum;
-    date_format_preference?: DateFormatPreferenceEnum;
+    /**
+     * * `en` - English
+     * * `fo` - Faroese
+     * * `da` - Danish
+     */
+    language_preference?: 'en' | 'fo' | 'da';
+    /**
+     * * `DMY` - DD/MM/YYYY
+     * * `MDY` - MM/DD/YYYY
+     * * `YMD` - YYYY-MM-DD
+     */
+    date_format_preference?: 'DMY' | 'MDY' | 'YMD';
     readonly created_at: string;
     readonly updated_at: string;
 };

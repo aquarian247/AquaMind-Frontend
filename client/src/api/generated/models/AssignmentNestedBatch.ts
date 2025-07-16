@@ -2,13 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { StatusEnum } from './StatusEnum';
 /**
  * Minimal serializer for nested Batch representation.
  */
 export type AssignmentNestedBatch = {
     readonly id: number;
     batch_number: string;
-    status?: StatusEnum;
+    /**
+     * * `ACTIVE` - Active
+     * * `COMPLETED` - Completed
+     * * `TERMINATED` - Terminated
+     */
+    status?: 'ACTIVE' | 'COMPLETED' | 'TERMINATED';
 };
 

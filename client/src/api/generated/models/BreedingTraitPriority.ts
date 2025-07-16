@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TraitNameEnum } from './TraitNameEnum';
 /**
  * Serializer for breeding trait priorities.
  */
@@ -17,7 +16,7 @@ export type BreedingTraitPriority = {
      * * `size` - Size
      * * `fertility` - Fertility
      */
-    trait_name: TraitNameEnum;
+    trait_name: 'growth_rate' | 'disease_resistance' | 'size' | 'fertility';
     readonly trait_display: string;
     /**
      * Weight from 0 to 1 (e.g., 0.7)

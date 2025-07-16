@@ -2,12 +2,20 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { LifecycleStageEnum } from './LifecycleStageEnum';
 /**
  * Serializer for stage-specific mortality rates.
  */
 export type MortalityModelStage = {
-    lifecycle_stage: LifecycleStageEnum;
+    /**
+     * * `egg` - Egg
+     * * `alevin` - Alevin
+     * * `fry` - Fry
+     * * `parr` - Parr
+     * * `smolt` - Smolt
+     * * `post_smolt` - Post-Smolt
+     * * `harvest` - Harvest
+     */
+    lifecycle_stage: 'egg' | 'alevin' | 'fry' | 'parr' | 'smolt' | 'post_smolt' | 'harvest';
     readonly stage_display: string;
     /**
      * Daily mortality rate as percentage for this stage

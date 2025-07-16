@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TaskTypeEnum } from './TaskTypeEnum';
 /**
  * Serializer for maintenance tasks.
  */
@@ -21,7 +20,7 @@ export type PatchedMaintenanceTask = {
      * * `inspection` - Inspection
      * * `upgrade` - Equipment Upgrade
      */
-    task_type?: TaskTypeEnum;
+    task_type?: 'cleaning' | 'repair' | 'inspection' | 'upgrade';
     /**
      * Planned execution date
      */

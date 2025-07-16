@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FrequencyEnum } from './FrequencyEnum';
 import type { MortalityModelStage } from './MortalityModelStage';
 /**
  * Enhanced serializer for mortality models with validation.
@@ -19,7 +18,7 @@ export type MortalityModel = {
      * * `daily` - Daily
      * * `weekly` - Weekly
      */
-    frequency: FrequencyEnum;
+    frequency: 'daily' | 'weekly';
     /**
      * Mortality rate percentage (e.g., 0.1)
      */

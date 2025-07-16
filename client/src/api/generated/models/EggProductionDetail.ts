@@ -5,7 +5,6 @@
 import type { BatchParentage } from './BatchParentage';
 import type { BreedingPair } from './BreedingPair';
 import type { ExternalEggBatch } from './ExternalEggBatch';
-import type { SourceTypeEnum } from './SourceTypeEnum';
 /**
  * Detailed serializer for egg production with nested data.
  */
@@ -35,7 +34,7 @@ export type EggProductionDetail = {
      * * `internal` - Internal
      * * `external` - External
      */
-    source_type: SourceTypeEnum;
+    source_type: 'internal' | 'external';
     readonly external_batch: ExternalEggBatch;
     readonly batch_assignment_count: number;
     readonly created_at: string;

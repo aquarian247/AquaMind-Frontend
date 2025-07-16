@@ -2,7 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SensorTypeEnum } from './SensorTypeEnum';
 /**
  * Serializer for the Sensor model.
  */
@@ -22,7 +21,7 @@ export type PatchedSensor = {
      * * `CO2` - CO2
      * * `OTHER` - Other
      */
-    sensor_type?: SensorTypeEnum;
+    sensor_type?: 'TEMPERATURE' | 'OXYGEN' | 'PH' | 'SALINITY' | 'CO2' | 'OTHER';
     /**
      * Human-readable display name for the sensor type.
      */
