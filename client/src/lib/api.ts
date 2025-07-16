@@ -210,7 +210,7 @@ export const api = {
       if (geographyId) {
         return ApiService.apiV1InfrastructureAreasList({
           geography: geographyId
-        });
+        } as any);
       }
       return ApiService.apiV1InfrastructureAreasList();
     },
@@ -223,7 +223,7 @@ export const api = {
       if (containerId) {
         return ApiService.apiV1InfrastructureSensorsList({
           container: containerId
-        });
+        } as any);
       }
       return ApiService.apiV1InfrastructureSensorsList();
     }
@@ -232,11 +232,11 @@ export const api = {
   // Inventory endpoints
   inventory: {
     async getFeedTypes() {
-      return ApiService.apiV1InventoryFeedList();
+      return ApiService.apiV1InventoryFeedsList();
     },
 
     async getFeedStock(filters?: any) {
-      return ApiService.apiV1InventoryFeedStockList();
+      return ApiService.apiV1InventoryFeedStocksList();
     },
 
     async getFeedingEvents(filters?: any) {
@@ -253,20 +253,20 @@ export const api = {
     async getHealthRecords(batchId?: number) {
       if (batchId) {
         // Filter client-side if needed since the endpoint may not support filtering
-        const records = await ApiService.apiV1HealthRecordsList();
+        const records = await ApiService.apiV1HealthSamplingEventsList();
         return {
           ...records,
           results: records.results.filter((r: any) => r.batch === batchId)
         };
       }
-      return ApiService.apiV1HealthRecordsList();
+      return ApiService.apiV1HealthSamplingEventsList();
     },
 
     async getHealthAssessments(batchId?: number) {
       // This endpoint might not exist in the current API
-      // Fallback to health records if needed
+      // Fallback to health sampling events if needed
       try {
-        const records = await ApiService.apiV1HealthRecordsList();
+        const records = await ApiService.apiV1HealthSamplingEventsList();
         if (batchId) {
           return {
             ...records,
@@ -280,7 +280,7 @@ export const api = {
     },
 
     async createHealthRecord(data: any) {
-      return ApiService.apiV1HealthRecordsCreate(data);
+      return ApiService.apiV1HealthSamplingEventsCreate(data);
     }
   }
 };

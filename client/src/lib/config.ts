@@ -42,7 +42,9 @@ export const getAuthToken = (): string | undefined => {
 // Configure the generated API client so every request uses the correct base
 // URL and pulls a fresh token at call-time.
 OpenAPI.BASE = API_CONFIG.DJANGO_API_URL;
-OpenAPI.TOKEN = getAuthToken;
+// OpenAPI.TOKEN expects either a string or a resolver that returns a string | undefined
+// wrapped in a Promise. We therefore wrap `getAuthToken` in an async resolver.
+OpenAPI.TOKEN = async () => getAuthToken();
 
 export const getApiUrl = (endpoint: string): string => {
   if (API_CONFIG.USE_DJANGO_API) {
