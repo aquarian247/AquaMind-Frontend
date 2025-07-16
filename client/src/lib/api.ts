@@ -1,20 +1,6 @@
 import { API_CONFIG } from "./config";
 import { ApiService } from "../api/generated";
 
-/**
- * NOTE:
- * The generated client (`ApiService`) exposes **all** operations on a single
- * class.  Previous code referenced sub-services that no longer exist after we
- * switched generators.  To minimise refactor churn we create a loose-typed
- * alias so existing call-sites remain readable while we verify the exact
- * method names emitted by the generator.
- *
- * Replace `apiSvc.<method>` with strongly-typed equivalents as we stabilise
- * the contract.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const apiSvc = ApiService as any;
-
 export interface DashboardKPIs {
   totalFish: number;
   healthRate: number;
@@ -38,21 +24,21 @@ export const api = {
   async getDashboardKPIs(): Promise<DashboardKPIs> {
     try {
       // Try Django dashboard endpoint first
-      const response = await ApiService.getDashboardKpis();
+      const response = await ApiService.apiV1DashboardKpisList();
       return response;
     } catch (error) {
       // Fallback to calculating from individual endpoints
       const [batches, healthRecords] = await Promise.all([
-        BatchService.getBatches(),
-        HealthService.getHealthRecords()
+        ApiService.apiV1BatchBatchesList(),
+        ApiService.apiV1HealthRecordsList()
       ]);
 
       // Calculate KPIs from available data
       const totalFish = batches.results.reduce(
-        (sum, batch) => sum + (batch.calculated_population_count ?? 0),
+        (sum: any, batch: any) => sum + (batch.calculated_population_count ?? 0),
         0,
       );
-      const healthyBatches = batches.results.filter((batch) => batch.status === 'ACTIVE').length;
+      const healthyBatches = batches.results.filter((batch: any) => batch.status === 'ACTIVE').length;
       const healthRate = batches.results.length > 0 ? (healthyBatches / batches.results.length) * 100 : 0;
 
       return {
@@ -66,11 +52,11 @@ export const api = {
 
   async getFarmSites() {
     try {
-      return await ApiService.getFarmSites();
+      return await ApiService.apiV1DashboardFarmSitesList();
     } catch (error) {
       // Fallback to areas as farm sites
-      const areas = await InfrastructureService.getAreas();
-      return areas.results.map((area) => ({
+      const areas = await ApiService.apiV1InfrastructureAreasList();
+      return areas.results.map((area: any) => ({
         id: area.id,
         name: area.name,
         location: `${area.latitude}, ${area.longitude}`,
@@ -83,7 +69,7 @@ export const api = {
 
   async getActiveAlerts() {
     try {
-      return await ApiService.getActiveAlerts();
+      return await ApiService.apiV1DashboardAlertsList();
     } catch (error) {
       // Return empty alerts if endpoint doesn't exist
       return [];
@@ -93,16 +79,16 @@ export const api = {
   // Chart data endpoints
   async getWaterQualityChart(farmSiteId = 1): Promise<ChartData> {
     // Convert Django environmental readings to chart format
-    const readings = await EnvironmentalService.getEnvironmentalReadings({
+    const readings = await ApiService.apiV1EnvironmentalReadingsList({
       parameter: 'temperature',
       limit: 50
     });
     
     return {
-      labels: readings.results.map((r) => new Date(r.reading_time).toLocaleDateString()),
+      labels: readings.results.map((r: any) => new Date(r.reading_time).toLocaleDateString()),
       datasets: [{
         label: 'Water Temperature',
-        data: readings.results.map((r) => r.value),
+        data: readings.results.map((r: any) => r.value),
         borderColor: 'rgb(75, 192, 192)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)'
       }]
@@ -111,13 +97,13 @@ export const api = {
 
   async getFishGrowthChart(): Promise<ChartData> {
     // Convert Django growth samples to chart format
-    const samples = await BatchService.getGrowthSamples();
+    const samples = await ApiService.apiV1BatchGrowthSamplesList();
     
     return {
-      labels: samples.results.map((s) => new Date(s.sample_date).toLocaleDateString()),
+      labels: samples.results.map((s: any) => new Date(s.sample_date).toLocaleDateString()),
       datasets: [{
         label: 'Average Weight (g)',
-        data: samples.results.map((s) => s.avg_weight_g),
+        data: samples.results.map((s: any) => s.avg_weight_g),
         borderColor: 'rgb(54, 162, 235)',
         backgroundColor: 'rgba(54, 162, 235, 0.2)'
       }]
@@ -127,7 +113,7 @@ export const api = {
   // Farm management endpoints
   async getPensByFarmSite(farmSiteId: number) {
     // Get containers for the area/site
-    const containers = await InfrastructureService.getContainers({ area: farmSiteId });
+    const containers = await ApiService.apiV1InfrastructureContainersList({ area: farmSiteId });
     return containers.results.map((container: any) => ({
       id: container.id,
       name: container.name,
@@ -139,7 +125,7 @@ export const api = {
 
   // Water quality endpoints
   async getWaterQualityReadings(farmSiteId: number, limit = 50) {
-    return EnvironmentalService.getEnvironmentalReadings({
+    return ApiService.apiV1EnvironmentalReadingsList({
       limit,
       parameter: 'temperature'
     });
@@ -147,91 +133,91 @@ export const api = {
 
   // Alerts endpoints
   async getAllAlerts(activeOnly = false) {
-    return ApiService.getActiveAlerts();
+    return ApiService.apiV1DashboardAlertsList();
   },
 
   async resolveAlert(alertId: number) {
     // This would need a custom Django endpoint
-    return ApiService.resolveAlert(alertId);
+    return ApiService.apiV1AlertsResolve(alertId);
   },
 
   // Batch management endpoints
   batch: {
     async getAll(filters?: any) {
-      return BatchService.getBatches(filters);
+      return ApiService.apiV1BatchBatchesList(filters);
     },
 
     async getById(id: number) {
-      return BatchService.getBatch(id);
+      return ApiService.apiV1BatchBatchesRetrieve(id);
     },
 
     async create(data: any) {
-      return BatchService.createBatch(data);
+      return ApiService.apiV1BatchBatchesCreate(data);
     },
 
     async update(id: number, data: any) {
-      return BatchService.updateBatch(id, data);
+      return ApiService.apiV1BatchBatchesUpdate(id, data);
     },
 
     async getAssignments(batchId?: number) {
-      return BatchService.getBatchContainerAssignments({ batch: batchId });
+      return ApiService.apiV1BatchContainerAssignmentsList({ batch: batchId });
     },
 
     async getTransfers(batchId?: number) {
-      return BatchService.getBatchTransfers({ source_batch: batchId });
+      return ApiService.apiV1BatchTransfersList({ source_batch: batchId });
     }
   },
 
   // Infrastructure endpoints
   infrastructure: {
     async getGeographies() {
-      return InfrastructureService.getGeographies();
+      return ApiService.apiV1InfrastructureGeographiesList();
     },
 
     async getAreas(geographyId?: number) {
-      return InfrastructureService.getAreas({ geography: geographyId });
+      return ApiService.apiV1InfrastructureAreasList({ geography: geographyId });
     },
 
     async getContainers(filters?: any) {
-      return InfrastructureService.getContainers(filters);
+      return ApiService.apiV1InfrastructureContainersList(filters);
     },
 
     async getSensors(containerId?: number) {
-      return InfrastructureService.getSensors({ container: containerId });
+      return ApiService.apiV1InfrastructureSensorsList({ container: containerId });
     }
   },
 
   // Inventory endpoints
   inventory: {
     async getFeedTypes() {
-      return InventoryService.getFeedTypes();
+      return ApiService.apiV1InventoryFeedList();
     },
 
     async getFeedStock(filters?: any) {
-      return InventoryService.getFeedStock(filters);
+      return ApiService.apiV1InventoryStockList(filters);
     },
 
     async getFeedingEvents(filters?: any) {
-      return InventoryService.getFeedingEvents(filters);
+      return ApiService.apiV1InventoryFeedingEventsList(filters);
     },
 
     async createFeedingEvent(data: any) {
-      return InventoryService.createFeedingEvent(data);
+      return ApiService.apiV1InventoryFeedingEventsCreate(data);
     }
   },
 
   // Health endpoints
   health: {
     async getHealthRecords(batchId?: number) {
-      return HealthService.getHealthRecords({ batch: batchId });
+      return ApiService.apiV1HealthRecordsList({ batch: batchId });
     },
 
     async getHealthAssessments(batchId?: number) {
-      return HealthService.getHealthAssessments({ batch: batchId });
+      return ApiService.apiV1HealthAssessmentsList({ batch: batchId });
     },
 
     async createHealthRecord(data: any) {
-      return HealthService.createHealthRecord(data);
+      return ApiService.apiV1HealthRecordsCreate(data);
     }
   }
 };
