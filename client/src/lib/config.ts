@@ -24,20 +24,20 @@ export const API_CONFIG = {
  */
 import { OpenAPI } from '../api';
 
-    /*
-     * Return the auth token if present; otherwise return an empty string.
-     * The generated OpenAPI runtime requires a **string** (or a promise
-     * resolving to one) – it must never be `undefined`.
-     */
-    return localStorage.getItem('authToken') ?? '';
+/**
+ * Retrieve the auth token from localStorage.
+ *
+ * The generated OpenAPI runtime expects a **string** (or a `Promise<string>`)
+ * – it must never be `undefined`.  When no user is authenticated we therefore
+ * return the empty string.
+ *
+ * The backend expects the following header when the user *is* authenticated:
+ *
  *     Authorization: Token <token>
- * Returning `undefined` means “unauthenticated request”.
  */
-export const getAuthToken = (): string | undefined => {
+export const getAuthToken = (): string => {
   try {
-    // Return an empty string when the user is unauthenticated.
-    // OpenAPI expects a plain string, not `undefined`.
-    return localStorage.getItem('authToken') || '';
+    return localStorage.getItem('authToken') ?? '';
   } catch {
     // SSR / sandboxed environment – no localStorage
     return '';
