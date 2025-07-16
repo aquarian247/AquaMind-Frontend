@@ -253,20 +253,20 @@ export const api = {
     async getHealthRecords(batchId?: number) {
       if (batchId) {
         // Filter client-side if needed since the endpoint may not support filtering
-        const records = await ApiService.apiV1HealthSamplingEventsList();
+        const records = await ApiService.apiV1HealthHealthSamplingEventsList();
         return {
           ...records,
           results: records.results.filter((r: any) => r.batch === batchId)
         };
       }
-      return ApiService.apiV1HealthSamplingEventsList();
+      return ApiService.apiV1HealthHealthSamplingEventsList();
     },
 
     async getHealthAssessments(batchId?: number) {
       // This endpoint might not exist in the current API
       // Fallback to health sampling events if needed
       try {
-        const records = await ApiService.apiV1HealthSamplingEventsList();
+        const records = await ApiService.apiV1HealthHealthSamplingEventsList();
         if (batchId) {
           return {
             ...records,
@@ -280,7 +280,7 @@ export const api = {
     },
 
     async createHealthRecord(data: any) {
-      return ApiService.apiV1HealthSamplingEventsCreate(data);
+      return ApiService.apiV1HealthHealthSamplingEventsCreate(data);
     }
   }
 };

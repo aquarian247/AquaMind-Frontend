@@ -32,10 +32,12 @@ import { OpenAPI } from '../api';
  */
 export const getAuthToken = (): string | undefined => {
   try {
-    return localStorage.getItem('authToken') || undefined;
+    // Return an empty string when the user is unauthenticated.
+    // OpenAPI expects a plain string, not `undefined`.
+    return localStorage.getItem('authToken') || '';
   } catch {
     // SSR / sandboxed environment – no localStorage
-    return undefined;
+    return '';
   }
 };
 
@@ -43,8 +45,8 @@ export const getAuthToken = (): string | undefined => {
 // URL and pulls a fresh token at call-time.
 OpenAPI.BASE = API_CONFIG.DJANGO_API_URL;
 // OpenAPI.TOKEN expects either a string or a resolver that returns a string | undefined
-// wrapped in a Promise. We therefore wrap `getAuthToken` in an async resolver.
-OpenAPI.TOKEN = async () => getAuthToken();
+// wrapped in a Promise. We provide a synchronous resolver that always returns a string.
+OpenAPI.TOKEN = () => getAuthToken();
 
 export const getApiUrl = (endpoint: string): string => {
   if (API_CONFIG.USE_DJANGO_API) {
