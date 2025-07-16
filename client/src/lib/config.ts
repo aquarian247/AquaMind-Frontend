@@ -24,9 +24,12 @@ export const API_CONFIG = {
  */
 import { OpenAPI } from '../api';
 
-/**
- * Retrieve the auth token (if any) from localStorage.
- * The backend expects a header:
+    /*
+     * Return the auth token if present; otherwise return an empty string.
+     * The generated OpenAPI runtime requires a **string** (or a promise
+     * resolving to one) – it must never be `undefined`.
+     */
+    return localStorage.getItem('authToken') ?? '';
  *     Authorization: Token <token>
  * Returning `undefined` means “unauthenticated request”.
  */
@@ -44,9 +47,12 @@ export const getAuthToken = (): string | undefined => {
 // Configure the generated API client so every request uses the correct base
 // URL and pulls a fresh token at call-time.
 OpenAPI.BASE = API_CONFIG.DJANGO_API_URL;
-// OpenAPI.TOKEN expects either a string or a resolver that returns a string | undefined
-// wrapped in a Promise. We provide a synchronous resolver that always returns a string.
-OpenAPI.TOKEN = () => getAuthToken();
+/*
+ * OpenAPI.TOKEN expects either a string **or** a resolver that returns
+ * `Promise<string>`. We supply an async resolver so that the latest
+ * token is fetched for every request.
+ */
+OpenAPI.TOKEN = async () => getAuthToken();
 
 export const getApiUrl = (endpoint: string): string => {
   if (API_CONFIG.USE_DJANGO_API) {
