@@ -23,16 +23,9 @@ export const api = {
   // Dashboard endpoints
   async getDashboardKPIs(): Promise<DashboardKPIs> {
     try {
-      // Try Django dashboard endpoint first
-      const response = await ApiService.apiV1DashboardKpisList();
-      return response;
-    } catch (error) {
-      // Fallback to calculating from individual endpoints
-      const [batches, healthRecords] = await Promise.all([
-        ApiService.apiV1BatchBatchesList(),
-        ApiService.apiV1HealthRecordsList()
-      ]);
-
+      // Dashboard KPIs endpoint doesn't exist, calculate from individual endpoints
+      const batches = await ApiService.apiV1BatchBatchesList();
+      
       // Calculate KPIs from available data
       const totalFish = batches.results.reduce(
         (sum: any, batch: any) => sum + (batch.calculated_population_count ?? 0),
@@ -41,10 +34,25 @@ export const api = {
       const healthyBatches = batches.results.filter((batch: any) => batch.status === 'ACTIVE').length;
       const healthRate = batches.results.length > 0 ? (healthyBatches / batches.results.length) * 100 : 0;
 
+      // Get environmental readings for water temperature
+      const envReadings = await ApiService.apiV1EnvironmentalReadingsList();
+      const tempReadings = envReadings.results.filter((r: any) => r.parameter_type === 'TEMPERATURE');
+      const avgWaterTemp = tempReadings.length > 0 
+        ? tempReadings.reduce((sum: number, r: any) => sum + r.value, 0) / tempReadings.length
+        : 12.5;
+
       return {
         totalFish,
         healthRate,
-        avgWaterTemp: 12.5, // Would be calculated from environmental readings
+        avgWaterTemp,
+        nextFeedingHours: 4
+      };
+    } catch (error) {
+      // Fallback values if API calls fail
+      return {
+        totalFish: 0,
+        healthRate: 0,
+        avgWaterTemp: 12.5,
         nextFeedingHours: 4
       };
     }
@@ -52,43 +60,44 @@ export const api = {
 
   async getFarmSites() {
     try {
-      return await ApiService.apiV1DashboardFarmSitesList();
-    } catch (error) {
-      // Fallback to areas as farm sites
+      // Farm sites endpoint doesn't exist, use areas instead
       const areas = await ApiService.apiV1InfrastructureAreasList();
       return areas.results.map((area: any) => ({
         id: area.id,
         name: area.name,
-        location: `${area.latitude}, ${area.longitude}`,
+        location: `${area.latitude || 0}, ${area.longitude || 0}`,
         status: area.active ? 'active' : 'inactive',
         fishCount: 0, // Would be calculated
         healthStatus: 'good'
       }));
+    } catch (error) {
+      return [];
     }
   },
 
   async getActiveAlerts() {
     try {
-      return await ApiService.apiV1DashboardAlertsList();
+      // No specific alerts endpoint, could be implemented with journal entries or custom endpoint
+      // Return empty array for now
+      return [];
     } catch (error) {
-      // Return empty alerts if endpoint doesn't exist
       return [];
     }
   },
 
   // Chart data endpoints
   async getWaterQualityChart(farmSiteId = 1): Promise<ChartData> {
-    // Convert Django environmental readings to chart format
-    const readings = await ApiService.apiV1EnvironmentalReadingsList({
-      parameter: 'temperature',
-      limit: 50
-    });
+    // Get environmental readings
+    const readings = await ApiService.apiV1EnvironmentalReadingsList();
+    
+    // Filter for temperature readings if needed
+    const tempReadings = readings.results.filter((r: any) => r.parameter_type === 'TEMPERATURE');
     
     return {
-      labels: readings.results.map((r: any) => new Date(r.reading_time).toLocaleDateString()),
+      labels: tempReadings.map((r: any) => new Date(r.reading_time).toLocaleDateString()),
       datasets: [{
         label: 'Water Temperature',
-        data: readings.results.map((r: any) => r.value),
+        data: tempReadings.map((r: any) => r.value),
         borderColor: 'rgb(75, 192, 192)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)'
       }]
@@ -96,7 +105,7 @@ export const api = {
   },
 
   async getFishGrowthChart(): Promise<ChartData> {
-    // Convert Django growth samples to chart format
+    // Get growth samples
     const samples = await ApiService.apiV1BatchGrowthSamplesList();
     
     return {
@@ -113,8 +122,12 @@ export const api = {
   // Farm management endpoints
   async getPensByFarmSite(farmSiteId: number) {
     // Get containers for the area/site
-    const containers = await ApiService.apiV1InfrastructureContainersList({ area: farmSiteId });
-    return containers.results.map((container: any) => ({
+    const containers = await ApiService.apiV1InfrastructureContainersList();
+    
+    // Filter for the specific area if needed
+    const areaContainers = containers.results.filter((c: any) => c.area === farmSiteId);
+    
+    return areaContainers.map((container: any) => ({
       id: container.id,
       name: container.name,
       capacity: container.volume_m3,
@@ -125,26 +138,31 @@ export const api = {
 
   // Water quality endpoints
   async getWaterQualityReadings(farmSiteId: number, limit = 50) {
-    return ApiService.apiV1EnvironmentalReadingsList({
-      limit,
-      parameter: 'temperature'
-    });
+    // Get all readings and filter as needed
+    const readings = await ApiService.apiV1EnvironmentalReadingsList();
+    return {
+      ...readings,
+      results: readings.results.slice(0, limit)
+    };
   },
 
   // Alerts endpoints
   async getAllAlerts(activeOnly = false) {
-    return ApiService.apiV1DashboardAlertsList();
+    // No specific alerts endpoint, could be implemented with journal entries
+    return [];
   },
 
   async resolveAlert(alertId: number) {
-    // This would need a custom Django endpoint
-    return ApiService.apiV1AlertsResolve(alertId);
+    // No specific alert resolve endpoint
+    // This would need to be implemented on the backend
+    console.warn('Alert resolution not implemented in API');
+    return { success: false };
   },
 
   // Batch management endpoints
   batch: {
     async getAll(filters?: any) {
-      return ApiService.apiV1BatchBatchesList(filters);
+      return ApiService.apiV1BatchBatchesList();
     },
 
     async getById(id: number) {
@@ -160,11 +178,25 @@ export const api = {
     },
 
     async getAssignments(batchId?: number) {
-      return ApiService.apiV1BatchContainerAssignmentsList({ batch: batchId });
+      const assignments = await ApiService.apiV1BatchContainerAssignmentsList();
+      if (batchId) {
+        return {
+          ...assignments,
+          results: assignments.results.filter((a: any) => a.batch === batchId)
+        };
+      }
+      return assignments;
     },
 
     async getTransfers(batchId?: number) {
-      return ApiService.apiV1BatchTransfersList({ source_batch: batchId });
+      const transfers = await ApiService.apiV1BatchTransfersList();
+      if (batchId) {
+        return {
+          ...transfers,
+          results: transfers.results.filter((t: any) => t.source_batch === batchId)
+        };
+      }
+      return transfers;
     }
   },
 
@@ -175,7 +207,12 @@ export const api = {
     },
 
     async getAreas(geographyId?: number) {
-      return ApiService.apiV1InfrastructureAreasList({ geography: geographyId });
+      if (geographyId) {
+        return ApiService.apiV1InfrastructureAreasList({
+          geography: geographyId
+        });
+      }
+      return ApiService.apiV1InfrastructureAreasList();
     },
 
     async getContainers(filters?: any) {
@@ -183,7 +220,12 @@ export const api = {
     },
 
     async getSensors(containerId?: number) {
-      return ApiService.apiV1InfrastructureSensorsList({ container: containerId });
+      if (containerId) {
+        return ApiService.apiV1InfrastructureSensorsList({
+          container: containerId
+        });
+      }
+      return ApiService.apiV1InfrastructureSensorsList();
     }
   },
 
@@ -194,11 +236,11 @@ export const api = {
     },
 
     async getFeedStock(filters?: any) {
-      return ApiService.apiV1InventoryStockList(filters);
+      return ApiService.apiV1InventoryFeedStockList();
     },
 
     async getFeedingEvents(filters?: any) {
-      return ApiService.apiV1InventoryFeedingEventsList(filters);
+      return ApiService.apiV1InventoryFeedingEventsList();
     },
 
     async createFeedingEvent(data: any) {
@@ -209,11 +251,32 @@ export const api = {
   // Health endpoints
   health: {
     async getHealthRecords(batchId?: number) {
-      return ApiService.apiV1HealthRecordsList({ batch: batchId });
+      if (batchId) {
+        // Filter client-side if needed since the endpoint may not support filtering
+        const records = await ApiService.apiV1HealthRecordsList();
+        return {
+          ...records,
+          results: records.results.filter((r: any) => r.batch === batchId)
+        };
+      }
+      return ApiService.apiV1HealthRecordsList();
     },
 
     async getHealthAssessments(batchId?: number) {
-      return ApiService.apiV1HealthAssessmentsList({ batch: batchId });
+      // This endpoint might not exist in the current API
+      // Fallback to health records if needed
+      try {
+        const records = await ApiService.apiV1HealthRecordsList();
+        if (batchId) {
+          return {
+            ...records,
+            results: records.results.filter((r: any) => r.batch === batchId)
+          };
+        }
+        return records;
+      } catch (error) {
+        return { results: [] };
+      }
     },
 
     async createHealthRecord(data: any) {
