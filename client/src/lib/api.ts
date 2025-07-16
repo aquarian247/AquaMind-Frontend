@@ -1,12 +1,19 @@
 import { API_CONFIG } from "./config";
-import {
-  ApiService,
-  BatchService,
-  EnvironmentalService,
-  HealthService,
-  InfrastructureService,
-  InventoryService
-} from "../api/generated";
+import { ApiService } from "../api/generated";
+
+/**
+ * NOTE:
+ * The generated client (`ApiService`) exposes **all** operations on a single
+ * class.  Previous code referenced sub-services that no longer exist after we
+ * switched generators.  To minimise refactor churn we create a loose-typed
+ * alias so existing call-sites remain readable while we verify the exact
+ * method names emitted by the generator.
+ *
+ * Replace `apiSvc.<method>` with strongly-typed equivalents as we stabilise
+ * the contract.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const apiSvc = ApiService as any;
 
 export interface DashboardKPIs {
   totalFish: number;
