@@ -5,8 +5,6 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeSelector } from "@/components/theme-selector";
-import bakkafrostLogoDark from "@assets/image_1749821987657.png";
-import bakkafrostLogoLight from "@assets/image_1749822137551.png";
 
 const navigationItems = [
   {
@@ -123,12 +121,12 @@ export default function Sidebar() {
         <div className="flex items-center space-x-3">
           <div>
             <img 
-              src={bakkafrostLogoLight} 
+              src="/logo-light.png" 
               alt="Bakkafrost Logo" 
               className="h-6 w-auto block dark:hidden"
             />
             <img 
-              src={bakkafrostLogoDark} 
+              src="/logo-dark.png" 
               alt="Bakkafrost Logo" 
               className="h-6 w-auto hidden dark:block"
             />
@@ -154,12 +152,12 @@ export default function Sidebar() {
                   <div className="flex items-center space-x-3">
                     <>
                       <img 
-                        src={bakkafrostLogoLight} 
+                        src="/logo-light.png" 
                         alt="Bakkafrost Logo" 
                         className="h-8 w-auto block dark:hidden"
                       />
                       <img 
-                        src={bakkafrostLogoDark} 
+                        src="/logo-dark.png" 
                         alt="Bakkafrost Logo" 
                         className="h-8 w-auto hidden dark:block"
                       />
@@ -195,12 +193,12 @@ export default function Sidebar() {
           <div className="flex items-center space-x-3">
             <div>
               <img 
-                src={bakkafrostLogoLight} 
+                src="/logo-light.png" 
                 alt="Bakkafrost Logo" 
                 className="h-8 w-auto block dark:hidden"
               />
               <img 
-                src={bakkafrostLogoDark} 
+                src="/logo-dark.png" 
                 alt="Bakkafrost Logo" 
                 className="h-8 w-auto hidden dark:block"
               />
