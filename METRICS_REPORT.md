@@ -13,7 +13,7 @@ AquaMind Frontend is a sophisticated aquaculture management system with signific
 **Key Findings:**
 - **Total Files Analyzed:** 79+ TypeScript/JavaScript files
 - **Estimated Total LOC:** ~15,000-20,000 lines
-- **Architecture:** Modern React SPA with Express backend
+- **Architecture:** Modern React SPA with interchangeable Django API (AquaMind backend integration) and Express (for testing) backend
 - **Complexity Level:** High in domain-specific modules, Moderate overall
 
 ---
