@@ -100,12 +100,12 @@ jobs:
             
             fs.writeFileSync('api-spec.zip', Buffer.from(download.data));
             
-            // Extract the artifact
-            const AdmZip = require('adm-zip');
-            const zip = new AdmZip('api-spec.zip');
-            zip.extractAllTo('../AquaMind/api', true);
-            
-            console.log('API spec artifact downloaded and extracted successfully');
+            console.log('API spec artifact downloaded successfully – prepared zip for extraction');
+      
+      - name: Extract API spec artifact
+        run: |
+          unzip -o api-spec.zip -d ../AquaMind/api
+          echo "API spec artifact extracted to ../AquaMind/api"
       
       - name: Generate API client
         run: npm run generate:api
