@@ -25,16 +25,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Download API spec artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: api-spec      
-
-      - name: Extract API spec artifact
+      - name: Fetch OpenAPI spec from backend commit
         run: |
           mkdir -p tmp/openapi
-          unzip -o api-spec.zip -d tmp/openapi
-          echo "API spec extracted to tmp/openapi"
+          curl -L \
+            https://raw.githubusercontent.com/aquarian247/AquaMind/${{ github.event.client_payload.backend_commit }}/api/openapi.yaml \
+            -o tmp/openapi/openapi.yaml
+          echo "Spec downloaded to tmp/openapi/openapi.yaml"
           
       - name: Generate API client
         run: npm run generate:api
