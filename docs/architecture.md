@@ -41,6 +41,53 @@ AquaMind is a comprehensive aquaculture management system built on Django 4.2.11
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Frontend Architecture (React SPA)
+
+### Technology Stack
+
+- **React 18 + TypeScript** – component-driven UI
+- **Vite** – dev server & build (ESM, code-splitting)
+- **Wouter** – lightweight client-side routing
+- **TanStack Query** – server-state caching & mutations
+- **Tailwind CSS + Shadcn/ui** – utility-first styling & accessible primitives
+- **Chart.js & Recharts** – visualisation layers
+
+### Responsibilities
+
+| Layer | Purpose |
+|-------|---------|
+| Presentation | Render UI components, theming, responsive layout |
+| Feature Logic | Domain-specific hooks & components per slice (`features/*`) |
+| Client State | Local component state & TanStack Query caches |
+| API Adapter  | `lib/api.ts` wraps fetch → adds auth headers, JWT refresh |
+| Routing      | Declarative route map → lazy-loaded pages |
+
+### Runtime Flow
+
+1. User navigates to a route; Wouter loads corresponding **page** (lazy import).
+2. Page’s custom hook triggers **TanStack Query** to request data from Django REST API (or Express mock when `VITE_USE_DJANGO_API=false`).
+3. Query layer uses central `fetchJson` which automatically attaches JWT & handles 401 refresh.
+4. Data arrives → cached → rendered by presentational components.
+5. Mutations (POST/PUT) invalidate affected queries to keep UI fresh.
+
+### Deployment Placement
+
+```
+┌──────────────┐            ┌────────────────────┐
+│   Browser    │  HTTPS     │  DMZ Frontend VM    │
+│  (React SPA) │──────────► │  Nginx + Vite dist  │
+└──────────────┘            └──────────┬─────────┘
+                                       │
+                                       ▼
+                             Protected VLAN / API
+```
+
+The built SPA (`dist/`) is served by Nginx (DMZ). All `/api/**` calls proxy to the Django backend in the protected VLAN through firewall rules.
+
+_Accessibility, performance (Lighthouse ≥90), and PWA capabilities are first-class goals._
+
+---
+
 ### Architecture Principles
 
 1. **Modular Design**: The system is divided into domain-specific apps, each responsible for a distinct functional area.

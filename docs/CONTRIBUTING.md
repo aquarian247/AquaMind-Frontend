@@ -5,7 +5,7 @@
 ### Prerequisites
 - Node.js 18+
 - Git configured with your GitHub credentials
-- Access to AquaMind Django backend (for full integration testing)
+- (Optional) Access to AquaMind backend for live integration testing – not required for most frontend tasks because the **OpenAPI spec & generated client** allow fully offline development.
 
 ### Local Development
 ```bash
@@ -40,7 +40,7 @@ For testing the DMZ/Protected VLAN architecture locally, see `docs/LOCAL_VLAN_SE
 ### TypeScript
 - Strict type checking enabled
 - Use shared types from `shared/schema.ts`
-- Define Django types in `client/src/lib/types/django.ts`
+- Shared API types are generated automatically into `client/src/api/generated` via `npm run generate:client`.
 
 ### React Components
 - Functional components with hooks
@@ -48,9 +48,9 @@ For testing the DMZ/Protected VLAN architecture locally, see `docs/LOCAL_VLAN_SE
 - Follow Shadcn/ui patterns for UI components
 
 ### API Integration
-- Use `apiRequest` from `lib/queryClient.ts`
-- Handle loading and error states
-- Invalidate cache after mutations
+- **Always** use the generated client in `client/src/api/generated`. Do **not** hand-craft `fetch`/Axios calls.
+- Wrap calls in TanStack Query hooks (e.g. `useBatches()`), handle loading/error states via Suspense & Error Boundaries.
+- Mutations must call `queryClient.invalidateQueries(...)` to refresh stale data.
 
 ### File Organization
 ```
@@ -71,8 +71,8 @@ client/src/
 # Test Express mock server
 npm run dev
 
-# Test Django integration (requires backend)
-VITE_USE_DJANGO_API=true npm run dev
+# Test live backend (requires backend running)
+VITE_USE_BACKEND_API=true VITE_BACKEND_API_URL=http://localhost:8000 npm run dev
 
 # Test production build
 npm run build && npm run start
@@ -84,7 +84,7 @@ Use the included debug utilities:
 import { debugAPI } from '@/lib/debug';
 
 // Test Django connectivity
-debugAPI.testDjangoConnection();
+debugAPI.testConnection();
 
 // Test specific endpoints
 debugAPI.testEndpoint('/api/v1/infrastructure/geographies/');

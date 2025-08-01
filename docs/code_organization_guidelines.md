@@ -1,37 +1,237 @@
-# Code Organization Guidelines
+# Code Organization Guidelines (Frontend – React 18 + TypeScript)
 
-## Overview
+> **Scope** – These guidelines apply to the AquaMind **frontend** codebase (React 18, Vite, Tailwind CSS, Shadcn/ui, Wouter, TanStack Query, Chart.js & Recharts).  
+> They replace the previous Django-oriented rules.
 
-This document outlines the code organization principles and best practices for the AquaMind project. Following these guidelines ensures a consistent, maintainable, and scalable codebase that adheres to our established coding standards.
+---
+
+## 0  API Contract-First Workflow
+
+The **OpenAPI spec (`api/openapi.yaml`) is the single source of truth** for all frontend–backend interactions.
+
+1. **Typed client generation** – `npm run generate:api` (CI workflow) regenerates `client/src/api/generated`.
+2. **Authentication** – token via `/api/v1/auth/token/`; the generated client handles auth header inclusion.
+3. **Change flow**  
+   Backend updates API ➜ pushes new `openapi.yaml` ➜ Frontend CI regenerates client & opens PR.  
+   _Manual fallback_: Run the **Manual API Client Sync** GitHub Action.
+4. **Contract verification** – Backend CI runs **Schemathesis** to validate endpoints vs spec.
+5. **Usage** – Always import from the generated client; never hard-code fetch calls.
+
+```ts
+import { api } from "@/api/generated";
+
+const batches = await api.batch.batchList();
+```
+
+---
+
+## 1  Folder & File Structure
+
+> **Scope** – These guidelines apply to the AquaMind **frontend** codebase (React 18, Vite, Tailwind CSS, Shadcn/ui, Wouter, TanStack Query, Chart.js & Recharts).  
+> They replace the previous Django-oriented rules.
+
+---
+
+## 1  Folder & File Structure
+
+```
+client/src/
+├── components/              # Re-usable UI pieces only concerned with rendering
+│   ├── ui/                  # Base Shadcn/ui primitives (never modified)
+│   ├── charts/              # Chart wrappers (Chart.js / Recharts)
+│   ├── dashboard/           # Feature-specific visual components
+│   └── …
+├── features/                # Slice-based feature folders (state + pages + sub-components)
+│   ├── batch-management/
+│   │   ├── api.ts           # Feature API client (TanStack Query)
+│   │   ├── hooks.ts         # Custom hooks (business logic)
+│   │   ├── pages/           # Page level components (route targets)
+│   │   └── components/      # Visual/presentational pieces
+│   └── …
+├── hooks/                   # Truly generic cross-feature hooks
+├── lib/                     # Pure util helpers (date, math, validation …)
+├── router/                  # Central route map & lazy imports
+├── styles/                  # Tailwind base layers & global styles
+├── types/                   # Global TypeScript types / generated API types
+└── App.tsx                  # Top-level config (providers, layout, router)
+```
+
+**Rules**
+1. Nothing outside `client/src` imports from inside `server/` (clear boundary).
+2. Pages live inside the **feature** they belong to.
+3. Components that are reused by >1 feature belong in `components/`.
+4. Shared constants & enums go in `lib/constants.ts` (or feature-local if only used there).
+
+---
+
+## 2  File Naming & Size Limits
+
+| Type            | Convention                | Max LOC | Notes |
+|-----------------|---------------------------|---------|-------|
+| Component       | `MyThing.tsx`             | 300     | Split when >300 LOC or >3 responsibilities |
+| Hook            | `useThing.ts`             | 150     | Prefer small hooks composed together |
+| Util / Helper   | `string.ts`, `math.ts`    | 200     | Pure functions only |
+| Test            | `MyThing.test.tsx`        | —       | colocated with file under test |
+
+Large domain pages (e.g. `Broodstock.tsx`) **must** be decomposed into:
+* top-level route ≈ 100-150 LOC (layout / glue)
+* sub-components & hooks for sections (charts, forms, tables)
+
+---
+
+## 3  Component Guidelines
+
+1. **Functional Components only** – no class components.
+2. Keep components **pure**; side-effects go in hooks.
+3. Props first, then hooks, then render.
+
+```tsx
+function BatchTable({ batches }: { batches: Batch[] }) {
+  /* 1. hooks */
+  const navigate = useNavigate();
+
+  /* 2. helpers */
+  const columns = useMemo(() => [...], [/* deps */]);
+
+  /* 3. render */
+  return (
+    <DataTable columns={columns} data={batches} onRowClick={b => navigate(`/batch/${b.id}`)} />
+  );
+}
+```
+
+### Presentational vs Smart
+* **Presentational**: receives all data via props, unaware of TanStack Query.
+* **Smart** (usually in `pages/` or `features/*/pages/`): owns data-fetch + mutations.
+
+---
+
+## 4  State Management with TanStack Query
+
+1. **Queries** live in the **feature folder** (`features/foo/api.ts`).
+2. Avoid global React Context; prefer server-state cached in Query + local component state.
+3. Always supply `queryKey` using `["feature", params]` pattern.
+4. Centralised **error boundary** at `App.tsx`.
+5. Use `suspense: true` + React 18 `<Suspense>` for smoother loading.
+
+---
+
+## 5  Styling & UI
+
+* **Tailwind first**, Shadcn/ui for accessible primitives.
+* Never write plain CSS except in `styles/`.
+* Follow **utility-first** order: `base -> layout -> modifiers -> state`.
+* Theme tokens in `tailwind.config.ts` only.
+
+```html
+<div className="flex flex-col gap-4 p-6 bg-card text-card-foreground">
+```
+
+---
+
+## 6  Routing (Wouter)
+
+* All routes defined in `router/index.tsx`.
+* Lazy-load heavy pages:
+
+```tsx
+const ScenarioPlanningPage = lazy(() => import("features/scenario/pages/ScenarioPlanningPage"));
+```
+
+---
+
+## 7  Data Visualisation
+
+* Wrap Chart.js/Recharts config in **thin wrapper components** under `components/charts`.
+* Each chart component accepts **serialised props only** (no raw API models).
+* Heavy chart libs loaded lazily with dynamic import + `Suspense`.
+
+---
+
+## 8  Custom Hooks & Utilities
+
+* Prefix hooks with `use` and return **[value, actions]** pattern.
+* Pure util functions: no DOM / React imports.
+* Date/time handled via `dayjs` (single source).
+
+---
+
+## 9  Testing
+
+* **Jest + React-Testing-Library** for unit/integration.
+* **Vitest** may be used for pure TS utils.
+* Chart components – use snapshot & accessibility tests.
+* Hooks – test via `@testing-library/react-hooks`.
+
+---
+
+## 10  Performance & Quality Gates
+
+| Metric                    | Threshold |
+|---------------------------|-----------|
+| Bundle size main chunk    | < 250 KB gzipped |
+| Lighthouse perf           | > 90     |
+| ESLint (airbnb+react)     | 0 errors |
+| TypeScript strict mode    | enabled  |
+| CC per function           | < 15     |
+| Test Coverage             | ≥ 80 %  |
+
+Use `vite --report` to watch chunk growth.
+
+---
+
+## 11  Refactoring Triggers
+
+* Function >50 LOC or CC>15.
+* Component with >2 useEffect hooks containing business logic.
+* Duplicate util >2 locations.
+* Metrics report flags (see `METRICS_REPORT.md`).
+
+---
+
+## 12  Example – Good Feature Slice (`batch-management`)
+
+```
+features/batch-management/
+├── api.ts           # TanStack Query defs (getBatches, transferBatch …)
+├── hooks.ts         # useBatchFilters, useTransferDialog
+├── pages/
+│   ├── BatchListPage.tsx
+│   └── BatchDetailPage.tsx
+├── components/
+│   ├── BatchTable.tsx
+│   └── BatchTransferDialog.tsx
+└── index.ts         # barrel export for router lazy-import
+```
+
+---
+
+## 13  Anti-Patterns to Avoid
+
+1. **Massive monolithic page components** (>500 LOC).
+2. Business logic inside JSX (move to hooks / utils).
+3. Inline `fetch` without TanStack Query.
+4. Global event bus / custom pub-sub (use React context or libraries).
+
+---
+
+## 14  Conclusion
+
+Adhering to these guidelines will keep the AquaMind frontend performant, maintainable and scalable as the product grows. When in doubt, optimise for **readability**, **single-responsibility**, and **user experience**.
+
+
+ Following these guidelines ensures a consistent, maintainable, and scalable codebase that adheres to our established coding standards.
 
 ## General Principles
 
 ### Code Structure
 
-- **Python Version**: All code must be compatible with Python 3.11
-- **Django Version**: The project uses Django 4.2.11
-- **PEP 8**: Follow PEP 8 style guide for Python code
-- **PEP 257**: Document all functions and classes with docstrings following PEP 257
-- **Linting**: Use flake8 for linting Python code
+- **TypeScript Strict Mode**: Project compiled with `"strict": true`.
+- **ESLint + Prettier**: Linting/formatting enforced via `npm run lint` & Husky pre-commit.
+- **Functional Components**: React 18 with hooks-only patterns; no class components.
+- **Tailwind CSS & Shadcn/ui**: Primary styling methodology; avoid plain CSS.
+- **Generated API Client**: All network calls must use `client/src/api/generated`.
 
-### File and Module Organization
-
-```
-AquaMind/
-├── apps/                   # Application modules
-│   ├── core/               # Core functionality and utilities
-│   ├── users/              # User authentication and permissions
-│   ├── infrastructure/     # Physical assets management
-│   ├── batch/              # Fish batch lifecycle management
-│   ├── environmental/      # Environmental monitoring
-│   ├── operational/        # Daily operations and planning
-│   ├── inventory/          # Resource and feed management
-│   └── health/             # Health tracking and records
-├── aquamind/               # Project settings
-├── docs/                   # Documentation
-├── scripts/                # Utility scripts
-└── tests/                  # Test suite
-```
 
 ## Code Organization Rules
 
@@ -60,428 +260,51 @@ AquaMind/
   6. Protected methods (prefixed with `_`)
   7. Private methods (prefixed with `__`)
 
-### Django-Specific Organization
+### API Interaction Layer (Generated Client)
 
-#### Models
+All network calls go through the generated client in `client/src/api/generated`. Do **not** add additional Axios/fetch wrappers.
 
-- Organize model fields in a logical order:
-  1. Primary key fields
-  2. Foreign key fields
-  3. Required fields
-  4. Optional fields
-  5. Calculated fields
-  6. Metadata fields (created_at, updated_at)
-- Place `Meta` class immediately after field definitions
-- Group related methods together
-- Define `__str__` method for all models
-- Example:
+* Extend client behaviour (e.g., retries, logging) via **interceptors** or wrapper functions in `lib/api-client.ts`, never by editing generated code.
+* Provide feature-level hooks such as `useBatches()` in `features/batch-management/api.ts` which call the generated client internally.
 
-```python
-class Batch(models.Model):
-    # Primary key
-    id = models.AutoField(primary_key=True)
-    
-    # Foreign keys
-    species = models.ForeignKey('Species', on_delete=models.PROTECT)
-    lifecycle_stage = models.ForeignKey('LifeCycleStage', on_delete=models.PROTECT)
-    
-    # Required fields
-    batch_number = models.CharField(max_length=50, unique=True)
-    start_date = models.DateField()
-    population_count = models.IntegerField()
-    
-    # Optional fields
-    notes = models.TextField(blank=True, null=True)
-    
-    # Calculated fields
-    biomass_kg = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    
-    # Metadata fields
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        verbose_name = "Batch"
-        verbose_name_plural = "Batches"
-        ordering = ['-start_date']
-    
-    def __str__(self):
-        return f"{self.batch_number} ({self.species.name})"
-    
-    # Lifecycle methods
-    def advance_lifecycle_stage(self):
-        # Method implementation
-        pass
-    
-    # Calculation methods
-    def calculate_biomass(self):
-        # Method implementation
-        pass
+```ts
+// features/batch-management/api.ts
+import { api } from "@/api/generated";
+import { useQuery } from "@tanstack/react-query";
+
+export function useBatches() {
+  return useQuery({
+    queryKey: ["batches"],
+    queryFn: () => api.batch.batchList(),
+  });
+}
 ```
-
-#### Views and ViewSets
-
-- Organize ViewSet methods in the standard order:
-  1. `get_queryset`
-  2. `get_serializer_class`
-  3. `get_permissions`
-  4. Standard actions (`list`, `retrieve`, `create`, `update`, `destroy`)
-  5. Custom actions (decorated with `@action`)
-- Extract complex filtering logic into separate methods
-- Example:
-
-```python
-class BatchViewSet(viewsets.ModelViewSet):
-    serializer_class = BatchSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        queryset = Batch.objects.all()
-        queryset = self._filter_by_geography(queryset)
-        return queryset
-    
-    def _filter_by_geography(self, queryset):
-        # Filtering implementation
-        return queryset
-    
-    @action(detail=True, methods=['post'])
-    def transfer(self, request, pk=None):
-        # Custom action implementation
-        pass
-```
-
-#### Serializers
-
-- Organize serializer fields in the same order as model fields
-- Group validation methods together
-- Example:
-
-```python
-class BatchSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Batch
-        fields = ['id', 'batch_number', 'species', 'lifecycle_stage', 'population_count', 'biomass_kg']
-    
-    def validate_population_count(self, value):
-        # Validation implementation
-        return value
-    
-    def validate(self, data):
-        # Cross-field validation
-        return data
-```
-
-#### URLs
-
-- Group related URLs together
-- Use consistent naming patterns
-- Example:
-
-```python
-urlpatterns = [
-    # Batch endpoints
-    path('batches/', BatchListCreateView.as_view(), name='batch-list'),
-    path('batches/<int:pk>/', BatchDetailView.as_view(), name='batch-detail'),
-    
-    # Container endpoints
-    path('containers/', ContainerListCreateView.as_view(), name='container-list'),
-    path('containers/<int:pk>/', ContainerDetailView.as_view(), name='container-detail'),
-]
-```
-
-## Refactoring Guidelines
-
-### When to Refactor
-
-- When a file exceeds 200-300 lines of code
-- When a function exceeds 50 lines of code
-- When a class has more than 15 methods
-- When there is duplicated code across multiple files
-- When a function or method has too many parameters (more than 5)
-- When a function or method has too many levels of nesting (more than 3)
-
-### How to Refactor
-
-#### Splitting Large Files
-
-1. **Identify Logical Components**: Look for groups of related functions or classes
-2. **Create New Modules**: Move related components to new files
-3. **Update Imports**: Adjust import statements in all affected files
-4. **Example**:
-
-Before:
-```
-infrastructure/models.py (500 lines with Geography, Area, Container, Sensor models)
-```
-
-After:
-```
-infrastructure/models/
-  __init__.py (imports and exports all models)
-  geography.py (Geography model)
-  area.py (Area model)
-  container.py (Container model)
-  sensor.py (Sensor model)
-```
-
-#### Splitting Large Functions
-
-1. **Identify Logical Steps**: Break the function into discrete steps
-2. **Extract Helper Functions**: Create helper functions for each step
-3. **Example**:
-
-Before:
-```python
-def process_batch_transfer(batch, new_container, transfer_date):
-    # 50+ lines of code handling validation, old container updates,
-    # new container assignment, and event logging
-```
-
-After:
-```python
-def process_batch_transfer(batch, new_container, transfer_date):
-    validate_transfer(batch, new_container)
-    deactivate_old_assignment(batch)
-    create_new_assignment(batch, new_container, transfer_date)
-    log_transfer_event(batch, new_container, transfer_date)
-    
-def validate_transfer(batch, new_container):
-    # Validation logic
-    
-def deactivate_old_assignment(batch):
-    # Deactivation logic
-    
-def create_new_assignment(batch, new_container, transfer_date):
-    # Assignment creation logic
-    
-def log_transfer_event(batch, new_container, transfer_date):
-    # Event logging logic
-```
-
-#### Extracting Reusable Components
-
-1. **Identify Common Patterns**: Look for code that appears in multiple places
-2. **Create Utility Functions/Classes**: Move common code to the core app
-3. **Example**:
-
-Before (repeated in multiple views):
-```python
-# In multiple view files
-def get_filtered_queryset(self):
-    queryset = self.model.objects.all()
-    user_geography = self.request.user.profile.geography
-    if user_geography:
-        queryset = queryset.filter(geography=user_geography)
-    return queryset
-```
-
-After:
-```python
-# In core/mixins.py
-class GeographyFilterMixin:
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        user_geography = self.request.user.profile.geography
-        if user_geography:
-            queryset = queryset.filter(geography=user_geography)
-        return queryset
-
-# In views
-class BatchViewSet(GeographyFilterMixin, viewsets.ModelViewSet):
-    # View implementation
-```
-
-## Best Practices
-
-### Code Reuse
-
-- **Look for Existing Solutions**: Before writing new code, check if similar functionality already exists
-- **Avoid Duplication**: Extract common code into shared utilities
-- **Use Inheritance and Mixins**: Leverage Django's class-based views and mixins
-
-### Code Simplicity
-
-- **Prefer Simple Solutions**: Choose the simplest approach that meets requirements
-- **Early Returns**: Use early returns to reduce nesting and improve readability
-- **Avoid Premature Optimization**: Focus on clear, correct code first
-
-### Environment Awareness
-
-- **Environment-Specific Code**: Write code that works across dev, test, and prod environments
-- **Configuration**: Use settings and environment variables for environment-specific values
-- **Feature Flags**: Use feature flags for functionality that varies by environment
-
-### Testing Considerations
-
-- **Testable Code**: Organize code to facilitate unit testing
-- **Dependency Injection**: Design classes and functions to accept dependencies
-- **Mock Boundaries**: Structure code so external dependencies can be easily mocked in tests
-
-## Examples
-
-### Good Code Organization Example
-
-```python
-# batch/services.py
-from decimal import Decimal
-from django.db import transaction
-from apps.batch.models import Batch, BatchContainerAssignment
-from apps.core.exceptions import InvalidTransferError
-
-class BatchTransferService:
-    """Service for handling batch transfers between containers."""
-    
-    @classmethod
-    def transfer_batch(cls, batch, new_container, transfer_date, user=None):
-        """
-        Transfer a batch to a new container.
-        
-        Args:
-            batch: The batch to transfer
-            new_container: The destination container
-            transfer_date: The date of transfer
-            user: Optional user performing the transfer
-            
-        Returns:
-            BatchContainerAssignment: The new assignment
-            
-        Raises:
-            InvalidTransferError: If the transfer is not valid
-        """
-        cls._validate_transfer(batch, new_container)
-        
-        with transaction.atomic():
-            old_assignment = cls._deactivate_current_assignment(batch)
-            new_assignment = cls._create_new_assignment(
-                batch, new_container, transfer_date, old_assignment
-            )
-            cls._log_transfer(batch, old_assignment, new_assignment, user)
-            
-        return new_assignment
-    
-    @staticmethod
-    def _validate_transfer(batch, new_container):
-        """Validate that the transfer is allowed."""
-        if not new_container.is_active:
-            raise InvalidTransferError("Cannot transfer to inactive container")
-        
-        if batch.lifecycle_stage not in new_container.compatible_stages.all():
-            raise InvalidTransferError(
-                f"Container not compatible with {batch.lifecycle_stage.name} stage"
-            )
-    
-    @staticmethod
-    def _deactivate_current_assignment(batch):
-        """Deactivate the current batch assignment."""
-        current_assignment = BatchContainerAssignment.objects.filter(
-            batch=batch, is_active=True
-        ).first()
-        
-        if current_assignment:
-            current_assignment.is_active = False
-            current_assignment.save()
-            
-        return current_assignment
-    
-    @staticmethod
-    def _create_new_assignment(batch, container, date, old_assignment=None):
-        """Create a new batch container assignment."""
-        # Copy values from old assignment if available
-        population = batch.population_count
-        biomass = batch.biomass_kg
-        
-        return BatchContainerAssignment.objects.create(
-            batch=batch,
-            container=container,
-            assignment_date=date,
-            population_count=population,
-            biomass_kg=biomass,
-            is_active=True,
-            lifecycle_stage=batch.lifecycle_stage
-        )
-    
-    @staticmethod
-    def _log_transfer(batch, old_assignment, new_assignment, user):
-        """Log the transfer event."""
-        from apps.core.models import AuditLog
-        
-        old_container = old_assignment.container if old_assignment else None
-        new_container = new_assignment.container
-        
-        AuditLog.objects.create(
-            content_object=batch,
-            action="TRANSFER",
-            user=user,
-            details={
-                "from_container": old_container.id if old_container else None,
-                "to_container": new_container.id,
-                "population": new_assignment.population_count,
-                "biomass_kg": float(new_assignment.biomass_kg)
-            }
-        )
-```
-
 ### Bad Code Organization (Anti-Pattern)
 
-```python
-# DON'T DO THIS: Everything in one large function
-def transfer_batch(batch_id, container_id, date, user_id=None):
-    # 100+ lines of code with validation, database operations,
-    # logging, notifications, all mixed together with complex
-    # conditional logic and no clear structure
-    
-    # Validation
-    batch = Batch.objects.get(id=batch_id)
-    container = Container.objects.get(id=container_id)
-    
-    if not container.is_active:
-        raise Exception("Container inactive")
-    
-    # Database operations mixed with business logic
-    old_assignment = BatchContainerAssignment.objects.filter(
-        batch=batch, is_active=True
-    ).first()
-    
-    if old_assignment:
-        old_assignment.is_active = False
-        old_assignment.save()
-    
-    # More database operations
-    new_assignment = BatchContainerAssignment.objects.create(
-        batch=batch,
-        container=container,
-        assignment_date=date,
-        population_count=batch.population_count,
-        biomass_kg=batch.biomass_kg,
-        is_active=True
-    )
-    
-    # Logging mixed in
-    if user_id:
-        user = User.objects.get(id=user_id)
-        AuditLog.objects.create(
-            content_object=batch,
-            action="TRANSFER",
-            user=user,
-            details={"some": "details"}
-        )
-    
-    # Notification logic mixed in
-    emails = []
-    for manager in container.area.managers.all():
-        emails.append(manager.email)
-    
-    if emails:
-        send_mail(
-            "Batch Transfer",
-            f"Batch {batch.batch_number} transferred to {container.name}",
-            "noreply@example.com",
-            emails
-        )
-    
-    return new_assignment
+```tsx
+// ❌ DON'T: Massive component with business logic, API calls and rendering mixed
+export default function ScenarioPlanningMonolith() {
+  const [state, setState] = useState<ScenarioState>({/* … */});
+  const [results, setResults] = useState<Result[]>([]);
+
+  // inline fetch instead of generated client
+  async function runScenario() {
+    const res = await fetch("/api/v1/scenario/run", { /* … */ });
+    setResults(await res.json());
+  }
+
+  useEffect(() => {
+    // complex effect with multiple responsibilities
+  }, [state]);
+
+  return (
+    <div>
+      {/* 600+ lines of JSX */}
+    </div>
+  );
+}
 ```
 
-## Conclusion
+*Symptoms*: Hard to test, no separation of concerns, fetch calls duplicated, impossible to reuse logic.
 
-Following these code organization guidelines will help maintain a clean, maintainable, and scalable codebase. When in doubt, prioritize readability and simplicity over cleverness. Remember that code is read much more often than it is written, so optimize for readability and maintainability.
+**Fix**: Split into hooks (`useScenarioRunner`), presentational components, and use the generated client.

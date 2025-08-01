@@ -1,4 +1,10 @@
-# Development Workflow for Django + React Integration
+# DEPRECATED – See `docs/deprecated/DEVELOPMENT_WORKFLOW.md`
+
+This file has been moved to the `docs/deprecated` directory and is retained only for historical reference. Please refer to:
+
+* `docs/CONTRIBUTING.md` for current development workflow (OpenAPI-first)
+* `docs/DEPLOYMENT_ARCHITECTURE.md` for deployment details
+
 
 ## Overview
 This workflow supports seamless development and debugging across three scenarios:

@@ -10,7 +10,7 @@
     "check": "npm run type-check",
     "type-check": "tsc --noEmit",
     "db:push": "drizzle-kit push",
-    "generate:api": "openapi --input ../AquaMind/api/openapi.yaml --output client/src/api/generated --client fetch --useUnionTypes"
+    "generate:api": "openapi --input tmp/openapi/openapi.yaml --output client/src/api/generated --client fetch --useUnionTypes"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
