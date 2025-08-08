@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=24.5 <25"
+  },
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
@@ -10,7 +13,10 @@
     "check": "npm run type-check",
     "type-check": "tsc --noEmit",
     "db:push": "drizzle-kit push",
-    "generate:api": "openapi --input tmp/openapi/openapi.yaml --output client/src/api/generated --client fetch --useUnionTypes"
+    "generate:api": "openapi --input tmp/openapi/openapi.yaml --output client/src/api/generated --client fetch --useUnionTypes",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run --coverage"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -96,16 +102,22 @@
     "@types/react-dom": "^18.3.1",
     "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.3.2",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
     "autoprefixer": "^10.4.20",
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.30.4",
     "esbuild": "^0.25.0",
+    "@vitest/coverage-v8": "^2.1.1",
     "openapi-typescript-codegen": "^0.29.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.17",
+    "jsdom": "^24.1.0",
     "tsx": "^4.19.1",
     "typescript": "5.6.3",
-    "vite": "^5.4.14"
+    "vite": "^5.4.14",
+    "vitest": "^2.1.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
