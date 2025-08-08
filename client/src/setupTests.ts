@@ -6,6 +6,9 @@ import { server } from '@/test/msw/server';
 vi.mock('chart.js/auto', () => {
   return {
     default: class MockChart {
+      // Explicitly declare the property so TypeScript recognizes it
+      destroyed: boolean;
+
       constructor() {
         this.destroyed = false;
       }

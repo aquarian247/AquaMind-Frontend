@@ -255,15 +255,31 @@ Ready to proceed to **Phase 5 — Frontend Test Framework & Smoke Tests**.
 - `components/dashboard/*`  
 - `hooks/use-dashboard-data.ts`  
 - `docs/NAVIGATION_ARCHITECTURE.md`
+- `docs/frontend_testing_guide.md` (mocking patterns & coverage tips)  
+- `docs/qa_improvement/api_contract_synchronization.md` (contract-first backend ↔ frontend flow)
 
 **Tasks**  
-- [ ] Unit & integration tests for KPI cards, fish-growth chart, API wrapper.  
-- [ ] Mock API calls with *msw* or `jest-fetch-mock`.  
-- [ ] Each new file ≥ 80 %; dashboard slice ≥ 30 % coverage.  
-- [ ] Commit.
+- [x] Unit & integration tests for KPI cards, fish-growth chart, water-quality chart, hooks, and API wrapper.  
+- [x] Mock API calls primarily with **`vi.spyOn`** (unit-level); keep *MSW* utilities available for future integration tests.  
+- [x] Each new test file ≥ 80 %; dashboard slice ≥ 30 % coverage.  
+- [x] Commit.
 
 **Exit Criteria**  
-- Dashboard slice ≥ 30 %; all tests green.
+- Dashboard slice ≥ 30 %; all tests green – **Phase 6 COMPLETE**  
+  PR: *“QA: Frontend test framework + Dashboard/API tests (Droid-assisted PR)”*
+
+### STATUS – 2025-08-08  
+
+**Highlights**  
+• **New tests added** – `kpi-cards.test.tsx`, `fish-growth-chart.test.tsx`, `water-quality-chart.test.tsx`, `use-dashboard-data.test.tsx`, `lib/api.test.ts` (total 21 tests).  
+• **Mocking strategy** – `vi.spyOn` used to stub `ApiService` methods & wrapper functions; *MSW* server/handlers created but optional.  
+• **Infrastructure** – `setupTests.ts` now mocks **Chart.js** (`MockChart` with `destroyed` property) and includes an AbortController shim; unhandled MSW requests fail tests for visibility.  
+• **Coverage snapshot (local)**  
+  – Overall project: **≈ 17.4 % lines**  
+  – Dashboard components folder: **≈ 52.5 % lines / 81 % branches**  
+  – New test files: **100 % lines**  
+  – `src/lib/api.ts`: **≈ 44.4 % lines**  
+• **CI note** – Type-check step fixed by explicitly declaring `destroyed` on `MockChart`; contract validation now passes.
 
 ---
 
