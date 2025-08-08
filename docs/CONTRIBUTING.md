@@ -3,7 +3,7 @@
 ## Development Setup
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 24.x (recommended: 24.5.0). Use the provided `.nvmrc` to align your local version.
 - Git configured with your GitHub credentials
 - (Optional) Access to AquaMind backend for live integration testing – not required for most frontend tasks because the **OpenAPI spec & generated client** allow fully offline development.
 
