@@ -43,11 +43,12 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
-      include: [
-        "src/App.tsx",
-        "src/components/ui/button.tsx",
-        "src/components/ui/card.tsx",
-        "src/pages/not-found.tsx",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/api/generated/**",
+        "src/setupTests.ts",
+        "src/test/**",
+        "src/pages/**",
       ],
       thresholds: { lines: 10, statements: 10, functions: 10, branches: 5 },
     },
