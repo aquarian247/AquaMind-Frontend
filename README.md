@@ -42,7 +42,7 @@ This frontend is designed to integrate with the AquaMind Django REST API backend
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 24.x (recommended: 24.5.0). A `.nvmrc` is provided.
 - npm or yarn
 - Git
 
@@ -87,6 +87,8 @@ npm run build        # Build for production
 npm run start        # Start production server
 npm run type-check   # Run TypeScript type checking
 npm run lint         # Run ESLint
+npm run test         # Run unit tests once
+npm run test:watch   # Run unit tests in watch mode
 ```
 
 ### Project Structure
