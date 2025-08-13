@@ -176,7 +176,7 @@ const feedingEventSchema = z.object({
 
 const api = {
   async getFeedTypes(): Promise<{ results: Feed[] }> {
-    const response = await fetch("/api/v1/inventory/feed-types/");
+    const response = await fetch("/api/v1/inventory/feeds/");
     if (!response.ok) throw new Error("Failed to fetch feed types");
     return response.json();
   },
@@ -188,13 +188,13 @@ const api = {
   },
 
   async getFeedContainers(): Promise<{ results: FeedContainer[] }> {
-    const response = await fetch("/api/v1/inventory/feed-containers/");
+    const response = await fetch("/api/v1/infrastructure/feed-containers/");
     if (!response.ok) throw new Error("Failed to fetch feed containers");
     return response.json();
   },
 
   async getFeedStock(): Promise<{ results: FeedStock[] }> {
-    const response = await fetch("/api/v1/inventory/feed-stock/");
+    const response = await fetch("/api/v1/inventory/feed-stocks/");
     if (!response.ok) throw new Error("Failed to fetch feed stock");
     return response.json();
   },
@@ -228,7 +228,7 @@ export default function Inventory() {
 
   // Data queries
   const { data: feedTypesData, isLoading: feedTypesLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-types/"],
+    queryKey: ["/api/v1/inventory/feeds/"],
     queryFn: api.getFeedTypes,
   });
 
@@ -238,12 +238,12 @@ export default function Inventory() {
   });
 
   const { data: containersData, isLoading: containersLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-containers/"],
+    queryKey: ["/api/v1/infrastructure/feed-containers/"],
     queryFn: api.getFeedContainers,
   });
 
   const { data: stockData, isLoading: stockLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-stock/"],
+    queryKey: ["/api/v1/inventory/feed-stocks/"],
     queryFn: api.getFeedStock,
   });
 

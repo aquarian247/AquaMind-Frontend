@@ -16,7 +16,8 @@
     "generate:api": "openapi --input tmp/openapi/openapi.yaml --output client/src/api/generated --client fetch --useUnionTypes",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "vitest run --coverage"
+    "test:ci": "vitest run --coverage",
+    "validate:endpoints": "tsx scripts/validate-endpoints.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -98,6 +99,7 @@
     "@types/express": "4.17.21",
     "@types/express-session": "^1.18.0",
     "@types/http-proxy-middleware": "^1.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "20.16.11",
     "@types/passport": "^1.0.16",
     "@types/passport-local": "^1.0.38",
@@ -110,7 +112,10 @@
     "cross-env": "^7.0.3",
     "drizzle-kit": "^0.30.4",
     "esbuild": "^0.25.0",
+    "js-yaml": "^4.1.0",
     "jsdom": "^24.1.0",
+    "glob": "^10.3.10",
+    "chalk": "^5.3.0",
     "msw": "^2.10.4",
     "openapi-typescript-codegen": "^0.29.0",
     "postcss": "^8.4.47",
