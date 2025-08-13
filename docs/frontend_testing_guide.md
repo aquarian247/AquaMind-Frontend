@@ -27,7 +27,7 @@ Everything lives under `client/`. Test files use `*.test.ts(x)`.
 
 * Adds **jest-dom** matchers.
 * Mocks **Chart.js** so `canvas.getContext` never runs.
-* Spins up MSW server (optional – see below).
+* MSW server is started by default; useful for integration tests.
 * Polyfills a safe `AbortController`.
 * Logs any unhandled request when `onUnhandledRequest: 'error'`.
 
@@ -96,6 +96,55 @@ render(<QueryClientProvider client={qc}>...</QueryClientProvider>);
   – New testable files ≥ 80 %.
 
 Check HTML/LCOV output in `coverage/`.
+
+---
+
+## View-only Components (Smoke Tests)
+
+Scope (Batch Management views)
+- Render without crashing
+- Basic tab navigation (userEvent)
+- Loading state and error state
+- 1–2 key data points per view
+
+Mocking
+- Prefer `vi.spyOn(globalThis, 'fetch')` for unit-level read-only components.
+- Return minimal JSON shapes matching what the component reads.
+
+Example
+```ts
+// Success
+vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+  new Response(JSON.stringify({ results: [] }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  })
+);
+
+// Error
+vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+  new Response('Server Error', { status: 500 })
+);
+```
+
+React Query
+- Use app default query function so component queries work without bespoke stubs:
+```ts
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { getQueryFn } from '@/lib/queryClient';
+
+const qc = new QueryClient({
+  defaultOptions: { queries: { queryFn: getQueryFn(), retry: false, gcTime: 0 } },
+});
+```
+
+Assertions
+- Prefer role-based queries; use `findBy*`/`findAllBy*` for async UI.
+- Handle duplicate text with `findAllByText` or by scoping to a container.
+
+Environment
+- `matchMedia`, `ResizeObserver`, and Canvas are stubbed in `setupTests.ts`.
+- MSW is available for integration tests; unit tests typically mock `fetch` directly.
 
 ---
 
