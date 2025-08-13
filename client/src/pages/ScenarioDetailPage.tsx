@@ -75,12 +75,12 @@ export function ScenarioDetailPage() {
   const [, setLocation] = useLocation();
 
   const { data: scenario, isLoading: scenarioLoading } = useQuery<ScenarioConfigResponse>({
-    queryKey: [`/api/v1/scenario-planning/scenarios/${id}/configuration/`],
+    queryKey: [`/api/v1/scenario/scenarios/${id}/configuration/`],
     enabled: !!id,
   });
 
   const { data: projectionData, isLoading: projectionsLoading } = useQuery<ProjectionsResponse>({
-    queryKey: [`/api/v1/scenario-planning/scenarios/${id}/projections/`],
+    queryKey: [`/api/v1/scenario/scenarios/${id}/projections/`],
     enabled: !!id,
   });
 

@@ -143,7 +143,7 @@ export function MortalityModelCreationDialog({ children, onSuccess }: MortalityM
       // apiRequest signature: (method, url, data)
       return apiRequest(
         "POST",
-        "/api/v1/scenario-planning/mortality-models/",
+        "/api/v1/scenario/mortality-models/",
         {
           name: data.name,
           frequency: data.frequency,
@@ -152,7 +152,7 @@ export function MortalityModelCreationDialog({ children, onSuccess }: MortalityM
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/mortality-models/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/mortality-models/"] });
       toast({
         title: "Success",
         description: "Mortality model created successfully",
