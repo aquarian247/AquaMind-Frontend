@@ -67,8 +67,8 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
 
   // Fetch scenario projections when dialog opens
   const { data: projectionData, isLoading: projectionsLoading } = useQuery<ProjectionData>({
-    queryKey: ["/api/v1/scenario-planning/scenarios/", scenario.id, "projections"],
-    queryFn: () => fetch(`/api/v1/scenario-planning/scenarios/${scenario.id}/projections/`).then(res => res.json()),
+    queryKey: ["/api/v1/scenario/scenarios/", scenario.id, "projections"],
+    queryFn: () => fetch(`/api/v1/scenario/scenarios/${scenario.id}/projections/`).then(res => res.json()),
     enabled: open,
   });
 
@@ -85,8 +85,8 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
 
   // Fetch scenario configuration details
   const { data: configData, isLoading: configLoading } = useQuery<any>({
-    queryKey: ["/api/v1/scenario-planning/scenarios/", scenario.id, "config"],
-    queryFn: () => fetch(`/api/v1/scenario-planning/scenarios/${scenario.id}/configuration/`).then(res => res.json()),
+    queryKey: ["/api/v1/scenario/scenarios/", scenario.id, "config"],
+    queryFn: () => fetch(`/api/v1/scenario/scenarios/${scenario.id}/configuration/`).then(res => res.json()),
     enabled: open,
   });
 

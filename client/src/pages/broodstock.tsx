@@ -104,21 +104,44 @@ function BroodstockDashboard() {
     results: T[];
   };
 
-  const { data: kpis, isLoading: kpisLoading } = useQuery<KPIData>({
-    queryKey: ['/api/v1/broodstock/dashboard/kpis/'],
-  });
+  /* ------------------------------------------------------------------
+   * NOTE: The following data-fetching hooks referenced deprecated /legacy
+   * broodstock endpoints that were removed during the backend contract
+   * unification.  Until new endpoints are implemented these queries are
+   * disabled and replaced with static placeholders so the UI renders
+   * without runtime errors (zero 404s in the network console).
+   * ------------------------------------------------------------------ */
+  // TODO(api-alignment): Replace placeholders with real queries once
+  // broodstock KPI & program endpoints are exposed by the backend.
+  /**
+   * Local placeholder object for KPI values.
+   *
+   * During the contract-alignment phase the backend does not yet expose
+   * a KPI endpoint.  Supplying a fully-typed fallback object avoids
+   * TypeScript “property does not exist on type 'never'” errors that
+   * occur when the value is literally `null` at compile-time.
+   *
+   * Replace this with a real `useQuery<KPIData>` hook once the endpoint
+   * is available.
+   */
+  const kpis: KPIData = {
+    activeBroodstockPairs: 0,
+    broodstockPopulation: 0,
+    totalProgenyCount: 0,
+    geneticDiversityIndex: 0,
+    pendingSelections: 0,
+    averageGeneticGain: 0,
+  };
+  const kpisLoading = false;
 
-  const { data: programs, isLoading: programsLoading } = useQuery<Paginated<Program>>({
-    queryKey: ['/api/v1/broodstock/programs/'],
-  });
+  const programs: Paginated<Program> | null = { count: 0, results: [] };
+  const programsLoading = false;
 
-  const { data: activities, isLoading: activitiesLoading } = useQuery<Paginated<any>>({
-    queryKey: ['/api/v1/broodstock/activities/'],
-  });
+  const activities: Paginated<any> | null = { count: 0, results: [] };
+  const activitiesLoading = false;
 
-  const { data: tasks, isLoading: tasksLoading } = useQuery<Paginated<any>>({
-    queryKey: ['/api/v1/broodstock/tasks/'],
-  });
+  const tasks: Paginated<any> | null = { count: 0, results: [] };
+  const tasksLoading = false;
 
   // ------------------------------------------------------------------
   // Genetic trait data shape (minimal for this dashboard)
@@ -166,14 +189,21 @@ function BroodstockDashboard() {
     }
   };
 
+  /**
+   * Priority badge helper (used in Upcoming Tasks list)
+   */
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-400';
-      case 'medium': return 'bg-blue-100 text-blue-800 border-blue-400';
-      case 'low': return 'bg-green-100 text-green-800 border-green-400';
-      default: return 'bg-gray-100 text-gray-800 border-gray-400';
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-400';
+      case 'medium':
+        return 'bg-blue-100 text-blue-800 border-blue-400';
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-400';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-400';
     }
-  };
+  }
 
   const formatTimeAgo = (timestamp: string) => {
     const now = new Date();

@@ -96,42 +96,42 @@ export default function ScenarioPlanning() {
 
   // Fetch KPIs
   const { data: kpis } = useQuery<ScenarioPlanningKPIs>({
-    queryKey: ["/api/v1/scenario-planning/dashboard/kpis/"],
+    queryKey: ["/api/v1/scenario/dashboard/kpis/"],
   });
 
   // Fetch Temperature Profiles
   const { data: temperatureProfiles } = useQuery<{results: TemperatureProfile[]}>({
-    queryKey: ["/api/v1/scenario-planning/temperature-profiles/"],
+    queryKey: ["/api/v1/scenario/temperature-profiles/"],
   });
 
   // Fetch TGC Models
   const { data: tgcModels } = useQuery<{results: TgcModel[]}>({
-    queryKey: ["/api/v1/scenario-planning/tgc-models/"],
+    queryKey: ["/api/v1/scenario/tgc-models/"],
   });
 
   // Fetch FCR Models
   const { data: fcrModels } = useQuery<{results: any[]}>({
-    queryKey: ["/api/v1/scenario-planning/fcr-models/"],
+    queryKey: ["/api/v1/scenario/fcr-models/"],
   });
 
   // Fetch Mortality Models
   const { data: mortalityModels } = useQuery<{results: any[]}>({
-    queryKey: ["/api/v1/scenario-planning/mortality-models/"],
+    queryKey: ["/api/v1/scenario/mortality-models/"],
   });
 
   // Fetch Biological Constraints
   const { data: biologicalConstraints } = useQuery<{results: any[]}>({
-    queryKey: ["/api/v1/scenario-planning/biological-constraints/"],
+    queryKey: ["/api/v1/scenario/biological-constraints/"],
   });
 
   // Fetch Scenarios with filtering
   const { data: scenarios, isLoading: scenariosLoading } = useQuery<{results: LocalScenario[]}>({
-    queryKey: ["/api/v1/scenario-planning/scenarios/", { search: searchTerm, status: statusFilter }],
+    queryKey: ["/api/v1/scenario/scenarios/", { search: searchTerm, status: statusFilter }],
     queryFn: () => {
       const params = new URLSearchParams();
       if (searchTerm) params.append('search', searchTerm);
       if (statusFilter !== 'all') params.append('status', statusFilter);
-      return fetch(`/api/v1/scenario-planning/scenarios/?${params}`).then(res => res.json());
+      return fetch(`/api/v1/scenario/scenarios/?${params}`).then(res => res.json());
     }
   });
 
@@ -140,12 +140,12 @@ export default function ScenarioPlanning() {
     mutationFn: async (scenarioId: number) => {
       return apiRequest(
         "DELETE",
-        `/api/v1/scenario-planning/scenarios/${scenarioId}/`
+        `/api/v1/scenario/scenarios/${scenarioId}/`
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/dashboard/kpis/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/dashboard/kpis/"] });
       toast({
         title: "Scenario Deleted",
         description: "The scenario has been deleted successfully.",
@@ -165,12 +165,12 @@ export default function ScenarioPlanning() {
     mutationFn: async ({ scenarioId, name }: { scenarioId: number; name: string }) => {
       return apiRequest(
         "POST",
-        `/api/v1/scenario-planning/scenarios/${scenarioId}/duplicate/`,
+        `/api/v1/scenario/scenarios/${scenarioId}/duplicate/`,
         { name }
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
       toast({
         title: "Scenario Duplicated",
         description: "The scenario has been duplicated successfully.",
@@ -190,11 +190,11 @@ export default function ScenarioPlanning() {
     mutationFn: async (scenarioId: number) => {
       return apiRequest(
         "POST",
-        `/api/v1/scenario-planning/scenarios/${scenarioId}/run-projection/`
+        `/api/v1/scenario/scenarios/${scenarioId}/run-projection/`
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
       toast({
         title: "Projection Started",
         description: "The scenario projection has been started.",
@@ -230,7 +230,7 @@ export default function ScenarioPlanning() {
           </p>
         </div>
         <div className="flex gap-2">
-          <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
+          <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] })}>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               New Scenario
@@ -366,7 +366,7 @@ export default function ScenarioPlanning() {
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <h2 className="text-2xl font-bold">Scenarios</h2>
             <div className="flex gap-2">
-              <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
+              <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] })}>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Scenario
@@ -444,7 +444,7 @@ export default function ScenarioPlanning() {
                   }
                 </p>
                 <div className="flex gap-2">
-                  <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}>
+                  <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] })}>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
                       Create First Scenario
@@ -491,7 +491,7 @@ export default function ScenarioPlanning() {
                         <DropdownMenuContent align="end">
                           <ScenarioEditDialog 
                             scenario={scenario} 
-                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] })}
+                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] })}
                           >
                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                               <Edit className="h-4 w-4 mr-2" />
@@ -577,19 +577,19 @@ export default function ScenarioPlanning() {
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Growth Models</h2>
             <div className="flex gap-2">
-              <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/tgc-models/"] })}>
+              <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/tgc-models/"] })}>
                 <Button variant="outline" size="sm">
                   <Brain className="h-4 w-4 mr-2" />
                   TGC Model
                 </Button>
               </TgcModelCreationDialog>
-              <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/fcr-models/"] })}>
+              <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/fcr-models/"] })}>
                 <Button variant="outline" size="sm">
                   <Calculator className="h-4 w-4 mr-2" />
                   FCR Model
                 </Button>
               </FcrModelCreationDialog>
-              <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/mortality-models/"] })}>
+              <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/mortality-models/"] })}>
                 <Button variant="outline" size="sm">
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Mortality Model
@@ -608,7 +608,7 @@ export default function ScenarioPlanning() {
 
             <TabsContent value="tgc" className="space-y-4">
               <div className="flex justify-end items-center">
-                <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/tgc-models/"] })}>
+                <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/tgc-models/"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     New TGC Model
@@ -669,7 +669,7 @@ export default function ScenarioPlanning() {
                       <p className="text-muted-foreground text-center mb-4">
                         Create your first TGC model to define growth parameters for scenarios
                       </p>
-                      <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/tgc-models/"] })}>
+                      <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/tgc-models/"] })}>
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
                           Create TGC Model
@@ -684,7 +684,7 @@ export default function ScenarioPlanning() {
             <TabsContent value="fcr" className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Feed Conversion Ratio Models</h3>
-                <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/fcr-models/"] })}>
+                <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/fcr-models/"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     New FCR Model
@@ -735,7 +735,7 @@ export default function ScenarioPlanning() {
                       <p className="text-muted-foreground text-center mb-4">
                         Create your first FCR model to define feed conversion ratios for each lifecycle stage
                       </p>
-                      <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/fcr-models/"] })}>
+                      <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/fcr-models/"] })}>
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
                           Create FCR Model
@@ -750,7 +750,7 @@ export default function ScenarioPlanning() {
             <TabsContent value="mortality" className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Mortality Models</h3>
-                <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/mortality-models/"] })}>
+                <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/mortality-models/"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     New Mortality Model
@@ -807,7 +807,7 @@ export default function ScenarioPlanning() {
                       <p className="text-muted-foreground text-center mb-4">
                         Create your first mortality model to define population decline rates for scenarios
                       </p>
-                      <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/mortality-models/"] })}>
+                      <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/mortality-models/"] })}>
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
                           Create Mortality Model

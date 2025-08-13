@@ -26,12 +26,12 @@ export default function TemperatureDataView() {
   const [, setLocation] = useLocation();
 
   const { data: profile } = useQuery<TemperatureProfile>({
-    queryKey: [`/api/v1/scenario-planning/temperature-profiles/${id}/`],
+    queryKey: [`/api/v1/scenario/temperature-profiles/${id}/`],
     enabled: !!id,
   });
 
   const { data: readings } = useQuery<{ results: TemperatureReading[] }>({
-    queryKey: [`/api/v1/scenario-planning/temperature-profiles/${id}/readings/`],
+    queryKey: [`/api/v1/scenario/temperature-profiles/${id}/readings/`],
     enabled: !!id,
   });
 

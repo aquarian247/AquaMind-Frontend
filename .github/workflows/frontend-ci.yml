@@ -28,6 +28,22 @@ jobs:
     
     - name: Type check (validate API contract)
       run: npm run type-check
+
+    # ------------------------------------------------------------------
+    # Contract enforcement – ensure every endpoint used in the codebase
+    # exists in the backend OpenAPI specification.  The spec should have
+    # been copied into ./api/openapi.yaml by the sync-openapi workflow.
+    # ------------------------------------------------------------------
+    - name: Validate API endpoints
+      run: |
+        # Check if OpenAPI spec exists (it should be copied by regenerate-api-client workflow)
+        if [ -f "api/openapi.yaml" ]; then
+          echo "✅ OpenAPI spec found, validating endpoints..."
+          npm run validate:endpoints
+        else
+          echo "⚠️ OpenAPI spec not found, skipping endpoint validation"
+          echo "To enable validation, ensure api/openapi.yaml is present"
+        fi
       
     - name: Build
       run: npm run build

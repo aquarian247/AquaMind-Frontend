@@ -85,7 +85,7 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
 
   // Fetch temperature profiles
   const { data: temperatureProfiles } = useQuery<{results: TemperatureProfile[]}>({
-    queryKey: ["/api/v1/scenario-planning/temperature-profiles/"],
+    queryKey: ["/api/v1/scenario/temperature-profiles/"],
     enabled: open,
   });
 
@@ -103,12 +103,12 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
 
       return apiRequest(
         "POST",
-        "/api/v1/scenario-planning/tgc-models/",
+        "/api/v1/scenario/tgc-models/",
         payload,
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/tgc-models/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/tgc-models/"] });
       toast({
         title: "Success",
         description: "TGC model created successfully",

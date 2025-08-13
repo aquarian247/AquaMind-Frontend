@@ -101,7 +101,7 @@ export function FcrModelCreationDialog({ children, onSuccess }: FcrModelCreation
 
   // Fetch available lifecycle stages
   const { data: availableStages } = useQuery<{results: Stage[]}>({
-    queryKey: ["/api/v1/scenario-planning/stages/"],
+    queryKey: ["/api/v1/scenario/stages/"],
     enabled: open,
   });
 
@@ -109,7 +109,7 @@ export function FcrModelCreationDialog({ children, onSuccess }: FcrModelCreation
     mutationFn: async (data: FcrModelFormData) => {
       return apiRequest(
         "POST",
-        "/api/v1/scenario-planning/fcr-models/",
+        "/api/v1/scenario/fcr-models/",
         {
           name: data.name,
           description: data.description,
@@ -117,7 +117,7 @@ export function FcrModelCreationDialog({ children, onSuccess }: FcrModelCreation
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/fcr-models/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/fcr-models/"] });
       toast({
         title: "Success",
         description: "FCR model created successfully",

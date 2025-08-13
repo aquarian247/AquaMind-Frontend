@@ -86,22 +86,22 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
 
   // Fetch available models
   const { data: tgcModels } = useQuery<{results: TgcModel[]}>({
-    queryKey: ["/api/v1/scenario-planning/tgc-models/"],
+    queryKey: ["/api/v1/scenario/tgc-models/"],
     enabled: open,
   });
 
   const { data: fcrModels } = useQuery<{results: FcrModel[]}>({
-    queryKey: ["/api/v1/scenario-planning/fcr-models/"],
+    queryKey: ["/api/v1/scenario/fcr-models/"],
     enabled: open,
   });
 
   const { data: mortalityModels } = useQuery<{results: MortalityModel[]}>({
-    queryKey: ["/api/v1/scenario-planning/mortality-models/"],
+    queryKey: ["/api/v1/scenario/mortality-models/"],
     enabled: open,
   });
 
   const { data: temperatureProfiles } = useQuery<{results: TemperatureProfile[]}>({
-    queryKey: ["/api/v1/scenario-planning/temperature-profiles/"],
+    queryKey: ["/api/v1/scenario/temperature-profiles/"],
     enabled: open,
   });
 
@@ -111,11 +111,11 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
         ...data,
         startDate: data.startDate.toISOString().split('T')[0],
       };
-      return apiRequest("POST", "/api/v1/scenario-planning/scenarios/", payload);
+      return apiRequest("POST", "/api/v1/scenario/scenarios/", payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/scenarios/"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario-planning/dashboard/kpis/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/dashboard/kpis/"] });
       toast({
         title: "Scenario Created",
         description: "Your scenario has been created successfully.",

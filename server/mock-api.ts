@@ -360,16 +360,16 @@ export function registerMockApiRoutes(app: any) {
   app.get('/api/v1/batch/batches/:id/', mockApiHandlers.getBatchById);
   
   // Species endpoints
-  app.get('/api/v1/species/', mockApiHandlers.getSpecies);
+  app.get('/api/v1/batch/species/', mockApiHandlers.getSpecies);
   
   // Stage endpoints
-  app.get('/api/v1/stages/', mockApiHandlers.getStages);
+  app.get('/api/v1/batch/lifecycle-stages/', mockApiHandlers.getStages);
   
   // Container endpoints
-  app.get('/api/v1/containers/', mockApiHandlers.getContainers);
+  app.get('/api/v1/infrastructure/containers/', mockApiHandlers.getContainers);
   
   // Feed type endpoints
-  app.get('/api/v1/inventory/feed-types/', mockApiHandlers.getFeedTypes);
+  app.get('/api/v1/inventory/feeds/', mockApiHandlers.getFeedTypes);
   
   // Environmental parameter endpoints
   app.get('/api/v1/environmental/parameters/', mockApiHandlers.getEnvironmentalParameters);
