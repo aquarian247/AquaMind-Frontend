@@ -27,13 +27,13 @@ Timeline target: **2 weeks** or ≤ 3 PRs.
 
 | Category | Example Path | Count | Recommended Action | GH Issue |
 |----------|--------------|-------|--------------------|----------|
-| Legacy pre-v1 stubs | `/api/batches/`, `/api/species/`, `/api/stages/` | 30 | Prefix with `/api/v1/batch/*` or `/api/v1/infrastructure/*` | #xxx |
-| Dashboard prototypes | `/api/dashboard/kpis`, `/api/dashboard/alerts` | 10 | ① Drop for now _or_ ② create BE spec | #xxx |
-| Health shortcuts | `/api/health/summary`, `/api/health/alerts/critical` | 8 | Map to granular health endpoints or implement aggregator viewset | #xxx |
-| Infrastructure “overview/summary” | `/api/v1/infrastructure/containers/overview` | 6 | Replace by client-side aggregate query; remove endpoint | #xxx |
-| Scenario v0 leftovers | `/api/v1/scenario/*/configuration`, `/run-projection/` (dynamic) | 12 | Confirm with BE; likely genuine → implement | #xxx |
-| Broodstock dashboards | `/api/v1/broodstock/dashboard/kpis`, `/tasks/` | 9 | Defer to future BE roadmap; hide UI cards | #xxx |
-| Misc analytics | `/api/batch/growth-metrics`, `/predictive-insights` | 12 | Evaluate need; possibly move to `/api/v1/batch/batches/{id}/…` | #xxx |
+| Legacy pre-v1 stubs | `/api/batches/`, `/api/species/`, `/api/stages/` | 30 | Prefix with `/api/v1/batch/*` or `/api/v1/infrastructure/*` | #4 |
+| Dashboard prototypes | `/api/dashboard/kpis`, `/api/dashboard/alerts` | 10 | ① Drop for now _or_ ② create BE spec | #5 |
+| Health shortcuts | `/api/health/summary`, `/api/health/alerts/critical` | 8 | Map to granular health endpoints or implement aggregator viewset | #6 |
+| Infrastructure “overview/summary” | `/api/v1/infrastructure/containers/overview` | 6 | Replace by client-side aggregate query; remove endpoint | #7 |
+| Scenario v0 leftovers | `/api/v1/scenario/*/configuration`, `/run-projection/` (dynamic) | 12 | Confirm with BE; likely genuine → implement | #8 |
+| Broodstock dashboards | `/api/v1/broodstock/dashboard/kpis`, `/tasks/` | 9 | Defer to future BE roadmap; hide UI cards | #9 |
+| Misc analytics | `/api/batch/growth-metrics`, `/predictive-insights` | 12 | Evaluate need; possibly move to `/api/v1/batch/batches/{id}/…` | #10 |
 | Non-versioned env. data | `/api/environmental-readings/` | 3 | Use `/api/v1/environmental/readings/` | #xxx |
 | Misc dev artifacts | `/api/farm-sites`, `/api/broodstock-pairs` | 10 | Remove or open BE ticket | #xxx |
 
@@ -79,15 +79,15 @@ Use this matrix during triage meetings; record outcome in each GitHub issue.
 
 ## 7  GitHub Issues (Placeholders)
 
-* **#xxx** Legacy stub endpoints migration
-* **#xxx** Dashboard prototype removal / redesign
-* **#xxx** Health summary aggregation endpoint
-* **#xxx** Infrastructure overview replacement
-* **#xxx** Scenario dynamic endpoints implementation
-* **#xxx** Broodstock dashboard KPI backend spec
-* **#xxx** Batch analytics endpoint consolidation
-* **#xxx** CI guard flip to blocking
-* **#xxx** Documentation final pass
+* **#4** Legacy stub endpoints migration
+* **#5** Dashboard prototype removal / redesign
+* **#6** Health summary aggregation endpoint
+* **#7** Infrastructure overview replacement
+* **#8** Scenario dynamic endpoints implementation
+* **#9** Broodstock dashboard KPI backend spec
+* **#10** Batch analytics endpoint consolidation
+* **#11** CI guard flip to blocking
+* **#12** Documentation final pass
 
 (Replace `#xxx` with actual issue numbers once created.)
 
