@@ -137,8 +137,15 @@ console.log('[setupTests] matchMedia stub installed');
 if (typeof HTMLCanvasElement !== 'undefined') {
   // Override for all tests – keep reference if needed elsewhere.
   // `chart.js` is already mocked above, we just need a harmless object here.
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  HTMLCanvasElement.prototype.getContext = vi.fn(() => ({} as unknown));
+  // Cast ensures TypeScript accepts our stub across all context overloads.
+  // We only need a plain object for libraries that check for presence.
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore – we deliberately replace the readonly property in tests
+  HTMLCanvasElement.prototype.getContext = vi.fn(
+    // Accept any contextId/options pair and return an empty 2D context stub.
+    (_contextId: unknown, _options?: unknown) => ({} as CanvasRenderingContext2D)
+    // Tell TS this matches the built-in signature set
+  ) as unknown as HTMLCanvasElement['getContext'];
 }
 
 // 2️⃣  Provide a minimal `ResizeObserver` so libraries like Recharts don't crash
