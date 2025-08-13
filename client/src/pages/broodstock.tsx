@@ -113,7 +113,25 @@ function BroodstockDashboard() {
    * ------------------------------------------------------------------ */
   // TODO(api-alignment): Replace placeholders with real queries once
   // broodstock KPI & program endpoints are exposed by the backend.
-  const kpis: KPIData | null = null;
+  /**
+   * Local placeholder object for KPI values.
+   *
+   * During the contract-alignment phase the backend does not yet expose
+   * a KPI endpoint.  Supplying a fully-typed fallback object avoids
+   * TypeScript “property does not exist on type 'never'” errors that
+   * occur when the value is literally `null` at compile-time.
+   *
+   * Replace this with a real `useQuery<KPIData>` hook once the endpoint
+   * is available.
+   */
+  const kpis: KPIData = {
+    activeBroodstockPairs: 0,
+    broodstockPopulation: 0,
+    totalProgenyCount: 0,
+    geneticDiversityIndex: 0,
+    pendingSelections: 0,
+    averageGeneticGain: 0,
+  };
   const kpisLoading = false;
 
   const programs: Paginated<Program> | null = { count: 0, results: [] };
