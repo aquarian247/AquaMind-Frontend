@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -50,7 +50,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 /* ---------------------------------------------------------------------------
  * Generated API types
  * ------------------------------------------------------------------------- */
+import { ApiService } from "@/api/generated";
 import type { PaginatedContainerList } from "@/api/generated/models/PaginatedContainerList";
+import type { Container } from "@/api/generated/models/Container";
 
 ChartJS.register(
   RadialLinearScale,
@@ -105,34 +107,75 @@ function BroodstockDashboard() {
   };
 
   /* ------------------------------------------------------------------
-   * NOTE: The following data-fetching hooks referenced deprecated /legacy
-   * broodstock endpoints that were removed during the backend contract
-   * unification.  Until new endpoints are implemented these queries are
-   * disabled and replaced with static placeholders so the UI renders
-   * without runtime errors (zero 404s in the network console).
+   * API Queries for Broodstock KPIs
    * ------------------------------------------------------------------ */
-  // TODO(api-alignment): Replace placeholders with real queries once
-  // broodstock KPI & program endpoints are exposed by the backend.
-  /**
-   * Local placeholder object for KPI values.
-   *
-   * During the contract-alignment phase the backend does not yet expose
-   * a KPI endpoint.  Supplying a fully-typed fallback object avoids
-   * TypeScript “property does not exist on type 'never'” errors that
-   * occur when the value is literally `null` at compile-time.
-   *
-   * Replace this with a real `useQuery<KPIData>` hook once the endpoint
-   * is available.
-   */
+  const fishCountQuery = useQuery<number>({
+    queryKey: ['broodstock', 'fish', 'count'],
+    queryFn: async () => {
+      const response = await ApiService.apiV1BroodstockFishList();
+      return response.count;
+    }
+  });
+
+  const breedingPairsCountQuery = useQuery<number>({
+    queryKey: ['broodstock', 'breeding-pairs', 'count'],
+    queryFn: async () => {
+      const response = await ApiService.apiV1BroodstockBreedingPairsList();
+      return response.count;
+    }
+  });
+
+  const recentEggsCountQuery = useQuery<number>({
+    queryKey: ['broodstock', 'egg-productions', 'recent-7d'],
+    queryFn: async () => {
+      let totalEggCount = 0;
+      let page = 1;
+      let hasMore = true;
+      const sevenDaysAgo = subDays(new Date(), 7).toISOString().split('T')[0];
+      
+      while (hasMore) {
+        const response = await ApiService.apiV1BroodstockEggProductionsList(
+          undefined, // destinationStation
+          '-production_date', // ordering
+          page, // page
+          undefined, // pair
+          undefined, // productionDate - we'll filter manually
+          undefined, // search
+          undefined // sourceType
+        );
+        
+        // Filter for eggs produced in the last 7 days
+        const recentEggs = response.results.filter(egg => {
+          return egg.production_date && egg.production_date >= sevenDaysAgo;
+        });
+        
+        // If we got fewer eggs than requested or no eggs with dates older than 7 days,
+        // we've reached the end
+        if (recentEggs.length < response.results.length || response.next === null) {
+          hasMore = false;
+        }
+        
+        // Sum the egg counts
+        totalEggCount += recentEggs.reduce((sum, egg) => sum + egg.egg_count, 0);
+        page++;
+      }
+      
+      return totalEggCount;
+    }
+  });
+
+  // Derived KPIs from query results
   const kpis: KPIData = {
-    activeBroodstockPairs: 0,
-    broodstockPopulation: 0,
-    totalProgenyCount: 0,
-    geneticDiversityIndex: 0,
-    pendingSelections: 0,
-    averageGeneticGain: 0,
+    activeBroodstockPairs: breedingPairsCountQuery.data || 0,
+    broodstockPopulation: fishCountQuery.data || 0,
+    totalProgenyCount: recentEggsCountQuery.data || 0,
+    geneticDiversityIndex: 0, // Placeholder
+    pendingSelections: 0, // Placeholder
+    averageGeneticGain: 0 // Placeholder
   };
-  const kpisLoading = false;
+  
+  // Combined loading state
+  const kpisLoading = fishCountQuery.isLoading || breedingPairsCountQuery.isLoading || recentEggsCountQuery.isLoading;
 
   const programs: Paginated<Program> | null = { count: 0, results: [] };
   const programsLoading = false;
@@ -159,21 +202,36 @@ function BroodstockDashboard() {
     };
   }
 
-  const { data: traitData, isLoading: traitsLoading } = useQuery<GeneticTraitData>({
-    queryKey: ['/api/v1/broodstock/genetic/traits/'],
-  });
+  // Remove invalid trait query and set to undefined
+  /* ------------------------------------------------------------------
+   * Genetic trait data
+   *
+   * The backend endpoint for trait data is not yet available.  We still
+   * want the UI to compile, so we keep the variable but type-loosen it
+   * to `any`.  This avoids “property does not exist on type 'never'”
+   * errors when the JSX later attempts to access nested properties
+   * (e.g. `traitPerformance.labels`).
+   * ------------------------------------------------------------------ */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const traitData: any = undefined;
+  const traitsLoading = false;
 
   const { data: containers, isLoading: containersLoading } = useQuery<PaginatedContainerList>({
-    queryKey: ['/api/v1/broodstock/containers/'],
+    queryKey: ['infrastructure', 'containers'],
+    queryFn: async () => {
+      return ApiService.apiV1InfrastructureContainersList();
+    }
   });
 
-  const { data: geographiesData } = useQuery({
-    queryKey: ['/api/v1/infrastructure/geographies/'],
+  /* Ensure `containers.results` is always an array so we can use the
+   * value safely without repetitive optional-chaining. */
+  const containerResults: Container[] = containers?.results ?? [];
+
+  const { data: geographiesData, isLoading: geographiesLoading } = useQuery({
+    queryKey: ['infrastructure', 'geographies'],
     queryFn: async () => {
-      const response = await fetch('/api/v1/infrastructure/geographies/');
-      if (!response.ok) throw new Error('Failed to fetch geographies');
-      return response.json();
-    },
+      return ApiService.apiV1InfrastructureGeographiesList();
+    }
   });
 
   const getActivityIcon = (type: string) => {
@@ -270,7 +328,7 @@ function BroodstockDashboard() {
     }
   };
 
-  if (kpisLoading || programsLoading || activitiesLoading || tasksLoading || traitsLoading || containersLoading) {
+  if (kpisLoading || programsLoading || activitiesLoading || tasksLoading || traitsLoading || containersLoading || geographiesLoading) {
     return (
       <div className="p-3 lg:p-6">
         <div className="space-y-4">
@@ -494,8 +552,12 @@ function BroodstockDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="h-64">
-                  {radarData && (
+                  {radarData ? (
                     <Radar data={radarData} options={radarOptions} />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-gray-500">
+                      No trait data available
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -513,26 +575,32 @@ function BroodstockDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {activities?.results?.map((activity: any) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-2 mt-1">
-                      {getActivityIcon(activity.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <h4 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
-                          {activity.title}
-                        </h4>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
-                          {formatTimeAgo(activity.timestamp)}
-                        </span>
+                {activities?.results?.length > 0 ? (
+                  activities.results.map((activity: any) => (
+                    <div key={activity.id} className="flex items-start space-x-3">
+                      <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-2 mt-1">
+                        {getActivityIcon(activity.type)}
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {activity.description}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-medium text-gray-800 dark:text-gray-200 text-sm">
+                            {activity.title}
+                          </h4>
+                          <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">
+                            {formatTimeAgo(activity.timestamp)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {activity.description}
+                        </p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    No recent activities to display
                   </div>
-                ))}
+                )}
               </CardContent>
             </Card>
 
@@ -551,21 +619,27 @@ function BroodstockDashboard() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {tasks?.results?.map((task: any) => (
-                  <div key={task.id} className={`p-3 rounded border-l-4 ${getPriorityColor(task.priority)}`}>
-                    <div className="flex justify-between items-start">
-                      <h4 className="font-medium text-gray-800 dark:text-gray-200">
-                        {task.title}
-                      </h4>
-                      <Badge variant="outline" className="text-xs">
-                        {format(new Date(task.dueDate), 'MMM dd')}
-                      </Badge>
+                {tasks?.results?.length > 0 ? (
+                  tasks.results.map((task: any) => (
+                    <div key={task.id} className={`p-3 rounded border-l-4 ${getPriorityColor(task.priority)}`}>
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-medium text-gray-800 dark:text-gray-200">
+                          {task.title}
+                        </h4>
+                        <Badge variant="outline" className="text-xs">
+                          {format(new Date(task.dueDate), 'MMM dd')}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {task.description}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {task.description}
-                    </p>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    No upcoming tasks scheduled
                   </div>
-                ))}
+                )}
               </CardContent>
             </Card>
           </div>
@@ -633,134 +707,140 @@ function BroodstockDashboard() {
 
           {/* Programs Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {programs?.results?.map((program: Program) => (
-              <Card key={program.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Target className="w-4 h-4" />
-                        <Badge className={program.status === 'active' ? 'bg-green-100 text-green-800' : program.status === 'selection' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}>
-                          {program.status}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-lg leading-tight">
-                        {program.name}
-                      </CardTitle>
-                      <CardDescription className="mt-1">
-                        {program.description}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                  {/* Progress */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Generation {program.currentGeneration} → {program.targetGeneration}
-                      </span>
-                      <span className="font-medium">{program.progress}%</span>
-                    </div>
-                    <Progress value={program.progress} className="h-2" />
-                  </div>
-
-                  {/* Key Metrics */}
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-600 dark:text-gray-400">Population</p>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">
-                        {program.populationSize.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600 dark:text-gray-400">Started</p>
-                      <p className="font-semibold text-gray-900 dark:text-gray-100">
-                        {format(new Date(program.startDate), 'MMM yyyy')}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Genetic Gain Chart */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Genetic Gain Progress
-                    </p>
-                    <div className="h-20">
-                      <Line
-                        data={{
-                          labels: program.geneticGain.map((_: any, idx: number) => `G${idx + 1}`),
-                          datasets: [{
-                            data: program.geneticGain,
-                            borderColor: 'rgb(59, 130, 246)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            pointRadius: 3,
-                            pointBackgroundColor: 'rgb(59, 130, 246)',
-                            tension: 0.3
-                          }]
-                        }}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                              callbacks: {
-                                label: (context) => `${context.parsed.y}% genetic gain`
-                              }
-                            }
-                          },
-                          scales: {
-                            x: { display: false },
-                            y: { display: false }
-                          },
-                          elements: {
-                            point: { hoverRadius: 6 }
-                          }
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Trait Weights */}
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Primary Traits
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {Object.entries(program.traitWeights)
-                        .sort(([,a], [,b]) => (b as number) - (a as number))
-                        .slice(0, 3)
-                        .map(([trait, weight]) => (
-                          <Badge key={trait} variant="outline" className="text-xs">
-                            {trait.replace(/([A-Z])/g, ' $1').trim()} {weight as number}%
+            {programs?.results?.length > 0 ? (
+              programs.results.map((program: Program) => (
+                <Card key={program.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Target className="w-4 h-4" />
+                          <Badge className={program.status === 'active' ? 'bg-green-100 text-green-800' : program.status === 'selection' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800'}>
+                            {program.status}
                           </Badge>
-                        ))}
+                        </div>
+                        <CardTitle className="text-lg leading-tight">
+                          {program.name}
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                          {program.description}
+                        </CardDescription>
+                      </div>
                     </div>
-                  </div>
+                  </CardHeader>
 
-                  {/* Actions */}
-                  <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-                    <div className="flex justify-between items-center">
+                  <CardContent className="space-y-4">
+                    {/* Progress */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Generation {program.currentGeneration} → {program.targetGeneration}
+                        </span>
+                        <span className="font-medium">{program.progress}%</span>
+                      </div>
+                      <Progress value={program.progress} className="h-2" />
+                    </div>
+
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Lead Geneticist</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                          {program.leadGeneticist}
+                        <p className="text-gray-600 dark:text-gray-400">Population</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
+                          {program.populationSize.toLocaleString()}
                         </p>
                       </div>
-                      <Link href={`/breeding-program-details/${program.id}`}>
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </Button>
-                      </Link>
+                      <div>
+                        <p className="text-gray-600 dark:text-gray-400">Started</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
+                          {format(new Date(program.startDate), 'MMM yyyy')}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+
+                    {/* Genetic Gain Chart */}
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Genetic Gain Progress
+                      </p>
+                      <div className="h-20">
+                        <Line
+                          data={{
+                            labels: program.geneticGain.map((_: any, idx: number) => `G${idx + 1}`),
+                            datasets: [{
+                              data: program.geneticGain,
+                              borderColor: 'rgb(59, 130, 246)',
+                              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                              borderWidth: 2,
+                              pointRadius: 3,
+                              pointBackgroundColor: 'rgb(59, 130, 246)',
+                              tension: 0.3
+                            }]
+                          }}
+                          options={{
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                              legend: { display: false },
+                              tooltip: {
+                                callbacks: {
+                                  label: (context) => `${context.parsed.y}% genetic gain`
+                                }
+                              }
+                            },
+                            scales: {
+                              x: { display: false },
+                              y: { display: false }
+                            },
+                            elements: {
+                              point: { hoverRadius: 6 }
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Trait Weights */}
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        Primary Traits
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {Object.entries(program.traitWeights)
+                          .sort(([,a], [,b]) => (b as number) - (a as number))
+                          .slice(0, 3)
+                          .map(([trait, weight]) => (
+                            <Badge key={trait} variant="outline" className="text-xs">
+                              {trait.replace(/([A-Z])/g, ' $1').trim()} {weight as number}%
+                            </Badge>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Lead Geneticist</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {program.leadGeneticist}
+                          </p>
+                        </div>
+                        <Link href={`/breeding-program-details/${program.id}`}>
+                          <Button variant="outline" size="sm">
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                No breeding programs available
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -849,23 +929,29 @@ function BroodstockDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {traitData?.traitPerformance?.labels?.map((trait: string, index: number) => (
-                    <div key={trait} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium text-gray-700 dark:text-gray-300">{trait}</span>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {traitData.traitPerformance.currentGeneration[index]}
-                        </span>
+                {traitData?.traitPerformance?.labels ? (
+                  <div className="space-y-4">
+                    {traitData.traitPerformance.labels.map((trait: string, index: number) => (
+                      <div key={trait} className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">{trait}</span>
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {traitData.traitPerformance.currentGeneration[index]}
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" style={{ width: `${traitData.traitPerformance.currentGeneration[index]}%` }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" style={{ width: `${traitData.traitPerformance.currentGeneration[index]}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    No breeding value data available
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -992,10 +1078,7 @@ function BroodstockDashboard() {
                       Avg Temperature
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {containers?.results && containers.results.length > 0
-                        ? (containers.results.reduce((sum: number, c: any) => sum + parseFloat(c.temperature), 0) / 
-                           containers.results.length).toFixed(1)
-                        : '0.0'}°C
+                      N/A
                     </p>
                   </div>
                   <Thermometer className="w-8 h-8 text-orange-500" />
@@ -1011,9 +1094,7 @@ function BroodstockDashboard() {
                       Total Fish
                     </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                      {(containers?.results ?? [])
-                        .reduce((sum: number, c: any) => sum + c.fishCount, 0)
-                        .toLocaleString()}
+                      {kpis.broodstockPopulation.toLocaleString()}
                     </p>
                   </div>
                   <Users className="w-8 h-8 text-purple-500" />
@@ -1025,84 +1106,54 @@ function BroodstockDashboard() {
           {/* Container Grid/List */}
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {containers?.results?.map((container: any) => (
-                <Card key={container.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-base leading-tight">
-                          {container.name}
-                        </CardTitle>
-                        <CardDescription className="mt-1">
-                          {container.location || 'Location not specified'}
-                        </CardDescription>
+              {containerResults.length > 0 ? (
+                containerResults.map((container: Container) => (
+                  <Card key={container.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-base leading-tight">
+                            {container.name}
+                          </CardTitle>
+                          <CardDescription className="mt-1">
+                            {container.hall_name || container.area_name || 'Location not specified'}
+                          </CardDescription>
+                        </div>
+                        <Badge className={container.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          <Activity className="w-3 h-3 mr-1" />
+                          <span className="text-xs">{container.active ? 'Active' : 'Inactive'}</span>
+                        </Badge>
                       </div>
-                      <Badge className={container.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                        <Activity className="w-3 h-3 mr-1" />
-                        <span className="text-xs">{container.active ? 'Active' : 'Inactive'}</span>
-                      </Badge>
-                    </div>
-                  </CardHeader>
+                    </CardHeader>
 
-                  <CardContent className="space-y-4">
-                    {/* Fish Count */}
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Fish Count</span>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
-                        {container.fishCount} / {container.capacity}
-                      </span>
-                    </div>
+                    <CardContent className="space-y-4">
+                      {/* Container Details */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-600 dark:text-gray-400">Volume</span>
+                          <span className="font-medium">{container.volume_m3} m³</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-600 dark:text-gray-400">Max Biomass</span>
+                          <span className="font-medium">{container.max_biomass_kg} kg</span>
+                        </div>
+                      </div>
 
-                    {/* Environmental Metrics */}
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <Thermometer className="w-4 h-4 text-orange-500" />
-                        <span className="text-gray-600 dark:text-gray-400">Temp</span>
-                        <span className="font-medium">{container.temperature}°C</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Droplets className="w-4 h-4 text-blue-500" />
-                        <span className="text-gray-600 dark:text-gray-400">O₂</span>
-                        <span className="font-medium">{container.oxygen} mg/L</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Activity className="w-4 h-4 text-purple-500" />
-                        <span className="text-gray-600 dark:text-gray-400">pH</span>
-                        <span className="font-medium">{container.ph}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="w-4 h-4 bg-yellow-400 rounded-full"></span>
-                        <span className="text-gray-600 dark:text-gray-400">Light</span>
-                        <span className="font-medium">{container.light}h</span>
-                      </div>
-                    </div>
-
-                    {/* Capacity Bar */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-gray-600 dark:text-gray-400">Capacity</span>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {Math.round((container.fishCount / container.capacity) * 100)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${Math.min((container.fishCount / container.capacity) * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* View Details Button */}
-                    <Link href={`/broodstock-container-details/${container.id}`}>
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
+                      {/* View Details Button */}
+                      <Link href={`/broodstock-container-details/${container.id}`}>
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12 text-gray-500">
+                  No containers available
+                </div>
+              )}
             </div>
           ) : (
             <Card>
@@ -1118,56 +1169,52 @@ function BroodstockDashboard() {
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-700">
                         <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Container</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Fish Count</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Capacity</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Temperature</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Oxygen</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">pH</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Volume (m³)</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Max Biomass (kg)</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Status</th>
                         <th className="text-left py-3 px-2 font-medium text-gray-600 dark:text-gray-400">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {containers?.results?.map((container: any) => (
-                        <tr key={container.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
-                          <td className="py-3 px-2">
-                            <div>
-                              <div className="font-medium text-gray-900 dark:text-gray-100">{container.name}</div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400">{container.location}</div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-2 font-semibold text-gray-900 dark:text-gray-100">
-                            {container.fishCount}
-                          </td>
-                          <td className="py-3 px-2">
-                            <div className="flex items-center space-x-2">
-                              <span>{container.capacity}</span>
-                              <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-1">
-                                <div 
-                                  className="bg-blue-600 h-1 rounded-full" 
-                                  style={{ width: `${Math.min((container.fishCount / container.capacity) * 100, 100)}%` }}
-                                ></div>
+                      {containerResults.length > 0 ? (
+                        containerResults.map((container: Container) => (
+                          <tr key={container.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td className="py-3 px-2">
+                              <div>
+                                <div className="font-medium text-gray-900 dark:text-gray-100">{container.name}</div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400">
+                                  {container.hall_name || container.area_name || 'Location not specified'}
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-2">{container.temperature}°C</td>
-                          <td className="py-3 px-2">{container.oxygen} mg/L</td>
-                          <td className="py-3 px-2">{container.ph}</td>
-                          <td className="py-3 px-2">
-                            <Badge className={container.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
-                              {container.active ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-2">
-                            <Link href={`/broodstock-container-details/${container.id}`}>
-                              <Button variant="outline" size="sm">
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
-                              </Button>
-                            </Link>
+                            </td>
+                            <td className="py-3 px-2 font-semibold text-gray-900 dark:text-gray-100">
+                              {container.volume_m3}
+                            </td>
+                            <td className="py-3 px-2 font-semibold text-gray-900 dark:text-gray-100">
+                              {container.max_biomass_kg}
+                            </td>
+                            <td className="py-3 px-2">
+                              <Badge className={container.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                                {container.active ? 'Active' : 'Inactive'}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-2">
+                              <Link href={`/broodstock-container-details/${container.id}`}>
+                                <Button variant="outline" size="sm">
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </Button>
+                              </Link>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-gray-500">
+                            No containers available
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </table>
                 </div>
