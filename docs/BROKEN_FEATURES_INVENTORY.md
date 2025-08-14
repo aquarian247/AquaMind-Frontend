@@ -1,6 +1,6 @@
 # Broken Features Inventory  
 _Tracking UI components that still rely on missing or legacy API endpoints (Phase-2 backlog)_  
-Last generated: **2025-08-13**
+Last generated: **2025-08-14**
 
 > Legend for “Priority”  
 > • **H** – must fix before GA  
@@ -13,8 +13,8 @@ Last generated: **2025-08-13**
 
 | Feature (UI Location) | Missing Endpoint(s) | Impact | Work-around | Priority | Recommended Resolution |
 |-----------------------|---------------------|--------|-------------|----------|------------------------|
-| KPI Cards (Dashboard homepage) | `/api/dashboard/kpis/` | Metrics show “0” | None | H | Create aggregated KPI endpoint in backend **or** repoint cards to real resources (e.g., `/api/v1/batch/batches/`, `/environmental/readings/recent/`). |
-| Farm-site selector & site list | `/api/dashboard/farm-sites/` | Farm-site filter empty | Hard-code “All” | M | Re-use `/api/v1/infrastructure/geographies/` & `/areas/` as hierarchy. |
+| KPI Cards (Dashboard homepage) | — (computed client-side) | Metrics populate normally | — | — | **RESOLVED by PR #15** |
+| Farm-site selector & site list | `/api/dashboard/farm-sites/` | Farm-site filter empty | Uses `/api/v1/infrastructure/areas/` via **ApiService** (requires auth) | M | Re-use `/api/v1/infrastructure/geographies/` & `/areas/` as hierarchy. |
 | Alerts panel | `/api/dashboard/alerts/` | Panel hidden | None | M | Decide if real-time alerts belong to backend; if not, drop feature for v1. |
 
 ---
