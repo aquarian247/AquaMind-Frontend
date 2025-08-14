@@ -37,10 +37,9 @@ Last generated: **2025-08-14**
 
 | Feature | Missing Endpoint(s) | Impact | Work-around | Prio. | Resolution |
 |---------|---------------------|--------|-------------|-------|------------|
-| Summary widgets | `/api/health/summary/` | Tiles show “N/A” | — | M | Aggregate in FE using granular endpoints. |
-| Critical alerts list | `/api/health/alerts/critical/` | List empty | — | M | Derive alerts client-side or design BE endpoint. |
+| Summary widgets | `/api/health/summary/` | Tiles show “N/A” | — | M | **RESOLVED — client-computed in FE using granular endpoints (this PR)** |
+| Critical alerts list | `/api/health/alerts/critical/` | List empty | — | M | *Partially resolved — initial heuristic client-side alerts (this PR).* |
 | Active treatments list | `/api/health/treatments/active/` | Section blank | Filter `/api/v1/health/treatments/` client-side | M | Implement client-side filter or BE query param. |
-| Recent mortality & lice widgets | `/api/health/mortality/recent/`, `/api/health/lice/recent/` | Widgets hidden | — | M | Replace by querying respective resources with `?ordering=-date&limit=`. |
 
 ---
 
@@ -56,11 +55,12 @@ Last generated: **2025-08-14**
 
 | Feature | Missing Endpoint(s) | Impact | Work-around | Prio. | Resolution |
 |---------|---------------------|--------|-------------|-------|------------|
-| Overview dash (`infrastructure.tsx`) | `/api/v1/infrastructure/summary/`, `/alerts/` | Summary & alerts cards hidden | — | M | Compute summary client-side; alerts pending product decision. |
-| Sensors overview page | `/api/v1/infrastructure/sensors/overview` (+ query) | Table shows spinner forever | None | M | Use `/api/v1/infrastructure/sensors/` & aggregate in FE. |
-| Containers overview page | `/api/v1/infrastructure/containers/overview` (+ query) | Same as above | — | M | Same fix as sensors. |
+| Overview dash (`infrastructure.tsx`) | `/api/v1/infrastructure/summary/`, `/alerts/` | Summary & alerts cards hidden | — | M | **RESOLVED — computed client-side (this PR); alerts placeholder uses client-side list.** |
+| Sensors overview page | `/api/v1/infrastructure/sensors/overview` (+ query) | Table shows spinner forever | None | M | **RESOLVED — FE aggregates over `/api/v1/infrastructure/sensors/`.** |
+| Containers overview page | `/api/v1/infrastructure/containers/overview` (+ query) | Same as above | — | M | **RESOLVED — FE aggregates over `/api/v1/infrastructure/containers/`.** |
 | Rings resource | `/api/v1/infrastructure/rings/` | Ring views 404 | — | L | If rings will be added to BE, create spec; else drop feature. |
-| Dynamic nested endpoints | `/stations/{id}/halls`, `/areas/{id}/rings` | Nested pages broken | — | M | Build FE filter over generic list endpoints (`/halls/` with `?station=`). |
+
+> **Note:** Endpoint validator still reports unrelated invalid references in other modules; these are tracked separately.
 
 ---
 
