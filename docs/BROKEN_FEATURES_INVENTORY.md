@@ -72,7 +72,7 @@ Last generated: **2025-08-14**
 | Temperature profile CRUD | `/api/v1/scenario/temperature-profiles/${id}/readings/` | Readings dialog fails | None | H | Implement readings endpoint (BE) or adjust UI scope. |
 | Biological constraints list | `/api/v1/scenario/biological-constraints/` | List empty | — | H | Endpoint exists in spec; ensure backend implementation. |
 | Model creation dialogs (TGC/FCR/Mortality) | Stage list `/stages/` missing | Dropdown empty | — | H | Add `/api/v1/batch/lifecycle-stages/` to dialog queries. |
-| Scenario table (filters, duplication) | `/configuration/`, `/projections/`, `/duplicate/`, `/run-projection/` | Advanced actions disabled | Basic list works | M | Keep core CRUD; advanced actions require BE support (Phase-3). |
+| Scenario table (filters, duplication) | `/configuration/`, `/projections/`, `/duplicate/`, `/run-projection/` | Advanced actions disabled | Basic list works | M | **PARTIALLY RESOLVED — migrated to ApiService with array query keys; Duplicate/Run Projection disabled with tooltips (this PR). Advanced actions require BE support.** |
 
 ---
 
@@ -80,7 +80,7 @@ Last generated: **2025-08-14**
 
 | Feature | Missing Endpoint(s) | Impact | Work-around | Prio. | Resolution |
 |---------|---------------------|--------|-------------|-------|------------|
-| Dashboard KPI cards & charts | `/api/v1/broodstock/dashboard/kpis/`, `/genetic/traits/` | Placeholder zeros | Static placeholders | M | Plan dedicated BE endpoints or hide until implemented. |
+| Dashboard KPI cards & charts | `/api/v1/broodstock/dashboard/kpis/`, `/genetic/traits/` | Working (basic KPIs) | Static placeholders | M | **RESOLVED — integrated real v1 endpoints and client-computed KPIs (this PR): /api/v1/broodstock/fish/, /api/v1/broodstock/breeding-pairs/, /api/v1/broodstock/egg-productions/** |
 | Maintenance tasks & activities widgets | `/api/v1/broodstock/tasks/`, `/activities/` | Sections blank | — | L | Move to Phase-3 after product review. |
 | Container list pages | `/api/v1/broodstock/containers/` | Lists empty | Use infrastructure containers | M | Decide ownership: reuse `/infrastructure/containers/` or add alias in BE. |
 
