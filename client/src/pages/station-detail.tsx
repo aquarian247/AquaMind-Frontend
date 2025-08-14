@@ -67,9 +67,9 @@ export default function StationDetail({ params }: { params: { id: string } }) {
   const stationId = params.id;
 
   const { data: station, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/stations/", stationId],
+    queryKey: ["/api/v1/infrastructure/freshwater-stations/", stationId],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/stations/${stationId}`);
+      const response = await fetch(`/api/v1/infrastructure/freshwater-stations/${stationId}`);
       if (!response.ok) throw new Error("Failed to fetch station details");
       return response.json();
     },
