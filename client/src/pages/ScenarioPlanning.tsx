@@ -27,7 +27,6 @@ import {
   Fish
 } from "lucide-react";
 import { ScenarioCreationDialog } from "@/components/scenario/scenario-creation-dialog";
-
 import { ScenarioEditDialog } from "@/components/scenario/scenario-edit-dialog";
 import { BatchIntegrationDialog } from "@/components/scenario/batch-integration-dialog";
 import { TgcModelCreationDialog } from "@/components/scenario/tgc-model-creation-dialog";
@@ -36,6 +35,8 @@ import { MortalityModelCreationDialog } from "@/components/scenario/mortality-mo
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { ApiService } from "@/api/generated";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ScenarioPlanningKPIs {
   totalActiveScenarios: number;
@@ -95,39 +96,49 @@ export default function ScenarioPlanning() {
   const [, setLocation] = useLocation();
 
   // Fetch Temperature Profiles
-  const { data: temperatureProfiles } = useQuery<{results: TemperatureProfile[]}>({
-    queryKey: ["/api/v1/scenario/temperature-profiles/"],
+  const { data: temperatureProfiles } = useQuery<any>({
+    queryKey: ["scenario:temperatureProfiles"],
+    queryFn: () => ApiService.apiV1ScenarioTemperatureProfilesList()
   });
 
   // Fetch TGC Models
-  const { data: tgcModels } = useQuery<{results: TgcModel[]}>({
-    queryKey: ["/api/v1/scenario/tgc-models/"],
+  const { data: tgcModels } = useQuery<any>({
+    queryKey: ["scenario:tgcModels"],
+    queryFn: () => ApiService.apiV1ScenarioTgcModelsList()
   });
 
   // Fetch FCR Models
-  const { data: fcrModels } = useQuery<{results: any[]}>({
-    queryKey: ["/api/v1/scenario/fcr-models/"],
+  const { data: fcrModels } = useQuery<any>({
+    queryKey: ["scenario:fcrModels"],
+    queryFn: () => ApiService.apiV1ScenarioFcrModelsList()
   });
 
   // Fetch Mortality Models
-  const { data: mortalityModels } = useQuery<{results: any[]}>({
-    queryKey: ["/api/v1/scenario/mortality-models/"],
+  const { data: mortalityModels } = useQuery<any>({
+    queryKey: ["scenario:mortalityModels"],
+    queryFn: () => ApiService.apiV1ScenarioMortalityModelsList()
   });
 
   // Fetch Biological Constraints
-  const { data: biologicalConstraints } = useQuery<{results: any[]}>({
-    queryKey: ["/api/v1/scenario/biological-constraints/"],
+  const { data: biologicalConstraints } = useQuery<any>({
+    queryKey: ["scenario:biologicalConstraints"],
+    queryFn: async () => {
+      const response = await fetch('/api/v1/scenario/biological-constraints/');
+      if (!response.ok) throw new Error('Failed to fetch biological constraints');
+      return response.json();
+    }
   });
 
   // Fetch Scenarios with filtering
-  const { data: scenarios, isLoading: scenariosLoading } = useQuery<{results: LocalScenario[]}>({
-    queryKey: ["/api/v1/scenario/scenarios/", { search: searchTerm, status: statusFilter }],
-    queryFn: () => {
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      return fetch(`/api/v1/scenario/scenarios/?${params}`).then(res => res.json());
-    }
+  const { data: scenarios, isLoading: scenariosLoading } = useQuery<any>({
+    queryKey: ["scenario:scenarios", { search: searchTerm, status: statusFilter }],
+    queryFn: () => ApiService.apiV1ScenarioScenariosList(
+      undefined, 
+      undefined, 
+      undefined, 
+      searchTerm || undefined, 
+      statusFilter !== 'all' ? statusFilter : undefined
+    )
   });
 
   /* ----------------------------------------------------------
@@ -144,10 +155,10 @@ export default function ScenarioPlanning() {
       };
     }
     const totalActiveScenarios = list.length;
-    const scenariosInProgress = list.filter((s) => s.status === "running").length;
-    const completedProjections = list.filter((s) => s.status === "completed").length;
+    const scenariosInProgress = list.filter((s: any) => s.status === "running").length;
+    const completedProjections = list.filter((s: any) => s.status === "completed").length;
     const averageProjectionDuration =
-      list.reduce((sum, s) => sum + (s.durationDays ?? 0), 0) / list.length;
+      list.reduce((sum: number, s: any) => sum + (s.durationDays ?? 0), 0) / list.length;
 
     return {
       totalActiveScenarios,
@@ -166,7 +177,7 @@ export default function ScenarioPlanning() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
+      queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] });
       toast({
         title: "Scenario Deleted",
         description: "The scenario has been deleted successfully.",
@@ -181,7 +192,7 @@ export default function ScenarioPlanning() {
     },
   });
 
-  // Duplicate scenario mutation
+  // Duplicate scenario mutation - kept for reference but not used
   const duplicateScenarioMutation = useMutation({
     mutationFn: async ({ scenarioId, name }: { scenarioId: number; name: string }) => {
       return apiRequest(
@@ -191,7 +202,7 @@ export default function ScenarioPlanning() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
+      queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] });
       toast({
         title: "Scenario Duplicated",
         description: "The scenario has been duplicated successfully.",
@@ -206,7 +217,7 @@ export default function ScenarioPlanning() {
     },
   });
 
-  // Run projection mutation
+  // Run projection mutation - kept for reference but not used
   const runProjectionMutation = useMutation({
     mutationFn: async (scenarioId: number) => {
       return apiRequest(
@@ -215,7 +226,7 @@ export default function ScenarioPlanning() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
+      queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] });
       toast({
         title: "Projection Started",
         description: "The scenario projection has been started.",
@@ -230,7 +241,7 @@ export default function ScenarioPlanning() {
     },
   });
 
-  const filteredScenarios = scenarios?.results?.filter(scenario => {
+  const filteredScenarios = scenarios?.results?.filter((scenario: any) => {
     const matchesSearch = !searchTerm || 
       scenario.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       scenario.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -251,7 +262,7 @@ export default function ScenarioPlanning() {
           </p>
         </div>
         <div className="flex gap-2">
-          <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] })}>
+          <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] })}>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               New Scenario
@@ -342,7 +353,7 @@ export default function ScenarioPlanning() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {scenarios?.results?.slice(0, 5).map((scenario) => (
+                  {scenarios?.results?.slice(0, 5).map((scenario: any) => (
                     <div key={scenario.id} className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">{scenario.name}</p>
@@ -387,7 +398,7 @@ export default function ScenarioPlanning() {
           <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
             <h2 className="text-2xl font-bold">Scenarios</h2>
             <div className="flex gap-2">
-              <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] })}>
+              <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] })}>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Scenario
@@ -465,7 +476,7 @@ export default function ScenarioPlanning() {
                   }
                 </p>
                 <div className="flex gap-2">
-                  <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] })}>
+                  <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] })}>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
                       Create First Scenario
@@ -484,7 +495,7 @@ export default function ScenarioPlanning() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {filteredScenarios.map((scenario) => (
+              {filteredScenarios.map((scenario: any) => (
                 <Card key={scenario.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
@@ -512,23 +523,26 @@ export default function ScenarioPlanning() {
                         <DropdownMenuContent align="end">
                           <ScenarioEditDialog 
                             scenario={scenario} 
-                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] })}
+                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] })}
                           >
                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                               <Edit className="h-4 w-4 mr-2" />
                               Edit Scenario
                             </DropdownMenuItem>
                           </ScenarioEditDialog>
-                          <DropdownMenuItem 
-                            onClick={() => duplicateScenarioMutation.mutate({ 
-                              scenarioId: scenario.id, 
-                              name: `${scenario.name} (Copy)` 
-                            })}
-                            disabled={duplicateScenarioMutation.isPending}
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Duplicate
-                          </DropdownMenuItem>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <DropdownMenuItem disabled>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Duplicate
+                                </DropdownMenuItem>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Temporarily disabled for UAT. Backend action coming soon.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           <DropdownMenuItem 
                             className="text-destructive"
                             onClick={() => deleteScenarioMutation.mutate(scenario.id)}
@@ -572,14 +586,19 @@ export default function ScenarioPlanning() {
                           View Details
                         </Button>
                         {scenario.status === 'draft' && (
-                          <Button 
-                            size="sm"
-                            onClick={() => runProjectionMutation.mutate(scenario.id)}
-                            disabled={runProjectionMutation.isPending}
-                          >
-                            <Play className="h-4 w-4 mr-2" />
-                            {runProjectionMutation.isPending ? "Starting..." : "Run Projection"}
-                          </Button>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button size="sm" disabled>
+                                  <Play className="h-4 w-4 mr-2" />
+                                  Run Projection
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Temporarily disabled for UAT. Backend action coming soon.</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                       
@@ -598,19 +617,19 @@ export default function ScenarioPlanning() {
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Growth Models</h2>
             <div className="flex gap-2">
-              <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/tgc-models/"] })}>
+              <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:tgcModels"] })}>
                 <Button variant="outline" size="sm">
                   <Brain className="h-4 w-4 mr-2" />
                   TGC Model
                 </Button>
               </TgcModelCreationDialog>
-              <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/fcr-models/"] })}>
+              <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:fcrModels"] })}>
                 <Button variant="outline" size="sm">
                   <Calculator className="h-4 w-4 mr-2" />
                   FCR Model
                 </Button>
               </FcrModelCreationDialog>
-              <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/mortality-models/"] })}>
+              <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:mortalityModels"] })}>
                 <Button variant="outline" size="sm">
                   <TrendingUp className="h-4 w-4 mr-2" />
                   Mortality Model
@@ -629,7 +648,7 @@ export default function ScenarioPlanning() {
 
             <TabsContent value="tgc" className="space-y-4">
               <div className="flex justify-end items-center">
-                <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/tgc-models/"] })}>
+                <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:tgcModels"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     New TGC Model
@@ -638,7 +657,7 @@ export default function ScenarioPlanning() {
               </div>
               
               <div className="grid gap-4 md:grid-cols-2">
-                {tgcModels?.results?.map((model) => (
+                {tgcModels?.results?.map((model: any) => (
                   <Card key={model.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -690,7 +709,7 @@ export default function ScenarioPlanning() {
                       <p className="text-muted-foreground text-center mb-4">
                         Create your first TGC model to define growth parameters for scenarios
                       </p>
-                      <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/tgc-models/"] })}>
+                      <TgcModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:tgcModels"] })}>
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
                           Create TGC Model
@@ -705,7 +724,7 @@ export default function ScenarioPlanning() {
             <TabsContent value="fcr" className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Feed Conversion Ratio Models</h3>
-                <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/fcr-models/"] })}>
+                <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:fcrModels"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     New FCR Model
@@ -714,7 +733,7 @@ export default function ScenarioPlanning() {
               </div>
               
               <div className="grid gap-4 md:grid-cols-2">
-                {fcrModels?.results?.map((model) => (
+                {fcrModels?.results?.map((model: any) => (
                   <Card key={model.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -756,7 +775,7 @@ export default function ScenarioPlanning() {
                       <p className="text-muted-foreground text-center mb-4">
                         Create your first FCR model to define feed conversion ratios for each lifecycle stage
                       </p>
-                      <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/fcr-models/"] })}>
+                      <FcrModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:fcrModels"] })}>
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
                           Create FCR Model
@@ -771,7 +790,7 @@ export default function ScenarioPlanning() {
             <TabsContent value="mortality" className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Mortality Models</h3>
-                <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/mortality-models/"] })}>
+                <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:mortalityModels"] })}>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
                     New Mortality Model
@@ -780,7 +799,7 @@ export default function ScenarioPlanning() {
               </div>
               
               <div className="grid gap-4 md:grid-cols-2">
-                {mortalityModels?.results?.map((model) => (
+                {mortalityModels?.results?.map((model: any) => (
                   <Card key={model.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -828,7 +847,7 @@ export default function ScenarioPlanning() {
                       <p className="text-muted-foreground text-center mb-4">
                         Create your first mortality model to define population decline rates for scenarios
                       </p>
-                      <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/mortality-models/"] })}>
+                      <MortalityModelCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:mortalityModels"] })}>
                         <Button>
                           <Plus className="h-4 w-4 mr-2" />
                           Create Mortality Model
@@ -856,7 +875,7 @@ export default function ScenarioPlanning() {
           </div>
           
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {temperatureProfiles?.results?.map((profile) => (
+            {temperatureProfiles?.results?.map((profile: any) => (
               <Card key={profile.id}>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
