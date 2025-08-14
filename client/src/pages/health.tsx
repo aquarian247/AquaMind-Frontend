@@ -27,6 +27,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+// Unified client-computed API
+import { api } from "@/lib/api";
 
 // Health data interfaces based on the comprehensive data model
 interface HealthJournalEntry {
@@ -126,21 +128,8 @@ export default function Health() {
   const { data: healthSummary, isLoading: summaryLoading } = useQuery<HealthSummary>({
     // Non-URL key prevents the endpoint validator from flagging this query.
     queryKey: ["health/summary", selectedGeography],
-    // Until a dedicated backend endpoint exists we provide safe default values
-    queryFn: async () => {
-      /* eslint-disable @typescript-eslint/no-magic-numbers */
-      return {
-        totalBatches: 100,
-        healthyBatches: 87,
-        batchesUnderTreatment: 3,
-        averageHealthScore: 4.2,
-        recentMortality: 1.2,
-        activeTreatments: 5,
-        pendingReviews: 0,
-        avgLiceCount: 2.3,
-      } as HealthSummary;
-      /* eslint-enable */
-    },
+    // Use client-computed aggregation
+    queryFn: () => api.health.getSummary(selectedGeography),
   });
 
   const { data: recentJournalEntries = [] } = useQuery<HealthJournalEntry[]>({
@@ -150,7 +139,7 @@ export default function Health() {
 
   const { data: criticalAlerts = [] } = useQuery<MortalityRecord[]>({
     queryKey: ["health/alerts/critical"],
-    queryFn: async () => [],
+    queryFn: () => api.health.getCriticalAlerts(),
   });
 
   const { data: activeTreatments = [] } = useQuery<Treatment[]>({

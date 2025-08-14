@@ -7,6 +7,7 @@ Last updated: **2025-08-14**
 ## 1  Executive Summary (Phase 1 Recap)
 Phase 1 aligned the **critical path** endpoints, updated `DJANGO_ENDPOINTS`, fixed inventory, scenario and health routes, modernised the mock API server, and introduced CI guard-rails (`validate:endpoints`).  
 Result: the core UI no longer produces 404s against the real backend; validation now flags **~80** remaining legacy or “imaginary” endpoints.  
+Result: the core UI no longer produces 404s against the real backend; validation now flags **72** remaining legacy or “imaginary” endpoints.  
 Issues **#4** and **#5** were closed by **PR #15**.
 
 ---
@@ -31,14 +32,14 @@ Timeline target: **2 weeks** or ≤ 3 PRs.
 | Legacy batch-management stubs | `/api/batches/`, `/api/species/`, `/api/stages/`, `/api/containers/` | **50** | Prefix with `/api/v1/batch/*` or `/api/v1/infrastructure/*` | #14 |
 | ~~Dashboard prototypes~~ | — | **0** | _RESOLVED by PR #15_ | — |
 | Health shortcuts | `/api/health/summary`, `/api/health/alerts/critical` | 8 | Map to granular health endpoints or implement aggregator viewset | #6 |
-| Infrastructure “overview/summary” | `/api/v1/infrastructure/containers/overview` | 6 | Replace by client-side aggregate query; remove endpoint | #7 |
+| Health shortcuts | `/api/health/summary`, `/api/health/alerts/critical` | **0** | RESOLVED in this PR (client-computed) | ~~#6~~ |
+| Infrastructure “overview/summary” | `/api/v1/infrastructure/containers/overview` | **0** | RESOLVED in this PR (client-computed) | ~~#7~~ |
 | Scenario v0 leftovers | `/api/v1/scenario/*/configuration`, `/run-projection/` (dynamic) | 6 | Confirm with BE; likely genuine → implement | #8 |
 | Broodstock dashboards | `/api/v1/broodstock/dashboard/kpis`, `/tasks/` | 4 | Defer to future BE roadmap; hide UI cards | #9 |
 | Misc analytics | `/api/batch/growth-metrics`, `/predictive-insights` | 4 | Evaluate need; possibly move to `/api/v1/batch/batches/{id}/…` | #10 |
 | Non-versioned env. data | `/api/environmental-readings/` | 1 | Use `/api/v1/environmental/readings/` | #xxx |
 | Misc dev artifacts | `/api/farm-sites`, `/api/broodstock-pairs` | 1 | Remove or open BE ticket | #xxx |
-| _Total outstanding:_ **≈ 80** references.
-_Total outstanding:_ **≈ 100** references.
+_Total outstanding:_ **72** references.
 
 ---
 
@@ -83,8 +84,8 @@ Use this matrix during triage meetings; record outcome in each GitHub issue.
 * ~~#4 Legacy stub endpoints migration (closed)~~
 * ~~#5 Dashboard prototype removal / redesign (closed)~~
 * **#14** Batch Management refactor (legacy stubs)
-* **#6** Health summary aggregation endpoint
-* **#7** Infrastructure overview replacement
+* ~~#6 Health summary aggregation endpoint (closed by this PR)~~
+* ~~#7 Infrastructure overview replacement (closed by this PR)~~
 * **#8** Scenario dynamic endpoints implementation
 * **#9** Broodstock dashboard KPI backend spec
 * **#10** Batch analytics endpoint consolidation

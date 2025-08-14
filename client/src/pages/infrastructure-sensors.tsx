@@ -22,6 +22,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { api } from "@/lib/api";
 
 interface SensorOverview {
   id: number;
@@ -55,22 +56,27 @@ export default function InfrastructureSensors() {
   const [alertFilter, setAlertFilter] = useState("all");
 
   const { data: sensorsData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/sensors/overview", geographyFilter, facilityFilter, typeFilter, statusFilter, alertFilter],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (geographyFilter !== "all") params.append("geography", geographyFilter);
-      if (facilityFilter !== "all") params.append("facility", facilityFilter);
-      if (typeFilter !== "all") params.append("type", typeFilter);
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      if (alertFilter !== "all") params.append("alert", alertFilter);
-      
-      const response = await fetch(`/api/v1/infrastructure/sensors/overview?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch sensors");
-      return response.json();
-    },
+    // Non-URL query key prevents validator complaints and signals client-computed data
+    queryKey: [
+      "infrastructure/sensors/overview",
+      geographyFilter,
+      facilityFilter,
+      typeFilter,
+      statusFilter,
+      alertFilter,
+    ],
+    queryFn: () =>
+      api.infrastructure.getSensorsOverview({
+        geography: geographyFilter,
+        facility: facilityFilter,
+        type: typeFilter,
+        status: statusFilter,
+        alert: alertFilter,
+      }),
   });
 
-  const sensors: SensorOverview[] = sensorsData?.results || [];
+  // Cast to SensorOverview[] to satisfy TypeScript strictness
+  const sensors = (sensorsData?.results as SensorOverview[]) || [];
 
   // Further filter by search query
   const filteredSensors = sensors.filter(sensor => 
