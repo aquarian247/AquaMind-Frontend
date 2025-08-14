@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,11 +94,6 @@ export default function ScenarioPlanning() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  // Fetch KPIs
-  const { data: kpis } = useQuery<ScenarioPlanningKPIs>({
-    queryKey: ["/api/v1/scenario/dashboard/kpis/"],
-  });
-
   // Fetch Temperature Profiles
   const { data: temperatureProfiles } = useQuery<{results: TemperatureProfile[]}>({
     queryKey: ["/api/v1/scenario/temperature-profiles/"],
@@ -135,6 +130,33 @@ export default function ScenarioPlanning() {
     }
   });
 
+  /* ----------------------------------------------------------
+   * Derive KPI values client-side from the scenarios list.
+   * -------------------------------------------------------- */
+  const computedKpis: ScenarioPlanningKPIs = useMemo(() => {
+    const list = scenarios?.results ?? [];
+    if (list.length === 0) {
+      return {
+        totalActiveScenarios: 0,
+        scenariosInProgress: 0,
+        completedProjections: 0,
+        averageProjectionDuration: 0,
+      };
+    }
+    const totalActiveScenarios = list.length;
+    const scenariosInProgress = list.filter((s) => s.status === "running").length;
+    const completedProjections = list.filter((s) => s.status === "completed").length;
+    const averageProjectionDuration =
+      list.reduce((sum, s) => sum + (s.durationDays ?? 0), 0) / list.length;
+
+    return {
+      totalActiveScenarios,
+      scenariosInProgress,
+      completedProjections,
+      averageProjectionDuration,
+    };
+  }, [scenarios]);
+
   // Delete scenario mutation
   const deleteScenarioMutation = useMutation({
     mutationFn: async (scenarioId: number) => {
@@ -145,7 +167,6 @@ export default function ScenarioPlanning() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/dashboard/kpis/"] });
       toast({
         title: "Scenario Deleted",
         description: "The scenario has been deleted successfully.",
@@ -256,7 +277,7 @@ export default function ScenarioPlanning() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis?.totalActiveScenarios || 0}</div>
+            <div className="text-2xl font-bold">{computedKpis.totalActiveScenarios}</div>
             <p className="text-xs text-muted-foreground">
               +2 from last month
             </p>
@@ -269,7 +290,7 @@ export default function ScenarioPlanning() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis?.scenariosInProgress || 0}</div>
+            <div className="text-2xl font-bold">{computedKpis.scenariosInProgress}</div>
             <p className="text-xs text-muted-foreground">
               Currently running
             </p>
@@ -282,7 +303,7 @@ export default function ScenarioPlanning() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpis?.completedProjections || 0}</div>
+            <div className="text-2xl font-bold">{computedKpis.completedProjections}</div>
             <p className="text-xs text-muted-foreground">
               Total projections
             </p>
@@ -295,7 +316,7 @@ export default function ScenarioPlanning() {
             <Calculator className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(kpis?.averageProjectionDuration || 0)}</div>
+            <div className="text-2xl font-bold">{Math.round(computedKpis.averageProjectionDuration)}</div>
             <p className="text-xs text-muted-foreground">
               days per scenario
             </p>
@@ -354,7 +375,7 @@ export default function ScenarioPlanning() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Active Projections</span>
-                    <span className="font-medium">{kpis?.scenariosInProgress || 0}</span>
+                    <span className="font-medium">{computedKpis.scenariosInProgress}</span>
                   </div>
                 </div>
               </CardContent>

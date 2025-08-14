@@ -21,24 +21,11 @@ async function getCsrfToken(): Promise<string | null> {
     return csrfCookie.split('=')[1];
   }
   
-  // If no CSRF token found, fetch it from Django
-  try {
-    await fetch(getApiUrl('/api/v1/auth/csrf/'), {
-      method: 'GET',
-      credentials: 'include',
-    });
-    
-    // Try again after fetching
-    const newCookies = document.cookie.split(';');
-    const newCsrfCookie = newCookies.find(cookie => 
-      cookie.trim().startsWith(API_CONFIG.CSRF_COOKIE_NAME + '=')
-    );
-    
-    return newCsrfCookie ? newCsrfCookie.split('=')[1] : null;
-  } catch (error) {
-    console.warn('Failed to fetch CSRF token:', error);
-    return null;
-  }
+  // No CSRF cookie present and we no longer attempt to fetch it from
+  // a non-existent endpoint; simply return null so the request proceeds
+  // without a CSRF header. Authentication-protected endpoints will still
+  // be guarded by the standard auth token mechanism.
+  return null;
 }
 
 export async function apiRequest(

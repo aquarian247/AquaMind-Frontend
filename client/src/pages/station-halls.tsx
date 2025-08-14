@@ -43,9 +43,9 @@ export default function StationHalls({ params }: { params: { id: string } }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: hallsData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/stations/", stationId, "/halls"],
+    queryKey: ["/api/v1/infrastructure/freshwater-stations/", stationId, "/halls"],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/stations/${stationId}/halls`);
+      const response = await fetch(`/api/v1/infrastructure/freshwater-stations/${stationId}/halls`);
       if (!response.ok) throw new Error("Failed to fetch halls");
       return response.json();
     },

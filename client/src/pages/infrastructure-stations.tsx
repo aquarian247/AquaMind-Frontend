@@ -158,11 +158,11 @@ export default function InfrastructureStations() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: stationsData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/stations/", selectedGeography],
+    queryKey: ["/api/v1/infrastructure/freshwater-stations/", selectedGeography],
     queryFn: async () => {
       const url = selectedGeography === "all" 
-        ? "/api/v1/infrastructure/stations/"
-        : `/api/v1/infrastructure/stations/?geography=${selectedGeography}`;
+        ? "/api/v1/infrastructure/freshwater-stations/"
+        : `/api/v1/infrastructure/freshwater-stations/?geography=${selectedGeography}`;
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch stations");
       return response.json();
