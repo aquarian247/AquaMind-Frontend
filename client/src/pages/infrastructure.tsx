@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "wouter";
+import { api } from "@/lib/api";
 
 // Infrastructure data interfaces
 interface GeographySummary {
@@ -70,36 +71,6 @@ interface Alert {
   timestamp: string;
 }
 
-// API functions
-const api = {
-  async getInfrastructureSummary() {
-    const response = await fetch("/api/v1/infrastructure/summary/");
-    if (!response.ok) throw new Error("Failed to fetch infrastructure summary");
-    return response.json();
-  },
-
-  async getGeographies() {
-    const response = await fetch("/api/v1/infrastructure/geographies/");
-    if (!response.ok) throw new Error("Failed to fetch geographies");
-    return response.json();
-  },
-
-  async getContainers(geography?: string) {
-    const url = geography 
-      ? `/api/v1/infrastructure/containers/?geography=${geography}`
-      : "/api/v1/infrastructure/containers/";
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Failed to fetch containers");
-    return response.json();
-  },
-
-  async getAlerts() {
-    const response = await fetch("/api/v1/infrastructure/alerts/");
-    if (!response.ok) throw new Error("Failed to fetch alerts");
-    return response.json();
-  }
-};
-
 export default function Infrastructure() {
   const [activeSection, setActiveSection] = useState("overview");
   const [selectedGeography, setSelectedGeography] = useState<string>("all");
@@ -113,23 +84,18 @@ export default function Infrastructure() {
 
   // Data queries
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/summary/"],
-    queryFn: api.getInfrastructureSummary,
+    queryKey: ["infrastructure/overview"],
+    queryFn: api.infrastructure.getOverview,
   });
 
   const { data: geographiesData } = useQuery({
-    queryKey: ["/api/v1/infrastructure/geographies/"],
-    queryFn: api.getGeographies,
-  });
-
-  const { data: containersData } = useQuery({
-    queryKey: ["/api/v1/infrastructure/containers/", selectedGeography],
-    queryFn: () => api.getContainers(selectedGeography === "all" ? undefined : selectedGeography),
+    queryKey: ["infrastructure/geographies"],
+    queryFn: api.infrastructure.getGeographies,
   });
 
   const { data: alertsData } = useQuery({
-    queryKey: ["/api/v1/infrastructure/alerts/"],
-    queryFn: api.getAlerts,
+    queryKey: ["infrastructure/alerts"],
+    queryFn: api.infrastructure.getActiveAlerts,
   });
 
   // Process data
@@ -146,7 +112,7 @@ export default function Infrastructure() {
     { id: 2, name: "Scotland", totalContainers: 95, activeBiomass: 4250, capacity: 5310 }
   ];
 
-  const containers = containersData?.results || [];
+  // Alerts list (API results fallback to sensible hard-coded examples)
   const alerts = alertsData?.results || [
     {
       id: 1,

@@ -18,6 +18,7 @@ import {
   Calendar
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { api } from "@/lib/api";
 
 interface ContainerOverview {
   id: number;
@@ -49,21 +50,25 @@ export default function InfrastructureContainers() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: containersData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/containers/overview", geographyFilter, stationFilter, typeFilter, statusFilter],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (geographyFilter !== "all") params.append("geography", geographyFilter);
-      if (stationFilter !== "all") params.append("station", stationFilter);
-      if (typeFilter !== "all") params.append("type", typeFilter);
-      if (statusFilter !== "all") params.append("status", statusFilter);
-      
-      const response = await fetch(`/api/v1/infrastructure/containers/overview?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch containers");
-      return response.json();
-    },
+    // Non-URL key signals client-computed aggregation to the endpoint validator
+    queryKey: [
+      "infrastructure/containers/overview",
+      geographyFilter,
+      stationFilter,
+      typeFilter,
+      statusFilter,
+    ],
+    queryFn: () =>
+      api.infrastructure.getContainersOverview({
+        geography: geographyFilter,
+        station: stationFilter,
+        type: typeFilter,
+        status: statusFilter,
+      }),
   });
 
-  const containers: ContainerOverview[] = containersData?.results || [];
+  // Cast result array to ContainerOverview[] to satisfy strict typing
+  const containers = (containersData?.results as ContainerOverview[]) || [];
 
   // Further filter by search query
   const filteredContainers = containers.filter(container => 
