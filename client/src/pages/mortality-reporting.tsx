@@ -70,13 +70,13 @@ export default function MortalityReporting() {
 
   // Fetch farm sites
   const { data: farmSites, isLoading: farmSitesLoading } = useQuery({
-    queryKey: ["/api/farm-sites"],
+    queryKey: ["farm-sites"],
     queryFn: () => api.getFarmSites(),
   });
 
   // Fetch pens for selected farm site
   const { data: pens, isLoading: pensLoading } = useQuery({
-    queryKey: ["/api/farm-sites", selectedFarmSite, "pens"],
+    queryKey: ["farm-sites", selectedFarmSite, "pens"],
     queryFn: () => api.getPensByFarmSite(selectedFarmSite!),
     enabled: !!selectedFarmSite,
   });
@@ -94,17 +94,8 @@ export default function MortalityReporting() {
         notes: `Primary cause: ${data.primaryCause}${data.secondaryCause ? `, Secondary: ${data.secondaryCause}` : ''}${data.notes ? `. Notes: ${data.notes}` : ''}`,
       };
       
-      const response = await fetch("/api/v1/health/records/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(healthRecord),
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to submit mortality report");
-      }
-      
-      return response.json();
+      // Use the typed helper from the unified API client.
+      return api.health.createHealthRecord(healthRecord);
     },
     onSuccess: () => {
       toast({
@@ -116,7 +107,7 @@ export default function MortalityReporting() {
         reportDate: new Date().toISOString().split('T')[0],
       });
       setSelectedFarmSite(null);
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/health/records/"] });
+      queryClient.invalidateQueries({ queryKey: ["health/records"] });
     },
     onError: (error) => {
       toast({
