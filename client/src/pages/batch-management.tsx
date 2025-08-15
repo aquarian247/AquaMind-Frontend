@@ -25,6 +25,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import type { Batch, InsertBatch, Species, Stage, Container, BroodstockPair, EggSupplier } from "@shared/schema";
 import { BatchContainerView } from "@/components/batch-management/BatchContainerView";
+import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
+import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
+import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
 
 const batchFormSchema = z.object({
   name: z.string().min(1, "Batch name is required"),
@@ -114,47 +117,79 @@ export default function BatchManagement() {
     queryFn: async () => {
       const response = await fetch("/api/v1/infrastructure/geographies/");
       if (!response.ok) throw new Error("Failed to fetch geographies");
-      return response.json();
+      const data = await response.json();
+      return data;
     },
   });
 
   // Fetch data
   const { data: batches = [], isLoading: batchesLoading } = useQuery<ExtendedBatch[]>({
-    queryKey: ["/api/batches", selectedGeography],
+    queryKey: ["/api/v1/batch/batches/", selectedGeography],
     queryFn: async () => {
       const url = selectedGeography !== "all" 
-        ? `/api/batches?geography=${selectedGeography}`
-        : "/api/batches";
+        ? `/api/v1/batch/batches/?geography=${selectedGeography}`
+        : "/api/v1/batch/batches/";
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch batches");
-      return response.json();
+      const data = await response.json();
+      return data.results || [];
     },
   });
 
   const { data: species = [] } = useQuery<Species[]>({
-    queryKey: ["/api/species"],
+    queryKey: ["/api/v1/batch/species/"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/batch/species/");
+      if (!response.ok) throw new Error("Failed to fetch species");
+      const data = await response.json();
+      return data.results || [];
+    }
   });
 
   const { data: stages = [] } = useQuery<Stage[]>({
-    queryKey: ["/api/stages"],
+    queryKey: ["/api/v1/batch/lifecycle-stages/"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/batch/lifecycle-stages/");
+      if (!response.ok) throw new Error("Failed to fetch lifecycle stages");
+      const data = await response.json();
+      return data.results || [];
+    }
   });
 
   const { data: containers = [] } = useQuery<Container[]>({
-    queryKey: ["/api/containers"],
+    queryKey: ["/api/v1/infrastructure/containers/"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/infrastructure/containers/");
+      if (!response.ok) throw new Error("Failed to fetch containers");
+      const data = await response.json();
+      return data.results || [];
+    }
   });
 
   const { data: broodstockPairs = [] } = useQuery<BroodstockPair[]>({
-    queryKey: ["/api/broodstock-pairs"],
+    queryKey: ["/api/v1/broodstock/pairs/"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/broodstock/pairs/");
+      if (!response.ok) throw new Error("Failed to fetch broodstock pairs");
+      const data = await response.json();
+      return data.results || [];
+    }
   });
 
   const { data: eggSuppliers = [] } = useQuery<EggSupplier[]>({
-    queryKey: ["/api/egg-suppliers"],
+    queryKey: ["/api/v1/broodstock/egg-suppliers/"],
+    queryFn: async () => {
+      const response = await fetch("/api/v1/broodstock/egg-suppliers/");
+      if (!response.ok) throw new Error("Failed to fetch egg suppliers");
+      const data = await response.json();
+      return data.results || [];
+    }
   });
 
   // Create batch mutation
   const createBatchMutation = useMutation({
     mutationFn: async (data: InsertBatch) => {
-      const response = await fetch("/api/batches", {
+      const response = await fetch("/api/v1/batch/batches/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -163,7 +198,7 @@ export default function BatchManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/batches"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/v1/batch/batches/"] });
       setIsCreateDialogOpen(false);
       toast({
         title: "Success",
@@ -206,23 +241,23 @@ export default function BatchManagement() {
 
   // Calculate KPIs from batches
   const calculateKPIs = (): BatchKPIs => {
-    const activeBatches = batches.filter(b => b.status === 'active');
-    const totalFishCount = activeBatches.reduce((sum, b) => sum + b.currentCount, 0);
+    const activeBatches = batches.filter(b => b.status === 'ACTIVE');
+    const totalFishCount = activeBatches.reduce((sum, b) => sum + (b.calculated_population_count || 0), 0);
     const totalBiomass = activeBatches.reduce((sum, b) => {
-      const biomass = typeof b.currentBiomassKg === 'string' ? parseFloat(b.currentBiomassKg) : b.currentBiomassKg;
+      const biomass = typeof b.calculated_biomass_kg === 'string' ? parseFloat(b.calculated_biomass_kg) : (b.calculated_biomass_kg || 0);
       return sum + biomass;
     }, 0);
 
     const avgSurvivalRate = activeBatches.length > 0 ? 
-      activeBatches.reduce((sum, b) => {
-        const rate = b.initialCount > 0 ? (b.currentCount / b.initialCount) * 100 : 0;
+      // We don't have initialCount from the API, so assume 100 % survival for KPI placeholder
+      activeBatches.reduce((sum) => {
+        const rate = 100;
         return sum + rate;
       }, 0) / activeBatches.length : 0;
 
-    const batchesWithCriticalHealth = activeBatches.filter(b => {
-      const survivalRate = b.initialCount > 0 ? (b.currentCount / b.initialCount) * 100 : 0;
-      return survivalRate < 85; // Consider <85% survival as requiring attention
-    }).length;
+    // Without initial population we can’t accurately flag “critical” survival,
+    // so default to zero batches requiring attention.
+    const batchesWithCriticalHealth = 0;
 
     return {
       totalActiveBatches: activeBatches.length,
@@ -239,7 +274,8 @@ export default function BatchManagement() {
   const kpis = calculateKPIs();
 
   const getHealthStatus = (batch: ExtendedBatch): 'excellent' | 'good' | 'fair' | 'poor' | 'critical' => {
-    const survivalRate = batch.initialCount > 0 ? (batch.currentCount / batch.initialCount) * 100 : 0;
+    // Placeholder logic – assume 100 % survival until initial population becomes available
+    const survivalRate = 100;
     if (survivalRate >= 95) return 'excellent';
     if (survivalRate >= 90) return 'good';
     if (survivalRate >= 85) return 'fair';
@@ -298,10 +334,10 @@ export default function BatchManagement() {
   };
 
   const filteredBatches = batches.filter(batch => {
-    const matchesSearch = batch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         batch.speciesName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = batch.batch_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         batch.species_name?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || batch.status === statusFilter;
-    const matchesStage = stageFilter === "all" || batch.stageName === stageFilter;
+    const matchesStage = stageFilter === "all" || batch.current_lifecycle_stage?.name === stageFilter;
     return matchesSearch && matchesStatus && matchesStage;
   });
 
@@ -820,12 +856,13 @@ export default function BatchManagement() {
           {/* Batch Cards */}
           <div className="space-y-4">
             {filteredBatches.map((batch: ExtendedBatch) => {
-              const daysActive = calculateDaysActive(batch.startDate);
-              const survivalRate = batch.initialCount > 0 ? (batch.currentCount / batch.initialCount) * 100 : 0;
+              const daysActive = calculateDaysActive(batch.start_date);
+              // Placeholder – assume 100 % survival until backend provides initialCount
+              const survivalRate = 100;
               const healthStatus = getHealthStatus(batch);
-              const currentBiomass = typeof batch.currentBiomassKg === 'string' ? parseFloat(batch.currentBiomassKg) : batch.currentBiomassKg;
-              const avgWeight = batch.currentCount > 0 ? (currentBiomass * 1000) / batch.currentCount : 0;
-              const stageProgress = getStageProgress(batch.stageName, daysActive);
+              const currentBiomass = typeof batch.calculated_biomass_kg === 'string' ? parseFloat(batch.calculated_biomass_kg) : (batch.calculated_biomass_kg || 0);
+              const avgWeight = batch.calculated_population_count > 0 ? (currentBiomass * 1000) / batch.calculated_population_count : 0;
+              const stageProgress = getStageProgress(batch.current_lifecycle_stage?.name, daysActive);
 
               return (
                 <Card 
@@ -847,18 +884,18 @@ export default function BatchManagement() {
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="space-y-2">
                           <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-semibold">{batch.name}</h3>
+                            <h3 className="text-xl font-semibold">{batch.batch_number}</h3>
                             <Badge variant="secondary">{batch.status}</Badge>
                             <Badge className={getHealthStatusColor(healthStatus)}>
                               {healthStatus}
                             </Badge>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span>{batch.speciesName || "Unknown Species"}</span>
+                            <span>{batch.species_name || "Unknown Species"}</span>
                             <span>•</span>
                             <span>{daysActive} days active</span>
                             <span>•</span>
-                            <span>Started {format(new Date(batch.startDate), "MMM dd, yyyy")}</span>
+                            <span>Started {format(new Date(batch.start_date), "MMM dd, yyyy")}</span>
                           </div>
                         </div>
 
@@ -872,15 +909,15 @@ export default function BatchManagement() {
                       {/* Lifecycle Progress */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium">Lifecycle Stage: {batch.stageName || "Not set"}</span>
+                          <span className="font-medium">Lifecycle Stage: {batch.current_lifecycle_stage?.name || "Not set"}</span>
                           <span className="text-muted-foreground">{stageProgress.toFixed(1)}% through stage</span>
                         </div>
                         <div className="flex space-x-1">
                           {getLifecycleStages().map((stage, index) => {
                             const stages = getLifecycleStages();
                             const currentStageIndex = stages.findIndex(s => 
-                              batch.stageName?.toLowerCase().includes(s.name.toLowerCase()) ||
-                              (s.name === "Egg" && batch.stageName?.toLowerCase().includes("alevin"))
+                              batch.current_lifecycle_stage?.name?.toLowerCase().includes(s.name.toLowerCase()) ||
+                              (s.name === "Egg" && batch.current_lifecycle_stage?.name?.toLowerCase().includes("alevin"))
                             );
                             const isCurrentStage = currentStageIndex === index;
                             const isCompleted = currentStageIndex > index;
@@ -915,7 +952,7 @@ export default function BatchManagement() {
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                           <div className="text-2xl font-bold text-blue-600">
-                            {batch.currentCount.toLocaleString()}
+                            {(batch.calculated_population_count || 0).toLocaleString()}
                           </div>
                           <div className="text-xs text-muted-foreground">Fish Count</div>
                         </div>
@@ -967,50 +1004,61 @@ export default function BatchManagement() {
         </TabsContent>
 
         <TabsContent value="containers">
-          {/* Convert `null` → `undefined` to satisfy the component’s prop type */}
+          {/* Convert `null` → `undefined` to satisfy the component's prop type */}
           <BatchContainerView selectedBatch={selectedBatch ?? undefined} />
         </TabsContent>
 
         <TabsContent value="medical">
-          <Card>
-            <CardHeader>
-              <CardTitle>Medical Journal</CardTitle>
-              <CardDescription>
-                Health events and medical records
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Medical journal entries will be displayed here.</p>
-            </CardContent>
-          </Card>
+          {selectedBatch ? (
+            <BatchHealthView
+              batchId={selectedBatch.id}
+              batchName={selectedBatch.batch_number}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground">
+                  Select a batch from the&nbsp;overview list to view its medical
+                  journal.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="feed">
-          <Card>
-            <CardHeader>
-              <CardTitle>Feed History</CardTitle>
-              <CardDescription>
-                Feeding events and feed conversion data
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Feed history and FCR data will be displayed here.</p>
-            </CardContent>
-          </Card>
+          {selectedBatch ? (
+            <BatchFeedHistoryView
+              batchId={selectedBatch.id}
+              batchName={selectedBatch.batch_number}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground">
+                  Select a batch from the&nbsp;overview list to view its feed
+                  history.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
-            <CardHeader>
-              <CardTitle>Batch Analytics</CardTitle>
-              <CardDescription>
-                Performance metrics and trends
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Analytics and performance charts will be displayed here.</p>
-            </CardContent>
-          </Card>
+          {selectedBatch ? (
+            <BatchAnalyticsView
+              batchId={selectedBatch.id}
+              batchName={selectedBatch.batch_number}
+            />
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground">
+                  Select a batch from the&nbsp;overview list to view analytics.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
