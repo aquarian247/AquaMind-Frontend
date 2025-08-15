@@ -19,19 +19,19 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   const [timeRange, setTimeRange] = useState<string>("30");
 
   const { data: farmSites = [] } = useQuery<FarmSite[]>({
-    queryKey: ["/api/dashboard/farm-sites"],
+    queryKey: ["/api/v1/infrastructure/areas/"],
   });
 
   const { data: allBatches = [] } = useQuery<Batch[]>({
-    queryKey: ["/api/batches"],
+    queryKey: ["/api/v1/batch/batches/"],
   });
 
   const { data: containers = [] } = useQuery<Container[]>({
-    queryKey: ["/api/containers"],
+    queryKey: ["/api/v1/infrastructure/containers/"],
   });
 
   const { data: environmentalReadings = [] } = useQuery<EnvironmentalReading[]>({
-    queryKey: ["/api/environmental-readings"],
+    queryKey: ["/api/v1/environmental/readings/"],
   });
 
   // Filter farm sites based on selected region
