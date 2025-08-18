@@ -75,6 +75,20 @@ interface ExtendedBatch extends Batch {
   healthStatus?: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
   mortalityRate?: number;
   biomassGrowthRate?: number;
+  /* ---  v1 API fields  --- */
+  species_name?: string;
+  calculated_population_count?: number;
+  calculated_biomass_kg?: string;
+  current_lifecycle_stage?: {
+    id: number;
+    name: string;
+  };
+  expected_harvest_date?: string;
+  egg_source?: string;
+
+  /* Legacy field kept for compatibility with
+     placeholder-survival-rate logic (may be removed later) */
+  initialCount?: number;
 }
 
 interface BatchKPIs {
