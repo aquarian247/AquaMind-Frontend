@@ -23,19 +23,37 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import type {
-  InsertBatch,
-  Species,
-  Stage,
-  Container,
-  BroodstockPair,
-  EggSupplier,
-} from "@shared/schema";
 import type { Batch } from "@/api/generated/models/Batch";
+import type { Species } from "@/api/generated/models/Species";
+import type { LifeCycleStage } from "@/api/generated/models/LifeCycleStage";
+import type { Container } from "@/api/generated/models/Container";
+import type { BreedingPair } from "@/api/generated/models/BreedingPair";
+import type { EggSupplier } from "@/api/generated/models/EggSupplier";
 import { BatchContainerView } from "@/components/batch-management/BatchContainerView";
 import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
 import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
 import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
+
+// Define InsertBatch type based on Batch type for creating new batches
+type InsertBatch = {
+  name: string;
+  species: number;
+  startDate: string;
+  initialCount: number;
+  initialBiomassKg: string;
+  currentCount: number;
+  currentBiomassKg: string;
+  container?: number;
+  stage?: number;
+  status: string;
+  expectedHarvestDate?: string;
+  notes?: string;
+  eggSource: 'internal' | 'external';
+  broodstockPairId?: number;
+  eggSupplierId?: number;
+  eggBatchNumber?: string;
+  eggProductionDate?: string;
+};
 
 const batchFormSchema = z.object({
   name: z.string().min(1, "Batch name is required"),
@@ -186,7 +204,7 @@ export default function BatchManagement() {
     }
   });
 
-  const { data: stages = [] } = useQuery<Stage[]>({
+  const { data: stages = [] } = useQuery<LifeCycleStage[]>({
     queryKey: ["/api/v1/batch/lifecycle-stages/"],
     queryFn: async () => {
       const response = await fetch("/api/v1/batch/lifecycle-stages/");
@@ -206,7 +224,7 @@ export default function BatchManagement() {
     }
   });
 
-  const { data: broodstockPairs = [] } = useQuery<BroodstockPair[]>({
+  const { data: broodstockPairs = [] } = useQuery<BreedingPair[]>({
     queryKey: ["/api/v1/broodstock/pairs/"],
     queryFn: async () => {
       const response = await fetch("/api/v1/broodstock/pairs/");
@@ -704,7 +722,7 @@ export default function BatchManagement() {
                               <SelectContent>
                                 {broodstockPairs.map((pair) => (
                                   <SelectItem key={pair.id} value={pair.id.toString()}>
-                                    {pair.pairName} (♂{pair.maleFishId} × ♀{pair.femaleFishId})
+                                    {pair.id} (♂{pair.male_fish_display} × ♀{pair.female_fish_display})
                                   </SelectItem>
                                 ))}
                               </SelectContent>

@@ -7,7 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MapPin, Activity, Fish, Thermometer } from "lucide-react";
 // Use the Batch type generated from the OpenAPI spec to stay in sync with the v1 API
 import type { Batch } from "@/api/generated/models/Batch";
-import type { Container, FarmSite, EnvironmentalReading } from "@shared/schema";
+import type { Container } from "@/api/generated/models/Container";
+import type { Area } from "@/api/generated/models/Area";
+import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
@@ -20,7 +22,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   const [containerTypeFilter, setContainerTypeFilter] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("30");
 
-  const { data: farmSites = [] } = useQuery<FarmSite[]>({
+  const { data: farmSites = [] } = useQuery<Area[]>({
     queryKey: ["/api/v1/infrastructure/areas/"],
   });
 
@@ -227,7 +229,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {container.containerType} • Capacity: {container.capacity}
+                  {container.container_type_name} • Capacity: {container.max_biomass_kg} kg
                 </p>
               </CardHeader>
 
