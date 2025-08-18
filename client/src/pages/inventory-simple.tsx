@@ -20,37 +20,58 @@ import {
   Factory
 } from "lucide-react";
 import HierarchicalFilter, { OperationsOverview } from "@/components/layout/hierarchical-filter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 // API functions
 const api = {
   async getFeedTypes() {
-    const response = await fetch("/api/v1/inventory/feed-types/");
-    if (!response.ok) throw new Error("Failed to fetch feed types");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedsList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch feed types:", error);
+      throw new Error("Failed to fetch feed types");
+    }
   },
 
   async getFeedPurchases() {
-    const response = await fetch("/api/v1/inventory/feed-purchases/");
-    if (!response.ok) throw new Error("Failed to fetch purchases");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedPurchasesList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch purchases:", error);
+      throw new Error("Failed to fetch purchases");
+    }
   },
 
   async getFeedContainers() {
-    const response = await fetch("/api/v1/inventory/feed-containers/");
-    if (!response.ok) throw new Error("Failed to fetch containers");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InfrastructureFeedContainersList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch containers:", error);
+      throw new Error("Failed to fetch containers");
+    }
   },
 
   async getFeedContainerStock() {
-    const response = await fetch("/api/v1/inventory/feed-container-stock/");
-    if (!response.ok) throw new Error("Failed to fetch container stock");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedContainerStockList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch container stock:", error);
+      throw new Error("Failed to fetch container stock");
+    }
   },
 
   async getFeedingEvents() {
-    const response = await fetch("/api/v1/inventory/feeding-events/");
-    if (!response.ok) throw new Error("Failed to fetch feeding events");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedingEventsList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch feeding events:", error);
+      throw new Error("Failed to fetch feeding events");
+    }
   }
 };
 
