@@ -43,58 +43,85 @@ describe('BatchContainerView', () => {
         return Promise.resolve(json({}));
       }
 
-      // Farm sites endpoint
-      if (url.includes('/api/dashboard/farm-sites')) {
-        return Promise.resolve(json([
-          { 
-            id: 1, 
-            name: 'North Bay Farm', 
-            location: 'Faroe', 
-            totalCapacity: 100000, 
-            currentStock: 50000, 
-            status: 'active', 
-            coordinates: '' 
-          }
-        ]));
+      // Farm sites endpoint (v1 API)
+      if (url.includes('/api/v1/infrastructure/areas/')) {
+        return Promise.resolve(json({
+          results: [
+            { 
+              id: 1, 
+              name: 'North Bay Farm', 
+              location: 'Faroe', 
+              total_capacity: 100000, 
+              current_stock: 50000, 
+              status: 'active', 
+              coordinates: '' 
+            }
+          ]
+        }));
       }
 
-      // Batches endpoint
-      if (url.includes('/api/batches')) {
-        return Promise.resolve(json([
-          { 
-            id: 1, 
-            name: 'Batch A', 
-            container: 10, 
-            status: 'active', 
-            currentCount: 20000, 
-            currentBiomassKg: 3500 
-          }
-        ]));
+      // Batches endpoint (v1 API)
+      if (url.includes('/api/v1/batch/batches/')) {
+        return Promise.resolve(json({
+          results: [
+            { 
+              id: 1, 
+              batch_number: 'Batch A',
+              species: 1,
+              species_name: 'Atlantic Salmon',
+              lifecycle_stage: 1,
+              status: 'ACTIVE',
+              batch_type: 'STANDARD',
+              start_date: '2025-01-01',
+              expected_end_date: '2025-12-31',
+              notes: '',
+              created_at: '2025-01-01T00:00:00Z',
+              updated_at: '2025-01-01T00:00:00Z',
+              calculated_population_count: 20000,
+              calculated_biomass_kg: 3500,
+              calculated_avg_weight_g: 175,
+              current_lifecycle_stage: {
+                id: 1,
+                name: 'Smolt'
+              },
+              days_in_production: 120,
+              active_containers: [10]
+            }
+          ]
+        }));
       }
 
-      // Containers endpoint
-      if (url.includes('/api/containers')) {
-        return Promise.resolve(json([
-          { 
-            id: 10, 
-            name: 'North Bay Farm - Cage 1', 
-            containerType: 'sea cage', 
-            capacity: 50000 
-          }
-        ]));
+      // Containers endpoint (v1 API)
+      if (url.includes('/api/v1/infrastructure/containers/')) {
+        return Promise.resolve(json({
+          results: [
+            { 
+              id: 10, 
+              name: 'North Bay Farm - Cage 1', 
+              containerType: 'sea cage', 
+              capacity: 50000 
+            }
+          ]
+        }));
       }
 
-      // Environmental readings endpoint
-      if (url.includes('/api/environmental-readings')) {
-        return Promise.resolve(json([
-          { 
-            id: 1, 
-            parameter: 1, 
-            readingTime: '2025-07-01T00:00:00Z', 
-            value: 12.3, 
-            container: 10 
-          }
-        ]));
+      // Environmental readings endpoint (v1 API)
+      if (url.includes('/api/v1/environmental/readings/')) {
+        return Promise.resolve(json({
+          results: [
+            { 
+              id: 1, 
+              parameter: {
+                id: 1,
+                name: 'Temperature',
+                unit: '°C'
+              },
+              reading_time: '2025-07-01T00:00:00Z', 
+              value: 12.3, 
+              container: 10 
+            }
+          ]
+        }));
       }
 
       return Promise.resolve(json({}));
@@ -121,19 +148,19 @@ describe('BatchContainerView', () => {
   it('handles API error gracefully', async () => {
     // Override fetch mock for batches to return error
     vi.spyOn(globalThis, 'fetch').mockImplementation((url: string) => {
-      if (typeof url === 'string' && url.includes('/api/batches')) {
+      if (typeof url === 'string' && url.includes('/api/v1/batch/batches/')) {
         return Promise.resolve(new Response(null, { status: 500 }));
       }
 
       // Return empty arrays for other endpoints
-      if (url.includes('/api/dashboard/farm-sites')) {
-        return Promise.resolve(json([]));
+      if (url.includes('/api/v1/infrastructure/areas/')) {
+        return Promise.resolve(json({ results: [] }));
       }
-      if (url.includes('/api/containers')) {
-        return Promise.resolve(json([]));
+      if (url.includes('/api/v1/infrastructure/containers/')) {
+        return Promise.resolve(json({ results: [] }));
       }
-      if (url.includes('/api/environmental-readings')) {
-        return Promise.resolve(json([]));
+      if (url.includes('/api/v1/environmental/readings/')) {
+        return Promise.resolve(json({ results: [] }));
       }
 
       return Promise.resolve(json({}));
