@@ -16,35 +16,29 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertScenarioSchema } from "@shared/schema";
+import type { Scenario as ScenarioModel } from "@/api/generated/models/Scenario";
 
-const scenarioEditSchema = insertScenarioSchema.extend({
+const scenarioEditSchema = z.object({
+  name: z.string().min(1, "Name is required"),
   startDate: z.date(),
+  durationDays: z.number().min(1, "Duration is required"),
+  initialCount: z.number().min(1, "Initial count is required"),
+  initialWeight: z.number().optional().nullable(),
+  genotype: z.string().min(1, "Genotype is required"),
+  supplier: z.string().min(1, "Supplier is required"),
   tgcModelId: z.number().optional(),
   fcrModelId: z.number().optional(),
   mortalityModelId: z.number().optional(),
+  batchId: z.number().optional().nullable(),
+  biologicalConstraintsId: z.number().optional().nullable(),
   temperatureProfileId: z.number().optional(),
+  status: z.string().optional(),
 });
 
 type ScenarioEditData = z.infer<typeof scenarioEditSchema>;
 
-interface Scenario {
-  id: number;
-  name: string;
-  description: string;
-  status: "draft" | "running" | "completed" | "failed";
-  durationDays: number;
-  initialCount: number;
-  initialWeight: string;
-  genotype: string;
-  supplier: string;
-  startDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface ScenarioEditDialogProps {
-  scenario: Scenario;
+  scenario: ScenarioModel;
   children: React.ReactNode;
   onSuccess?: () => void;
 }
@@ -58,14 +52,12 @@ export function ScenarioEditDialog({ scenario, children, onSuccess }: ScenarioEd
     resolver: zodResolver(scenarioEditSchema),
     defaultValues: {
       name: scenario.name,
-      description: scenario.description,
-      durationDays: scenario.durationDays,
-      initialCount: scenario.initialCount,
-      initialWeight: scenario.initialWeight,
+      durationDays: scenario.duration_days,
+      initialCount: scenario.initial_count,
+      initialWeight: scenario.initial_weight ?? null,
       genotype: scenario.genotype,
       supplier: scenario.supplier,
-      status: scenario.status,
-      startDate: new Date(scenario.startDate),
+      startDate: new Date(scenario.start_date),
     },
   });
 
@@ -73,14 +65,12 @@ export function ScenarioEditDialog({ scenario, children, onSuccess }: ScenarioEd
   useEffect(() => {
     form.reset({
       name: scenario.name,
-      description: scenario.description,
-      durationDays: scenario.durationDays,
-      initialCount: scenario.initialCount,
-      initialWeight: scenario.initialWeight,
+      durationDays: scenario.duration_days,
+      initialCount: scenario.initial_count,
+      initialWeight: scenario.initial_weight ?? null,
       genotype: scenario.genotype,
       supplier: scenario.supplier,
-      status: scenario.status,
-      startDate: new Date(scenario.startDate),
+      startDate: new Date(scenario.start_date),
     });
   }, [scenario, form]);
 
@@ -107,11 +97,23 @@ export function ScenarioEditDialog({ scenario, children, onSuccess }: ScenarioEd
 
   const updateScenarioMutation = useMutation({
     mutationFn: async (data: ScenarioEditData) => {
-      const payload = {
-        ...data,
-        startDate: data.startDate.toISOString().split('T')[0],
+      const payload: Partial<ScenarioModel> = {
+        name: data.name,
+        start_date: data.startDate.toISOString().split("T")[0],
+        duration_days: data.durationDays,
+        initial_count: data.initialCount,
+        initial_weight: data.initialWeight ?? null,
+        genotype: data.genotype,
+        supplier: data.supplier,
+        tgc_model: data.tgcModelId,
+        fcr_model: data.fcrModelId,
+        mortality_model: data.mortalityModelId,
+        batch: data.batchId ?? null,
+        biological_constraints: data.biologicalConstraintsId ?? null,
+        // @ts-expect-error backend may expose this soon
+        temperature_profile: data.temperatureProfileId,
       };
-      return apiRequest("PUT", `/api/v1/scenario/scenarios/${scenario.id}/`, payload);
+      return apiRequest("PUT", `/api/v1/scenario/scenarios/${scenario.scenario_id}/`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
@@ -136,9 +138,6 @@ export function ScenarioEditDialog({ scenario, children, onSuccess }: ScenarioEd
     updateScenarioMutation.mutate(data);
   };
 
-  // Prevent editing if scenario is running or completed
-  const isEditable = scenario.status === 'draft' || scenario.status === 'failed';
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -155,14 +154,6 @@ export function ScenarioEditDialog({ scenario, children, onSuccess }: ScenarioEd
           </DialogDescription>
         </DialogHeader>
 
-        {!isEditable ? (
-          <div className="py-8 text-center">
-            <p className="text-muted-foreground">
-              This scenario cannot be edited because it is {scenario.status}. 
-              You can duplicate it to create a new editable version.
-            </p>
-          </div>
-        ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="grid gap-4">
@@ -174,25 +165,6 @@ export function ScenarioEditDialog({ scenario, children, onSuccess }: ScenarioEd
                       <FormLabel>Scenario Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter scenario name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Describe the scenario objectives and parameters"
-                          className="min-h-[80px]"
-                          {...field}
-                          value={field.value || ""}
-                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -476,7 +448,6 @@ export function ScenarioEditDialog({ scenario, children, onSuccess }: ScenarioEd
               </DialogFooter>
             </form>
           </Form>
-        )}
       </DialogContent>
     </Dialog>
   );

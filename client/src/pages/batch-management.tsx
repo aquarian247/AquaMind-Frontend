@@ -419,7 +419,7 @@ export default function BatchManagement() {
   }
 
   /* ------------------------------------------------------------------
-   * NOTE: BatchContainerView expects a Batch type from @shared/schema.
+   * NOTE: BatchContainerView expects a Batch type from the generated API models.
    * We provide a lightweight mapper to convert the few fields that
    * BatchContainerView relies on (currently only the `id` – plus a handful
    * of required props on the `Batch` type).  This avoids an unsafe cast
@@ -793,7 +793,7 @@ export default function BatchManagement() {
                               <SelectContent>
                                 {eggSuppliers.map((supplier) => (
                                   <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                                    {supplier.name} ({supplier.country})
+                                        {supplier.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
