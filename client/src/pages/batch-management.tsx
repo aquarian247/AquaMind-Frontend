@@ -23,7 +23,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import type { Batch, InsertBatch, Species, Stage, Container, BroodstockPair, EggSupplier } from "@shared/schema";
+import type { InsertBatch, Species, Stage, Container, BroodstockPair, EggSupplier } from "@shared/schema";
 import { BatchContainerView } from "@/components/batch-management/BatchContainerView";
 import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
 import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
@@ -63,20 +63,25 @@ const batchFormSchema = z.object({
 
 type BatchFormData = z.infer<typeof batchFormSchema>;
 
-interface ExtendedBatch extends Batch {
-  speciesName?: string;
-  stageName?: string;
-  containerName?: string;
-  fcr?: number;
-  survivalRate?: number;
-  avgWeight?: number;
-  daysActive?: number;
-  containerCount?: number;
-  healthStatus?: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
-  mortalityRate?: number;
-  biomassGrowthRate?: number;
-  /* ---  v1 API fields  --- */
+interface ExtendedBatch {
+  // Core fields from Django API
+  id: number;
+  batch_number: string;
+  species: number;
   species_name?: string;
+  lifecycle_stage?: number;
+  status: string;
+  batch_type?: string;
+  start_date: string;
+  expected_end_date?: string;
+  actual_end_date?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  population_count?: number;
+  biomass_kg?: number;
+  
+  // Calculated fields from Django API
   calculated_population_count?: number;
   calculated_biomass_kg?: string;
   current_lifecycle_stage?: {
@@ -85,10 +90,23 @@ interface ExtendedBatch extends Batch {
   };
   expected_harvest_date?: string;
   egg_source?: string;
-
-  /* Legacy field kept for compatibility with
-     placeholder-survival-rate logic (may be removed later) */
+  
+  // Frontend-calculated fields
+  fcr?: number;
+  survivalRate?: number;
+  avgWeight?: number;
+  daysActive?: number;
+  containerCount?: number;
+  healthStatus?: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
+  mortalityRate?: number;
+  biomassGrowthRate?: number;
+  
+  // Legacy fields for compatibility
+  name?: string; // Maps to batch_number
   initialCount?: number;
+  speciesName?: string;
+  stageName?: string;
+  containerName?: string;
 }
 
 interface BatchKPIs {
@@ -269,7 +287,7 @@ export default function BatchManagement() {
         return sum + rate;
       }, 0) / activeBatches.length : 0;
 
-    // Without initial population we can’t accurately flag “critical” survival,
+    // Without initial population we can't accurately flag "critical" survival,
     // so default to zero batches requiring attention.
     const batchesWithCriticalHealth = 0;
 
