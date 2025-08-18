@@ -39,7 +39,7 @@ For testing the DMZ/Protected VLAN architecture locally, see `docs/LOCAL_VLAN_SE
 
 ### TypeScript
 - Strict type checking enabled
-- Use shared types from `shared/schema.ts`
+- Use generated types from `client/src/api/generated/models/`
 - Shared API types are generated automatically into `client/src/api/generated` via `npm run generate:client`.
 
 ### React Components

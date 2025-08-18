@@ -19,14 +19,29 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertScenarioSchema } from "@shared/schema";
+import type { Scenario } from "@/api/generated/models/Scenario";
 
-const scenarioFormSchema = insertScenarioSchema.extend({
+/* -------------------------------------------------------------------------- */
+/*                               Form Zod Schema                              */
+/* -------------------------------------------------------------------------- */
+const scenarioFormSchema = z.object({
+  // Required
+  name: z.string().min(1, "Name is required"),
   startDate: z.date(),
+  durationDays: z.number().min(1, "Duration is required"),
+  initialCount: z.number().min(1, "Initial count is required"),
+  genotype: z.string().min(1, "Genotype is required"),
+  supplier: z.string().min(1, "Supplier is required"),
+
+  // Optional / nullable fields
+  initialWeight: z.number().optional().nullable(),
   tgcModelId: z.number().optional(),
   fcrModelId: z.number().optional(),
   mortalityModelId: z.number().optional(),
+  batchId: z.number().optional().nullable(),
+  biologicalConstraintsId: z.number().optional().nullable(),
   temperatureProfileId: z.number().optional(),
+  status: z.string().optional(),
 });
 
 type ScenarioFormData = z.infer<typeof scenarioFormSchema>;
@@ -73,10 +88,9 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
     resolver: zodResolver(scenarioFormSchema),
     defaultValues: {
       name: "",
-      description: "",
       durationDays: 540, // Default 18 months
       initialCount: 100000,
-      initialWeight: "50",
+      initialWeight: 50,
       genotype: "AquaGen",
       supplier: "Benchmark Genetics",
       status: "draft",
@@ -107,10 +121,30 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
 
   const createScenarioMutation = useMutation({
     mutationFn: async (data: ScenarioFormData) => {
-      const payload = {
-        ...data,
-        startDate: data.startDate.toISOString().split('T')[0],
+      /* ------------------------------------------------------------------ */
+      /*                Transform camelCase form data -> snake_case         */
+      /* ------------------------------------------------------------------ */
+      const payload: Partial<Scenario> = {
+        name: data.name,
+        start_date: data.startDate.toISOString().split("T")[0],
+        duration_days: data.durationDays,
+        initial_count: data.initialCount,
+        initial_weight: data.initialWeight ?? null,
+        genotype: data.genotype,
+        supplier: data.supplier,
+        tgc_model: data.tgcModelId,
+        fcr_model: data.fcrModelId,
+        mortality_model: data.mortalityModelId,
+        batch: data.batchId ?? null,
+        biological_constraints: data.biologicalConstraintsId ?? null,
+        // Temperature profile is part of the TGC model; keep as optional extension
+        // @ts-expect-error openapi client may not yet expose this field
+        temperature_profile: data.temperatureProfileId,
+        // Status field may be optional in API
+        // @ts-ignore - allow draft status until backend enforces default
+        status: data.status,
       };
+
       return apiRequest("POST", "/api/v1/scenario/scenarios/", payload);
     },
     onSuccess: () => {
@@ -169,25 +203,6 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
               )}
             />
             
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe the scenario objectives and parameters"
-                      className="min-h-[100px]"
-                      {...field} 
-                      value={field.value || ""}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
