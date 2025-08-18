@@ -34,6 +34,7 @@ import {
   ClipboardList,
   Factory
 } from "lucide-react";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 // Types based on Django data model section 3.3
 interface Feed {
@@ -176,45 +177,73 @@ const feedingEventSchema = z.object({
 
 const api = {
   async getFeedTypes(): Promise<{ results: Feed[] }> {
-    const response = await fetch("/api/v1/inventory/feeds/");
-    if (!response.ok) throw new Error("Failed to fetch feed types");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedsList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch feed types:", error);
+      throw new Error("Failed to fetch feed types");
+    }
   },
 
   async getFeedPurchases(): Promise<{ results: FeedPurchase[] }> {
-    const response = await fetch("/api/v1/inventory/feed-purchases/");
-    if (!response.ok) throw new Error("Failed to fetch feed purchases");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedPurchasesList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch feed purchases:", error);
+      throw new Error("Failed to fetch feed purchases");
+    }
   },
 
   async getFeedContainers(): Promise<{ results: FeedContainer[] }> {
-    const response = await fetch("/api/v1/infrastructure/feed-containers/");
-    if (!response.ok) throw new Error("Failed to fetch feed containers");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InfrastructureFeedContainersList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch feed containers:", error);
+      throw new Error("Failed to fetch feed containers");
+    }
   },
 
   async getFeedStock(): Promise<{ results: FeedStock[] }> {
-    const response = await fetch("/api/v1/inventory/feed-stocks/");
-    if (!response.ok) throw new Error("Failed to fetch feed stock");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedStocksList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch feed stock:", error);
+      throw new Error("Failed to fetch feed stock");
+    }
   },
 
   async getFeedingEvents(): Promise<{ results: FeedingEvent[] }> {
-    const response = await fetch("/api/v1/inventory/feeding-events/");
-    if (!response.ok) throw new Error("Failed to fetch feeding events");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedingEventsList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch feeding events:", error);
+      throw new Error("Failed to fetch feeding events");
+    }
   },
 
   async getFeedContainerStock(): Promise<{ results: FeedContainerStock[] }> {
-    const response = await fetch("/api/v1/inventory/feed-container-stock/");
-    if (!response.ok) throw new Error("Failed to fetch container stock");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedContainerStockList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch container stock:", error);
+      throw new Error("Failed to fetch container stock");
+    }
   },
 
   async getBatchFeedingSummaries(): Promise<{ results: BatchFeedingSummary[] }> {
-    const response = await fetch("/api/v1/inventory/batch-feeding-summaries/");
-    if (!response.ok) throw new Error("Failed to fetch feeding summaries");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryBatchFeedingSummariesList();
+      return response;
+    } catch (error) {
+      console.error("Failed to fetch feeding summaries:", error);
+      throw new Error("Failed to fetch feeding summaries");
+    }
   },
 };
 
