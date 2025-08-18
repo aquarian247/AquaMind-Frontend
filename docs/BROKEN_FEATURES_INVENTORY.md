@@ -1,6 +1,6 @@
 # Broken Features Inventory  
 _Tracking UI components that still rely on missing or legacy API endpoints (Phase-2 backlog)_  
-Last generated: **2025-08-14**
+Last generated: **2025-08-18**
 
 > Legend for “Priority”  
 > • **H** – must fix before GA  
@@ -28,6 +28,7 @@ Last generated: **2025-08-14**
 | Container dropdown | `/api/containers/` | Assignments impossible | — | H | `/api/v1/infrastructure/containers/`. |
 | Traceability view | `/api/batch/container-assignments/`, `/api/batch/transfers/`, `/growth-samples/`, `/mortality-events/` | History tab broken | — | M | Point to `/api/v1/batch/*` equivalents or aggregate client-side. |
 | Analytics view (growth/performance) | `/api/batch/growth-metrics/`, `/performance-metrics/`, `/predictive-insights/`, `/environmental-correlations/`, `/benchmarks/` | Analytics cards empty | — | M | Open BE tickets or hide feature (Phase-3). |
+| Analytics view (growth/performance) | `/api/batch/growth-metrics/`, `/performance-metrics/`, `/predictive-insights/`, `/environmental-correlations/`, `/benchmarks/` | ~~Analytics cards empty~~ | — | M | **FIXED in PR #19** – now consumes real v1 endpoints: `/api/v1/batch/growth-samples/`, `/api/v1/batch/batches/`, `/api/v1/health/health-sampling-events/` |
 | Feed History view | `/api/batch/feeding-events/`, `/feeding-summaries/` | Graphs empty | Pull data from inventory endpoints | M | Map to `/api/v1/inventory/feeding-events/` + `/batch-feeding-summaries/`. |
 | Health tab (batch detail) | `/api/health/records/`, `/assessments/`, `/lab-samples/` | Health section blank | — | M | Replace with granular health endpoints (`journal-entries/`, `health-lab-samples/`, etc.). |
 
