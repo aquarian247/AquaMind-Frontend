@@ -5,11 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Activity, Fish, Thermometer } from "lucide-react";
-// Use the Batch type generated from the OpenAPI spec to stay in sync with the v1 API
+// Use the types generated from the OpenAPI spec to stay in sync with the v1 API
 import type { Batch } from "@/api/generated/models/Batch";
 import type { Container } from "@/api/generated/models/Container";
 import type { Area } from "@/api/generated/models/Area";
 import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
+// Import paginated response types
+import type { PaginatedAreaList } from "@/api/generated/models/PaginatedAreaList";
+import type { PaginatedBatchList } from "@/api/generated/models/PaginatedBatchList";
+import type { PaginatedContainerList } from "@/api/generated/models/PaginatedContainerList";
+import type { PaginatedEnvironmentalReadingList } from "@/api/generated/models/PaginatedEnvironmentalReadingList";
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
@@ -22,21 +27,26 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   const [containerTypeFilter, setContainerTypeFilter] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("30");
 
-  const { data: farmSites = [] } = useQuery<Area[]>({
+  // Update query types to use paginated responses
+  const { data: farmSitesResponse } = useQuery<PaginatedAreaList>({
     queryKey: ["/api/v1/infrastructure/areas/"],
   });
+  const farmSites = farmSitesResponse?.results || [];
 
-  const { data: allBatches = [] } = useQuery<Batch[]>({
+  const { data: batchesResponse } = useQuery<PaginatedBatchList>({
     queryKey: ["/api/v1/batch/batches/"],
   });
+  const allBatches = batchesResponse?.results || [];
 
-  const { data: containers = [] } = useQuery<Container[]>({
+  const { data: containersResponse } = useQuery<PaginatedContainerList>({
     queryKey: ["/api/v1/infrastructure/containers/"],
   });
+  const containers = containersResponse?.results || [];
 
-  const { data: environmentalReadings = [] } = useQuery<EnvironmentalReading[]>({
+  const { data: environmentalReadingsResponse } = useQuery<PaginatedEnvironmentalReadingList>({
     queryKey: ["/api/v1/environmental/readings/"],
   });
+  const environmentalReadings = environmentalReadingsResponse?.results || [];
 
   // Filter farm sites based on selected region
   const filteredFarmSites = selectedRegion === "all" 

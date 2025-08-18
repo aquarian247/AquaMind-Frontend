@@ -134,6 +134,108 @@ const growthSamplesData = {
   ]
 };
 
+// Mock data for mortality events
+const mortalityEventsData = {
+  count: 3,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 1,
+      batch_number: 'B2025-001',
+      cause_display: 'Handling stress',
+      batch_info: 'Batch A',
+      container_info: 'Cage 1',
+      reason_info: 'Routine handling',
+      container_assignment: 1,
+      event_date: '2025-06-20',
+      count: 5,
+      biomass_kg: '2.5',
+      cause: 'Handling stress',
+      investigation: 'Checked oxygen levels',
+      preventive_measures: 'Gentler crowding',
+      reported_by: 2,
+      created_at: '2025-06-20T10:00:00Z',
+      updated_at: '2025-06-20T10:00:00Z'
+    },
+    {
+      id: 2,
+      batch_number: 'B2025-001',
+      cause_display: 'Gill disease',
+      batch_info: 'Batch A',
+      container_info: 'Cage 1',
+      reason_info: 'Health issue',
+      container_assignment: 1,
+      event_date: '2025-06-27',
+      count: 4,
+      biomass_kg: '2.0',
+      cause: 'Gill disease',
+      investigation: 'Sampled gills for PCR',
+      preventive_measures: 'Freshwater bath',
+      reported_by: 2,
+      created_at: '2025-06-27T11:00:00Z',
+      updated_at: '2025-06-27T11:00:00Z'
+    },
+    {
+      id: 3,
+      batch_number: 'B2025-001',
+      cause_display: 'Predation',
+      batch_info: 'Batch A',
+      container_info: 'Cage 1',
+      reason_info: 'Seal attack',
+      container_assignment: 1,
+      event_date: '2025-07-02',
+      count: 3,
+      biomass_kg: '1.5',
+      cause: 'Predation',
+      investigation: 'Net hole discovered',
+      preventive_measures: 'Repaired net',
+      reported_by: 3,
+      created_at: '2025-07-02T09:30:00Z',
+      updated_at: '2025-07-02T09:30:00Z'
+    }
+  ]
+};
+
+// Mock data for health assessments
+const healthAssessmentsData = {
+  count: 1,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 1,
+      batch: 1,
+      assessment_date: '2025-07-01',
+      health_score: 88,
+      remarks: 'Overall good condition, some fin erosion noted',
+      assessed_by: 4,
+      created_at: '2025-07-01T14:00:00Z',
+      updated_at: '2025-07-01T14:00:00Z'
+    }
+  ]
+};
+
+// Mock data for treatments
+const treatmentsData = {
+  count: 1,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 1,
+      batch: 1,
+      treatment_date: '2025-06-28',
+      treatment_type: 'Freshwater Bath',
+      active_ingredient: 'N/A',
+      dosage: '2 hours',
+      reason: 'Gill disease',
+      created_at: '2025-06-28T13:00:00Z',
+      updated_at: '2025-06-28T13:00:00Z'
+    }
+  ]
+};
+
 // Mock data for areas
 const areasData = {
   count: 2,
@@ -177,6 +279,18 @@ const handlers = [
   
   http.get('path:/api/v1/batch/growth-samples*', () => {
     return HttpResponse.json(growthSamplesData);
+  }),
+
+  http.get('path:/api/v1/batch/mortality-events*', () => {
+    return HttpResponse.json(mortalityEventsData);
+  }),
+
+  http.get('path:/api/v1/batch/health-assessments*', () => {
+    return HttpResponse.json(healthAssessmentsData);
+  }),
+
+  http.get('path:/api/v1/batch/treatments*', () => {
+    return HttpResponse.json(treatmentsData);
   }),
   
   http.get('path:/api/v1/infrastructure/areas*', () => {

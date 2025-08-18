@@ -8,6 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
 import { Fish, TrendingUp, TrendingDown, Activity, Beaker, AlertTriangle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ApiService } from "@/api/generated/services/ApiService";
+import type { PaginatedBatchContainerAssignmentList } from "@/api/generated/models/PaginatedBatchContainerAssignmentList";
+import type { PaginatedBatchTransferList } from "@/api/generated/models/PaginatedBatchTransferList";
+import type { PaginatedContainerList } from "@/api/generated/models/PaginatedContainerList";
+import type { PaginatedLifeCycleStageList } from "@/api/generated/models/PaginatedLifeCycleStageList";
+import type { PaginatedGrowthSampleList } from "@/api/generated/models/PaginatedGrowthSampleList";
+import type { PaginatedMortalityEventList } from "@/api/generated/models/PaginatedMortalityEventList";
 
 interface BatchTraceabilityViewProps {
   batchId: number;
@@ -18,33 +25,78 @@ export function BatchTraceabilityView({ batchId, batchName }: BatchTraceabilityV
   const [activeView, setActiveView] = useState("lifecycle");
   const isMobile = useIsMobile();
   const { data: assignments } = useQuery({
-    queryKey: ["/api/batch-container-assignments", batchId],
-    queryFn: () => fetch(`/api/batch-container-assignments?batchId=${batchId}`).then(res => res.json()),
+    queryKey: ["container-assignments", batchId],
+    queryFn: async () => {
+      const res: PaginatedBatchContainerAssignmentList =
+        await ApiService.apiV1BatchContainerAssignmentsList(
+          batchId,   // batch
+          undefined, // container
+          undefined, // ordering
+          undefined, // page
+          undefined  // search
+        );
+      return res.results ?? [];
+    },
   });
 
   const { data: transfers } = useQuery({
-    queryKey: ["/api/batch-transfers", batchId],
-    queryFn: () => fetch(`/api/batch-transfers?batchId=${batchId}`).then(res => res.json()),
+    queryKey: ["batch-transfers", batchId],
+    queryFn: async () => {
+      const res: PaginatedBatchTransferList =
+        await ApiService.apiV1BatchTransfersList(
+          batchId,   // batch
+          undefined, // ordering
+          undefined, // page
+          undefined  // search
+        );
+      return res.results ?? [];
+    },
   });
 
   const { data: containers } = useQuery({
-    queryKey: ["/api/containers"],
-    queryFn: () => fetch("/api/containers").then(res => res.json()),
+    queryKey: ["containers"],
+    queryFn: async () => {
+      const res: PaginatedContainerList =
+        await ApiService.apiV1InfrastructureContainersList();
+      return res.results ?? [];
+    },
   });
 
   const { data: stages } = useQuery({
-    queryKey: ["/api/stages"],
-    queryFn: () => fetch("/api/stages").then(res => res.json()),
+    queryKey: ["lifecycle-stages"],
+    queryFn: async () => {
+      const res: PaginatedLifeCycleStageList =
+        await ApiService.apiV1BatchLifecycleStagesList();
+      return res.results ?? [];
+    },
   });
 
   const { data: growthSamples } = useQuery({
-    queryKey: ["/api/growth-samples"],
-    queryFn: () => fetch("/api/growth-samples").then(res => res.json()),
+    queryKey: ["growth-samples", batchId],
+    queryFn: async () => {
+      const res: PaginatedGrowthSampleList =
+        await ApiService.apiV1BatchGrowthSamplesList(
+          batchId,   // batch
+          undefined, // ordering
+          undefined, // page
+          undefined  // search
+        );
+      return res.results ?? [];
+    },
   });
 
   const { data: mortalityEvents } = useQuery({
-    queryKey: ["/api/mortality-events"],
-    queryFn: () => fetch("/api/mortality-events").then(res => res.json()),
+    queryKey: ["mortality-events", batchId],
+    queryFn: async () => {
+      const res: PaginatedMortalityEventList =
+        await ApiService.apiV1BatchMortalityEventsList(
+          batchId,   // batch
+          undefined, // ordering
+          undefined, // page
+          undefined  // search
+        );
+      return res.results ?? [];
+    },
   });
 
   if (!assignments || !containers || !stages) {

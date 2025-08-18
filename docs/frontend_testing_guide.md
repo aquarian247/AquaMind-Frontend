@@ -12,6 +12,12 @@ A quick reference for writing and running tests in this repo.
 
 Everything lives under `client/`. Test files use `*.test.ts(x)`.
 
+ℹ️ **Real API vs. mock endpoints**  
+The suite now targets the *real* Django REST API (`/api/v1/...`).  Tests should
+mock those URLs (or the generated ApiService) instead of the legacy “/api/foo”
+place-holders.  Keep the response shape identical to what Django returns so the
+UI logic (pagination, field names, etc.) stays truthful.
+
 ---
 
 ## Running Tests
@@ -43,15 +49,21 @@ import { ApiService } from '@/api/generated';
 vi.spyOn(ApiService, 'apiV1BatchBatchesList').mockResolvedValue({ results: [] });
 ```
 
-### 2. Hook / Component tests
-Mock the **api wrapper** instead:
-
-```ts
-import { api } from '@/lib/api';
-vi.spyOn(api, 'getDashboardKPIs').mockResolvedValue({ totalFish: 0, healthRate: 0 });
-```
-
 Avoid network calls; keep tests fast and deterministic.
+
+🚩 **Paginated responses**  
+Most Django list endpoints return:
+
+```json
+{
+  "count": 12,
+  "next": null,
+  "previous": null,
+  "results": [ /* array of objects */ ]
+}
+```
+Mock the full envelope so components that read `.results` (or check `.count`)
+work exactly as in production.
 
 ---
 
@@ -115,10 +127,19 @@ Example
 ```ts
 // Success
 vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-  new Response(JSON.stringify({ results: [] }), {
+  // Django REST list endpoint example
+  new Response(
+    JSON.stringify({
+      count: 0,
+      next: null,
+      previous: null,
+      results: [],
+    }),
+    {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
-  })
+    }
+  )
 );
 
 // Error
