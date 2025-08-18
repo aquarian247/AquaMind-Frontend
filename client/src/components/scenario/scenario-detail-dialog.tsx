@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScenarioProjectionsChart } from "./scenario-projections-chart";
+import { ApiService } from "@/api/generated/services/ApiService";
 import { 
   LineChart, 
   Settings, 
@@ -42,33 +43,21 @@ interface ScenarioDetailDialogProps {
   children: React.ReactNode;
 }
 
-interface ProjectionData {
-  count: number;
-  results: Array<{
-    id: number;
-    scenarioId: number;
-    projectionDate: string;
-    weekNumber: number;
-    fishCount: number;
-    averageWeight: number;
-    totalBiomass: number;
-    feedConsumed: number;
-    cumulativeFeed: number;
-    fcr: number;
-    mortalityRate: number;
-    waterTemperature: number;
-    createdAt: string;
-    updatedAt: string;
-  }>;
-}
-
 export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialogProps) {
   const [open, setOpen] = useState(false);
 
   // Fetch scenario projections when dialog opens
-  const { data: projectionData, isLoading: projectionsLoading } = useQuery<ProjectionData>({
+  const { data: projectionData, isLoading: projectionsLoading } = useQuery({
     queryKey: ["/api/v1/scenario/scenarios/", scenario.id, "projections"],
-    queryFn: () => fetch(`/api/v1/scenario/scenarios/${scenario.id}/projections/`).then(res => res.json()),
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1ScenarioScenariosProjectionsList(scenario.id);
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch projections:", error);
+        throw new Error("Failed to fetch projections");
+      }
+    },
     enabled: open,
   });
 
@@ -84,9 +73,17 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
   } : null;
 
   // Fetch scenario configuration details
-  const { data: configData, isLoading: configLoading } = useQuery<any>({
+  const { data: configData, isLoading: configLoading } = useQuery({
     queryKey: ["/api/v1/scenario/scenarios/", scenario.id, "config"],
-    queryFn: () => fetch(`/api/v1/scenario/scenarios/${scenario.id}/configuration/`).then(res => res.json()),
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1ScenarioScenariosConfigurationRetrieve(scenario.id);
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch configuration:", error);
+        throw new Error("Failed to fetch configuration");
+      }
+    },
     enabled: open,
   });
 

@@ -12,6 +12,7 @@ import { BatchTraceabilityView } from "@/components/batch-management/BatchTracea
 import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
 import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
 import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface BatchDetails {
   id: number;
@@ -54,60 +55,84 @@ export default function BatchDetails() {
 
   const { data: batch, isLoading } = useQuery({
     queryKey: [`/api/v1/batch/batches/${batchId}/`],
-    queryFn: () =>
-      fetch(`/api/v1/batch/batches/${batchId}/`).then(res => {
-        if (!res.ok) throw new Error("Failed to fetch batch");
-        return res.json();
-      }) as Promise<BatchDetails>,
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1BatchBatchesRetrieve(Number(batchId));
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch batch:", error);
+        throw new Error("Failed to fetch batch");
+      }
+    },
   });
 
   const { data: containers } = useQuery<Container[]>({
     queryKey: ["/api/v1/infrastructure/containers/"],
     queryFn: async () => {
-      const res = await fetch("/api/v1/infrastructure/containers/");
-      if (!res.ok) throw new Error("Failed to fetch containers");
-      const data = await res.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1InfrastructureContainersList();
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch containers:", error);
+        throw new Error("Failed to fetch containers");
+      }
     },
   });
 
   const { data: species } = useQuery({
     queryKey: ["/api/v1/batch/species/"],
     queryFn: async () => {
-      const res = await fetch("/api/v1/batch/species/");
-      if (!res.ok) throw new Error("Failed to fetch species");
-      const data = await res.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BatchSpeciesList();
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch species:", error);
+        throw new Error("Failed to fetch species");
+      }
     },
   });
 
   const { data: stages } = useQuery({
     queryKey: ["/api/v1/batch/lifecycle-stages/"],
     queryFn: async () => {
-      const res = await fetch("/api/v1/batch/lifecycle-stages/");
-      if (!res.ok) throw new Error("Failed to fetch stages");
-      const data = await res.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BatchLifecycleStagesList();
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch stages:", error);
+        throw new Error("Failed to fetch stages");
+      }
     },
   });
 
   const { data: assignments } = useQuery({
     queryKey: ["/api/v1/batch/batch-container-assignments/", batchId],
     queryFn: async () => {
-      const res = await fetch(`/api/v1/batch/batch-container-assignments/?batch=${batchId}`);
-      if (!res.ok) throw new Error("Failed to fetch assignments");
-      const data = await res.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BatchBatchContainerAssignmentsList(
+          Number(batchId)
+        );
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch assignments:", error);
+        throw new Error("Failed to fetch assignments");
+      }
     },
   });
 
   const { data: transfers } = useQuery({
     queryKey: ["/api/v1/batch/batch-transfers/", batchId],
     queryFn: async () => {
-      const res = await fetch(`/api/v1/batch/batch-transfers/?source_batch=${batchId}`);
-      if (!res.ok) throw new Error("Failed to fetch transfers");
-      const data = await res.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BatchBatchTransfersList(
+          undefined,
+          Number(batchId)
+        );
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch transfers:", error);
+        throw new Error("Failed to fetch transfers");
+      }
     },
   });
 

@@ -22,6 +22,7 @@ import {
   Settings
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface RingDetail {
   id: number;
@@ -61,9 +62,16 @@ export default function RingDetail({ params }: { params: { id: string } }) {
   const { data: ringData, isLoading } = useQuery({
     queryKey: ["/api/v1/infrastructure/rings/", ringId],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/rings/${ringId}`);
-      if (!response.ok) throw new Error("Failed to fetch ring details");
-      return response.json();
+      try {
+        const response =
+          await ApiService.apiV1InfrastructureContainersRetrieve(
+            Number(ringId)
+          );
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch ring details:", error);
+        throw new Error("Failed to fetch ring details");
+      }
     },
   });
 

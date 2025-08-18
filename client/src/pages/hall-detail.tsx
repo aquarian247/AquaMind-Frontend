@@ -20,6 +20,7 @@ import {
   Fish
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface Container {
   id: number;
@@ -54,9 +55,19 @@ export default function HallDetail({ params }: { params: { id: string } }) {
   const { data: containersData, isLoading } = useQuery({
     queryKey: ["/api/v1/infrastructure/halls/", hallId, "/containers"],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/halls/${hallId}/containers`);
-      if (!response.ok) throw new Error("Failed to fetch containers");
-      return response.json();
+      try {
+        /* Parameters: active, area, containerType, hall */
+        const response = await ApiService.apiV1InfrastructureContainersList(
+          undefined, // active
+          undefined, // area
+          undefined, // containerType
+          Number(hallId) // hall
+        );
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch containers:", error);
+        throw new Error("Failed to fetch containers");
+      }
     },
   });
 

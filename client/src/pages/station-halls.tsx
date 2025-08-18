@@ -18,6 +18,7 @@ import {
   Activity
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface Hall {
   id: number;
@@ -45,9 +46,17 @@ export default function StationHalls({ params }: { params: { id: string } }) {
   const { data: hallsData, isLoading } = useQuery({
     queryKey: ["/api/v1/infrastructure/freshwater-stations/", stationId, "/halls"],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/freshwater-stations/${stationId}/halls`);
-      if (!response.ok) throw new Error("Failed to fetch halls");
-      return response.json();
+      try {
+        // apiV1InfrastructureHallsList(active?, freshwaterStation?)
+        const response = await ApiService.apiV1InfrastructureHallsList(
+          undefined,
+          Number(stationId)
+        );
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch halls:", error);
+        throw new Error("Failed to fetch halls");
+      }
     },
   });
 

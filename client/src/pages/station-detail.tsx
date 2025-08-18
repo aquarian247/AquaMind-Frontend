@@ -30,6 +30,7 @@ import {
   Eye
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface StationDetail {
   id: number;
@@ -69,9 +70,16 @@ export default function StationDetail({ params }: { params: { id: string } }) {
   const { data: station, isLoading } = useQuery({
     queryKey: ["/api/v1/infrastructure/freshwater-stations/", stationId],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/freshwater-stations/${stationId}`);
-      if (!response.ok) throw new Error("Failed to fetch station details");
-      return response.json();
+      try {
+        const response =
+          await ApiService.apiV1InfrastructureFreshwaterStationsRetrieve(
+            Number(stationId)
+          );
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch station details:", error);
+        throw new Error("Failed to fetch station details");
+      }
     },
   });
 

@@ -19,6 +19,7 @@ import {
   Gauge
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface Area {
   id: number;
@@ -136,12 +137,15 @@ export default function InfrastructureAreas() {
   const { data: areasData, isLoading } = useQuery({
     queryKey: ["/api/v1/infrastructure/areas/", selectedGeography],
     queryFn: async () => {
-      const url = selectedGeography === "all" 
-        ? "/api/v1/infrastructure/areas/"
-        : `/api/v1/infrastructure/areas/?geography=${selectedGeography}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch areas");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1InfrastructureAreasList(
+          selectedGeography === "all" ? undefined : selectedGeography
+        );
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch areas:", error);
+        throw new Error("Failed to fetch areas");
+      }
     },
   });
 

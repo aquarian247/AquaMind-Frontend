@@ -19,6 +19,7 @@ import {
   Calendar
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface Ring {
   id: number;
@@ -46,9 +47,16 @@ export default function AreaRings({ params }: { params: { id: string } }) {
   const { data: ringsData, isLoading } = useQuery({
     queryKey: ["/api/v1/infrastructure/areas/", areaId, "/rings"],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/areas/${areaId}/rings`);
-      if (!response.ok) throw new Error("Failed to fetch rings");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1InfrastructureContainersList(
+          undefined,          // active (no filter)
+          Number(areaId)      // area filter
+        );
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch rings:", error);
+        throw new Error("Failed to fetch rings");
+      }
     },
   });
 

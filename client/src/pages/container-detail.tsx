@@ -22,6 +22,7 @@ import {
   Timer
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface ContainerDetail {
   id: number;
@@ -68,9 +69,16 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
   const { data: containerData, isLoading } = useQuery({
     queryKey: ["/api/v1/infrastructure/containers/", containerId],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/containers/${containerId}`);
-      if (!response.ok) throw new Error("Failed to fetch container details");
-      return response.json();
+      try {
+        const response =
+          await ApiService.apiV1InfrastructureContainersRetrieve(
+            Number(containerId)
+          );
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch container details:", error);
+        throw new Error("Failed to fetch container details");
+      }
     },
   });
 

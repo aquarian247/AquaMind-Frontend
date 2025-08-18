@@ -33,6 +33,7 @@ import { BatchContainerView } from "@/components/batch-management/BatchContainer
 import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
 import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
 import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 // Define InsertBatch type based on Batch type for creating new batches
 type InsertBatch = {
@@ -173,10 +174,13 @@ export default function BatchManagement() {
   const { data: geographiesData } = useQuery({
     queryKey: ["/api/v1/infrastructure/geographies/"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/infrastructure/geographies/");
-      if (!response.ok) throw new Error("Failed to fetch geographies");
-      const data = await response.json();
-      return data;
+      try {
+        const response = await ApiService.apiV1InfrastructureGeographiesList();
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch geographies:", error);
+        throw new Error("Failed to fetch geographies");
+      }
     },
   });
 
@@ -184,76 +188,98 @@ export default function BatchManagement() {
   const { data: batches = [], isLoading: batchesLoading } = useQuery<ExtendedBatch[]>({
     queryKey: ["/api/v1/batch/batches/", selectedGeography],
     queryFn: async () => {
-      const url = selectedGeography !== "all" 
-        ? `/api/v1/batch/batches/?geography=${selectedGeography}`
-        : "/api/v1/batch/batches/";
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch batches");
-      const data = await response.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BatchBatchesList(
+          undefined, // ordering
+          undefined, // page
+          undefined, // search
+          selectedGeography !== "all" ? selectedGeography : undefined // geography
+        );
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch batches:", error);
+        throw new Error("Failed to fetch batches");
+      }
     },
   });
 
   const { data: species = [] } = useQuery<Species[]>({
     queryKey: ["/api/v1/batch/species/"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/batch/species/");
-      if (!response.ok) throw new Error("Failed to fetch species");
-      const data = await response.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BatchSpeciesList();
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch species:", error);
+        throw new Error("Failed to fetch species");
+      }
     }
   });
 
   const { data: stages = [] } = useQuery<LifeCycleStage[]>({
     queryKey: ["/api/v1/batch/lifecycle-stages/"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/batch/lifecycle-stages/");
-      if (!response.ok) throw new Error("Failed to fetch lifecycle stages");
-      const data = await response.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BatchLifecycleStagesList();
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch lifecycle stages:", error);
+        throw new Error("Failed to fetch lifecycle stages");
+      }
     }
   });
 
   const { data: containers = [] } = useQuery<Container[]>({
     queryKey: ["/api/v1/infrastructure/containers/"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/infrastructure/containers/");
-      if (!response.ok) throw new Error("Failed to fetch containers");
-      const data = await response.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1InfrastructureContainersList();
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch containers:", error);
+        throw new Error("Failed to fetch containers");
+      }
     }
   });
 
   const { data: broodstockPairs = [] } = useQuery<BreedingPair[]>({
     queryKey: ["/api/v1/broodstock/pairs/"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/broodstock/pairs/");
-      if (!response.ok) throw new Error("Failed to fetch broodstock pairs");
-      const data = await response.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BroodstockBreedingPairsList();
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch broodstock pairs:", error);
+        throw new Error("Failed to fetch broodstock pairs");
+      }
     }
   });
 
   const { data: eggSuppliers = [] } = useQuery<EggSupplier[]>({
     queryKey: ["/api/v1/broodstock/egg-suppliers/"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/broodstock/egg-suppliers/");
-      if (!response.ok) throw new Error("Failed to fetch egg suppliers");
-      const data = await response.json();
-      return data.results || [];
+      try {
+        const response = await ApiService.apiV1BroodstockEggSuppliersList();
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch egg suppliers:", error);
+        throw new Error("Failed to fetch egg suppliers");
+      }
     }
   });
 
   // Create batch mutation
   const createBatchMutation = useMutation({
     mutationFn: async (data: InsertBatch) => {
-      const response = await fetch("/api/v1/batch/batches/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error("Failed to create batch");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1BatchBatchesCreate({
+          ...data,
+        });
+        return response;
+      } catch (error) {
+        console.error("Failed to create batch:", error);
+        throw new Error("Failed to create batch");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/batch/batches/"] });

@@ -30,6 +30,7 @@ import {
   Search
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface AreaDetail {
   id: number;
@@ -79,18 +80,30 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
   const { data: area, isLoading, error } = useQuery({
     queryKey: ["/api/v1/infrastructure/areas", params.id],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/areas/${params.id}`);
-      if (!response.ok) throw new Error("Area not found");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1InfrastructureAreasRetrieve(
+          Number(params.id)
+        );
+        return response;
+      } catch (err) {
+        console.error("Area fetch failed:", err);
+        throw new Error("Area not found");
+      }
     },
   });
 
   const { data: ringsData, isLoading: isLoadingRings } = useQuery({
     queryKey: ["/api/v1/infrastructure/areas", params.id, "rings"],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/areas/${params.id}/rings`);
-      if (!response.ok) throw new Error("Failed to fetch rings");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1InfrastructureAreasRingsList(
+          Number(params.id)
+        );
+        return response;
+      } catch (err) {
+        console.error("Failed to fetch rings:", err);
+        throw new Error("Failed to fetch rings");
+      }
     },
   });
 

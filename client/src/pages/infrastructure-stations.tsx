@@ -20,6 +20,7 @@ import {
   Container
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface Station {
   id: number;
@@ -160,12 +161,15 @@ export default function InfrastructureStations() {
   const { data: stationsData, isLoading } = useQuery({
     queryKey: ["/api/v1/infrastructure/freshwater-stations/", selectedGeography],
     queryFn: async () => {
-      const url = selectedGeography === "all" 
-        ? "/api/v1/infrastructure/freshwater-stations/"
-        : `/api/v1/infrastructure/freshwater-stations/?geography=${selectedGeography}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch stations");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1InfrastructureFreshwaterStationsList(
+          selectedGeography === "all" ? undefined : selectedGeography
+        );
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch stations:", error);
+        throw new Error("Failed to fetch stations");
+      }
     },
   });
 
