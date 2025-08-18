@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Activity, Fish, Thermometer } from "lucide-react";
-import type { Batch, Container, FarmSite, EnvironmentalReading } from "@shared/schema";
+// Use the Batch type generated from the OpenAPI spec to stay in sync with the v1 API
+import type { Batch } from "@/api/generated/models/Batch";
+import type { Container } from "@/api/generated/models/Container";
+import type { Area } from "@/api/generated/models/Area";
+import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
@@ -18,7 +22,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   const [containerTypeFilter, setContainerTypeFilter] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("30");
 
-  const { data: farmSites = [] } = useQuery<FarmSite[]>({
+  const { data: farmSites = [] } = useQuery<Area[]>({
     queryKey: ["/api/v1/infrastructure/areas/"],
   });
 
@@ -49,7 +53,8 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
 
   // Filter batches based on selected region and site
   const filteredBatches = allBatches.filter(batch => {
-    const container = containers.find(c => c.id === batch.container);
+    // get any container attached to this batch
+    const container = containers.find(c => batch.active_containers?.includes(c.id));
     
     // Filter by region first
     if (selectedRegion !== "all") {
@@ -83,8 +88,8 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
     
     const batch = allBatches.find(b => b.id.toString() === selectedBatchFilter);
     if (!batch) return [];
-    
-    return containers.filter(c => c.id === batch.container);
+
+    return containers.filter(c => batch.active_containers?.includes(c.id));
   };
 
   const relevantContainers = getContainersForBatch();
@@ -108,7 +113,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
 
   // Get batch history for a container
   const getContainerBatchHistory = (containerId: number) => {
-    return allBatches.filter(batch => batch.container === containerId);
+    return allBatches.filter(batch => batch.active_containers?.includes(containerId));
   };
 
   return (
@@ -167,7 +172,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                   <SelectItem value="all">All Batches</SelectItem>
                   {filteredBatches.map((batch) => (
                     <SelectItem key={batch.id} value={batch.id.toString()}>
-                      {batch.name}
+                      {batch.batch_number}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -212,7 +217,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
         {filteredContainers.map((container) => {
           const environmentalData = getContainerEnvironmentalData(container.id);
           const batchHistory = getContainerBatchHistory(container.id);
-          const currentBatch = batchHistory.find(b => b.status === "active");
+          const currentBatch = batchHistory.find(b => b.status === "ACTIVE");
 
           return (
             <Card key={container.id} className="relative">
@@ -224,7 +229,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {container.containerType} • Capacity: {container.capacity}
+                  {container.container_type_name} • Capacity: {container.max_biomass_kg} kg
                 </p>
               </CardHeader>
 
@@ -237,9 +242,9 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                       <span className="font-medium">Current Batch</span>
                     </div>
                     <div className="pl-6 space-y-1">
-                      <p className="text-sm">{currentBatch.name}</p>
+                      <p className="text-sm">{currentBatch.batch_number}</p>
                       <p className="text-xs text-muted-foreground">
-                        {currentBatch.currentCount.toLocaleString()} fish • {currentBatch.currentBiomassKg} kg
+                        {currentBatch.calculated_population_count.toLocaleString()} fish • {currentBatch.calculated_biomass_kg} kg
                       </p>
                     </div>
                   </div>
@@ -309,8 +314,12 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {filteredContainers.filter(c => 
-                    allBatches.some(b => b.container === c.id && b.status === "active")
+                  {filteredContainers.filter(c =>
+                    allBatches.some(
+                      b =>
+                        b.active_containers?.includes(c.id) &&
+                        b.status === "ACTIVE"
+                    )
                   ).length}
                 </div>
                 <div className="text-sm text-muted-foreground">Active Containers</div>
