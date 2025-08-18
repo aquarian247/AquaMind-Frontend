@@ -91,10 +91,13 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
     queryKey: ["/api/v1/health/journal-entries", batchId],
     queryFn: async () => {
       try {
-        const response = await ApiService.apiV1HealthJournalEntriesList({
-          batch: batchId,
-          limit: 50
-        });
+        const response = await ApiService.apiV1HealthJournalEntriesList(
+          batchId, // batch parameter
+          undefined, // container
+          undefined, // ordering
+          undefined, // page
+          undefined  // search
+        );
         return response.results || [];
       } catch (error) {
         console.error("Failed to fetch journal entries:", error);
@@ -104,29 +107,38 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
   });
 
   // Map journal entries to health records format
-  const healthRecords: HealthRecord[] = journalEntries.map(entry => ({
-    id: entry.id,
-    date: entry.entry_date,
-    healthScore: entry.severity ? (100 - entry.severity * 20) : 80, // Convert severity (0-5) to health score (100-0)
-    mortalityCount: 0, // Not available in journal entries
-    notes: entry.entry_text || "",
-    veterinarian: entry.user?.username || "Unknown",
-    assessment: {
-      behavior: "Normal", // Default values as these aren't in journal entries
-      physicalCondition: "Good",
-      growthRate: 0
-    }
-  }));
+  const healthRecords: HealthRecord[] = journalEntries.map(entry => {
+    // Convert severity string to number if it exists, default to 1 (which becomes 80 health score)
+    const severityValue = entry.severity ? 
+      (typeof entry.severity === 'string' ? parseInt(entry.severity, 10) : entry.severity) : 
+      1;
+      
+    return {
+      id: entry.id,
+      date: entry.entry_date || '',
+      healthScore: 100 - (severityValue * 20), // Convert severity (0-5) to health score (100-0)
+      mortalityCount: 0, // Not available in journal entries
+      notes: entry.description || "",
+      veterinarian: "Staff", // user is just an ID, not an object with username
+      assessment: {
+        behavior: "Normal", // Default values as these aren't in journal entries
+        physicalCondition: "Good",
+        growthRate: 0
+      }
+    };
+  });
 
   // Fetch mortality events
   const { data: mortalityData = [], error: mortalityError, isLoading: mortalityLoading } = useQuery({
     queryKey: ["/api/v1/batch/mortality-events", batchId],
     queryFn: async () => {
       try {
-        const response = await ApiService.apiV1BatchMortalityEventsList({
-          batch: batchId,
-          limit: 50
-        });
+        const response = await ApiService.apiV1BatchMortalityEventsList(
+          batchId, // batch parameter
+          undefined, // ordering
+          undefined, // page
+          undefined  // search
+        );
         return response.results || [];
       } catch (error) {
         console.error("Failed to fetch mortality events:", error);
@@ -138,11 +150,11 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
   // Map mortality events to expected format
   const mortalityEvents: MortalityEvent[] = mortalityData.map(event => ({
     id: event.id,
-    date: event.date,
+    date: event.event_date || '', // Fixed field name
     count: event.count,
-    cause: event.reason?.name || "Unknown",
-    description: event.notes || "",
-    containerName: event.container?.name
+    cause: event.cause || "UNKNOWN", // Fixed field name
+    description: event.description || "",
+    containerName: event.container_info // Using container_info instead of container.name
   }));
 
   // Fetch health sampling events
@@ -150,10 +162,15 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
     queryKey: ["/api/v1/health/health-sampling-events", batchId],
     queryFn: async () => {
       try {
-        const response = await ApiService.apiV1HealthHealthSamplingEventsList({
-          batch: batchId,
-          limit: 50
-        });
+        const response = await ApiService.apiV1HealthHealthSamplingEventsList(
+          batchId, // batch parameter
+          undefined, // assignment
+          undefined, // ordering
+          undefined, // page
+          undefined, // sampledBy
+          undefined, // samplingDate
+          undefined  // search
+        );
         return response.results || [];
       } catch (error) {
         console.error("Failed to fetch health sampling events:", error);
@@ -165,16 +182,16 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
   // Map health sampling events to health assessments format
   const healthAssessments: HealthAssessment[] = samplingEvents.map(event => {
     // Calculate a health score based on available metrics
-    const kFactor = event.avg_k_factor || 1;
+    const kFactor = event.avg_k_factor ? parseFloat(event.avg_k_factor) : 1;
     const healthScore = Math.min(Math.round(kFactor * 100), 100);
     
     return {
       id: event.id,
-      date: event.sample_date,
-      veterinarian: event.sampler || "Unknown",
+      date: event.sampling_date || '', // Fixed field name
+      veterinarian: event.sampled_by_username || "Unknown", // Using sampled_by_username
       healthScore: healthScore,
-      mortalityRate: event.mortality_rate || 0,
-      growthRate: event.growth_rate || 0,
+      mortalityRate: 0, // Not available in sampling events
+      growthRate: 0, // Not available in sampling events
       behavior: "Normal", // Default values as these aren't in sampling events
       physicalCondition: event.notes || "No observations",
       notes: event.notes || ""
@@ -186,10 +203,13 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
     queryKey: ["/api/v1/health/health-lab-samples", batchId],
     queryFn: async () => {
       try {
-        const response = await ApiService.apiV1HealthHealthLabSamplesList({
-          batch: batchId,
-          limit: 50
-        });
+        const response = await ApiService.apiV1HealthHealthLabSamplesList(
+          batchId, // batch parameter
+          undefined, // ordering
+          undefined, // page
+          undefined, // sampleType
+          undefined  // search
+        );
         return response.results || [];
       } catch (error) {
         console.error("Failed to fetch lab samples:", error);
@@ -201,10 +221,13 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
   // Map lab samples to expected format
   const labSamples: LabSample[] = labData.map(sample => ({
     id: sample.id,
-    sampleDate: sample.sample_date,
-    sampleType: sample.sample_type?.name || "Unknown",
-    labId: sample.lab_id || `LAB-${sample.id}`,
-    results: sample.results || {},
+    sampleDate: sample.sample_date || '', // Use the correct field
+    // Ensure sampleType is always a string to satisfy LabSample interface
+    sampleType: sample.sample_type !== undefined && sample.sample_type !== null
+      ? String(sample.sample_type)
+      : "Unknown",
+    labId: `LAB-${sample.id}`, // Generate a lab ID since it doesn't exist
+    results: { test_results: "See notes" }, // Mock results
     notes: sample.notes || ""
   }));
 

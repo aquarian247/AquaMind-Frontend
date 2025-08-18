@@ -61,7 +61,7 @@ export default function BatchDetails() {
       }) as Promise<BatchDetails>,
   });
 
-  const { data: containers } = useQuery({
+  const { data: containers } = useQuery<Container[]>({
     queryKey: ["/api/v1/infrastructure/containers/"],
     queryFn: async () => {
       const res = await fetch("/api/v1/infrastructure/containers/");

@@ -23,7 +23,15 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import type { InsertBatch, Species, Stage, Container, BroodstockPair, EggSupplier } from "@shared/schema";
+import type {
+  InsertBatch,
+  Species,
+  Stage,
+  Container,
+  BroodstockPair,
+  EggSupplier,
+} from "@shared/schema";
+import type { Batch } from "@/api/generated/models/Batch";
 import { BatchContainerView } from "@/components/batch-management/BatchContainerView";
 import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
 import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
@@ -391,6 +399,59 @@ export default function BatchManagement() {
       </div>
     );
   }
+
+  /* ------------------------------------------------------------------
+   * NOTE: BatchContainerView expects a Batch type from @shared/schema.
+   * We provide a lightweight mapper to convert the few fields that
+   * BatchContainerView relies on (currently only the `id` – plus a handful
+   * of required props on the `Batch` type).  This avoids an unsafe cast
+   * while keeping the mapping logic in one place.
+   * ------------------------------------------------------------------ */
+
+  /**
+   * Convert an ExtendedBatch (Django v1 API shape) to the minimal
+   * Batch shape required by BatchContainerView.
+   *
+   * Only a subset of fields are mapped.  Any fields that are required
+   * by the `Batch` type but are not yet available from the API are
+   * filled with sensible fall-backs so the object satisfies the type
+   * checker without affecting runtime behaviour of BatchContainerView.
+   */
+  const mapExtendedToBatch = (b: ExtendedBatch): Batch => ({
+    id: b.id,
+    batch_number: b.batch_number,
+    /* Optional, but required (read-only) in generated Batch type */
+    species_name: b.species_name ?? "",
+    species: b.species,
+    lifecycle_stage: b.lifecycle_stage ?? 0,
+    status: (b.status as Batch["status"]) ?? "ACTIVE",
+    batch_type: (b.batch_type as Batch["batch_type"]) ?? "STANDARD",
+    start_date: b.start_date,
+    expected_end_date: b.expected_end_date ?? null,
+    notes: b.notes ?? "",
+
+    /* read-only / calculated */
+    created_at: b.created_at,
+    updated_at: b.updated_at,
+    calculated_population_count: b.calculated_population_count ?? 0,
+    calculated_biomass_kg:
+      typeof b.calculated_biomass_kg === "string"
+        ? parseFloat(b.calculated_biomass_kg)
+        : b.calculated_biomass_kg ?? 0,
+    /* Derive average weight if not provided */
+    calculated_avg_weight_g: (() => {
+      if (typeof b.avgWeight === "number") return b.avgWeight;
+      const pop = b.calculated_population_count ?? 0;
+      const biomassKg =
+        typeof b.calculated_biomass_kg === "string"
+          ? parseFloat(b.calculated_biomass_kg)
+          : b.calculated_biomass_kg ?? 0;
+      return pop > 0 ? (biomassKg * 1000) / pop : 0;
+    })(),
+    current_lifecycle_stage: b.current_lifecycle_stage ?? null,
+    days_in_production: b.daysActive ?? 0,
+    active_containers: [], // placeholder – fetched separately
+  });
 
   return (
     <div className="container mx-auto p-3 lg:p-6 space-y-6">
@@ -893,7 +954,9 @@ export default function BatchManagement() {
               const survivalRate = 100;
               const healthStatus = getHealthStatus(batch);
               const currentBiomass = typeof batch.calculated_biomass_kg === 'string' ? parseFloat(batch.calculated_biomass_kg) : (batch.calculated_biomass_kg || 0);
-              const avgWeight = batch.calculated_population_count > 0 ? (currentBiomass * 1000) / batch.calculated_population_count : 0;
+          // Handle possible undefined population count safely
+          const populationCount = batch.calculated_population_count ?? 0;
+          const avgWeight = populationCount > 0 ? (currentBiomass * 1000) / populationCount : 0;
               const stageProgress = getStageProgress(batch.current_lifecycle_stage?.name, daysActive);
 
               return (
@@ -984,7 +1047,7 @@ export default function BatchManagement() {
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                           <div className="text-2xl font-bold text-blue-600">
-                            {(batch.calculated_population_count || 0).toLocaleString()}
+                            {(batch.calculated_population_count ?? 0).toLocaleString()}
                           </div>
                           <div className="text-xs text-muted-foreground">Fish Count</div>
                         </div>
@@ -1037,7 +1100,11 @@ export default function BatchManagement() {
 
         <TabsContent value="containers">
           {/* Convert `null` → `undefined` to satisfy the component's prop type */}
-          <BatchContainerView selectedBatch={selectedBatch ?? undefined} />
+          <BatchContainerView
+            selectedBatch={
+              selectedBatch ? mapExtendedToBatch(selectedBatch) : undefined
+            }
+          />
         </TabsContent>
 
         <TabsContent value="medical">
