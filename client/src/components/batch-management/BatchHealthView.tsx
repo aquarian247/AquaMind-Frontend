@@ -29,6 +29,7 @@ import {
   Users
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface BatchHealthViewProps {
   batchId: number;
@@ -85,47 +86,134 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
   const [mortalityFilter, setMortalityFilter] = useState("all");
   const isMobile = useIsMobile();
 
-  // Fetch batch health data
-  const { data: healthRecords = [] } = useQuery<HealthRecord[]>({
-    queryKey: ["/api/health/records", batchId],
+  // Fetch journal entries for health records
+  const { data: journalEntries = [], error: journalError, isLoading: journalLoading } = useQuery({
+    queryKey: ["/api/v1/health/journal-entries", batchId],
     queryFn: async () => {
-      const response = await fetch(`/api/health/records?batchId=${batchId}`);
-      if (!response.ok) throw new Error("Failed to fetch health records");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1HealthJournalEntriesList({
+          batch: batchId,
+          limit: 50
+        });
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch journal entries:", error);
+        throw new Error("Failed to fetch health records");
+      }
     },
   });
 
-  const { data: mortalityEvents = [] } = useQuery<MortalityEvent[]>({
-    queryKey: ["/api/batch/mortality-events", batchId],
+  // Map journal entries to health records format
+  const healthRecords: HealthRecord[] = journalEntries.map(entry => ({
+    id: entry.id,
+    date: entry.entry_date,
+    healthScore: entry.severity ? (100 - entry.severity * 20) : 80, // Convert severity (0-5) to health score (100-0)
+    mortalityCount: 0, // Not available in journal entries
+    notes: entry.entry_text || "",
+    veterinarian: entry.user?.username || "Unknown",
+    assessment: {
+      behavior: "Normal", // Default values as these aren't in journal entries
+      physicalCondition: "Good",
+      growthRate: 0
+    }
+  }));
+
+  // Fetch mortality events
+  const { data: mortalityData = [], error: mortalityError, isLoading: mortalityLoading } = useQuery({
+    queryKey: ["/api/v1/batch/mortality-events", batchId],
     queryFn: async () => {
-      const response = await fetch(`/api/batch/mortality-events?batchId=${batchId}`);
-      if (!response.ok) throw new Error("Failed to fetch mortality events");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1BatchMortalityEventsList({
+          batch: batchId,
+          limit: 50
+        });
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch mortality events:", error);
+        throw new Error("Failed to fetch mortality events");
+      }
     },
   });
 
-  const { data: healthAssessments = [] } = useQuery<HealthAssessment[]>({
-    queryKey: ["/api/health/assessments", batchId],
+  // Map mortality events to expected format
+  const mortalityEvents: MortalityEvent[] = mortalityData.map(event => ({
+    id: event.id,
+    date: event.date,
+    count: event.count,
+    cause: event.reason?.name || "Unknown",
+    description: event.notes || "",
+    containerName: event.container?.name
+  }));
+
+  // Fetch health sampling events
+  const { data: samplingEvents = [], error: samplingError, isLoading: samplingLoading } = useQuery({
+    queryKey: ["/api/v1/health/health-sampling-events", batchId],
     queryFn: async () => {
-      const response = await fetch(`/api/health/assessments?batchId=${batchId}`);
-      if (!response.ok) throw new Error("Failed to fetch health assessments");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1HealthHealthSamplingEventsList({
+          batch: batchId,
+          limit: 50
+        });
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch health sampling events:", error);
+        throw new Error("Failed to fetch health assessments");
+      }
     },
   });
 
-  const { data: labSamples = [] } = useQuery<LabSample[]>({
-    queryKey: ["/api/health/lab-samples", batchId],
+  // Map health sampling events to health assessments format
+  const healthAssessments: HealthAssessment[] = samplingEvents.map(event => {
+    // Calculate a health score based on available metrics
+    const kFactor = event.avg_k_factor || 1;
+    const healthScore = Math.min(Math.round(kFactor * 100), 100);
+    
+    return {
+      id: event.id,
+      date: event.sample_date,
+      veterinarian: event.sampler || "Unknown",
+      healthScore: healthScore,
+      mortalityRate: event.mortality_rate || 0,
+      growthRate: event.growth_rate || 0,
+      behavior: "Normal", // Default values as these aren't in sampling events
+      physicalCondition: event.notes || "No observations",
+      notes: event.notes || ""
+    };
+  });
+
+  // Fetch lab samples
+  const { data: labData = [], error: labError, isLoading: labLoading } = useQuery({
+    queryKey: ["/api/v1/health/health-lab-samples", batchId],
     queryFn: async () => {
-      const response = await fetch(`/api/health/lab-samples?batchId=${batchId}`);
-      if (!response.ok) throw new Error("Failed to fetch lab samples");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1HealthHealthLabSamplesList({
+          batch: batchId,
+          limit: 50
+        });
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch lab samples:", error);
+        throw new Error("Failed to fetch lab samples");
+      }
     },
   });
+
+  // Map lab samples to expected format
+  const labSamples: LabSample[] = labData.map(sample => ({
+    id: sample.id,
+    sampleDate: sample.sample_date,
+    sampleType: sample.sample_type?.name || "Unknown",
+    labId: sample.lab_id || `LAB-${sample.id}`,
+    results: sample.results || {},
+    notes: sample.notes || ""
+  }));
 
   // Calculate health metrics
-  const currentHealthScore = healthRecords.length > 0 
-    ? healthRecords[healthRecords.length - 1].healthScore 
-    : 0;
+  const currentHealthScore = healthAssessments.length > 0 
+    ? healthAssessments[0].healthScore 
+    : journalEntries.length > 0
+      ? healthRecords[0].healthScore
+      : 0;
 
   const totalMortality = mortalityEvents.reduce((sum, event) => sum + event.count, 0);
   
@@ -163,6 +251,32 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
       default: return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
+
+  // Loading and error states
+  const isLoading = journalLoading || mortalityLoading || samplingLoading || labLoading;
+  const hasError = journalError || mortalityError || samplingError || labError;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-center">
+          <Activity className="h-8 w-8 animate-pulse mx-auto text-primary mb-4" />
+          <p>Loading health data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-center">
+          <AlertTriangle className="h-8 w-8 mx-auto text-red-500 mb-4" />
+          <p className="text-red-500">Error loading health data. Please try again.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

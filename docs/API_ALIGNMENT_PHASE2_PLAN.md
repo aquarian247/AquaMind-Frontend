@@ -1,6 +1,6 @@
 # API Alignment Roadmap  
 _AquaMind Frontend ↔ Backend • Phase 2 & 3 Planning_  
-Last updated: **2025-08-14**
+Last updated: **2025-08-18**
 
 ---
 
@@ -37,9 +37,10 @@ Timeline target: **2 weeks** or ≤ 3 PRs.
 | Scenario v0 leftovers | `/api/v1/scenario/*/configuration`, `/run-projection/` (dynamic) | 6 | Confirm with BE; likely genuine → implement | #8 |
 | Broodstock dashboards | `/api/v1/broodstock/dashboard/kpis`, `/tasks/` | **0** | RESOLVED in this PR (client-computed + v1 endpoints) | ~~#9~~ |
 | Misc analytics | `/api/batch/growth-metrics`, `/predictive-insights` | 4 | Evaluate need; possibly move to `/api/v1/batch/batches/{id}/…` | #10 |
+| Misc analytics | `/api/batch/growth-metrics`, `/predictive-insights` | **0** | **RESOLVED in PR #19** (migrated to real v1 endpoints) | ~~#10~~ |
 | Non-versioned env. data | `/api/environmental-readings/` | 1 | Use `/api/v1/environmental/readings/` | #xxx |
 | Misc dev artifacts | `/api/farm-sites`, `/api/broodstock-pairs` | 1 | Remove or open BE ticket | #xxx |
-_Total outstanding:_ **72** references.
+_Total outstanding:_ **68** references.
 
 ---
 
@@ -86,7 +87,7 @@ Use this matrix during triage meetings; record outcome in each GitHub issue.
 * **#14** Batch Management refactor (legacy stubs)
 * ~~#8 Scenario dynamic endpoints implementation (completed in this PR)~~
 * ~~#9 Broodstock dashboard KPI backend spec (completed in this PR)~~
-* **#10** Batch analytics endpoint consolidation
+* ~~#10 Batch analytics endpoint consolidation (closed by PR #19)~~
 * **#11** CI guard flip to blocking
 * **#12** Documentation final pass
 
