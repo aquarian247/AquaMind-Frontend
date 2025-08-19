@@ -163,12 +163,8 @@ describe('BatchHealthView', () => {
     // Render with required props
     renderWithQueryClient(<BatchHealthView batchId={1} batchName="Batch A" />);
 
-    // Verify header is still rendered despite the API error
-    const header = await screen.findByText(/Health Status for Batch A/i);
-    expect(header).toBeInTheDocument();
-
-    // Verify at least one section renders without throwing
-    const sections = await screen.findAllByText(/Health Assessments|Lab Results/i);
-    expect(sections.length).toBeGreaterThan(0);
+    // Verify error message is displayed
+    const errorMsg = await screen.findByText(/Error loading health data\\. Please try again\\./i);
+    expect(errorMsg).toBeInTheDocument();
   });
 });
