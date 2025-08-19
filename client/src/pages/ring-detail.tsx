@@ -22,6 +22,7 @@ import {
   Settings
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { api } from "@/lib/api";
 
 interface RingDetail {
   id: number;
@@ -59,15 +60,12 @@ export default function RingDetail({ params }: { params: { id: string } }) {
   const ringId = params.id;
 
   const { data: ringData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/rings/", ringId],
-    queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/rings/${ringId}`);
-      if (!response.ok) throw new Error("Failed to fetch ring details");
-      return response.json();
-    },
+    queryKey: ["infrastructure/ring-detail", ringId],
+    queryFn: () => api.infrastructure.getRingDetail(Number(ringId)),
   });
 
-  const ring: RingDetail = ringData;
+  // Allow for the possibility that the query returns undefined before data is loaded
+  const ring = ringData as RingDetail | undefined;
 
   const getStatusBadge = (status: string) => {
     const variants = {

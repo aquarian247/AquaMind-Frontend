@@ -117,7 +117,7 @@ export function ScenarioEditDialog({ scenario, children, onSuccess }: ScenarioEd
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/dashboard/kpis/"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard/kpis"] });
       toast({
         title: "Scenario Updated",
         description: "Your scenario has been updated successfully.",

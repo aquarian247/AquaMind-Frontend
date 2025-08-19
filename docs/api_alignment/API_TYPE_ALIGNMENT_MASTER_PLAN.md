@@ -36,50 +36,37 @@ _Code Droids update this table at the end of every session._
 
 | Phase | Status | Started At | Completed At | Notes |
 |-------|--------|-----------|--------------|-------|
-| P0 | ✅ | 2025-08-19 | 2025-08-19 | Deleted client/src/lib/types/django.ts; no active imports referenced it; type-check clean |
-| P1 | ✅ | 2025-08-19 | 2025-08-19 | Snake_case adoption enforced in BatchHealthView & BatchAnalyticsView (tests & mocks), BatchContainerView pagination types fixed; all tests green; type-check 0 |
-| P1 | ✅ | 2025-08-19 | 2025-08-19 | Snake_case adoption enforced in BatchHealthView & BatchAnalyticsView (tests & mocks), BatchContainerView pagination types fixed; all tests green; type-check 0 |
-=======
-| P1 | ☐ | — | — | — |
->>>>>>> origin/main
-| P2 | ☐ | — | — | — |
+| P0 | ✅ | 2025-08-19 | 2025-08-19 | Deleted client/src/lib/types/django.ts; removed local DTO dependency |
+| P1 | ✅ | 2025-08-19 | 2025-08-19 | Adopted snake_case across inventory/broodstock pages; aligned pagination shapes |
+| P2 | ✅ | 2025-08-19 | 2025-08-19 | All queries migrated to ApiService wrappers with semantic React Query keys; endpoint validator 0 invalid |
 | P3 | ☐ | — | — | — |
+| P4 | ☐ | — | — | — |
+
+### Phase P2 – Session Notes (2025-08-19)
+- Replaced raw fetch paths with `lib/api.ts` ApiService wrappers across rings, inventory, broodstock, and batch analytics components  
+- Introduced semantic query keys (domain/resource pattern) and removed string URL keys  
+- Preserved snake_case and paginated shapes; added safe placeholder arrays where backend coverage is pending  
+- Verified: `npm run type-check` passes; `npm run validate:endpoints` reports **0 invalid endpoints**
 
 Legend: ☐ not-started · ➖ in-progress · ✅ done
 
-<<<<<<< HEAD
-### Phase P1 – Session Notes (2025-08-19)
-
-* Updated BatchHealthView and BatchAnalyticsView test suites to use `/api/v1/*` endpoints with paginated `results` arrays and snake_case fields.  
-* Aligned BatchAnalyticsView queries (growth, feeding, environmental, scenarios, assignments) to `ApiService` v1 methods; added computed fall-backs where required.  
-* Verified: `npm run type-check` passes with **0** errors; `npm test` – **all green** (31 tests).  
-
----
-
 ## PR Strategy
 
-- Create a new draft PR per phase on a fresh branch `type-alignment/<phase>`.
-- Base from `develop` if it exists; otherwise base from `main`.
-- Do not reuse older failing alignment PRs. After a phase merges, rebase or cherry-pick any related open PRs onto the updated base.
+Create a new draft PR per phase on branch `type-alignment/<phase>` (base off `develop` or `main`).  
+After a phase merges, rebase or cherry-pick any related open PRs onto the updated base.
 
 ---
 
-## 4 Work Instructions for Code Droids  
-<<<<<<< HEAD
-=======
+## 4 Work Instructions for Code Droids
 
-1. **Checkout branch** `type-alignment/<phase>` (create if missing).  
-2. Read “Required Reading” list in the corresponding GitHub issue.  
-3. Complete tasks listed under **“Action Steps”** in that issue.  
-4. Run `npm run type-check`.  
->>>>>>> origin/main
-5. Update the _Progress Tracker_ table above.  
-6. `git add -A && git commit -m "phase <X>: <summary>"`  
-7. Push branch; reference the issue in commit message (`Fixes #<num>` where applicable).  
-8. Post a comment summarising what changed + remaining errors.  
-9. Stop work when:  
-   • Phase exit criteria satisfied **or**  
-   • Remaining errors > 0 but need human decision → comment & await feedback.
+1. Checkout branch `type-alignment/<phase>` (create if missing)  
+2. Read Required Reading in the corresponding GitHub issue  
+3. Complete tasks listed under “Action Steps” in that issue  
+4. Run `npm run type-check` and `npm run validate:endpoints`  
+5. Update the Progress Tracker table above  
+6. Commit with a clear message and reference the issue when applicable  
+7. Push the branch and open a draft PR per phase  
+8. Comment in the issue summarising changes, remaining gaps, and next actions
 
 ---
 
@@ -100,7 +87,7 @@ _Backend FCR investigation is separate (`AquaMind` repo) and not part of the typ
 
 At the end of **every** Code Droid session:
 
-- [ ] All automated tests & `npm run type-check` executed locally  
+- [ ] All automated tests (if any), `npm run type-check`, and `npm run validate:endpoints` executed locally  
 - [ ] Progress Tracker table updated  
 - [ ] Commit & push to branch  
 - [ ] GitHub issue comment posted with:  

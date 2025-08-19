@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Target, TrendingUp, Users, ChevronRight, MoreVertical } from "lucide-react";
 import { Link } from "wouter";
 import { Line } from "react-chartjs-2";
+import { api } from "@/lib/api";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -54,7 +55,8 @@ function BroodstockPrograms() {
   }
 
   const { data: programs, isLoading } = useQuery<PaginatedPrograms>({
-    queryKey: ['/api/v1/broodstock/programs/'],
+    queryKey: ["broodstock/programs"],
+    queryFn: () => api.broodstock.programs.getAll(),
   });
 
   const getStatusColor = (status: string) => {

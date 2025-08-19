@@ -101,32 +101,15 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
 
   // Fetch feeding data
   const { data: feedingEvents = [] } = useQuery<FeedingEvent[]>({
-    queryKey: ["/api/batch/feeding-events", batchId, currentDateRange],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        batchId: batchId.toString(),
-        ...(currentDateRange.from && { from: currentDateRange.from.toISOString() }),
-        ...(currentDateRange.to && { to: currentDateRange.to.toISOString() })
-      });
-      const response = await fetch(`/api/batch/feeding-events?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch feeding events");
-      return response.json();
-    },
+    queryKey: ["batch/feeding-events", batchId, currentDateRange],
+    // TODO: replace placeholder with api.batch.getFeedingEvents once backend/spec exposes it
+    queryFn: async () => [],
   });
 
   const { data: feedingSummaries = [] } = useQuery<FeedingSummary[]>({
-    queryKey: ["/api/batch/feeding-summaries", batchId, periodFilter, dateRange],
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        batchId: batchId.toString(),
-        period: periodFilter,
-        ...(periodFilter === "custom" && dateRange.from && { from: dateRange.from.toISOString() }),
-        ...(periodFilter === "custom" && dateRange.to && { to: dateRange.to.toISOString() })
-      });
-      const response = await fetch(`/api/batch/feeding-summaries?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch feeding summaries");
-      return response.json();
-    },
+    queryKey: ["batch/feeding-summaries", batchId, periodFilter, dateRange],
+    // TODO: replace placeholder with api.batch.getFeedingSummaries once backend/spec exposes it
+    queryFn: async () => [],
   });
 
   // Calculate feed analytics

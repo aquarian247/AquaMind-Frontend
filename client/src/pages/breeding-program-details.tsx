@@ -21,6 +21,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { api } from "@/lib/api";
 
 ChartJS.register(
   CategoryScale,
@@ -59,7 +60,8 @@ export default function BreedingProgramDetails() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const { data: programs, isLoading } = useQuery<{ results: BreedingProgram[] }>({
-    queryKey: ['/api/v1/broodstock/programs/'],
+    queryKey: ["broodstock/programs"],
+    queryFn: () => api.broodstock.programs.getAll(),
   });
 
   const program = programs?.results?.find((p: BreedingProgram) => p.id === programId);

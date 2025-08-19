@@ -9,7 +9,7 @@ export default function PenManagementTable() {
   const [selectedFarmSite] = useState(1); // Default to first farm site
   
   const { data: pens, isLoading, error } = useQuery({
-    queryKey: ["/api/farm-sites", selectedFarmSite, "pens"],
+    queryKey: ["farm/pens", selectedFarmSite],
     queryFn: () => api.getPensByFarmSite(selectedFarmSite),
   });
 

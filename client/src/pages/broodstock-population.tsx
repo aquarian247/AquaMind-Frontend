@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users, Thermometer, Droplets, Activity, Filter, Grid, List, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import { api } from "@/lib/api";
 
 function BroodstockPopulation() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   const { data: containers, isLoading } = useQuery<{ count: number; results: any[] }>({
-    queryKey: ['/api/v1/broodstock/containers/'],
+    queryKey: ['broodstock/population'],
+    queryFn: () => api.broodstock.population.getContainers(),
   });
 
   const getStatusColor = (status: string) => {

@@ -149,7 +149,7 @@ export function ScenarioCreationDialog({ children, onSuccess }: ScenarioCreation
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/scenarios/"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/dashboard/kpis/"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard/kpis"] });
       toast({
         title: "Scenario Created",
         description: "Your scenario has been created successfully.",

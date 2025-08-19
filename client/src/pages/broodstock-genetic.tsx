@@ -6,6 +6,7 @@ import { ArrowLeft, Activity, TrendingUp, BarChart3, Download, Filter } from "lu
 import { Link } from "wouter";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Bar, Scatter } from "react-chartjs-2";
+import { api } from "@/lib/api";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
@@ -39,7 +40,8 @@ interface GeneticTraitData {
 
 function BroodstockGenetic() {
   const { data: traitData, isLoading } = useQuery<GeneticTraitData>({
-    queryKey: ['/api/v1/broodstock/genetic/traits/'],
+    queryKey: ['broodstock/genetic-traits'],
+    queryFn: () => api.broodstock.genetics.getTraits(),
   });
 
   if (isLoading) {
