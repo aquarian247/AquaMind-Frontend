@@ -10,16 +10,13 @@ import type { Batch } from "@/api/generated/models/Batch";
 import type { Container } from "@/api/generated/models/Container";
 import type { Area } from "@/api/generated/models/Area";
 import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
-<<<<<<< HEAD
 // Paginated list models for proper typing of query responses
 import type { PaginatedAreaList } from "@/api/generated/models/PaginatedAreaList";
 import type { PaginatedBatchList } from "@/api/generated/models/PaginatedBatchList";
 import type { PaginatedContainerList } from "@/api/generated/models/PaginatedContainerList";
 import type { PaginatedEnvironmentalReadingList } from "@/api/generated/models/PaginatedEnvironmentalReadingList";
 // (No direct ApiService calls here; we rely on react-query's `select` to unwrap paginated results)
-=======
-import { ApiService } from "@/api/generated/services/ApiService";
->>>>>>> origin/main
+// (No direct ApiService calls here; we rely on react-query's `select` to unwrap paginated results)
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
@@ -38,18 +35,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
     Area[]
   >({
     queryKey: ["/api/v1/infrastructure/areas/"],
-<<<<<<< HEAD
     select: (res) => res.results ?? [],
-=======
-    queryFn: async () => {
-      const response = await ApiService.apiV1InfrastructureAreasList(
-        undefined,
-        undefined,
-        undefined
-      );
-      return response.results ?? [];
-    },
->>>>>>> origin/main
   });
 
   const { data: allBatches = [] } = useQuery<
@@ -58,20 +44,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
     Batch[]
   >({
     queryKey: ["/api/v1/batch/batches/"],
-<<<<<<< HEAD
     select: (res) => res.results ?? [],
-=======
-    queryFn: async () => {
-      const response = await ApiService.apiV1BatchBatchesList(
-        undefined, // ordering
-        undefined, // page
-        undefined, // page_size
-        undefined, // search
-        undefined  // status
-      );
-      return response.results ?? [];
-    },
->>>>>>> origin/main
   });
 
   const { data: containers = [] } = useQuery<
@@ -80,18 +53,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
     Container[]
   >({
     queryKey: ["/api/v1/infrastructure/containers/"],
-<<<<<<< HEAD
     select: (res) => res.results ?? [],
-=======
-    queryFn: async () => {
-      const response = await ApiService.apiV1InfrastructureContainersList(
-        undefined,
-        undefined,
-        undefined
-      );
-      return response.results ?? [];
-    },
->>>>>>> origin/main
   });
 
   const { data: environmentalReadings = [] } = useQuery<
@@ -100,19 +62,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
     EnvironmentalReading[]
   >({
     queryKey: ["/api/v1/environmental/readings/"],
-<<<<<<< HEAD
     select: (res) => res.results ?? [],
-=======
-    queryFn: async () => {
-      const response = await ApiService.apiV1EnvironmentalReadingsList(
-        undefined, // ordering
-        undefined, // page
-        undefined, // parameter
-        undefined  // search
-      );
-      return response.results ?? [];
-    },
->>>>>>> origin/main
   });
 
   // Filter farm sites based on selected region
