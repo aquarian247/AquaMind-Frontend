@@ -41,89 +41,54 @@ describe('BatchAnalyticsView', () => {
         return Promise.resolve(json({}));
       }
 
-      // Growth metrics endpoint
-      if (url.includes('/api/batch/growth-metrics')) {
-        return Promise.resolve(json([
-          {
-            date: '2025-07-01',
-            averageWeight: 150.5,
-            totalBiomass: 3750.5,
-            populationCount: 24900,
-            growthRate: 12.5,
-            condition: 1.1
-          },
-          {
-            date: '2025-07-08',
-            averageWeight: 168.7,
-            totalBiomass: 4133.2,
-            populationCount: 24500,
-            growthRate: 12.1,
-            condition: 1.2
-          }
-        ]));
-      }
-
-      // Performance metrics endpoint
-      if (url.includes('/api/batch/performance-metrics')) {
+      // Growth samples (paginated)
+      if (url.includes('/api/v1/batch/growth-samples')) {
         return Promise.resolve(json({
-          survivalRate: 98.5,
-          growthRate: 12.3,
-          feedConversionRatio: 1.2,
-          healthScore: 92,
-          productivity: 87.5,
-          efficiency: 85.3
+          results: [
+            { id: 1, assignment: 101, sample_date: '2025-07-01', avg_weight_g: '150.5', avg_length_cm: '20.0' },
+            { id: 2, assignment: 102, sample_date: '2025-07-08', avg_weight_g: '168.7', avg_length_cm: '21.0' },
+            { id: 3, assignment: 103, sample_date: '2025-07-15', avg_weight_g: '185.0', avg_length_cm: '21.8' }
+          ]
         }));
       }
 
-      // Environmental correlations endpoint
-      if (url.includes('/api/batch/environmental-correlations')) {
-        return Promise.resolve(json([
-          {
-            parameter: 'Temperature',
-            correlation: 0.75,
-            impact: 'positive',
-            significance: 'high'
-          },
-          {
-            parameter: 'Oxygen',
-            correlation: 0.62,
-            impact: 'positive',
-            significance: 'medium'
-          },
-          {
-            parameter: 'pH',
-            correlation: 0.31,
-            impact: 'neutral',
-            significance: 'low'
-          }
-        ]));
+      // Feeding summaries
+      if (url.includes('/api/v1/inventory/batch-feeding-summaries')) {
+        return Promise.resolve(json({ results: [{ total_feed_kg: '120.5' }] }));
       }
 
-      // Predictive insights endpoint
-      if (url.includes('/api/batch/predictive-insights')) {
-        return Promise.resolve(json([
-          {
-            metric: 'Expected Harvest Weight',
-            currentValue: 168.7,
-            predictedValue: 450.2,
-            trend: 'improving',
-            confidence: 85,
-            timeframe: 'next 60 days'
-          }
-        ]));
+      // Environmental readings
+      if (url.includes('/api/v1/environmental/readings')) {
+        return Promise.resolve(json({
+          results: [
+            { id: 1, parameter: { name: 'Temperature' } },
+            { id: 2, parameter: { name: 'Oxygen' } },
+            { id: 3, parameter: { name: 'pH' } }
+          ]
+        }));
       }
 
-      // Benchmarks endpoint
-      if (url.includes('/api/batch/benchmarks')) {
-        return Promise.resolve(json([
-          {
-            metric: 'Growth Rate',
-            current: 12.3,
-            target: 12.0,
-            industry: 11.5,
-            status: 'above'
-          }
-        ]));
+      // Scenarios
+      if (url.includes('/api/v1/scenario/scenarios')) {
+        return Promise.resolve(json({
+          results: [{ name: 'Baseline Projection', duration_days: 60 }]
+        }));
+      }
+
+      // Container assignments
+      if (url.includes('/api/v1/batch/batch-container-assignments')) {
+        return Promise.resolve(json({
+          results: [
+            { id: 101, population_count: 25000, biomass_kg: '3750.5' },
+            { id: 102, population_count: 24700, biomass_kg: '4133.2' },
+            { id: 103, population_count: 24500, biomass_kg: '4500.0' }
+          ]
+        }));
+      }
+
+      // Growth analysis
+      if (url.includes('/api/v1/batch/batches/growth-analysis')) {
+        return Promise.resolve(json({ status: 'ok' }));
       }
 
       return Promise.resolve(json({}));
@@ -154,8 +119,8 @@ describe('BatchAnalyticsView', () => {
       await userEvent.click(benchmarksTab);
 
       // Verify content specific to Benchmarks tab is displayed
-      const vsTarget = await screen.findByText(/vs Target/i);
-      expect(vsTarget).toBeInTheDocument();
+      const vsTargetElements = await screen.findAllByText(/vs Target/i);
+      expect(vsTargetElements.length).toBeGreaterThan(0);
     } else {
       // Mobile view - tabs are in a select dropdown
       // Just verify that some content is visible
@@ -165,24 +130,19 @@ describe('BatchAnalyticsView', () => {
   });
 
   it('handles API error gracefully', async () => {
-    // Override fetch mock for performance-metrics to return error
+    // Override fetch mock for growth samples to return error
     vi.spyOn(globalThis, 'fetch').mockImplementation((url: string) => {
-      if (typeof url === 'string' && url.includes('/api/batch/performance-metrics')) {
+      if (typeof url === 'string' && url.includes('/api/v1/batch/growth-samples')) {
         return Promise.resolve(new Response(null, { status: 500 }));
       }
 
-      // Return empty arrays/objects for other endpoints
-      if (url.includes('/api/batch/growth-metrics')) {
-        return Promise.resolve(json([]));
-      }
-      if (url.includes('/api/batch/environmental-correlations')) {
-        return Promise.resolve(json([]));
-      }
-      if (url.includes('/api/batch/predictive-insights')) {
-        return Promise.resolve(json([]));
-      }
-      if (url.includes('/api/batch/benchmarks')) {
-        return Promise.resolve(json([]));
+      // Return empty paginated shapes for other endpoints
+      if (url.includes('/api/v1/inventory/batch-feeding-summaries') ||
+          url.includes('/api/v1/environmental/readings') ||
+          url.includes('/api/v1/scenario/scenarios') ||
+          url.includes('/api/v1/batch/batch-container-assignments') ||
+          url.includes('/api/v1/batch/batches/growth-analysis')) {
+        return Promise.resolve(json({ results: [] }));
       }
 
       return Promise.resolve(json({}));
@@ -191,12 +151,10 @@ describe('BatchAnalyticsView', () => {
     // Render with required props
     renderWithQueryClient(<BatchAnalyticsView batchId={1} batchName="Batch A" />);
 
-    // Verify header is still rendered despite the API error
-    const header = await screen.findByText(/Analytics for Batch A/i);
-    expect(header).toBeInTheDocument();
-
-    // Verify at least one section renders without throwing
-    const section = await screen.findByText(/Performance Metrics|Growth Analytics/i);
-    expect(section).toBeInTheDocument();
+    // Verify the error message is displayed
+    const errorMessage = await screen.findByText(
+      /Error loading analytics data\. Please try again\./i
+    );
+    expect(errorMessage).toBeInTheDocument();
   });
 });

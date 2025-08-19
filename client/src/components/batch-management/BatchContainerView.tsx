@@ -10,6 +10,11 @@ import type { Batch } from "@/api/generated/models/Batch";
 import type { Container } from "@/api/generated/models/Container";
 import type { Area } from "@/api/generated/models/Area";
 import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
+// Paginated list models for proper typing of query responses
+import type { PaginatedAreaList } from "@/api/generated/models/PaginatedAreaList";
+import type { PaginatedBatchList } from "@/api/generated/models/PaginatedBatchList";
+import type { PaginatedContainerList } from "@/api/generated/models/PaginatedContainerList";
+import type { PaginatedEnvironmentalReadingList } from "@/api/generated/models/PaginatedEnvironmentalReadingList";
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
@@ -22,20 +27,40 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   const [containerTypeFilter, setContainerTypeFilter] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("30");
 
-  const { data: farmSites = [] } = useQuery<Area[]>({
+  const { data: farmSites = [] } = useQuery<
+    PaginatedAreaList,
+    Error,
+    Area[]
+  >({
     queryKey: ["/api/v1/infrastructure/areas/"],
+    select: (res) => res.results ?? [],
   });
 
-  const { data: allBatches = [] } = useQuery<Batch[]>({
+  const { data: allBatches = [] } = useQuery<
+    PaginatedBatchList,
+    Error,
+    Batch[]
+  >({
     queryKey: ["/api/v1/batch/batches/"],
+    select: (res) => res.results ?? [],
   });
 
-  const { data: containers = [] } = useQuery<Container[]>({
+  const { data: containers = [] } = useQuery<
+    PaginatedContainerList,
+    Error,
+    Container[]
+  >({
     queryKey: ["/api/v1/infrastructure/containers/"],
+    select: (res) => res.results ?? [],
   });
 
-  const { data: environmentalReadings = [] } = useQuery<EnvironmentalReading[]>({
+  const { data: environmentalReadings = [] } = useQuery<
+    PaginatedEnvironmentalReadingList,
+    Error,
+    EnvironmentalReading[]
+  >({
     queryKey: ["/api/v1/environmental/readings/"],
+    select: (res) => res.results ?? [],
   });
 
   // Filter farm sites based on selected region
