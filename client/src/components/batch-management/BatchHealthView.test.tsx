@@ -42,105 +42,63 @@ describe('BatchHealthView', () => {
       }
 
       // Health records endpoint
-      if (url.includes('/api/health/records')) {
-        return Promise.resolve(json([
-          {
-            id: 1,
-            date: '2025-07-01',
-            healthScore: 92,
-            mortalityCount: 12,
-            notes: 'Regular health check - good condition',
-            veterinarian: 'Dr. Smith',
-            assessment: {
-              behavior: 'Active and responsive',
-              physicalCondition: 'Good overall condition',
-              growthRate: 12.5
-            }
-          },
-          {
-            id: 2,
-            date: '2025-07-08',
-            healthScore: 88,
-            mortalityCount: 15,
-            notes: 'Slight decrease in activity levels',
-            veterinarian: 'Dr. Johnson',
-            assessment: {
-              behavior: 'Slightly less active',
-              physicalCondition: 'Some minor fin erosion',
-              growthRate: 11.8
-            }
-          },
-          {
-            id: 3,
-            date: '2025-07-15',
-            healthScore: 90,
-            mortalityCount: 10,
-            notes: 'Improved since last check',
-            veterinarian: 'Dr. Smith',
-            assessment: {
-              behavior: 'Normal activity resumed',
-              physicalCondition: 'Improving fin condition',
-              growthRate: 12.1
-            }
-          }
-        ]));
+      if (url.includes('/api/v1/health/journal-entries')) {
+        // Component currently doesn't render journal entry specific fields in tests,
+        // so an empty paginated object is enough.
+        return Promise.resolve(json({ results: [] }));
       }
 
       // Mortality events endpoint
-      if (url.includes('/api/batch/mortality-events')) {
-        return Promise.resolve(json([
-          {
-            id: 1,
-            date: '2025-07-05',
-            count: 12,
-            cause: 'Environmental',
-            description: 'Sudden temperature change',
-            containerName: 'Tank A-1'
-          },
-          {
-            id: 2,
-            date: '2025-07-12',
-            count: 15,
-            cause: 'Disease',
-            description: 'Suspected bacterial infection',
-            containerName: 'Tank A-1'
-          }
-        ]));
+      if (url.includes('/api/v1/batch/mortality-events')) {
+        return Promise.resolve(json({
+          results: [
+            {
+              id: 1,
+              event_date: '2025-07-05',
+              count: 12,
+              cause: 'Environmental',
+              description: 'Sudden temperature change',
+              container_info: 'Tank A-1'
+            },
+            {
+              id: 2,
+              event_date: '2025-07-12',
+              count: 15,
+              cause: 'Disease',
+              description: 'Suspected bacterial infection',
+              container_info: 'Tank A-1'
+            }
+          ]
+        }));
       }
 
       // Health assessments endpoint
-      if (url.includes('/api/health/assessments')) {
-        return Promise.resolve(json([
-          {
-            id: 1,
-            date: '2025-07-15',
-            veterinarian: 'Dr. Smith',
-            healthScore: 90,
-            mortalityRate: 0.5,
-            growthRate: 12.1,
-            behavior: 'Normal activity patterns',
-            physicalCondition: 'Good overall condition with minor fin erosion',
-            notes: 'Batch recovering well from previous issues'
-          }
-        ]));
+      if (url.includes('/api/v1/health/health-sampling-events')) {
+        return Promise.resolve(json({
+          results: [
+            {
+              id: 1,
+              sampling_date: '2025-07-15',
+              sampled_by_username: 'Dr. Smith',
+              avg_k_factor: '0.9',
+              notes: 'Batch recovering well from previous issues'
+            }
+          ]
+        }));
       }
 
       // Lab samples endpoint
-      if (url.includes('/api/health/lab-samples')) {
-        return Promise.resolve(json([
-          {
-            id: 1,
-            sampleDate: '2025-07-10',
-            sampleType: 'Water',
-            labId: 'LAB-2025-0723',
-            results: {
-              oxygen: '8.2 mg/L',
-              pH: '7.4',
-              ammonia: '0.02 mg/L'
-            },
-            notes: 'Water quality parameters within normal range'
-          }
-        ]));
+      if (url.includes('/api/v1/health/health-lab-samples')) {
+        return Promise.resolve(json({
+          results: [
+            {
+              id: 1,
+              sample_date: '2025-07-10',
+              sample_type: 'Water',
+              notes: 'Water quality parameters within normal range'
+            }
+          ]
+        }));
       }
 
       return Promise.resolve(json({}));
@@ -184,19 +142,19 @@ describe('BatchHealthView', () => {
   it('handles API error gracefully', async () => {
     // Override fetch mock for health records to return error
     vi.spyOn(globalThis, 'fetch').mockImplementation((url: string) => {
-      if (typeof url === 'string' && url.includes('/api/health/records')) {
+      if (typeof url === 'string' && url.includes('/api/v1/health/journal-entries')) {
         return Promise.resolve(new Response(null, { status: 500 }));
       }
 
       // Return empty arrays for other endpoints
-      if (url.includes('/api/batch/mortality-events')) {
-        return Promise.resolve(json([]));
+      if (url.includes('/api/v1/batch/mortality-events')) {
+        return Promise.resolve(json({ results: [] }));
       }
-      if (url.includes('/api/health/assessments')) {
-        return Promise.resolve(json([]));
+      if (url.includes('/api/v1/health/health-sampling-events')) {
+        return Promise.resolve(json({ results: [] }));
       }
-      if (url.includes('/api/health/lab-samples')) {
-        return Promise.resolve(json([]));
+      if (url.includes('/api/v1/health/health-lab-samples')) {
+        return Promise.resolve(json({ results: [] }));
       }
 
       return Promise.resolve(json({}));
