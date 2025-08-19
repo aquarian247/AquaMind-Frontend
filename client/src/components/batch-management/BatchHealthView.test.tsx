@@ -43,6 +43,7 @@ describe('BatchHealthView', () => {
 
       // Health records endpoint
       if (url.includes('/api/v1/health/journal-entries')) {
+<<<<<<< HEAD
         return Promise.resolve(json({
           results: [
           {
@@ -64,12 +65,18 @@ describe('BatchHealthView', () => {
             severity: 1
           }
         ]}));
+=======
+        // Component currently doesn't render journal entry specific fields in tests,
+        // so an empty paginated object is enough.
+        return Promise.resolve(json({ results: [] }));
+>>>>>>> origin/main
       }
 
       // Mortality events endpoint
       if (url.includes('/api/v1/batch/mortality-events')) {
         return Promise.resolve(json({
           results: [
+<<<<<<< HEAD
           {
             id: 1,
             event_date: '2025-07-05',
@@ -87,12 +94,33 @@ describe('BatchHealthView', () => {
             container_info: 'Tank A-1'
           }
         ]}));
+=======
+            {
+              id: 1,
+              event_date: '2025-07-05',
+              count: 12,
+              cause: 'Environmental',
+              description: 'Sudden temperature change',
+              container_info: 'Tank A-1'
+            },
+            {
+              id: 2,
+              event_date: '2025-07-12',
+              count: 15,
+              cause: 'Disease',
+              description: 'Suspected bacterial infection',
+              container_info: 'Tank A-1'
+            }
+          ]
+        }));
+>>>>>>> origin/main
       }
 
       // Health assessments endpoint
       if (url.includes('/api/v1/health/health-sampling-events')) {
         return Promise.resolve(json({
           results: [
+<<<<<<< HEAD
           {
             id: 1,
             sampling_date: '2025-07-15',
@@ -101,12 +129,24 @@ describe('BatchHealthView', () => {
             notes: 'Batch recovering well from previous issues'
           }
         ]}));
+=======
+            {
+              id: 1,
+              sampling_date: '2025-07-15',
+              sampled_by_username: 'Dr. Smith',
+              avg_k_factor: '0.9',
+              notes: 'Batch recovering well from previous issues'
+            }
+          ]
+        }));
+>>>>>>> origin/main
       }
 
       // Lab samples endpoint
       if (url.includes('/api/v1/health/health-lab-samples')) {
         return Promise.resolve(json({
           results: [
+<<<<<<< HEAD
           {
             id: 1,
             sample_date: '2025-07-10',
@@ -114,6 +154,16 @@ describe('BatchHealthView', () => {
             notes: 'Water quality parameters within normal range'
           }
         ]}));
+=======
+            {
+              id: 1,
+              sample_date: '2025-07-10',
+              sample_type: 'Water',
+              notes: 'Water quality parameters within normal range'
+            }
+          ]
+        }));
+>>>>>>> origin/main
       }
 
       return Promise.resolve(json({}));
@@ -178,10 +228,16 @@ describe('BatchHealthView', () => {
     // Render with required props
     renderWithQueryClient(<BatchHealthView batchId={1} batchName="Batch A" />);
 
+<<<<<<< HEAD
     // Verify the error message is displayed
     const errorMessage = await screen.findByText(
       /Error loading health data\. Please try again\./i
     );
     expect(errorMessage).toBeInTheDocument();
+=======
+    // Verify error message is displayed
+    const errorMsg = await screen.findByText(/Error loading health data/i, { timeout: 3000 });
+    expect(errorMsg).toBeInTheDocument();
+>>>>>>> origin/main
   });
 });
