@@ -15,6 +15,7 @@ import type { PaginatedAreaList } from "@/api/generated/models/PaginatedAreaList
 import type { PaginatedBatchList } from "@/api/generated/models/PaginatedBatchList";
 import type { PaginatedContainerList } from "@/api/generated/models/PaginatedContainerList";
 import type { PaginatedEnvironmentalReadingList } from "@/api/generated/models/PaginatedEnvironmentalReadingList";
+// (No direct ApiService calls here; we rely on react-query's `select` to unwrap paginated results)
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;

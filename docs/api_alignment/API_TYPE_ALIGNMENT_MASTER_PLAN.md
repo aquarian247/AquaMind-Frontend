@@ -44,13 +44,10 @@ _Code Droids update this table at the end of every session._
 
 Legend: ☐ not-started · ➖ in-progress · ✅ done
 
----
-
 ### Phase P1 – Session Notes (2025-08-19)
 
 * Updated BatchHealthView and BatchAnalyticsView test suites to use `/api/v1/*` endpoints with paginated `results` arrays and snake_case fields.  
 * Aligned BatchAnalyticsView queries (growth, feeding, environmental, scenarios, assignments) to `ApiService` v1 methods; added computed fall-backs where required.  
-* Adjusted assertions to match component error / empty states and resolved duplicate-text query issues.  
 * Verified: `npm run type-check` passes with **0** errors; `npm test` – **all green** (31 tests).  
 
 ---
@@ -64,11 +61,6 @@ Legend: ☐ not-started · ➖ in-progress · ✅ done
 ---
 
 ## 4 Work Instructions for Code Droids  
-
-1. **Checkout branch** `type-alignment/<phase>` (create if missing).  
-2. Read “Required Reading” list in the corresponding GitHub issue.  
-3. Complete tasks listed under **“Action Steps”** in that issue.  
-4. Run `npm run type-check`.  
 5. Update the _Progress Tracker_ table above.  
 6. `git add -A && git commit -m "phase <X>: <summary>"`  
 7. Push branch; reference the issue in commit message (`Fixes #<num>` where applicable).  
