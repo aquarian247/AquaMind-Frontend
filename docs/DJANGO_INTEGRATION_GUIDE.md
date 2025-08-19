@@ -12,7 +12,7 @@ Your React frontend with Django backend integration is now configured for the VL
 
 ### 1. Configuration System
 - `client/src/lib/config.ts` - Environment-based backend switching
-- `client/src/lib/types/django.ts` - TypeScript definitions for Django models
+- `client/src/api/generated/models/*` - Auto-generated TypeScript models from OpenAPI (single source of truth)
 - `.env.example` - Environment configuration templates
 
 ### 2. API Integration Layer
