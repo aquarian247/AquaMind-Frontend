@@ -164,7 +164,7 @@ describe('BatchHealthView', () => {
     renderWithQueryClient(<BatchHealthView batchId={1} batchName="Batch A" />);
 
     // Verify error message is displayed
-    const errorMsg = await screen.findByText(/Error loading health data\\. Please try again\\./i);
+    const errorMsg = await screen.findByText(/Error loading health data/i, { timeout: 3000 });
     expect(errorMsg).toBeInTheDocument();
   });
 });

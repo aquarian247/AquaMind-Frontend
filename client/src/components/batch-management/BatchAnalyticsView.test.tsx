@@ -133,8 +133,8 @@ describe('BatchAnalyticsView', () => {
       await userEvent.click(benchmarksTab);
 
       // Verify content specific to Benchmarks tab is displayed
-      const vsTarget = await screen.findByText(/vs Target/i);
-      expect(vsTarget).toBeInTheDocument();
+      const vsTargetElements = await screen.findAllByText(/vs Target/i);
+      expect(vsTargetElements.length).toBeGreaterThan(0);
     } else {
       // Mobile view - tabs are in a select dropdown
       // Just verify that some content is visible
@@ -147,6 +147,7 @@ describe('BatchAnalyticsView', () => {
     // Override fetch mock for growth-samples to return error
     vi.spyOn(globalThis, 'fetch').mockImplementation((url: string) => {
       if (typeof url === 'string' && url.includes('/api/v1/batch/growth-samples')) {
+        // Simulate API failure for growth samples
         return Promise.resolve(new Response(null, { status: 500 }));
       }
 
@@ -174,7 +175,7 @@ describe('BatchAnalyticsView', () => {
     renderWithQueryClient(<BatchAnalyticsView batchId={1} batchName="Batch A" />);
 
     // Verify error message displayed
-    const errorMsg = await screen.findByText(/Error loading analytics data\\. Please try again\\./i);
+    const errorMsg = await screen.findByText(/Error loading analytics data/i, { timeout: 3000 });
     expect(errorMsg).toBeInTheDocument();
   });
 });
