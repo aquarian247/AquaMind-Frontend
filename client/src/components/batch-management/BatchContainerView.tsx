@@ -10,6 +10,7 @@ import type { Batch } from "@/api/generated/models/Batch";
 import type { Container } from "@/api/generated/models/Container";
 import type { Area } from "@/api/generated/models/Area";
 import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
@@ -24,18 +25,53 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
 
   const { data: farmSites = [] } = useQuery<Area[]>({
     queryKey: ["/api/v1/infrastructure/areas/"],
+    queryFn: async () => {
+      const response = await ApiService.apiV1InfrastructureAreasList(
+        undefined,
+        undefined,
+        undefined
+      );
+      return response.results ?? [];
+    },
   });
 
   const { data: allBatches = [] } = useQuery<Batch[]>({
     queryKey: ["/api/v1/batch/batches/"],
+    queryFn: async () => {
+      const response = await ApiService.apiV1BatchBatchesList(
+        undefined, // ordering
+        undefined, // page
+        undefined, // page_size
+        undefined, // search
+        undefined  // status
+      );
+      return response.results ?? [];
+    },
   });
 
   const { data: containers = [] } = useQuery<Container[]>({
     queryKey: ["/api/v1/infrastructure/containers/"],
+    queryFn: async () => {
+      const response = await ApiService.apiV1InfrastructureContainersList(
+        undefined,
+        undefined,
+        undefined
+      );
+      return response.results ?? [];
+    },
   });
 
   const { data: environmentalReadings = [] } = useQuery<EnvironmentalReading[]>({
     queryKey: ["/api/v1/environmental/readings/"],
+    queryFn: async () => {
+      const response = await ApiService.apiV1EnvironmentalReadingsList(
+        undefined, // ordering
+        undefined, // page
+        undefined, // parameter
+        undefined  // search
+      );
+      return response.results ?? [];
+    },
   });
 
   // Filter farm sites based on selected region
