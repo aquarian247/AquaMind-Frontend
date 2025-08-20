@@ -19,6 +19,7 @@ import {
   Gauge
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
+import { ApiService } from "@/api/generated";
 
 interface Area {
   id: number;
@@ -134,14 +135,35 @@ export default function InfrastructureAreas() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: areasData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/areas/", selectedGeography],
+    queryKey: ["areas", selectedGeography],
     queryFn: async () => {
-      const url = selectedGeography === "all" 
-        ? "/api/v1/infrastructure/areas/"
-        : `/api/v1/infrastructure/areas/?geography=${selectedGeography}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch areas");
-      return response.json();
+      // Retrieve all areas (backend filtering not yet available for string geographies)
+      const res = await ApiService.apiV1InfrastructureAreasList({} as any);
+
+      const mapped = (res.results || []).map((raw: any): Area => ({
+        id: raw.id,
+        name: raw.name,
+        geography: raw.geography_name ?? raw.geography ?? "Unknown",
+        type: raw.area_type_name ?? raw.type ?? "Sea",
+        rings: 0,
+        totalBiomass: 0,
+        coordinates: {
+          lat: raw.latitude ?? 0,
+          lng: raw.longitude ?? 0,
+        },
+        status: raw.active ? "active" : "inactive",
+        waterDepth: 0,
+        lastInspection: new Date().toISOString(),
+      }));
+
+      const filtered =
+        selectedGeography === "all"
+          ? mapped
+          : mapped.filter((a) =>
+              a.geography.toLowerCase().includes(selectedGeography.toLowerCase()),
+            );
+
+      return { results: filtered };
     },
   });
 

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ApiService } from "@/api/generated";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
@@ -66,15 +67,55 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
   const containerId = params.id;
 
   const { data: containerData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/containers/", containerId],
+    queryKey: ["container", containerId],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/containers/${containerId}`);
-      if (!response.ok) throw new Error("Failed to fetch container details");
-      return response.json();
+      const raw = await ApiService.apiV1InfrastructureContainersRetrieve(
+        Number(containerId),
+      );
+
+      const capacity = parseFloat((raw as any).volume_m3 ?? "0") || 0;
+
+      return {
+        id: raw.id,
+        name: raw.name,
+        hallId: (raw as any).hall ?? 0,
+        hallName: (raw as any).hall_name ?? "",
+        stationId: 0,
+        stationName: (raw as any).hall_name ?? "",
+        type: ((raw as any).container_type_name ?? "Tank") as any,
+        stage: "Smolt",
+        status: raw.active ? "active" : "inactive",
+        biomass: 0,
+        capacity,
+        fishCount: 0,
+        averageWeight: 0,
+        temperature: 0,
+        oxygenLevel: 0,
+        flowRate: 0,
+        lastMaintenance: new Date().toISOString(),
+        systemStatus: "optimal",
+        density: 0,
+        feedingSchedule: "08:00, 12:00, 16:00",
+        volume: capacity,
+        installDate: (raw as any).created_at,
+        lastFeedingTime: new Date().toISOString(),
+        dailyFeedAmount: 0,
+        mortalityRate: 0,
+        feedConversionRatio: 0,
+        pH: 7.2,
+        salinity: 0,
+        lightingSchedule: "12L:12D",
+        waterExchangeRate: 0,
+        powerConsumption: 0,
+        filtrationSystem: "Standard",
+        lastCleaning: new Date().toISOString(),
+        nextScheduledMaintenance: new Date().toISOString(),
+      } as ContainerDetail;
     },
   });
 
-  const container: ContainerDetail = containerData;
+  // `containerData` may be undefined until the query resolves, so reflect that in the type.
+  const container = containerData as ContainerDetail | undefined;
 
   const getStatusBadge = (status: string) => {
     const variants = {

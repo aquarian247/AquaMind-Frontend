@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useStationKpi } from "@/hooks/aggregations/useStationKpi";
+import { ApiService } from "@/api/generated";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -68,11 +69,48 @@ export default function StationDetail({ params }: { params: { id: string } }) {
   const stationId = params.id;
 
   const { data: station, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/freshwater-stations/", stationId],
+    queryKey: ["station", stationId],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/freshwater-stations/${stationId}`);
-      if (!response.ok) throw new Error("Failed to fetch station details");
-      return response.json();
+      const raw = await ApiService.apiV1InfrastructureFreshwaterStationsRetrieve(
+        Number(stationId),
+      );
+
+      return {
+        id: raw.id,
+        name: raw.name,
+        geography:
+          (raw as any).geography_name ?? (raw as any).geography ?? "Unknown",
+        type:
+          (raw as any).station_type_display ??
+          (raw as any).station_type ??
+          "FRESHWATER",
+        halls: 0,
+        coordinates: {
+          lat: (raw as any).latitude ?? 0,
+          lng: (raw as any).longitude ?? 0,
+        },
+        status: raw.active ? "active" : "inactive",
+        waterSource: "river",
+        lastInspection: new Date().toISOString(),
+        totalContainers: 0,
+        totalBiomass: 0,
+        capacity: 0,
+        currentStock: 0,
+        averageWeight: 0,
+        mortalityRate: 0,
+        feedConversion: 0,
+        waterTemperature: 0,
+        oxygenLevel: 0,
+        pH: 7.2,
+        flowRate: 0,
+        powerConsumption: 0,
+        waterUsage: 0,
+        lastMaintenance: new Date().toISOString(),
+        nextScheduledMaintenance: new Date().toISOString(),
+        staffCount: 0,
+        certificationStatus: "valid",
+        lastAudit: new Date().toISOString(),
+      } as StationDetail;
     },
   });
 

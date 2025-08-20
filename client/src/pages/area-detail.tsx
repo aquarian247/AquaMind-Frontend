@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useAreaKpi } from "@/hooks/aggregations/useAreaKpi";
+import { ApiService } from "@/api/generated";
+import { api } from "@/lib/api";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -78,21 +80,39 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: area, isLoading, error } = useQuery({
-    queryKey: ["/api/v1/infrastructure/areas", params.id],
+    queryKey: ["area", params.id],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/areas/${params.id}`);
-      if (!response.ok) throw new Error("Area not found");
-      return response.json();
+      const id = Number(params.id);
+      const raw = await ApiService.apiV1InfrastructureAreasRetrieve(id);
+      return {
+        ...raw,
+        geography: (raw as any).geography_name ?? (raw as any).geography ?? "Unknown",
+        type: (raw as any).area_type_name ?? (raw as any).type ?? "Sea",
+        rings: 0,
+        coordinates: {
+          lat: (raw as any).latitude ?? 0,
+          lng: (raw as any).longitude ?? 0,
+        },
+        status: (raw as any).active ? "active" : "inactive",
+        waterDepth: 0,
+        lastInspection: new Date().toISOString(),
+        totalBiomass: 0,
+        capacity: 0,
+        currentStock: 0,
+        averageWeight: 0,
+        mortalityRate: 0,
+        feedConversion: 0,
+        waterTemperature: 0,
+        oxygenLevel: 0,
+        salinity: 0,
+        currentSpeed: 0,
+      };
     },
   });
 
   const { data: ringsData, isLoading: isLoadingRings } = useQuery({
-    queryKey: ["/api/v1/infrastructure/areas", params.id, "rings"],
-    queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/areas/${params.id}/rings`);
-      if (!response.ok) throw new Error("Failed to fetch rings");
-      return response.json();
-    },
+    queryKey: ["area", params.id, "rings"],
+    queryFn: () => api.infrastructure.getAreaRings(Number(params.id)),
   });
 
   const rings: Ring[] = ringsData?.results || [];
