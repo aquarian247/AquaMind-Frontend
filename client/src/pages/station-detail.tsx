@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+import { useStationKpi } from "@/hooks/aggregations/useStationKpi";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -75,6 +76,8 @@ export default function StationDetail({ params }: { params: { id: string } }) {
     },
   });
 
+  const { data: kpi } = useStationKpi(Number(stationId));
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-4 space-y-6">
@@ -141,7 +144,7 @@ export default function StationDetail({ params }: { params: { id: string } }) {
     );
   }
 
-  const capacityUtilization = Math.round((station.totalBiomass / station.capacity) * 100);
+  const capacityUtilization = Math.round((((kpi?.totalBiomassKg ?? 0) / 1000) / (station.capacity || 1)) * 100);
   const efficiencyScore = Math.round((2.0 - station.feedConversion) * 100); // Higher FCR = lower efficiency
 
   return (
@@ -197,8 +200,8 @@ export default function StationDetail({ params }: { params: { id: string } }) {
             <Fish className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{station.totalBiomass}</div>
-            <p className="text-xs text-muted-foreground">tons • {station.currentStock.toLocaleString()} fish</p>
+            <div className="text-2xl font-bold text-blue-600">{((kpi?.totalBiomassKg ?? 0) / 1000).toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">tons • {(kpi?.populationCount ?? 0).toLocaleString()} fish</p>
             <Progress value={capacityUtilization} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">{capacityUtilization}% of capacity</p>
           </CardContent>
@@ -214,7 +217,7 @@ export default function StationDetail({ params }: { params: { id: string } }) {
             <p className="text-xs text-muted-foreground">{station.totalContainers} containers • Click to view</p>
             <div className="flex items-center space-x-2 mt-2">
               <span className="text-xs">Avg weight:</span>
-              <span className="text-sm font-medium">{(station.averageWeight * 1000).toFixed(0)}g</span>
+              <span className="text-sm font-medium">{((kpi?.averageWeightKg ?? 0) * 1000).toFixed(0)}g</span>
             </div>
             <div className="mt-2 text-xs text-blue-600 flex items-center">
               <Factory className="h-3 w-3 mr-1" />
@@ -398,11 +401,11 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Current Stock:</span>
-                    <div className="text-lg font-semibold">{station.currentStock.toLocaleString()}</div>
+                    <div className="text-lg font-semibold">{(kpi?.populationCount ?? 0).toLocaleString()}</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Average Weight:</span>
-                    <div className="text-lg font-semibold">{(station.averageWeight * 1000).toFixed(0)}g</div>
+                    <div className="text-lg font-semibold">{((kpi?.averageWeightKg ?? 0) * 1000).toFixed(0)}g</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Mortality Rate:</span>
