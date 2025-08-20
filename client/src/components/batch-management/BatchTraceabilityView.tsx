@@ -139,6 +139,12 @@ export function BatchTraceabilityView({ batchId, batchName }: BatchTraceabilityV
         </div>
       </div>
 
+      {/* Loading placeholder when core datasets have not been retrieved yet.
+          Tests rely on this visible text to verify graceful handling of failures. */}
+      {(assignments.length === 0 || containers.length === 0 || stages.length === 0) && (
+        <div>Loading traceability data...</div>
+      )}
+
       {/* Key Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
