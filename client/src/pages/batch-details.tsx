@@ -12,23 +12,24 @@ import { BatchTraceabilityView } from "@/components/batch-management/BatchTracea
 import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
 import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
 import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
+import { api } from "@/lib/api";
 
 interface BatchDetails {
   id: number;
   batch_number: string;
   species: number;
   species_name: string;
+  lifecycle_stage: number;
   current_lifecycle_stage: {
     id: number;
     name: string;
   } | null;
-  container: number | null;
   start_date: string;
-  expected_harvest_date: string;
+  expected_end_date?: string | null;
   calculated_population_count: number;
-  calculated_biomass_kg: string;
+  calculated_biomass_kg: number;
   status: string;
-  egg_source: string;
+  active_containers: number[];
   notes?: string;
   containerName?: string;
 }
@@ -36,14 +37,6 @@ interface BatchDetails {
 interface Container {
   id: number;
   name: string;
-  containerType: string;
-  capacity: number;
-  currentStock?: number;
-  location?: string;
-  batchId?: number;
-  status?: string;
-  coordinates?: string;
-  depth?: string;
 }
 
 export default function BatchDetails() {
@@ -53,62 +46,33 @@ export default function BatchDetails() {
   const [activeTab, setActiveTab] = useState("overview");
 
   const { data: batch, isLoading } = useQuery({
-    queryKey: [`/api/v1/batch/batches/${batchId}/`],
-    queryFn: () =>
-      fetch(`/api/v1/batch/batches/${batchId}/`).then(res => {
-        if (!res.ok) throw new Error("Failed to fetch batch");
-        return res.json();
-      }) as Promise<BatchDetails>,
+    queryKey: ["batch/details", batchId],
+    queryFn: () => api.batch.getById(batchId) as Promise<BatchDetails>,
   });
 
   const { data: containers } = useQuery<Container[]>({
-    queryKey: ["/api/v1/infrastructure/containers/"],
-    queryFn: async () => {
-      const res = await fetch("/api/v1/infrastructure/containers/");
-      if (!res.ok) throw new Error("Failed to fetch containers");
-      const data = await res.json();
-      return data.results || [];
-    },
+    queryKey: ["infrastructure/containers"],
+    queryFn: async () => (await api.infrastructure.getContainers()).results as Container[],
   });
 
   const { data: species } = useQuery({
-    queryKey: ["/api/v1/batch/species/"],
-    queryFn: async () => {
-      const res = await fetch("/api/v1/batch/species/");
-      if (!res.ok) throw new Error("Failed to fetch species");
-      const data = await res.json();
-      return data.results || [];
-    },
+    queryKey: ["batch/species"],
+    queryFn: async () => (await api.batch.getSpecies()).results,
   });
 
   const { data: stages } = useQuery({
-    queryKey: ["/api/v1/batch/lifecycle-stages/"],
-    queryFn: async () => {
-      const res = await fetch("/api/v1/batch/lifecycle-stages/");
-      if (!res.ok) throw new Error("Failed to fetch stages");
-      const data = await res.json();
-      return data.results || [];
-    },
+    queryKey: ["batch/lifecycle-stages"],
+    queryFn: async () => (await api.batch.getLifecycleStages()).results,
   });
 
   const { data: assignments } = useQuery({
-    queryKey: ["/api/v1/batch/batch-container-assignments/", batchId],
-    queryFn: async () => {
-      const res = await fetch(`/api/v1/batch/batch-container-assignments/?batch=${batchId}`);
-      if (!res.ok) throw new Error("Failed to fetch assignments");
-      const data = await res.json();
-      return data.results || [];
-    },
+    queryKey: ["batch/assignments", batchId],
+    queryFn: async () => (await api.batch.getAssignments(batchId)).results,
   });
 
   const { data: transfers } = useQuery({
-    queryKey: ["/api/v1/batch/batch-transfers/", batchId],
-    queryFn: async () => {
-      const res = await fetch(`/api/v1/batch/batch-transfers/?source_batch=${batchId}`);
-      if (!res.ok) throw new Error("Failed to fetch transfers");
-      const data = await res.json();
-      return data.results || [];
-    },
+    queryKey: ["batch/transfers", batchId],
+    queryFn: async () => (await api.batch.getTransfers(batchId)).results,
   });
 
   if (isLoading) {
@@ -119,7 +83,10 @@ export default function BatchDetails() {
     return <div>Batch not found</div>;
   }
 
-  const currentContainer = batch.container ? containers?.find(c => c.id === batch.container) : null;
+  const currentContainerId = batch.active_containers?.[0];
+  const currentContainer = currentContainerId
+    ? containers?.find((c) => c.id === currentContainerId)
+    : null;
 
   // Determine if this batch has complex traceability based on actual data
   const hasMultipleAssignments = assignments && assignments.length > 5;
@@ -174,7 +141,7 @@ export default function BatchDetails() {
             <Scale className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{parseFloat(batch.calculated_biomass_kg || '0').toLocaleString()} kg</div>
+            <div className="text-2xl font-bold">{Number(batch.calculated_biomass_kg ?? 0).toLocaleString()} kg</div>
             <p className="text-xs text-muted-foreground">
               Initial biomass not available
             </p>
@@ -278,11 +245,7 @@ export default function BatchDetails() {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Expected Harvest</label>
-                        <p className="font-medium">{batch.expected_harvest_date || 'TBD'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Egg Source</label>
-                        <p className="font-medium capitalize">{batch.egg_source || 'Unknown'}</p>
+                        <p className="font-medium">{batch.expected_end_date || 'TBD'}</p>
                       </div>
                     </div>
 
@@ -307,7 +270,7 @@ export default function BatchDetails() {
                         <label className="text-sm font-medium text-muted-foreground">Average Weight</label>
                         <p className="text-lg lg:text-xl font-bold">
                           {batch.calculated_population_count && batch.calculated_biomass_kg && batch.calculated_population_count > 0
-                            ? ((parseFloat(batch.calculated_biomass_kg) * 1000) / batch.calculated_population_count).toFixed(2)
+                            ? ((Number(batch.calculated_biomass_kg) * 1000) / batch.calculated_population_count).toFixed(2)
                             : '0.00'} g
                         </p>
                       </div>

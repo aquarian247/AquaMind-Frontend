@@ -86,7 +86,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
 
   // Fetch growth samples data
   const { data: growthSamplesData = [], isLoading: growthLoading, error: growthError } = useQuery({
-    queryKey: ["/api/v1/batch/growth-samples", batchId, timeframe],
+    queryKey: ["batch/growth-samples", batchId, timeframe],
     queryFn: async () => {
       try {
         // Fixed: Use correct parameter structure
@@ -107,7 +107,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
 
   // Fetch batch growth analysis if available
   const { data: growthAnalysis, isLoading: analysisLoading, error: analysisError } = useQuery({
-    queryKey: ["/api/v1/batch/batches/growth-analysis", batchId],
+    queryKey: ["batch/growth-analysis", batchId],
     queryFn: async () => {
       try {
         const response = await ApiService.apiV1BatchBatchesGrowthAnalysisRetrieve(batchId);
@@ -122,7 +122,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
 
   // Fetch feeding summaries for FCR calculation
   const { data: feedingSummaries = [], isLoading: feedingLoading, error: feedingError } = useQuery({
-    queryKey: ["/api/v1/inventory/batch-feeding-summaries", batchId],
+    queryKey: ["batch/feeding-summaries", batchId],
     queryFn: async () => {
       try {
         // Fixed: Use correct parameter structure
@@ -141,7 +141,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
 
   // Fetch environmental readings
   const { data: environmentalReadings = [], isLoading: envLoading, error: envError } = useQuery({
-    queryKey: ["/api/v1/environmental/readings", batchId],
+    queryKey: ["environmental/readings", batchId],
     queryFn: async () => {
       try {
         // Fixed: Use correct parameter structure
@@ -165,7 +165,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
 
   // Fetch scenarios for predictions
   const { data: scenarios = [], isLoading: scenarioLoading, error: scenarioError } = useQuery({
-    queryKey: ["/api/v1/scenario/scenarios", batchId],
+    queryKey: ["scenario/scenarios", batchId],
     queryFn: async () => {
       try {
         // Fixed: Use correct parameter structure
@@ -186,7 +186,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
 
   // Fetch batch container assignments to get population counts
   const { data: batchAssignments = [], isLoading: assignmentsLoading } = useQuery({
-    queryKey: ["/api/v1/batch/batch-container-assignments", batchId],
+    queryKey: ["batch/container-assignments", batchId],
     queryFn: async () => {
       try {
         // Fixed: Convert batchId to string as expected by the API

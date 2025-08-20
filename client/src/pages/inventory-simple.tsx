@@ -20,39 +20,7 @@ import {
   Factory
 } from "lucide-react";
 import HierarchicalFilter, { OperationsOverview } from "@/components/layout/hierarchical-filter";
-
-// API functions
-const api = {
-  async getFeedTypes() {
-    const response = await fetch("/api/v1/inventory/feed-types/");
-    if (!response.ok) throw new Error("Failed to fetch feed types");
-    return response.json();
-  },
-
-  async getFeedPurchases() {
-    const response = await fetch("/api/v1/inventory/feed-purchases/");
-    if (!response.ok) throw new Error("Failed to fetch purchases");
-    return response.json();
-  },
-
-  async getFeedContainers() {
-    const response = await fetch("/api/v1/inventory/feed-containers/");
-    if (!response.ok) throw new Error("Failed to fetch containers");
-    return response.json();
-  },
-
-  async getFeedContainerStock() {
-    const response = await fetch("/api/v1/inventory/feed-container-stock/");
-    if (!response.ok) throw new Error("Failed to fetch container stock");
-    return response.json();
-  },
-
-  async getFeedingEvents() {
-    const response = await fetch("/api/v1/inventory/feeding-events/");
-    if (!response.ok) throw new Error("Failed to fetch feeding events");
-    return response.json();
-  }
-};
+import { api } from "@/lib/api";
 
 export default function Inventory() {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
@@ -60,28 +28,28 @@ export default function Inventory() {
 
   // Data queries
   const { data: feedTypesData } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-types/"],
-    queryFn: api.getFeedTypes,
+    queryKey: ["inventory/feed-types"],
+    queryFn: () => api.inventory.getFeedTypes(),
   });
 
   const { data: purchasesData } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-purchases/"],
-    queryFn: api.getFeedPurchases,
+    queryKey: ["inventory/feed-purchases"],
+    queryFn: () => api.inventory.getFeedPurchases(),
   });
 
   const { data: containersData } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-containers/"],
-    queryFn: api.getFeedContainers,
+    queryKey: ["inventory/feed-containers"],
+    queryFn: () => api.inventory.getFeedContainers(),
   });
 
   const { data: stockData } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-container-stock/"],
-    queryFn: api.getFeedContainerStock,
+    queryKey: ["inventory/feed-container-stock"],
+    queryFn: () => api.inventory.getFeedContainerStock(),
   });
 
   const { data: feedingEventsData } = useQuery({
-    queryKey: ["/api/v1/inventory/feeding-events/"],
-    queryFn: api.getFeedingEvents,
+    queryKey: ["inventory/feeding-events"],
+    queryFn: () => api.inventory.getFeedingEvents(),
   });
 
   const feedTypes = feedTypesData?.results || [];
@@ -92,11 +60,11 @@ export default function Inventory() {
 
   // Calculate metrics
   const totalInventoryValue = containerStock.reduce((sum: number, item: any) => 
-    sum + (parseFloat(item.quantityKg) * parseFloat(item.costPerKg)), 0
+    sum + (parseFloat(item.quantity_kg) * parseFloat(item.cost_per_kg)), 0
   );
 
-  const totalQuantity = containerStock.reduce((sum: number, item: any) => sum + parseFloat(item.quantityKg), 0);
-  const activeContainers = containers.filter((c: any) => c.isActive).length;
+  const totalQuantity = containerStock.reduce((sum: number, item: any) => sum + parseFloat(item.quantity_kg), 0);
+  const activeContainers = containers.filter((c: any) => c.active).length;
 
   // Navigation menu items
   const navigationSections = [
@@ -305,8 +273,10 @@ export default function Inventory() {
                   {feedingEvents.slice(0, 5).map((event: any) => (
                     <div key={event.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium">Batch {event.batch}</p>
-                        <p className="text-sm text-gray-600">{event.feedingDate} - {event.amountKg}kg</p>
+                        <p className="font-medium">Batch {event.batch_name}</p>
+                        <p className="text-sm text-gray-600">
+                          {event.feeding_date} - {parseFloat(event.amount_kg).toLocaleString()}kg
+                        </p>
                       </div>
                       <Badge variant="outline">{event.method || "Manual"}</Badge>
                     </div>
@@ -327,11 +297,13 @@ export default function Inventory() {
                   {containerStock.slice(0, 5).map((stock: any) => (
                     <div key={stock.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium">Container {stock.containerId}</p>
-                        <p className="text-sm text-gray-600">{parseFloat(stock.quantityKg).toLocaleString()} kg</p>
+                        <p className="font-medium">{stock.feed_container_name}</p>
+                        <p className="text-sm text-gray-600">
+                          {parseFloat(stock.quantity_kg).toLocaleString()} kg
+                        </p>
                       </div>
                       <Progress 
-                        value={Math.min(100, (parseFloat(stock.quantityKg) / 1000) * 10)} 
+                        value={Math.min(100, (parseFloat(stock.quantity_kg) / 1000) * 10)} 
                         className="w-20"
                       />
                     </div>
@@ -360,17 +332,17 @@ export default function Inventory() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>{feed.name}</span>
-                    <Badge variant={feed.isActive ? "default" : "secondary"}>
-                      {feed.isActive ? "Active" : "Inactive"}
+                      <Badge variant={feed.is_active ? "default" : "secondary"}>
+                        {feed.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     <p className="text-sm"><strong>Brand:</strong> {feed.brand}</p>
-                    <p className="text-sm"><strong>Size:</strong> {feed.sizeCategory}</p>
-                    {feed.proteinPercentage && (
-                      <p className="text-sm"><strong>Protein:</strong> {feed.proteinPercentage}%</p>
+                      <p className="text-sm"><strong>Size:</strong> {feed.size_category}</p>
+                      {feed.protein_percentage && (
+                        <p className="text-sm"><strong>Protein:</strong> {feed.protein_percentage}%</p>
                     )}
                   </div>
                 </CardContent>

@@ -31,6 +31,7 @@ import { Slider } from "@/components/ui/slider";
 import { ArrowLeft, ArrowRight, Scale, Plus, Trash2, Info, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { api } from "@/lib/api";
 
 // FCR Stage Schema
 const fcrStageSchema = z.object({
@@ -100,8 +101,25 @@ export function FcrModelCreationDialog({ children, onSuccess }: FcrModelCreation
   });
 
   // Fetch available lifecycle stages
-  const { data: availableStages } = useQuery<{results: Stage[]}>({
-    queryKey: ["/api/v1/scenario/stages/"],
+  const { data: availableStages = [] } = useQuery<Stage[]>({
+    queryKey: ["batch/lifecycle-stages"],
+    queryFn: async () => {
+      const res = await api.batch.getLifecycleStages();
+      const items = res.results || [];
+      return items.map((s: any) => ({
+        id: s.id,
+        name: s.name || "",
+        description: s.description || "",
+        // Map numeric/string mixes to consistently typed strings for weights
+        minWeightG: String(s.min_weight_g ?? "0"),
+        maxWeightG: String(s.max_weight_g ?? "0"),
+        // Ensure typicalDurationDays is a number
+        typicalDurationDays:
+          typeof s.typical_duration_days === "number"
+            ? s.typical_duration_days
+            : parseInt(String(s.typical_duration_days || 0), 10),
+      })) as Stage[];
+    },
     enabled: open,
   });
 

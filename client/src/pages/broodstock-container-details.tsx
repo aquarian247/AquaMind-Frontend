@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -71,11 +72,10 @@ export default function BroodstockContainerDetails() {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const { data: containersData, isLoading } = useQuery<{ results: BroodstockContainer[] }>({
-    queryKey: ['/api/v1/broodstock/containers/'],
+  const { data: container, isLoading } = useQuery<BroodstockContainer | null>({
+    queryKey: ['broodstock/container-detail', containerId],
+    queryFn: () => api.broodstock.population.getContainerById(containerId),
   });
-
-  const container = containersData?.results?.find((c: BroodstockContainer) => c.id === containerId);
 
   if (isLoading) {
     return <div>Loading container details...</div>;

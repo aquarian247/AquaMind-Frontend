@@ -19,6 +19,7 @@ import {
   Calendar
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { api } from "@/lib/api"; // use shared API wrapper
 
 interface Ring {
   id: number;
@@ -44,12 +45,10 @@ export default function AreaRings({ params }: { params: { id: string } }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: ringsData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/areas/", areaId, "/rings"],
-    queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/areas/${areaId}/rings`);
-      if (!response.ok) throw new Error("Failed to fetch rings");
-      return response.json();
-    },
+    // Semantic, non-URL key
+    queryKey: ["infrastructure/area-rings", areaId],
+    // Use wrapper which handles fetch + pagination mapping
+    queryFn: () => api.infrastructure.getAreaRings(Number(areaId)),
   });
 
   const rings: Ring[] = ringsData?.results || [];

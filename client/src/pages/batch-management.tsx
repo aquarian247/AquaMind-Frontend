@@ -23,6 +23,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { api } from "@/lib/api";
 import type { Batch } from "@/api/generated/models/Batch";
 import type { Species } from "@/api/generated/models/Species";
 import type { LifeCycleStage } from "@/api/generated/models/LifeCycleStage";
@@ -171,92 +172,59 @@ export default function BatchManagement() {
 
   // Geography data
   const { data: geographiesData } = useQuery({
-    queryKey: ["/api/v1/infrastructure/geographies/"],
-    queryFn: async () => {
-      const response = await fetch("/api/v1/infrastructure/geographies/");
-      if (!response.ok) throw new Error("Failed to fetch geographies");
-      const data = await response.json();
-      return data;
-    },
+    queryKey: ["infrastructure/geographies"],
+    queryFn: () => api.infrastructure.getGeographies(),
   });
 
   // Fetch data
   const { data: batches = [], isLoading: batchesLoading } = useQuery<ExtendedBatch[]>({
-    queryKey: ["/api/v1/batch/batches/", selectedGeography],
+    queryKey: ["batch/batches", selectedGeography],
     queryFn: async () => {
-      const url = selectedGeography !== "all" 
-        ? `/api/v1/batch/batches/?geography=${selectedGeography}`
-        : "/api/v1/batch/batches/";
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch batches");
-      const data = await response.json();
-      return data.results || [];
+      const res = await api.batch.getAll();
+      const items = res.results || [];
+      return items.map((b: any) => ({
+        ...b,
+        // Ensure required/core fields exist with safe defaults
+        status: b.status || "ACTIVE",
+        batch_number: b.batch_number || b.name || "",
+        start_date:
+          b.start_date || b.created_at || new Date().toISOString(),
+        created_at: b.created_at || new Date().toISOString(),
+        updated_at: b.updated_at || new Date().toISOString(),
+      })) as ExtendedBatch[];
     },
   });
 
   const { data: species = [] } = useQuery<Species[]>({
-    queryKey: ["/api/v1/batch/species/"],
-    queryFn: async () => {
-      const response = await fetch("/api/v1/batch/species/");
-      if (!response.ok) throw new Error("Failed to fetch species");
-      const data = await response.json();
-      return data.results || [];
-    }
+    queryKey: ["batch/species"],
+    queryFn: async () => (await api.batch.getSpecies()).results || [],
   });
 
   const { data: stages = [] } = useQuery<LifeCycleStage[]>({
-    queryKey: ["/api/v1/batch/lifecycle-stages/"],
-    queryFn: async () => {
-      const response = await fetch("/api/v1/batch/lifecycle-stages/");
-      if (!response.ok) throw new Error("Failed to fetch lifecycle stages");
-      const data = await response.json();
-      return data.results || [];
-    }
+    queryKey: ["batch/lifecycle-stages"],
+    queryFn: async () => (await api.batch.getLifecycleStages()).results || [],
   });
 
   const { data: containers = [] } = useQuery<Container[]>({
-    queryKey: ["/api/v1/infrastructure/containers/"],
-    queryFn: async () => {
-      const response = await fetch("/api/v1/infrastructure/containers/");
-      if (!response.ok) throw new Error("Failed to fetch containers");
-      const data = await response.json();
-      return data.results || [];
-    }
+    queryKey: ["infrastructure/containers"],
+    queryFn: async () => (await api.infrastructure.getContainers()).results || [],
   });
 
   const { data: broodstockPairs = [] } = useQuery<BreedingPair[]>({
-    queryKey: ["/api/v1/broodstock/pairs/"],
-    queryFn: async () => {
-      const response = await fetch("/api/v1/broodstock/pairs/");
-      if (!response.ok) throw new Error("Failed to fetch broodstock pairs");
-      const data = await response.json();
-      return data.results || [];
-    }
+    queryKey: ["broodstock/pairs"],
+    queryFn: async () => (await (api as any).broodstock.getPairs()).results || [],
   });
 
   const { data: eggSuppliers = [] } = useQuery<EggSupplier[]>({
-    queryKey: ["/api/v1/broodstock/egg-suppliers/"],
-    queryFn: async () => {
-      const response = await fetch("/api/v1/broodstock/egg-suppliers/");
-      if (!response.ok) throw new Error("Failed to fetch egg suppliers");
-      const data = await response.json();
-      return data.results || [];
-    }
+    queryKey: ["broodstock/egg-suppliers"],
+    queryFn: async () => (await (api as any).broodstock.getEggSuppliers()).results || [],
   });
 
   // Create batch mutation
   const createBatchMutation = useMutation({
-    mutationFn: async (data: InsertBatch) => {
-      const response = await fetch("/api/v1/batch/batches/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error("Failed to create batch");
-      return response.json();
-    },
+    mutationFn: async (data: InsertBatch) => api.batch.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/batch/batches/"] });
+      queryClient.invalidateQueries({ queryKey: ["batch/batches"] });
       setIsCreateDialogOpen(false);
       toast({
         title: "Success",

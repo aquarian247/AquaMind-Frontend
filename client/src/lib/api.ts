@@ -177,6 +177,20 @@ export const api = {
       return ApiService.apiV1BatchBatchesUpdate(id, data);
     },
 
+    /**
+     * List all species available for batches.
+     */
+    async getSpecies() {
+      return ApiService.apiV1BatchSpeciesList();
+    },
+
+    /**
+     * List lifecycle stages for batches.
+     */
+    async getLifecycleStages() {
+      return ApiService.apiV1BatchLifecycleStagesList();
+    },
+
     async getAssignments(batchId?: number) {
       const assignments = await ApiService.apiV1BatchContainerAssignmentsList();
       if (batchId) {
@@ -197,6 +211,50 @@ export const api = {
         };
       }
       return transfers;
+    },
+
+    /**
+     * Growth samples collected for batches.
+     */
+    async getGrowthSamples(batchId?: number) {
+      const samples = await ApiService.apiV1BatchGrowthSamplesList();
+      if (batchId) {
+        return {
+          ...samples,
+          results: samples.results.filter((s: any) => s.batch === batchId),
+        };
+      }
+      return samples;
+    },
+
+    /**
+     * Mortality events recorded for batches.
+     */
+    async getMortalityEvents(batchId?: number) {
+      const events = await ApiService.apiV1BatchMortalityEventsList();
+      if (batchId) {
+        return {
+          ...events,
+          results: events.results.filter((e: any) => e.batch === batchId),
+        };
+      }
+      return events;
+    },
+
+    /**
+     * Feeding summaries (aggregated) for batches.
+     */
+    async getFeedingSummaries(batchId?: number) {
+      // Corrected: use inventory endpoint for batch feeding summaries
+      const summaries =
+        await ApiService.apiV1InventoryBatchFeedingSummariesList();
+      if (batchId) {
+        return {
+          ...summaries,
+          results: summaries.results.filter((r: any) => r.batch === batchId),
+        };
+      }
+      return summaries;
     }
   },
 
@@ -332,6 +390,87 @@ export const api = {
       } catch {
         return { results: [] };
       }
+    },
+
+    /**
+     * Get area rings by filtering containers with type "Ring"
+     */
+    async getAreaRings(areaId: number) {
+      try {
+        const containers = await ApiService.apiV1InfrastructureContainersList({
+          area: areaId
+        } as any);
+        
+        const rings = containers.results
+          .filter((c: any) => (c.container_type_name || '').toLowerCase().includes('ring'))
+          .map((c: any) => {
+            const capacity = parseFloat(c.volume_m3 ?? "0") || 0;
+            return {
+              id: c.id,
+              name: c.name,
+              areaId: c.area,
+              areaName: c.area_name || 'Unknown Area',
+              status: c.active ? 'active' : 'inactive',
+              biomass: 0, // Placeholder
+              capacity,
+              fishCount: 0, // Placeholder
+              averageWeight: 0, // Placeholder
+              waterDepth: 15, // Placeholder
+              netCondition: 'good', // Placeholder
+              lastInspection: new Date().toISOString(),
+              coordinates: { lat: 0, lng: 0 }, // Placeholder
+              environmentalStatus: 'optimal' // Placeholder
+            };
+          });
+        
+        return { results: rings };
+      } catch {
+        return { results: [] };
+      }
+    },
+
+    /**
+     * Get detailed ring information
+     */
+    async getRingDetail(id: number) {
+      try {
+        const container = await ApiService.apiV1InfrastructureContainersRetrieve(id);
+        if (!container) return null;
+        
+        const capacity = parseFloat(container.volume_m3 ?? "0") || 0;
+        
+        return {
+          id: container.id,
+          name: container.name,
+          areaId: container.area || 0,
+          areaName: container.area_name || 'Unknown Area',
+          status: container.active ? 'active' : 'inactive',
+          biomass: 0, // Placeholder
+          capacity,
+          fishCount: 0, // Placeholder
+          averageWeight: 0, // Placeholder
+          waterDepth: 15, // Placeholder
+          netCondition: 'good', // Placeholder
+          lastInspection: new Date().toISOString(),
+          coordinates: { lat: 0, lng: 0 }, // Placeholder
+          environmentalStatus: 'optimal', // Placeholder
+          // Additional fields for detail view
+          netLastChanged: new Date().toISOString(),
+          netType: 'Standard',
+          cageVolume: capacity,
+          installedDate: container.created_at,
+          lastFeedingTime: new Date().toISOString(),
+          dailyFeedAmount: 850, // Placeholder
+          mortalityRate: 0.15, // Placeholder
+          feedConversionRatio: 1.12, // Placeholder
+          waterTemperature: 8.5, // Placeholder
+          salinity: 34.8, // Placeholder
+          currentSpeed: 0.3, // Placeholder
+          oxygenSaturation: 95.2 // Placeholder
+        };
+      } catch {
+        return null;
+      }
     }
   },
 
@@ -351,6 +490,208 @@ export const api = {
 
     async createFeedingEvent(data: any) {
       return ApiService.apiV1InventoryFeedingEventsCreate(data);
+    },
+
+    async getFeedPurchases(filters?: any) {
+      return ApiService.apiV1InventoryFeedPurchasesList(filters as any);
+    },
+
+    async getFeedContainers(filters?: any) {
+      // The OpenAPI spec currently exposes only FeedContainerStock, not the parent
+      // FeedContainer list, so we synthesise a minimal container collection from
+      // the stock response until the backend adds a dedicated endpoint.
+      const stock = await ApiService.apiV1InventoryFeedContainerStockList(
+        filters as any,
+      );
+
+      // Build a unique map keyed by feed_container id
+      const map = new Map<
+        number,
+        {
+          id: number;
+          name: string;
+          active: boolean;
+        }
+      >();
+
+      for (const s of stock.results ?? []) {
+        if (!map.has(s.feed_container)) {
+          map.set(s.feed_container, {
+            id: s.feed_container,
+            name: s.feed_container_name,
+            active: true, // assume active; additional status unavailable
+          });
+        }
+      }
+
+      return {
+        count: map.size,
+        results: Array.from(map.values()),
+      };
+    },
+
+    async getFeedContainerStock(filters?: any) {
+      return ApiService.apiV1InventoryFeedContainerStockList(filters as any);
+    }
+  },
+
+  // Broodstock endpoints
+  broodstock: {
+    programs: {
+      async getAll() {
+        try {
+          const plans = await ApiService.apiV1BroodstockBreedingPlansList();
+          
+          const programs = plans.results.map((plan: any) => {
+            const currentGeneration = 3; // Placeholder
+            const targetGeneration = 5; // Placeholder
+            
+            return {
+              id: plan.id,
+              name: plan.name || `Breeding Plan ${plan.id}`,
+              description: plan.description || 'No description available',
+              status: plan.status || 'active',
+              currentGeneration,
+              targetGeneration,
+              progress: Math.min(100, (currentGeneration / targetGeneration) * 100),
+              populationSize: 0, // Placeholder
+              startDate: plan.created_at,
+              geneticGain: [2, 4, 7, 10, 12], // Placeholder
+              traitWeights: {
+                growthRate: 40,
+                diseaseResistance: 30,
+                feedEfficiency: 20,
+                fleshQuality: 10
+              },
+              leadGeneticist: 'Dr. Alex Smith' // Placeholder
+            };
+          });
+          
+          return { count: programs.length, results: programs };
+        } catch {
+          return { count: 0, results: [] };
+        }
+      }
+    },
+    
+    population: {
+      async getContainers() {
+        try {
+          const containers = await ApiService.apiV1InfrastructureContainersList();
+          
+          const broodstockContainers = containers.results.map((c: any) => {
+            return {
+              id: c.id,
+              name: c.name,
+              location: c.area_name || c.hall_name || 'Unknown',
+              facility: c.hall_name || 'Main Facility',
+              geography: c.area_name || 'Unknown Area',
+              containerType: c.container_type_name || 'Tank',
+              stage: 'Broodstock',
+              fishCount: 100, // Placeholder
+              capacity: parseFloat(c.volume_m3 || '0') || 500,
+              temperature: 12.5, // Placeholder
+              oxygen: 8.2, // Placeholder
+              ph: 7.4, // Placeholder
+              light: 14, // Placeholder
+              environmentalStatus: 'optimal', // Placeholder
+              utilizationRate: 80 // Placeholder
+            };
+          });
+          
+          return {
+            count: broodstockContainers.length,
+            results: broodstockContainers
+          };
+        } catch {
+          return { count: 0, results: [] };
+        }
+      },
+      
+      async getContainerById(id: number) {
+        try {
+          const container = await ApiService.apiV1InfrastructureContainersRetrieve(id);
+          if (!container) return null;
+          
+          return {
+            id: container.id,
+            name: container.name,
+            location: container.area_name || container.hall_name || 'Unknown',
+            facility: container.hall_name || 'Main Facility',
+            geography: container.area_name || 'Unknown Area',
+            containerType: container.container_type_name || 'Tank',
+            stage: 'Broodstock',
+            fishCount: 100, // Placeholder
+            capacity: parseFloat(container.volume_m3 || '0') || 500,
+            utilizationRate: 80, // Placeholder
+            assignedProgram: 'Atlantic Salmon G5', // Placeholder
+            generation: 'G5', // Placeholder
+            temperature: 12.5, // Placeholder
+            oxygen: 8.2, // Placeholder
+            ph: 7.4, // Placeholder
+            salinity: 34.8, // Placeholder
+            light: 14, // Placeholder
+            flowRate: 120, // Placeholder
+            environmentalStatus: 'optimal', // Placeholder
+            status: container.active ? 'active' : 'inactive',
+            lastFeedingTime: new Date().toISOString(),
+            lastHealthCheck: new Date().toISOString(),
+            lastSampling: new Date().toISOString(),
+            mortalityRate: '0.15%', // Placeholder
+            avgWeight: '5200', // Placeholder
+            conditionFactor: '1.15', // Placeholder
+            hasActiveAlerts: false, // Placeholder
+            alertCount: 0 // Placeholder
+          };
+        } catch {
+          return null;
+        }
+      }
+    },
+    
+    genetics: {
+      async getTraits() {
+        // Return static placeholder data matching the expected shape
+        return {
+          correlationMatrix: {
+            traits: ['Growth Rate', 'Disease Resistance', 'Feed Efficiency', 'Flesh Quality'],
+            correlations: [
+              [1.0, 0.3, 0.5, 0.2],
+              [0.3, 1.0, 0.4, 0.1],
+              [0.5, 0.4, 1.0, 0.3],
+              [0.2, 0.1, 0.3, 1.0]
+            ]
+          },
+          snpAnalysis: {
+            totalSnps: 25000,
+            analyzedTraits: 4,
+            genomicMarkers: [
+              { type: 'growth', positions: [0.15, 0.35, 0.62, 0.78] },
+              { type: 'disease', positions: [0.22, 0.44, 0.67, 0.89] },
+              { type: 'quality', positions: [0.12, 0.33, 0.57, 0.91] },
+              { type: 'maturation', positions: [0.18, 0.29, 0.51, 0.82] }
+            ]
+          },
+          traitPerformance: {
+            labels: ['Growth Rate', 'Disease Resistance', 'Feed Efficiency', 'Flesh Quality'],
+            currentGeneration: [85, 92, 78, 88]
+          }
+        };
+      }
+    },
+
+    /**
+     * List broodstock breeding pairs
+     */
+    async getPairs() {
+      return ApiService.apiV1BroodstockBreedingPairsList();
+    },
+
+    /**
+     * List registered egg suppliers
+     */
+    async getEggSuppliers() {
+      return ApiService.apiV1BroodstockEggSuppliersList();
     }
   },
 

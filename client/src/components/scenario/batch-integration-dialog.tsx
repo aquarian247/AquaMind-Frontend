@@ -36,7 +36,7 @@ export function BatchIntegrationDialog({ children, onBatchSelected }: BatchInteg
 
   // Fetch available batches
   const { data: batches, isLoading } = useQuery<Batch[]>({
-    queryKey: ["/api/batches", { search: searchTerm, status: statusFilter }],
+    queryKey: ["batch/batches", { search: searchTerm, status: statusFilter }],
     queryFn: () => {
       // Mock batch data - in real app this would fetch from batch management API
       const mockBatches: Batch[] = [
