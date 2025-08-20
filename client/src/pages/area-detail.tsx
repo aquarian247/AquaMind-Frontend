@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useAreaKpi } from "@/hooks/aggregations/useAreaKpi";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -95,6 +96,10 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
   });
 
   const rings: Ring[] = ringsData?.results || [];
+
+  // Aggregated KPI data for this area
+  const areaId = Number(params.id);
+  const { data: kpi } = useAreaKpi(areaId);
 
   if (isLoading) {
     return (
@@ -200,10 +205,12 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             <Fish className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{area.totalBiomass.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {((kpi?.totalBiomassKg ?? 0) / 1000).toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">tonnes</p>
             <div className="mt-2">
-              <Progress value={(area.totalBiomass / area.capacity) * 100} />
+              <Progress value={(((kpi?.totalBiomassKg ?? 0) / 1000) / (area.capacity || 1)) * 100} />
             </div>
           </CardContent>
         </Card>
@@ -214,10 +221,12 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             <Scale className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{area.averageWeight}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {(kpi?.averageWeightKg ?? 0).toFixed(2)}
+            </div>
             <p className="text-xs text-muted-foreground">kg per fish</p>
             <div className="mt-2">
-              <Progress value={(area.averageWeight / 6) * 100} />
+              <Progress value={((kpi?.averageWeightKg ?? 0) / 6) * 100} />
             </div>
           </CardContent>
         </Card>
@@ -383,7 +392,9 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Current Stock:</span>
-                      <div className="font-medium">{area.currentStock.toLocaleString()} fish</div>
+                      <div className="font-medium">
+                        {(kpi?.populationCount ?? 0).toLocaleString()} fish
+                      </div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Capacity:</span>
@@ -391,7 +402,9 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Utilization:</span>
-                      <div className="font-medium">{Math.round((area.totalBiomass / area.capacity) * 100)}%</div>
+                      <div className="font-medium">
+                        {Math.round((((kpi?.totalBiomassKg ?? 0) / 1000) / (area.capacity || 1)) * 100)}%
+                      </div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Generation:</span>

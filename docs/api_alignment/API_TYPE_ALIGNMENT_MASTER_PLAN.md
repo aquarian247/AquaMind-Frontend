@@ -39,7 +39,7 @@ _Code Droids update this table at the end of every session._
 | P0 | ✅ | 2025-08-19 | 2025-08-19 | Deleted client/src/lib/types/django.ts; removed local DTO dependency |
 | P1 | ✅ | 2025-08-19 | 2025-08-19 | Adopted snake_case across inventory/broodstock pages; aligned pagination shapes |
 | P2 | ✅ | 2025-08-19 | 2025-08-19 | All queries migrated to ApiService wrappers with semantic React Query keys; endpoint validator 0 invalid |
-| P3 | ☐ | — | — | — |
+| P3 | ✅ | 2025-08-20 | 2025-08-20 | Implemented aggregation hooks (area/station KPI, batch FCR); refactored components; added tests; type-check zero; endpoints validated |
 | P4 | ☐ | — | — | — |
 
 ### Phase P2 – Session Notes (2025-08-19)
@@ -47,6 +47,13 @@ _Code Droids update this table at the end of every session._
 - Introduced semantic query keys (domain/resource pattern) and removed string URL keys  
 - Preserved snake_case and paginated shapes; added safe placeholder arrays where backend coverage is pending  
 - Verified: `npm run type-check` passes; `npm run validate:endpoints` reports **0 invalid endpoints**
+
+### Phase P3 – Session Notes (2025-08-20)
+- Implemented new aggregation hooks: **useAreaKpi**, **useStationKpi**, **useBatchFcr**  
+- Refactored components to consume hooks: `area-detail.tsx`, `station-detail.tsx`, `BatchFeedHistoryView.tsx`  
+- Added comprehensive unit tests for each hook with **ApiService** mocks (Vitest)  
+- Fixed remaining TS issues by using `container_id` fields and adding date-guard defaults in growth-sample logic  
+- Results: `npm run type-check` passes, all unit tests green, `npm run validate:endpoints` passes  
 
 Legend: ☐ not-started · ➖ in-progress · ✅ done
 

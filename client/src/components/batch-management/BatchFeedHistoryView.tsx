@@ -27,6 +27,7 @@ import {
   Activity
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { api } from "@/lib/api";
 
 interface BatchFeedHistoryViewProps {
   batchId: number;
@@ -103,13 +104,69 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   const { data: feedingEvents = [] } = useQuery<FeedingEvent[]>({
     queryKey: ["batch/feeding-events", batchId, currentDateRange],
     // TODO: replace placeholder with api.batch.getFeedingEvents once backend/spec exposes it
-    queryFn: async () => [],
+    queryFn: async () => {
+      const resp: any = await api.inventory.getFeedingEvents();
+      const from = currentDateRange.from ? new Date(currentDateRange.from) : null;
+      const to = currentDateRange.to ? new Date(currentDateRange.to) : null;
+
+      const results = (resp.results || [])
+        .filter((e: any) => e.batch === batchId)
+        .filter((e: any) => {
+          const d = new Date(e.feeding_date);
+          if (from && d < from) return false;
+          if (to && d > to) return false;
+          return true;
+        })
+        .map((e: any) => ({
+          id: e.id,
+          feedingDate: e.feeding_date,
+          feedingTime: new Date(e.feeding_date).toISOString().slice(11, 16),
+          amountKg: Number(e.amount_kg ?? 0),
+          feedType: e.feed_type_name ?? e.feed_type ?? "Unknown",
+          feedBrand: e.feed_name ?? e.feed_brand ?? "Generic",
+          containerName: e.container_name ?? "Unknown",
+          batchBiomassKg: Number(e.batch_biomass_kg ?? 0),
+          feedCost: Number(e.total_cost ?? e.estimated_cost ?? 0),
+          method: e.feeding_method_name ?? e.method ?? "Manual",
+          notes: e.notes ?? "",
+          recordedBy: e.recorded_by_username ?? "system",
+        }));
+
+      return results as FeedingEvent[];
+    },
   });
 
   const { data: feedingSummaries = [] } = useQuery<FeedingSummary[]>({
     queryKey: ["batch/feeding-summaries", batchId, periodFilter, dateRange],
     // TODO: replace placeholder with api.batch.getFeedingSummaries once backend/spec exposes it
-    queryFn: async () => [],
+    queryFn: async () => {
+      const resp: any = await api.batch.getFeedingSummaries(batchId);
+      const list = (resp.results || []).map((r: any) => ({
+        id: r.id,
+        periodStart:
+          r.period_start ?? r.start_date ?? r.periodStart ??
+          new Date().toISOString(),
+        periodEnd:
+          r.period_end ?? r.end_date ?? r.periodEnd ??
+          new Date().toISOString(),
+        totalFeedKg: Number(r.total_feed_kg ?? r.totalFeedKg ?? 0),
+        totalFeedConsumedKg: Number(
+          r.total_feed_consumed_kg ?? r.totalFeedConsumedKg ?? 0,
+        ),
+        totalBiomassGainKg: Number(
+          r.total_biomass_gain_kg ?? r.totalBiomassGainKg ?? 0,
+        ),
+        fcr: Number(r.fcr ?? 0),
+        averageFeedingPercentage: Number(
+          r.average_feeding_percentage ?? r.avg_feeding_pct ?? 0,
+        ),
+        feedingEventsCount: Number(
+          r.events_count ?? r.feeding_events_count ?? 0,
+        ),
+        totalCost: Number(r.total_cost ?? 0),
+      }));
+      return list as FeedingSummary[];
+    },
   });
 
   // Calculate feed analytics
