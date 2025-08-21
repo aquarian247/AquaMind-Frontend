@@ -38,12 +38,11 @@ jobs:
     # moving.  Once legacy endpoints are removed in Phase 2 the guard can
     # be made blocking again (remove `continue-on-error` and `|| true`).
     - name: Validate API endpoints
-      continue-on-error: true
       run: |
         # Check if OpenAPI spec exists (it should be copied by regenerate-api-client workflow)
         if [ -f "api/openapi.yaml" ]; then
           echo "✅ OpenAPI spec found, validating endpoints..."
-          npm run validate:endpoints || true
+          npm run validate:endpoints
         else
           echo "⚠️ OpenAPI spec not found, skipping endpoint validation"
           echo "To enable validation, ensure api/openapi.yaml is present"
