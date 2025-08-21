@@ -1,6 +1,7 @@
 # API Alignment Roadmap  
 _AquaMind Frontend ↔ Backend • Phase 2 & 3 Planning_  
 Last updated: **2025-08-18**
+Status update (2025-08-21): CI now fails on endpoint validation errors; validator is clean on main.
 
 ---
 
@@ -46,7 +47,7 @@ _Total outstanding:_ **68** references.
 
 ## 4  Phase 3 — Final Cleanup (Post-Alignment)
 
-1. **Toggle CI** – make endpoint validation **blocking** (`continue-on-error: false`).
+1. **Toggle CI** – make endpoint validation **blocking** (`continue-on-error: false`) — DONE (this PR flips continue-on-error off).
 2. **Remove placeholders / mocks** introduced in Phase 1.
 3. **Generate client-only fetches** – mandate `ApiService` usage everywhere.
 4. **Delete redundant code** tied to removed “imaginary” features.
@@ -88,7 +89,7 @@ Use this matrix during triage meetings; record outcome in each GitHub issue.
 * ~~#8 Scenario dynamic endpoints implementation (completed in this PR)~~
 * ~~#9 Broodstock dashboard KPI backend spec (completed in this PR)~~
 * ~~#10 Batch analytics endpoint consolidation (closed by PR #19)~~
-* **#11** CI guard flip to blocking
+* ~~#11 CI guard flip to blocking (closed by this PR)~~
 * **#12** Documentation final pass
 
 (Replace `#xxx` with actual issue numbers once created.)
