@@ -35,7 +35,7 @@ import { MortalityModelCreationDialog } from "@/components/scenario/mortality-mo
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ApiService } from "@/api/generated";
+import { ApiService } from "@/api/generated/services/ApiService";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ScenarioPlanningKPIs {
@@ -123,9 +123,13 @@ export default function ScenarioPlanning() {
   const { data: biologicalConstraints } = useQuery<any>({
     queryKey: ["scenario:biologicalConstraints"],
     queryFn: async () => {
-      const response = await fetch('/api/v1/scenario/biological-constraints/');
-      if (!response.ok) throw new Error('Failed to fetch biological constraints');
-      return response.json();
+      try {
+        const response = await ApiService.apiV1ScenarioBiologicalConstraintsList();
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch biological constraints:", error);
+        throw new Error("Failed to fetch biological constraints");
+      }
     }
   });
 

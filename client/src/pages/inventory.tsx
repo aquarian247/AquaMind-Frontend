@@ -34,6 +34,7 @@ import {
   ClipboardList,
   Factory
 } from "lucide-react";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 // Types based on Django data model section 3.3
 interface Feed {
@@ -176,45 +177,168 @@ const feedingEventSchema = z.object({
 
 const api = {
   async getFeedTypes(): Promise<{ results: Feed[] }> {
-    const response = await fetch("/api/v1/inventory/feeds/");
-    if (!response.ok) throw new Error("Failed to fetch feed types");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedsList();
+      const list: any[] = (response as any)?.results ?? [];
+      const mapped: Feed[] = list.map((f: any) => ({
+        id: f.feed_id ?? f.id,
+        name: f.name ?? "",
+        brand: f.brand ?? "",
+        sizeCategory: String(f.size_category ?? "SMALL").toUpperCase() as any,
+        pelletSizeMm: f.pellet_size_mm != null ? Number(f.pellet_size_mm) : undefined,
+        proteinPercentage: f.protein_percentage != null ? Number(f.protein_percentage) : undefined,
+        fatPercentage: f.fat_percentage != null ? Number(f.fat_percentage) : undefined,
+        carbohydratePercentage: f.carbohydrate_percentage != null ? Number(f.carbohydrate_percentage) : undefined,
+        description: f.description ?? "",
+        isActive: Boolean(f.active ?? f.is_active ?? true),
+        createdAt: f.created_at ?? new Date().toISOString(),
+        updatedAt: f.updated_at ?? new Date().toISOString(),
+      }));
+      return { results: mapped };
+    } catch (error) {
+      console.error("Failed to fetch feed types:", error);
+      throw new Error("Failed to fetch feed types");
+    }
   },
 
   async getFeedPurchases(): Promise<{ results: FeedPurchase[] }> {
-    const response = await fetch("/api/v1/inventory/feed-purchases/");
-    if (!response.ok) throw new Error("Failed to fetch feed purchases");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedPurchasesList();
+      const list: any[] = (response as any)?.results ?? [];
+      const mapped: FeedPurchase[] = list.map((p: any) => ({
+        id: p.id ?? p.feed_purchase_id,
+        feed: p.feed,
+        purchaseDate: p.purchase_date ?? p.date ?? new Date().toISOString(),
+        quantityKg: String(p.quantity_kg ?? p.quantity ?? "0"),
+        costPerKg: String(p.cost_per_kg ?? p.unit_cost ?? "0"),
+        supplier: p.supplier ?? "Unknown",
+        batchNumber: p.batch_number ?? undefined,
+        expiryDate: p.expiry_date ?? undefined,
+        notes: p.notes ?? undefined,
+        createdAt: p.created_at ?? new Date().toISOString(),
+        updatedAt: p.updated_at ?? new Date().toISOString(),
+      }));
+      return { results: mapped };
+    } catch (error) {
+      console.error("Failed to fetch feed purchases:", error);
+      throw new Error("Failed to fetch feed purchases");
+    }
   },
 
   async getFeedContainers(): Promise<{ results: FeedContainer[] }> {
-    const response = await fetch("/api/v1/infrastructure/feed-containers/");
-    if (!response.ok) throw new Error("Failed to fetch feed containers");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InfrastructureFeedContainersList();
+      const list: any[] = (response as any)?.results ?? [];
+      const mapped: FeedContainer[] = list.map((c: any) => ({
+        id: c.id ?? c.feed_container_id,
+        name: c.name ?? "Container",
+        capacity: String(c.capacity_kg ?? c.capacity ?? "0"),
+        location: c.location ?? c.hall_name ?? undefined,
+        containerType: c.container_type_name ?? c.type ?? "Barge",
+        isActive: Boolean(c.active ?? c.is_active ?? true),
+        createdAt: c.created_at ?? new Date().toISOString(),
+        updatedAt: c.updated_at ?? new Date().toISOString(),
+      }));
+      return { results: mapped };
+    } catch (error) {
+      console.error("Failed to fetch feed containers:", error);
+      throw new Error("Failed to fetch feed containers");
+    }
   },
 
   async getFeedStock(): Promise<{ results: FeedStock[] }> {
-    const response = await fetch("/api/v1/inventory/feed-stocks/");
-    if (!response.ok) throw new Error("Failed to fetch feed stock");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedStocksList();
+      const list: any[] = (response as any)?.results ?? [];
+      const mapped: FeedStock[] = list.map((s: any) => ({
+        id: s.id ?? s.feed_stock_id,
+        feed: s.feed,
+        feedContainer: s.feed_container ?? s.container ?? 0,
+        currentQuantityKg: String(s.current_quantity_kg ?? s.quantity_kg ?? s.quantity ?? "0"),
+        reorderThresholdKg: String(s.reorder_threshold_kg ?? s.reorder_threshold ?? "0"),
+        updatedAt: s.updated_at ?? new Date().toISOString(),
+        notes: s.notes ?? undefined,
+      }));
+      return { results: mapped };
+    } catch (error) {
+      console.error("Failed to fetch feed stock:", error);
+      throw new Error("Failed to fetch feed stock");
+    }
   },
 
   async getFeedingEvents(): Promise<{ results: FeedingEvent[] }> {
-    const response = await fetch("/api/v1/inventory/feeding-events/");
-    if (!response.ok) throw new Error("Failed to fetch feeding events");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedingEventsList();
+      const list: any[] = (response as any)?.results ?? [];
+      const mapped: FeedingEvent[] = list.map((e: any) => ({
+        id: e.id ?? e.feeding_event_id,
+        batch: e.batch ?? 0,
+        container: e.container ?? 0,
+        feed: e.feed ?? 0,
+        feedingDate: e.feeding_date ?? e.date ?? new Date().toISOString(),
+        feedingTime: e.feeding_time ?? "08:00",
+        amountKg: String(e.amount_kg ?? e.amount ?? "0"),
+        batchBiomassKg: String(e.batch_biomass_kg ?? e.biomass_kg ?? "0"),
+        feedingPercentage: e.feeding_percentage != null ? String(e.feeding_percentage) : undefined,
+        feedCost: e.feed_cost != null ? String(e.feed_cost) : undefined,
+        method: e.method ?? "MANUAL",
+        notes: e.notes ?? undefined,
+        recordedBy: e.recorded_by ?? undefined,
+        createdAt: e.created_at ?? new Date().toISOString(),
+        updatedAt: e.updated_at ?? new Date().toISOString(),
+      }));
+      return { results: mapped };
+    } catch (error) {
+      console.error("Failed to fetch feeding events:", error);
+      throw new Error("Failed to fetch feeding events");
+    }
   },
 
   async getFeedContainerStock(): Promise<{ results: FeedContainerStock[] }> {
-    const response = await fetch("/api/v1/inventory/feed-container-stock/");
-    if (!response.ok) throw new Error("Failed to fetch container stock");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryFeedContainerStockList();
+      const list: any[] = (response as any)?.results ?? [];
+      const mapped: FeedContainerStock[] = list.map((cs: any) => ({
+        id: cs.id ?? cs.feed_container_stock_id,
+        feedContainer: cs.feed_container ?? 0,
+        feedPurchase: cs.feed_purchase ?? 0,
+        quantityKg: String(cs.quantity_kg ?? cs.quantity ?? "0"),
+        costPerKg: String(cs.cost_per_kg ?? cs.unit_cost ?? "0"),
+        purchaseDate: cs.purchase_date ?? new Date().toISOString(),
+        createdAt: cs.created_at ?? new Date().toISOString(),
+        updatedAt: cs.updated_at ?? new Date().toISOString(),
+      }));
+      return { results: mapped };
+    } catch (error) {
+      console.error("Failed to fetch container stock:", error);
+      throw new Error("Failed to fetch container stock");
+    }
   },
 
   async getBatchFeedingSummaries(): Promise<{ results: BatchFeedingSummary[] }> {
-    const response = await fetch("/api/v1/inventory/batch-feeding-summaries/");
-    if (!response.ok) throw new Error("Failed to fetch feeding summaries");
-    return response.json();
+    try {
+      const response = await ApiService.apiV1InventoryBatchFeedingSummariesList();
+      const list: any[] = (response as any)?.results ?? [];
+      const mapped: BatchFeedingSummary[] = list.map((b: any) => ({
+        id: b.id ?? b.batch_feeding_summary_id,
+        batch: b.batch ?? 0,
+        periodStart: b.period_start ?? new Date().toISOString(),
+        periodEnd: b.period_end ?? new Date().toISOString(),
+        totalFeedKg: String(b.total_feed_kg ?? b.total_feed ?? "0"),
+        averageBiomassKg: b.average_biomass_kg != null ? String(b.average_biomass_kg) : undefined,
+        averageFeedingPercentage: b.average_feeding_percentage != null ? String(b.average_feeding_percentage) : undefined,
+        feedConversionRatio: b.feed_conversion_ratio != null ? String(b.feed_conversion_ratio) : undefined,
+        totalFeedConsumedKg: b.total_feed_consumed_kg != null ? String(b.total_feed_consumed_kg) : undefined,
+        totalBiomassGainKg: b.total_biomass_gain_kg != null ? String(b.total_biomass_gain_kg) : undefined,
+        fcr: b.fcr != null ? String(b.fcr) : undefined,
+        createdAt: b.created_at ?? new Date().toISOString(),
+        updatedAt: b.updated_at ?? new Date().toISOString(),
+      }));
+      return { results: mapped };
+    } catch (error) {
+      console.error("Failed to fetch feeding summaries:", error);
+      throw new Error("Failed to fetch feeding summaries");
+    }
   },
 };
 

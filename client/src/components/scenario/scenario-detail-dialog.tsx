@@ -21,6 +21,7 @@ import {
   Thermometer
 } from "lucide-react";
 import { format } from "date-fns";
+import { ApiService } from "@/api/generated";
 
 interface Scenario {
   id: number;
@@ -67,8 +68,17 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
 
   // Fetch scenario projections when dialog opens
   const { data: projectionData, isLoading: projectionsLoading } = useQuery<ProjectionData>({
-    queryKey: ["/api/v1/scenario/scenarios/", scenario.id, "projections"],
-    queryFn: () => fetch(`/api/v1/scenario/scenarios/${scenario.id}/projections/`).then(res => res.json()),
+    queryKey: ["scenario", scenario.id, "projections"],
+    queryFn: async () => {
+      const raw: any = await ApiService.apiV1ScenarioScenariosProjectionsRetrieve(
+        scenario.id as any
+      );
+      // Handle different possible shapes gracefully
+      if (raw && Array.isArray(raw.results)) return raw as ProjectionData;
+      if (Array.isArray(raw)) return { count: raw.length, results: raw } as ProjectionData;
+      if (raw && (raw as any).results) return raw as ProjectionData;
+      return { count: 0, results: [] } as ProjectionData;
+    },
     enabled: open,
   });
 
@@ -85,8 +95,39 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
 
   // Fetch scenario configuration details
   const { data: configData, isLoading: configLoading } = useQuery<any>({
-    queryKey: ["/api/v1/scenario/scenarios/", scenario.id, "config"],
-    queryFn: () => fetch(`/api/v1/scenario/scenarios/${scenario.id}/configuration/`).then(res => res.json()),
+    queryKey: ["scenario", scenario.id, "config"],
+    queryFn: async () => {
+      const s: any = await ApiService.apiV1ScenarioScenariosRetrieve(
+        scenario.id as any
+      );
+      // Map minimal UI-friendly configuration object
+      const tgcModel =
+        s?.tgc_model != null
+          ? {
+              name: `TGC Model #${s.tgc_model}`,
+              tgcValue: s.tgc_value ?? "N/A",
+              location: s.geography_name ?? "Unknown",
+            }
+          : undefined;
+      const fcrModel =
+        s?.fcr_model != null
+          ? {
+              name: `FCR Model #${s.fcr_model}`,
+              baseFcr: s.base_fcr ?? "1.2",
+            }
+          : undefined;
+      const mortalityModel =
+        s?.mortality_model != null
+          ? {
+              name: `Mortality Model #${s.mortality_model}`,
+              frequency: s.mortality_frequency ?? "Daily",
+            }
+          : undefined;
+      const temperatureProfile = {
+        name: s?.temperature_profile_name ?? "Standard Profile",
+      };
+      return { tgcModel, fcrModel, mortalityModel, temperatureProfile };
+    },
     enabled: open,
   });
 

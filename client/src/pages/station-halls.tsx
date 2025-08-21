@@ -18,6 +18,7 @@ import {
   Activity
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated";
 
 interface Hall {
   id: number;
@@ -43,11 +44,30 @@ export default function StationHalls({ params }: { params: { id: string } }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: hallsData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/freshwater-stations/", stationId, "/halls"],
+    queryKey: ["station", stationId, "halls"],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/freshwater-stations/${stationId}/halls`);
-      if (!response.ok) throw new Error("Failed to fetch halls");
-      return response.json();
+      const res = await ApiService.apiV1InfrastructureHallsList({
+        freshwater_station: Number(stationId),
+      } as any);
+
+      const mapped = (res.results || []).map((raw: any): Hall => ({
+        id: raw.id,
+        name: raw.name,
+        stationId: raw.freshwater_station ?? Number(stationId),
+        stationName: raw.freshwater_station_name ?? "",
+        status: raw.active ? "active" : "inactive",
+        containers: 0,
+        totalBiomass: 0,
+        capacity: 0,
+        temperature: 0,
+        oxygenLevel: 0,
+        flowRate: 0,
+        powerUsage: 0,
+        lastMaintenance: new Date().toISOString(),
+        systemStatus: "optimal",
+      }));
+
+      return { results: mapped };
     },
   });
 

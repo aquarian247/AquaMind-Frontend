@@ -26,6 +26,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { ApiService } from "@/api/generated/services/ApiService";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // Unified client-computed API
 import { api } from "@/lib/api";
@@ -118,9 +119,13 @@ export default function Health() {
   const { data: geographiesData } = useQuery({
     queryKey: ["/api/v1/infrastructure/geographies/"],
     queryFn: async () => {
-      const response = await fetch("/api/v1/infrastructure/geographies/");
-      if (!response.ok) throw new Error("Failed to fetch geographies");
-      return response.json();
+      try {
+        const response = await ApiService.apiV1InfrastructureGeographiesList();
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch geographies:", error);
+        throw new Error("Failed to fetch geographies");
+      }
     },
   });
 

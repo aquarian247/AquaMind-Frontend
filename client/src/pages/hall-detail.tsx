@@ -14,12 +14,13 @@ import {
   Gauge,
   Settings,
   Search,
+  Fish,
   Calendar,
   Activity,
-  Eye,
-  Fish
+  Eye
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { ApiService } from "@/api/generated";
 
 interface Container {
   id: number;
@@ -51,12 +52,50 @@ export default function HallDetail({ params }: { params: { id: string } }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  /* -------------------------------------------------
+   * Hall metadata (for names / station linkage)
+   * ------------------------------------------------- */
+  const { data: hall } = useQuery({
+    queryKey: ["hall", hallId],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureHallsRetrieve(Number(hallId)),
+  });
+
   const { data: containersData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/halls/", hallId, "/containers"],
+    queryKey: ["hall", hallId, "containers"],
     queryFn: async () => {
-      const response = await fetch(`/api/v1/infrastructure/halls/${hallId}/containers`);
-      if (!response.ok) throw new Error("Failed to fetch containers");
-      return response.json();
+      const res = await ApiService.apiV1InfrastructureContainersList({
+        hall: Number(hallId),
+      } as any);
+
+      /* Map API result to UI shape expected by page */
+      const mapped = (res.results || []).map((c: any) => {
+        const capacity = parseFloat(c.volume_m3 ?? "0") || 0;
+        return {
+          id: c.id,
+          name: c.name,
+          hallId: c.hall ?? Number(hallId),
+          hallName: c.hall_name || hall?.name || `Hall ${hallId}`,
+          stationId: hall?.freshwater_station ?? 0,
+          stationName: hall?.freshwater_station_name ?? "",
+          type: (c.container_type_name as Container["type"]) || "Smolt Tank",
+          stage: "Smolt",
+          status: c.active ? "active" : "inactive",
+          biomass: 0,
+          capacity,
+          fishCount: 0,
+          averageWeight: 0,
+          temperature: 0,
+          oxygenLevel: 0,
+          flowRate: 0,
+          lastMaintenance: new Date().toISOString(),
+          systemStatus: "optimal",
+          density: 0,
+          feedingSchedule: "08:00, 12:00, 16:00",
+        } as Container;
+      });
+
+      return { results: mapped };
     },
   });
 
@@ -70,35 +109,49 @@ export default function HallDetail({ params }: { params: { id: string } }) {
     return matchesSearch && matchesStatus && matchesType;
   });
 
+  /* -------------------------------------------------
+   * Derived naming & helper utilities
+   * ------------------------------------------------- */
+  const effectiveStationId =
+    hall?.freshwater_station ?? containers[0]?.stationId;
+  const headerHallName =
+    hall?.name ?? containers[0]?.hallName ?? `Hall ${hallId}`;
+  const headerStationName =
+    hall?.freshwater_station_name ??
+    containers[0]?.stationName ??
+    (effectiveStationId ? `Station ${effectiveStationId}` : "Station");
+
   const getStatusBadge = (status: string) => {
     const variants = {
       active: "bg-green-100 text-green-800",
       maintenance: "bg-yellow-100 text-yellow-800",
-      inactive: "bg-red-100 text-red-800"
-    };
-    return variants[status as keyof typeof variants] || "bg-gray-100 text-gray-800";
+      inactive: "bg-red-100 text-red-800",
+    } as const;
+    return (
+      variants[status as keyof typeof variants] ||
+      "bg-gray-100 text-gray-800"
+    );
   };
 
   const getTypeBadge = (type: string) => {
     const variants = {
-      "Tray": "bg-purple-100 text-purple-800",
+      Tray: "bg-purple-100 text-purple-800",
       "Fry Tank": "bg-blue-100 text-blue-800",
       "Parr Tank": "bg-cyan-100 text-cyan-800",
       "Smolt Tank": "bg-green-100 text-green-800",
-      "Post-Smolt Tank": "bg-orange-100 text-orange-800"
-    };
+      "Post-Smolt Tank": "bg-orange-100 text-orange-800",
+    } as const;
     return variants[type as keyof typeof variants] || "bg-gray-100 text-gray-800";
   };
 
   const getStageIcon = (stage: string) => {
-    // Different lifecycle stages have different visual representations
     const icons = {
       "Egg&Alevin": "🥚",
-      "Fry": "🐟",
-      "Parr": "🐠",
-      "Smolt": "🐟",
-      "Post-Smolt": "🐡"
-    };
+      Fry: "🐟",
+      Parr: "🐠",
+      Smolt: "🐟",
+      "Post-Smolt": "🐡",
+    } as const;
     return icons[stage as keyof typeof icons] || "🐟";
   };
 
@@ -125,9 +178,6 @@ export default function HallDetail({ params }: { params: { id: string } }) {
     );
   }
 
-  const hallInfo = containers[0];
-  const stationId = hallInfo?.stationId;
-
   return (
     <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
@@ -135,7 +185,10 @@ export default function HallDetail({ params }: { params: { id: string } }) {
         <div className="flex items-center space-x-2">
           <Button 
             variant="ghost" 
-            onClick={() => setLocation(`/infrastructure/stations/${stationId}/halls`)} 
+            onClick={() =>
+              effectiveStationId &&
+              setLocation(`/infrastructure/stations/${effectiveStationId}/halls`)
+            } 
             className="flex items-center"
           >
             <ArrowLeft className="h-4 w-4 sm:mr-2" />
@@ -143,9 +196,9 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           </Button>
           <Factory className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className="text-2xl font-bold">{hallInfo?.hallName || `Hall ${hallId}`}</h1>
+            <h1 className="text-2xl font-bold">{headerHallName}</h1>
             <p className="text-muted-foreground">
-              {hallInfo?.stationName || `Station ${stationId}`} • Production containers
+              {headerStationName} • Production containers
             </p>
           </div>
         </div>

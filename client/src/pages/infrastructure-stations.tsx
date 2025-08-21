@@ -20,6 +20,7 @@ import {
   Container
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
+import { ApiService } from "@/api/generated";
 
 interface Station {
   id: number;
@@ -158,14 +159,39 @@ export default function InfrastructureStations() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const { data: stationsData, isLoading } = useQuery({
-    queryKey: ["/api/v1/infrastructure/freshwater-stations/", selectedGeography],
+    queryKey: ["stations", selectedGeography],
     queryFn: async () => {
-      const url = selectedGeography === "all" 
-        ? "/api/v1/infrastructure/freshwater-stations/"
-        : `/api/v1/infrastructure/freshwater-stations/?geography=${selectedGeography}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch stations");
-      return response.json();
+      const res = await ApiService.apiV1InfrastructureFreshwaterStationsList(
+        {} as any,
+      );
+
+      const mapped = (res.results || []).map((raw: any): Station => ({
+        id: raw.id,
+        name: raw.name,
+        geography: raw.geography_name ?? raw.geography ?? "Unknown",
+        type: raw.station_type_display ?? raw.station_type ?? "FRESHWATER",
+        halls: 0,
+        totalContainers: 0,
+        totalBiomass: 0,
+        coordinates: {
+          lat: raw.latitude ?? 0,
+          lng: raw.longitude ?? 0,
+        },
+        status: raw.active ? "active" : "inactive",
+        waterSource: (raw as any).water_source ?? "river",
+        lastInspection: new Date().toISOString(),
+      }));
+
+      const filtered =
+        selectedGeography === "all"
+          ? mapped
+          : mapped.filter((s) =>
+              s.geography
+                .toLowerCase()
+                .includes(selectedGeography.toLowerCase()),
+            );
+
+      return { results: filtered };
     },
   });
 
