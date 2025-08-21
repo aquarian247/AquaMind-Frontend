@@ -97,3 +97,7 @@ Use this matrix during triage meetings; record outcome in each GitHub issue.
 ---
 
 _Authored by Droid-assistant as requested; serves as strategic guidance for the upcoming alignment work._  
+
+---
+
+Finalization (2025-08-21): Obsolete shared schema removed; CI guard now blocking; ready to tag **v1.0-contract-strict**.
