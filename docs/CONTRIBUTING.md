@@ -138,7 +138,6 @@ refactor: improve API error handling
 Update relevant documentation:
 - `README.md` for user-facing changes
 - `docs/` for architectural changes
-- `replit.md` for project context
 - Component documentation for new UI components
 
 ## Questions?
