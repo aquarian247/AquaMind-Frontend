@@ -100,7 +100,11 @@ export default function FarmSitesStatus() {
                   <h4 className="font-semibold text-gray-900">{site.name}</h4>
                   <p className="text-sm text-gray-600">{site.location}</p>
                   <p className="text-xs text-gray-500 font-mono">
-                    Fish: {site.currentStock.toLocaleString()}
+                    {/* `fishCount` is the field returned by the API. Guard against undefined */}
+                    Fish:&nbsp;
+                    {site.fishCount !== undefined && site.fishCount !== null
+                      ? site.fishCount.toLocaleString()
+                      : "—"}
                   </p>
                 </div>
               </div>

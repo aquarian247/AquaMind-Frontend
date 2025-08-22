@@ -68,7 +68,10 @@ export const api = {
         location: `${area.latitude || 0}, ${area.longitude || 0}`,
         status: area.active ? 'active' : 'inactive',
         fishCount: 0, // Would be calculated
-        healthStatus: 'good'
+        healthStatus: 'good',
+        // Added so dashboard components that display "last updated"
+        // information don't encounter undefined values.
+        lastUpdate: new Date().toISOString(),
       }));
     } catch (error) {
       return [];
