@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Waves } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 // Form schema with validation
 const loginFormSchema = z.object({
@@ -83,14 +83,21 @@ const LoginPage: React.FC = () => {
       <div className="w-full max-w-md">
         {/* Logo and branding */}
         <div className="text-center mb-6">
-          <div className="inline-block p-2 bg-primary rounded-full mb-4">
-            <Waves
-              className="h-10 w-10 text-primary-foreground"
-              aria-hidden="true"
-            />
-          </div>
+          {/* Theme-aware Bakkafrost logo */}
+          <img
+            src="/logo-light.png"
+            alt="Bakkafrost Logo"
+            className="h-10 w-auto mx-auto mb-4 block dark:hidden"
+          />
+          <img
+            src="/logo-dark.png"
+            alt="Bakkafrost Logo"
+            className="h-10 w-auto mx-auto mb-4 hidden dark:block"
+          />
           <h1 className="text-3xl font-bold text-foreground">AquaMind</h1>
-          <p className="text-muted-foreground mt-1">Aquaculture Management Platform</p>
+          <p className="text-muted-foreground mt-1">
+            Bakkafrost Aquaculture Management System
+          </p>
         </div>
 
         <Card>
