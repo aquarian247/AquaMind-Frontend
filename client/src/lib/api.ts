@@ -297,38 +297,76 @@ export const api = {
       /* eslint-disable @typescript-eslint/no-magic-numbers */
       try {
         /* ------------------------------------------------------------------
-         * Fetch containers (for capacity) and active batch-container
-         * assignments (for biomass) concurrently.
+         * Fetch first pages concurrently – gives us the counts so we know how
+         * many additional pages to request. The backend uses standard DRF
+         * pagination (count / next / previous / results) with a default page
+         * size of ~20.
          * ------------------------------------------------------------------ */
-        const [containers, assignments] = await Promise.all([
+        const [firstContainersPage, firstAssignmentsPage] = await Promise.all([
           ApiService.apiV1InfrastructureContainersList(),
-          // parameters: assignmentDate?, batch?, container?, isActive?
           ApiService.apiV1BatchContainerAssignmentsList(
-            undefined, // assignment_date
-            undefined, // batch
-            undefined, // container
-            true       // is_active – only active assignments
+            undefined,
+            undefined,
+            undefined,
+            true, // is_active
           ),
         ]);
 
-        /* ----------------------------  Aggregations  ---------------------------- */
-        const totalContainers = containers.results.length;
+        /* ------------------------------ Containers ----------------------------- */
+        const totalContainers = firstContainersPage.count ?? firstContainersPage.results.length;
 
-        const capacity = containers.results.reduce((sum: number, c: any) => {
-          /* max_biomass_kg is a string; fall back to '0' */
-          const cap = parseFloat(c.max_biomass_kg ?? "0");
-          return sum + (isNaN(cap) ? 0 : cap);
+        // capacity accumulator – start with first page
+        let capacity = firstContainersPage.results.reduce((sum: number, c: any) => {
+          const val = parseFloat(c.max_biomass_kg ?? "0");
+          return sum + (isNaN(val) ? 0 : val);
         }, 0);
 
-        const activeBiomass = (assignments.results ?? []).reduce(
-          (sum: number, a: any) => {
-            // ensure assignment is active (extra guard) and biomass_kg is numeric
-            if (a.is_active === false) return sum;
-            const bio = parseFloat(a.biomass_kg ?? "0");
-            return sum + (isNaN(bio) ? 0 : bio);
-          },
-          0,
-        );
+        // paginate if more pages exist
+        if (firstContainersPage.next) {
+          const pageSize = firstContainersPage.results.length || 20;
+          const totalPages = Math.ceil(totalContainers / pageSize);
+          for (let p = 2; p <= totalPages; p += 1) {
+            const pageData = await ApiService.apiV1InfrastructureContainersList(
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              p, // page index
+            );
+            capacity += pageData.results.reduce((sum: number, c: any) => {
+              const val = parseFloat(c.max_biomass_kg ?? "0");
+              return sum + (isNaN(val) ? 0 : val);
+            }, 0);
+          }
+        }
+
+        /* --------------------------- Active Assignments --------------------------- */
+        let activeBiomass = (firstAssignmentsPage.results ?? []).reduce((sum: number, a: any) => {
+          const val = parseFloat(a.biomass_kg ?? "0");
+          return sum + (isNaN(val) ? 0 : val);
+        }, 0);
+
+        const assignmentTotal = firstAssignmentsPage.count ?? firstAssignmentsPage.results.length;
+        if (firstAssignmentsPage.next) {
+          const pageSizeA = firstAssignmentsPage.results.length || 20;
+          const totalPagesA = Math.ceil(assignmentTotal / pageSizeA);
+          for (let p = 2; p <= totalPagesA; p += 1) {
+            const pageData = await ApiService.apiV1BatchContainerAssignmentsList(
+              undefined,
+              undefined,
+              undefined,
+              true,
+              undefined,
+              p,
+            );
+            activeBiomass += (pageData.results ?? []).reduce((sum: number, a: any) => {
+              const val = parseFloat(a.biomass_kg ?? "0");
+              return sum + (isNaN(val) ? 0 : val);
+            }, 0);
+          }
+        }
 
         return {
           totalContainers,
