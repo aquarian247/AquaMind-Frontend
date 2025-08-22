@@ -344,17 +344,21 @@ function BroodstockDashboard() {
   }
 
   return (
-    <div className="p-3 lg:p-6 space-y-6">
+    <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Broodstock Management
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Genetic optimization and breeding program oversight
-          </p>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+        {/* Left: icon + title */}
+        <div className="flex items-center space-x-2">
+          <Dna className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold">Broodstock Management</h1>
+            <p className="text-muted-foreground">
+              Genetic optimization and breeding program oversight
+            </p>
+          </div>
         </div>
+
+        {/* Right: controls */}
         <div className="flex flex-wrap gap-2">
           <div className="relative">
             <select 
