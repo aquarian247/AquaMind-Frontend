@@ -37,14 +37,14 @@ interface Scenario {
   name: string;
   description: string;
   status: string;
-  durationDays: number;
-  initialCount: number;
-  initialWeight: string;
+  duration_days: number;
+  initial_count: number;
+  initial_weight: string;
   genotype: string;
   supplier: string;
-  startDate: string;
-  createdAt: string;
-  updatedAt: string;
+  start_date: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface ScenarioConfigResponse {
@@ -119,7 +119,7 @@ export function ScenarioDetailPage() {
     totalBiomass: projections[projections.length - 1]?.totalBiomass || 0,
     totalFeed: projections[projections.length - 1]?.cumulativeFeed || 0,
     avgFcr: projections[projections.length - 1]?.fcr || 0,
-    totalMortality: scenarioData.initialCount - (projections[projections.length - 1]?.fishCount || 0)
+    totalMortality: scenarioData.initial_count - (projections[projections.length - 1]?.fishCount || 0)
   } : null;
 
   const getStatusColor = (status: string) => {
@@ -159,11 +159,11 @@ export function ScenarioDetailPage() {
             </Badge>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>{new Date(scenarioData.startDate).toLocaleDateString()}</span>
+              <span>{new Date(scenarioData.start_date).toLocaleDateString()}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <Target className="h-4 w-4" />
-              <span>{scenarioData.durationDays} days</span>
+              <span>{scenarioData.duration_days} days</span>
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@ export function ScenarioDetailPage() {
               <Users className="h-4 w-4 text-blue-600" />
               <div>
                 <p className="text-xs text-muted-foreground">Starting Population</p>
-                <p className="text-lg font-bold">{(scenarioData.initialCount / 1000000).toFixed(1)}M</p>
+                <p className="text-lg font-bold">{(scenarioData.initial_count / 1000000).toFixed(1)}M</p>
               </div>
             </div>
           </CardContent>
@@ -189,7 +189,7 @@ export function ScenarioDetailPage() {
               <TrendingUp className="h-4 w-4 text-green-600" />
               <div>
                 <p className="text-xs text-muted-foreground">Initial Weight</p>
-                <p className="text-lg font-bold">{(parseFloat(scenarioData.initialWeight) / 1000).toFixed(1)}kg</p>
+                <p className="text-lg font-bold">{(parseFloat(scenarioData.initial_weight) / 1000).toFixed(1)}kg</p>
               </div>
             </div>
           </CardContent>
@@ -281,9 +281,9 @@ export function ScenarioDetailPage() {
                   <div className="space-y-2">
                     <h4 className="font-medium">Key Insights</h4>
                     <ul className="space-y-1 text-sm text-muted-foreground">
-                      <li>• Growth from smolt transfer ({parseFloat(scenarioData.initialWeight)/1000}kg) to harvest weight ({(summary.finalWeight / 1000).toFixed(1)}kg)</li>
+                      <li>• Growth from smolt transfer ({parseFloat(scenarioData.initial_weight)/1000}kg) to harvest weight ({(summary.finalWeight / 1000).toFixed(1)}kg)</li>
                       <li>• Feed conversion ratio of {summary.avgFcr?.toFixed(2) || 0} demonstrates {(summary.avgFcr || 0) < 1.3 ? 'excellent' : (summary.avgFcr || 0) < 1.5 ? 'good' : 'acceptable'} efficiency</li>
-                      <li>• Sea cage survival rate of {(((scenarioData.initialCount - summary.totalMortality) / scenarioData.initialCount) * 100).toFixed(1)}% over {Math.round(scenarioData.durationDays/30)} months</li>
+                      <li>• Sea cage survival rate of {(((scenarioData.initial_count - summary.totalMortality) / scenarioData.initial_count) * 100).toFixed(1)}% over {Math.round(scenarioData.duration_days/30)} months</li>
                       <li>• Total feed consumption of {summary.totalFeed?.toFixed(0) || 0} tonnes for {(summary.totalBiomass / 1000).toFixed(0)}t biomass production</li>
                     </ul>
                   </div>
@@ -310,13 +310,13 @@ export function ScenarioDetailPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Start Date</label>
-                    <p className="text-sm">{new Date(scenarioData.startDate).toLocaleDateString()}</p>
+                    <p className="text-sm">{new Date(scenarioData.start_date).toLocaleDateString()}</p>
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Duration</label>
-                    <p className="text-sm">{scenarioData.durationDays} days ({Math.round(scenarioData.durationDays/30)} months)</p>
+                    <p className="text-sm">{scenarioData.duration_days} days ({Math.round(scenarioData.duration_days/30)} months)</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Status</label>
@@ -326,7 +326,7 @@ export function ScenarioDetailPage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Created</label>
-                    <p className="text-sm">{new Date(scenarioData.createdAt).toLocaleDateString()}</p>
+                    <p className="text-sm">{new Date(scenarioData.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
