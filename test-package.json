@@ -1,0 +1,31 @@
+{
+  "name": "aquamind-integration-tests",
+  "version": "1.0.0",
+  "description": "Integration tests for AquaMind Django API and React frontend",
+  "main": "test-integration.js",
+  "scripts": {
+    "test": "node test-integration.js",
+    "test:verbose": "node test-integration.js --verbose",
+    "test:auth": "node test-integration.js --auth-only",
+    "test:endpoint": "node test-integration.js --endpoint",
+    "test:watch": "nodemon test-integration.js",
+    "wait-and-test": "wait-on http://localhost:8000/api/ http://localhost:5001 && npm test"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "puppeteer": "^21.5.2",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3",
+    "wait-on": "^7.2.0",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "AquaMind Team",
+  "license": "UNLICENSED",
+  "private": true
+}
