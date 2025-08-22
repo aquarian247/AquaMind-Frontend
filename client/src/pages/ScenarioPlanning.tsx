@@ -162,7 +162,7 @@ export default function ScenarioPlanning() {
     const scenariosInProgress = list.filter((s: any) => s.status === "running").length;
     const completedProjections = list.filter((s: any) => s.status === "completed").length;
     const averageProjectionDuration =
-      list.reduce((sum: number, s: any) => sum + (s.durationDays ?? 0), 0) / list.length;
+      list.reduce((sum: number, s: any) => sum + (s.duration_days ?? 0), 0) / list.length;
 
     return {
       totalActiveScenarios,
@@ -257,15 +257,19 @@ export default function ScenarioPlanning() {
   }) || [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Scenario Planning</h1>
-          <p className="text-muted-foreground">
-            Growth projections and model management for salmon farming operations
-          </p>
+    <div className="container mx-auto p-4 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+        <div className="flex items-center space-x-2">
+          <LineChart className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold">Scenario Planning</h1>
+            <p className="text-muted-foreground">
+              Growth projections and model management for salmon farming operations
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
           <ScenarioCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] })}>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -362,7 +366,7 @@ export default function ScenarioPlanning() {
                       <div>
                         <p className="font-medium">{scenario.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {scenario.durationDays} days • {scenario.genotype}
+                          {scenario.duration_days} days • {scenario.genotype}
                         </p>
                       </div>
                       <Badge variant={scenario.status === 'completed' ? 'default' : 'secondary'}>
@@ -563,15 +567,15 @@ export default function ScenarioPlanning() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                       <div>
                         <p className="text-muted-foreground">Duration</p>
-                        <p className="font-medium">{scenario.durationDays} days</p>
+                        <p className="font-medium">{scenario.duration_days} days</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Initial Count</p>
-                        <p className="font-medium">{scenario.initialCount.toLocaleString()}</p>
+                        <p className="font-medium">{scenario.initial_count.toLocaleString()}</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Initial Weight</p>
-                        <p className="font-medium">{scenario.initialWeight}g</p>
+                        <p className="font-medium">{scenario.initial_weight}g</p>
                       </div>
                       <div>
                         <p className="text-muted-foreground">Genotype</p>
@@ -607,7 +611,7 @@ export default function ScenarioPlanning() {
                       </div>
                       
                       <div className="text-xs text-muted-foreground">
-                        Created {new Date(scenario.createdAt).toLocaleDateString()}
+                        Created {new Date(scenario.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </CardContent>
@@ -671,7 +675,7 @@ export default function ScenarioPlanning() {
                             {model.name}
                           </CardTitle>
                           <p className="text-sm text-muted-foreground mt-1">
-                            {model.location} • {model.releasePeriod}
+                            {model.location} • {model.release_period}
                           </p>
                         </div>
                         <Badge variant="outline">TGC</Badge>
@@ -681,15 +685,15 @@ export default function ScenarioPlanning() {
                       <div className="grid grid-cols-3 gap-4 text-sm mb-4">
                         <div>
                           <p className="text-muted-foreground">TGC Value</p>
-                          <p className="font-medium">{model.tgcValue}</p>
+                          <p className="font-medium">{model.tgc_value}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Exponent N</p>
-                          <p className="font-medium">{model.exponentN}</p>
+                          <p className="font-medium">{model.exponent_n}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Exponent M</p>
-                          <p className="font-medium">{model.exponentM}</p>
+                          <p className="font-medium">{model.exponent_m}</p>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -892,13 +896,13 @@ export default function ScenarioPlanning() {
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Created</span>
                       <span className="text-sm">
-                        {new Date(profile.createdAt).toLocaleDateString()}
+                        {new Date(profile.created_at).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Last Updated</span>
                       <span className="text-sm">
-                        {new Date(profile.updatedAt).toLocaleDateString()}
+                        {new Date(profile.updated_at).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
