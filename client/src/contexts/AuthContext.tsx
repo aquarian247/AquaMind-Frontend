@@ -1,0 +1,411 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { ApiService } from '@/api/generated/services/ApiService';
+import { User } from '@/api/generated/models/User';
+import { UserProfile } from '@/api/generated/models/UserProfile';
+import { TokenRefresh } from '@/api/generated/models/TokenRefresh';
+import { setAuthToken, storeAuthToken, clearAuthToken } from '@/api/index';
+import { ApiError } from '@/api/generated/core/ApiError';
+import { jwtDecode } from 'jwt-decode';
+
+// Types for JWT token response and decoded token
+interface JWTTokens {
+  access: string;
+  refresh: string;
+}
+
+interface TokenRefreshRequest {
+  refresh: string;
+}
+
+interface TokenRefreshResponse {
+  access: string;
+}
+
+interface DecodedToken {
+  user_id: number;
+  exp: number;
+  username?: string;
+  email?: string;
+  full_name?: string;
+  auth_source?: 'ldap' | 'local';
+  role?: string;
+  geography?: string;
+  subsidiary?: string;
+  [key: string]: any;
+}
+
+// Auth state interface
+interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  tokenInfo: {
+    accessToken: string | null;
+    refreshToken: string | null;
+    expiresAt: number | null;
+    authSource?: 'ldap' | 'local';
+  };
+}
+
+// Auth context interface with all methods
+interface AuthContextType extends AuthState {
+  login: (username: string, password: string) => Promise<boolean>;
+  logout: () => void;
+  refreshToken: () => Promise<boolean>;
+  clearError: () => void;
+  hasPermission: (permission: string) => boolean;
+  isAdmin: () => boolean;
+  fetchUserProfile: () => Promise<UserProfile | null>;
+}
+
+// Default context value
+const defaultAuthContext: AuthContextType = {
+  user: null,
+  isAuthenticated: false,
+  isLoading: true, // Start with loading while we check for stored token
+  error: null,
+  tokenInfo: {
+    accessToken: null,
+    refreshToken: null,
+    expiresAt: null,
+  },
+  login: async () => false,
+  logout: () => {},
+  refreshToken: async () => false,
+  clearError: () => {},
+  hasPermission: () => false,
+  isAdmin: () => false,
+  fetchUserProfile: async () => null,
+};
+
+// Create the context
+const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+
+// Provider props interface
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+/**
+ * AuthProvider component that manages authentication state and provides
+ * methods for login, logout, and token refresh.
+ */
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  // Auth state
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isLoading: true,
+    error: null,
+    tokenInfo: {
+      accessToken: null,
+      refreshToken: null,
+      expiresAt: null,
+    },
+  });
+
+  // Fetch user profile from API
+  const fetchUserProfile = async (): Promise<UserProfile | null> => {
+    try {
+      const profile = await ApiService.apiV1UsersAuthProfileRetrieve();
+      
+      // Update user state with profile data
+      if (profile && state.user) {
+        setState(prev => ({
+          ...prev,
+          user: {
+            ...prev.user!,
+            profile,
+          }
+        }));
+      }
+      
+      return profile;
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+      return null;
+    }
+  };
+
+  // Initialize auth from localStorage on mount
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        // Check if we have a token in localStorage
+        const accessToken = localStorage.getItem('auth_token');
+        const refreshToken = localStorage.getItem('refresh_token');
+        
+        if (!accessToken || !refreshToken) {
+          setState(prev => ({ ...prev, isLoading: false }));
+          return;
+        }
+        
+        // Decode token to check expiration and get user info
+        const decoded = jwtDecode<DecodedToken>(accessToken);
+        const currentTime = Date.now() / 1000;
+        
+        if (decoded.exp < currentTime) {
+          // Token expired, try to refresh
+          const success = await refreshTokenInternal(refreshToken);
+          if (!success) {
+            // If refresh fails, clear everything
+            handleLogout();
+          }
+        } else {
+          // Valid token, set auth state
+          setAuthToken(accessToken);
+          
+          // Set auth state with decoded token info
+          setState({
+            user: {
+              id: decoded.user_id,
+              username: decoded.username || '',
+              email: decoded.email || '',
+              is_active: true,
+              date_joined: new Date().toISOString(),
+              profile: {} as UserProfile,
+            } as User,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+            tokenInfo: {
+              accessToken,
+              refreshToken,
+              expiresAt: decoded.exp,
+              authSource: decoded.auth_source,
+            },
+          });
+          
+          // Schedule token refresh
+          scheduleTokenRefresh(decoded.exp);
+          
+          // Fetch complete user profile
+          fetchUserProfile();
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        handleLogout();
+      }
+    };
+    
+    initAuth();
+  }, []);
+
+  // Schedule token refresh before expiration
+  const scheduleTokenRefresh = (expiresAt: number) => {
+    const currentTime = Date.now() / 1000;
+    const timeUntilExpiry = expiresAt - currentTime;
+    
+    // Refresh 5 minutes before expiration
+    const refreshTime = Math.max(timeUntilExpiry - 300, 0) * 1000;
+    
+    const refreshTimer = setTimeout(() => {
+      refreshTokenInternal(state.tokenInfo.refreshToken || '');
+    }, refreshTime);
+    
+    // Clean up timer on unmount
+    return () => clearTimeout(refreshTimer);
+  };
+
+  // Internal refresh token function
+  const refreshTokenInternal = async (refreshToken: string): Promise<boolean> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true }));
+      
+      /* The generated TokenRefresh model incorrectly marks `access`
+         as required/readonly on the request body.  We only need to send
+         the refresh token string – cast to satisfy the type checker. */
+      const response = (await ApiService.apiV1UsersAuthTokenRefreshCreate(
+        { refresh: refreshToken } as unknown as TokenRefresh
+      )) as any;
+      
+      if (response.access) {
+        // Store new access token
+        localStorage.setItem('auth_token', response.access);
+        setAuthToken(response.access);
+        
+        // Decode new token
+        const decoded = jwtDecode<DecodedToken>(response.access);
+        
+        setState(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          tokenInfo: {
+            ...prev.tokenInfo,
+            accessToken: response.access,
+            expiresAt: decoded.exp,
+          },
+        }));
+        
+        // Schedule next refresh
+        scheduleTokenRefresh(decoded.exp);
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      handleLogout();
+      return false;
+    }
+  };
+
+  // Login function
+  const handleLogin = async (username: string, password: string): Promise<boolean> => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      /* Generated type (CustomTokenObtainPair) describes the *request*,
+         not the *response*.  Cast to `any` so we can access the real
+         JWT fields returned by the backend. */
+      const response = (await ApiService.apiV1UsersAuthTokenCreate({
+        username,
+        password,
+      })) as any;
+      
+      if (response.access && response.refresh) {
+        // Store tokens
+        localStorage.setItem('auth_token', response.access);
+        localStorage.setItem('refresh_token', response.refresh);
+        setAuthToken(response.access);
+        
+        // Decode token to get user info and expiration
+        const decoded = jwtDecode<DecodedToken>(response.access);
+        
+        setState({
+          user: {
+            id: decoded.user_id,
+            username: decoded.username || username,
+            email: decoded.email || '',
+            is_active: true,
+            date_joined: new Date().toISOString(),
+            profile: {} as UserProfile,
+          } as User,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          tokenInfo: {
+            accessToken: response.access,
+            refreshToken: response.refresh,
+            expiresAt: decoded.exp,
+            authSource: decoded.auth_source,
+          },
+        });
+        
+        // Schedule token refresh
+        scheduleTokenRefresh(decoded.exp);
+        
+        // Fetch complete user profile
+        await fetchUserProfile();
+        
+        return true;
+      }
+      
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Login failed: Invalid response from server'
+      }));
+      return false;
+    } catch (error) {
+      let errorMessage = 'Login failed: Unknown error';
+      
+      if (error instanceof ApiError && error.body) {
+        if (typeof error.body === 'object' && error.body !== null) {
+          if ('detail' in error.body) {
+            errorMessage = `${error.body.detail}`;
+          } else if ('non_field_errors' in error.body) {
+            errorMessage = `${error.body.non_field_errors}`;
+          } else if (error.status === 401) {
+            errorMessage = 'Invalid username or password';
+          }
+        }
+      }
+      
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: errorMessage
+      }));
+      return false;
+    }
+  };
+
+  // Logout function
+  const handleLogout = () => {
+    // Clear tokens from localStorage
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('refresh_token');
+    clearAuthToken();
+    
+    // Reset auth state
+    setState({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+      tokenInfo: {
+        accessToken: null,
+        refreshToken: null,
+        expiresAt: null,
+      },
+    });
+  };
+
+  // Public refresh token function
+  const handleRefreshToken = async (): Promise<boolean> => {
+    return refreshTokenInternal(state.tokenInfo.refreshToken || '');
+  };
+
+  // Clear error function
+  const handleClearError = () => {
+    setState(prev => ({ ...prev, error: null }));
+  };
+
+  // Permission checking helpers
+  const hasPermission = (permission: string): boolean => {
+    // This is a placeholder - in a real app, you'd check against user permissions
+    // from the JWT token or from a separate API call
+    return state.isAuthenticated && state.user !== null;
+  };
+
+  const isAdmin = (): boolean => {
+    // Check if user has admin role
+    return state.isAuthenticated && state.user?.role === 'ADMIN';
+  };
+
+  // Provide the auth context
+  const contextValue: AuthContextType = {
+    ...state,
+    login: handleLogin,
+    logout: handleLogout,
+    refreshToken: handleRefreshToken,
+    clearError: handleClearError,
+    hasPermission,
+    isAdmin,
+    fetchUserProfile,
+  };
+
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+/**
+ * Custom hook to use the auth context
+ */
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthContext;

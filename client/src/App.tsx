@@ -1,10 +1,13 @@
 import React, { lazy, Suspense } from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import LoginPage from "@/pages/login";
 
 const TemperatureDataView = lazy(() => import("./pages/TemperatureDataView"));
 
@@ -42,71 +45,303 @@ import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 
+// Root redirect component
+const RootRedirect = () => {
+  const { isAuthenticated } = useAuth();
+  return <Redirect to={isAuthenticated ? "/dashboard" : "/login"} />;
+};
+
+// Layout wrapper component
+const AppLayout = ({ children }: { children: React.ReactNode }) => (
+  <div className="flex h-screen bg-background">
+    <Sidebar />
+    {/* Responsive main content area */}
+    <div className="flex-1 flex flex-col overflow-hidden lg:ml-64 pt-16 lg:pt-0">
+      {/* Header only shows on desktop */}
+      <div className="hidden lg:block">
+        <Header />
+      </div>
+      <main className="flex-1 overflow-auto p-3 lg:p-6">
+        {children}
+      </main>
+    </div>
+  </div>
+);
+
 function Router() {
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      {/* Responsive main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden lg:ml-64 pt-16 lg:pt-0">
-        {/* Header only shows on desktop */}
-        <div className="hidden lg:block">
-          <Header />
-        </div>
-        <main className="flex-1 overflow-auto p-3 lg:p-6">
-          <Switch>
-            <Route path="/" component={Dashboard} />
-            <Route path="/monitoring" component={Monitoring} />
-            <Route path="/farm-management" component={FarmManagement} />
-            <Route path="/infrastructure" component={Infrastructure} />
-            <Route path="/infrastructure/areas" component={InfrastructureAreas} />
-            <Route path="/infrastructure/stations" component={InfrastructureStations} />
-            <Route path="/infrastructure/containers" component={InfrastructureContainers} />
-            <Route path="/infrastructure/sensors" component={InfrastructureSensors} />
-            <Route path="/infrastructure/areas/:id">
-              {(params) => <AreaDetail params={params} />}
-            </Route>
-            <Route path="/infrastructure/areas/:id/rings">
-              {(params) => <AreaRings params={params} />}
-            </Route>
-            <Route path="/infrastructure/rings/:id">
-              {(params) => <RingDetail params={params} />}
-            </Route>
-            <Route path="/infrastructure/stations/:id">
-              {(params) => <StationDetail params={params} />}
-            </Route>
-            <Route path="/infrastructure/stations/:id/halls">
-              {(params) => <StationHalls params={params} />}
-            </Route>
-            <Route path="/infrastructure/halls/:id">
-              {(params) => <HallDetail params={params} />}
-            </Route>
-            <Route path="/infrastructure/containers/:id">
-              {(params) => <ContainerDetail params={params} />}
-            </Route>
-            <Route path="/batch-management" component={BatchManagement} />
-            <Route path="/batch-details/:id" component={BatchDetails} />
-            <Route path="/health" component={Health} />
-            <Route path="/broodstock" component={Broodstock} />
-            <Route path="/broodstock/programs" component={BroodstockPrograms} />
-            <Route path="/broodstock/genetic" component={BroodstockGenetic} />
-            <Route path="/broodstock/population" component={BroodstockPopulation} />
-            <Route path="/breeding-program-details/:id" component={BreedingProgramDetails} />
-            <Route path="/broodstock-container-details/:id" component={BroodstockContainerDetails} />
-            <Route path="/scenario-planning" component={ScenarioPlanning} />
-            <Route path="/scenario-planning/scenarios/:id" component={ScenarioDetailPage} />
-            <Route path="/temperature-data/:id">
-              <Suspense fallback={<div>Loading...</div>}>
-                <TemperatureDataView />
-              </Suspense>
-            </Route>
-            <Route path="/inventory" component={Inventory} />
-            <Route path="/analytics" component={Analytics} />
-            <Route path="/mortality-reporting" component={MortalityReporting} />
-            <Route component={NotFound} />
-          </Switch>
-        </main>
-      </div>
-    </div>
+    <Switch>
+      {/* Root path redirect */}
+      <Route path="/" component={RootRedirect} />
+      
+      {/* Login route - outside layout */}
+      <Route path="/login" component={LoginPage} />
+      
+      {/* Protected routes with layout */}
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <AppLayout>
+            <Dashboard />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/monitoring">
+        <ProtectedRoute>
+          <AppLayout>
+            <Monitoring />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/farm-management">
+        <ProtectedRoute>
+          <AppLayout>
+            <FarmManagement />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/infrastructure">
+        <ProtectedRoute>
+          <AppLayout>
+            <Infrastructure />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/infrastructure/areas">
+        <ProtectedRoute>
+          <AppLayout>
+            <InfrastructureAreas />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/infrastructure/stations">
+        <ProtectedRoute>
+          <AppLayout>
+            <InfrastructureStations />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/infrastructure/containers">
+        <ProtectedRoute>
+          <AppLayout>
+            <InfrastructureContainers />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/infrastructure/sensors">
+        <ProtectedRoute>
+          <AppLayout>
+            <InfrastructureSensors />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/infrastructure/areas/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <AreaDetail params={params} />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/infrastructure/areas/:id/rings">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <AreaRings params={params} />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/infrastructure/rings/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <RingDetail params={params} />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/infrastructure/stations/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <StationDetail params={params} />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/infrastructure/stations/:id/halls">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <StationHalls params={params} />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/infrastructure/halls/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <HallDetail params={params} />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/infrastructure/containers/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <ContainerDetail params={params} />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/batch-management">
+        <ProtectedRoute>
+          <AppLayout>
+            <BatchManagement />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/batch-details/:id">
+        <ProtectedRoute>
+          <AppLayout>
+            <BatchDetails />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/health">
+        <ProtectedRoute>
+          <AppLayout>
+            <Health />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/broodstock">
+        <ProtectedRoute>
+          <AppLayout>
+            <Broodstock />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/broodstock/programs">
+        <ProtectedRoute>
+          <AppLayout>
+            <BroodstockPrograms />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/broodstock/genetic">
+        <ProtectedRoute>
+          <AppLayout>
+            <BroodstockGenetic />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/broodstock/population">
+        <ProtectedRoute>
+          <AppLayout>
+            <BroodstockPopulation />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/breeding-program-details/:id">
+        <ProtectedRoute>
+          <AppLayout>
+            <BreedingProgramDetails />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/broodstock-container-details/:id">
+        <ProtectedRoute>
+          <AppLayout>
+            <BroodstockContainerDetails />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/scenario-planning">
+        <ProtectedRoute>
+          <AppLayout>
+            <ScenarioPlanning />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/scenario-planning/scenarios/:id">
+        <ProtectedRoute>
+          <AppLayout>
+            <ScenarioDetailPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/temperature-data/:id">
+        <ProtectedRoute>
+          <AppLayout>
+            <Suspense fallback={<div>Loading...</div>}>
+              <TemperatureDataView />
+            </Suspense>
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/inventory">
+        <ProtectedRoute>
+          <AppLayout>
+            <Inventory />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/analytics">
+        <ProtectedRoute>
+          <AppLayout>
+            <Analytics />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/mortality-reporting">
+        <ProtectedRoute>
+          <AppLayout>
+            <MortalityReporting />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route>
+        <ProtectedRoute>
+          <AppLayout>
+            <NotFound />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+    </Switch>
   );
 }
 
@@ -115,8 +350,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="ocean-depths" defaultMode="light">
         <TooltipProvider>
-          <Toaster />
-          <Router />
+          <AuthProvider>
+            <Toaster />
+            <Router />
+          </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
