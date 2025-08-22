@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/contexts/AuthContext';
+import { ThemeSelector } from '@/components/theme-selector';
 
 // Shadcn/ui components
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Waves } from 'lucide-react';
 
 // Form schema with validation
 const loginFormSchema = z.object({
@@ -73,33 +74,28 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-cyan-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+      {/* Theme selector in top right corner */}
+      <div className="absolute top-4 right-4">
+        <ThemeSelector />
+      </div>
+      
       <div className="w-full max-w-md">
         {/* Logo and branding */}
         <div className="text-center mb-6">
-          <div className="inline-block p-2 bg-blue-600 rounded-full mb-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-10 w-10 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"
-              />
-            </svg>
+          <div className="inline-block p-2 bg-primary rounded-full mb-4">
+            <Waves
+              className="h-10 w-10 text-primary-foreground"
+              aria-hidden="true"
+            />
           </div>
-          <h1 className="text-3xl font-bold text-blue-800">AquaMind</h1>
-          <p className="text-gray-600 mt-1">Aquaculture Management Platform</p>
+          <h1 className="text-3xl font-bold text-foreground">AquaMind</h1>
+          <p className="text-muted-foreground mt-1">Aquaculture Management Platform</p>
         </div>
 
-        <Card className="border-blue-200 shadow-lg">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-center text-blue-700">Sign In</CardTitle>
+            <CardTitle className="text-center">Sign In</CardTitle>
             <CardDescription className="text-center">
               Enter your credentials to access the platform
             </CardDescription>
@@ -182,7 +178,8 @@ const LoginPage: React.FC = () => {
                 {/* Submit button */}
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  variant="default"
+                  className="w-full"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
@@ -197,9 +194,9 @@ const LoginPage: React.FC = () => {
               </form>
             </Form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-2 text-sm text-center text-gray-600">
-            <p>Contact your administrator if you need access.</p>
-            <p className="text-xs">
+          <CardFooter className="flex flex-col space-y-2 text-sm text-center">
+            <p className="text-muted-foreground">Contact your administrator if you need access.</p>
+            <p className="text-xs text-muted-foreground">
               &copy; {new Date().getFullYear()} AquaMind - Bakkafrost
             </p>
           </CardFooter>

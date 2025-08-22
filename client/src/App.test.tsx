@@ -14,7 +14,7 @@ const createTestQueryClient = () => new QueryClient({
 });
 
 describe('App Component', () => {
-  it('renders NotFound page when navigating to non-existent route', () => {
+  it('redirects to login page when accessing protected route while unauthenticated', () => {
     // Set the location to a non-existent route
     window.history.pushState({}, '', '/__test__/non-existent-route');
     
@@ -28,7 +28,16 @@ describe('App Component', () => {
       </QueryClientProvider>
     );
     
-    // Assert that the NotFound page is rendered
-    expect(screen.getByText('404 Page Not Found')).toBeInTheDocument();
+    /**
+     * When unauthenticated, navigating to an unknown route should redirect
+     * the user to the login page (not the 404 page) because the route is
+     * wrapped in a ProtectedRoute.
+     */
+    // The login page renders a plain text heading "Sign In" (not an actual <h*> element),
+    // so we query it using getByText instead of getByRole.
+    // There are multiple elements containing the text "Sign In" (heading + button).
+    // Use getAllByText and ensure we have at least one match.
+    expect(screen.getAllByText(/sign in/i).length).toBeGreaterThan(0);
+    expect(screen.getByPlaceholderText(/enter your username/i)).toBeInTheDocument();
   });
 });
