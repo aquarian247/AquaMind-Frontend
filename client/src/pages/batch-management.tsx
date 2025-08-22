@@ -369,9 +369,9 @@ export default function BatchManagement() {
 
   if (batchesLoading) {
     return (
-      <div className="container mx-auto p-3 lg:p-6 space-y-6">
+      <div className="container mx-auto p-4 space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Batch Management</h1>
+          <h1 className="text-2xl font-bold">Batch Management</h1>
         </div>
         <div className="grid gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -440,14 +440,17 @@ export default function BatchManagement() {
   });
 
   return (
-    <div className="container mx-auto p-3 lg:p-6 space-y-6">
+    <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Batch Management</h1>
-          <p className="text-muted-foreground mt-2">
-            Track and manage fish batches through their lifecycle
-          </p>
+        <div className="flex items-center space-x-2">
+          <Fish className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold">Batch Management</h1>
+            <p className="text-muted-foreground mt-1">
+              Track and manage fish batches through their lifecycle
+            </p>
+          </div>
         </div>
         
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
