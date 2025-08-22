@@ -296,30 +296,55 @@ export const api = {
     async getOverview() {
       /* eslint-disable @typescript-eslint/no-magic-numbers */
       try {
-        const containers = await ApiService.apiV1InfrastructureContainersList();
-        const totals = containers.results.reduce(
-          (acc: any, c: any) => {
-            const capacity = parseFloat(c.volume_m3 ?? "0") || 0;
-            acc.totalContainers += 1;
-            acc.capacity += capacity;
-            // biomass placeholder – would need assignment linkage
-            acc.activeBiomass += 0;
-            return acc;
+        /* ------------------------------------------------------------------
+         * Fetch containers (for capacity) and active batch-container
+         * assignments (for biomass) concurrently.
+         * ------------------------------------------------------------------ */
+        const [containers, assignments] = await Promise.all([
+          ApiService.apiV1InfrastructureContainersList(),
+          // parameters: assignmentDate?, batch?, container?, isActive?
+          ApiService.apiV1BatchContainerAssignmentsList(
+            undefined, // assignment_date
+            undefined, // batch
+            undefined, // container
+            true       // is_active – only active assignments
+          ),
+        ]);
+
+        /* ----------------------------  Aggregations  ---------------------------- */
+        const totalContainers = containers.results.length;
+
+        const capacity = containers.results.reduce((sum: number, c: any) => {
+          /* max_biomass_kg is a string; fall back to '0' */
+          const cap = parseFloat(c.max_biomass_kg ?? "0");
+          return sum + (isNaN(cap) ? 0 : cap);
+        }, 0);
+
+        const activeBiomass = (assignments.results ?? []).reduce(
+          (sum: number, a: any) => {
+            // ensure assignment is active (extra guard) and biomass_kg is numeric
+            if (a.is_active === false) return sum;
+            const bio = parseFloat(a.biomass_kg ?? "0");
+            return sum + (isNaN(bio) ? 0 : bio);
           },
-          { totalContainers: 0, capacity: 0, activeBiomass: 0 },
+          0,
         );
+
         return {
-          ...totals,
-          sensorAlerts: 0,
-          feedingEventsToday: 0,
+          totalContainers,
+          activeBiomass,
+          capacity,
+          sensorAlerts: 0,        // TODO: hook up real alert aggregation
+          feedingEventsToday: 0,  // TODO: hook up real feeding metrics
         };
       } catch {
+        // Graceful fallback – all zeros
         return {
-          totalContainers: 247,
-          activeBiomass: 12450,
-          capacity: 14310,
-          sensorAlerts: 7,
-          feedingEventsToday: 124,
+          totalContainers: 0,
+          activeBiomass: 0,
+          capacity: 0,
+          sensorAlerts: 0,
+          feedingEventsToday: 0,
         };
       }
       /* eslint-enable */
