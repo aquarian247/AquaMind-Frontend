@@ -16,6 +16,9 @@ export type FCRModelStage = {
      * Stage duration in days (e.g., 90)
      */
     duration_days: number;
-    readonly overrides: string;
+    /**
+     * Get weight-based FCR overrides.
+     */
+    readonly overrides: Array<Record<string, any>>;
 };
 

@@ -35,6 +35,6 @@ export type IndividualFishObservation = {
     /**
      * Calculated K-factor (condition factor) based on weight and length measurements.
      */
-    readonly calculated_k_factor: string;
+    readonly calculated_k_factor: number | null;
 };
 

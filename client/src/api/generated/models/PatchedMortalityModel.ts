@@ -24,7 +24,10 @@ export type PatchedMortalityModel = {
      */
     rate?: number;
     readonly stage_overrides?: Array<MortalityModelStage>;
-    readonly effective_annual_rate?: string;
+    /**
+     * Calculate effective annual mortality rate.
+     */
+    readonly effective_annual_rate?: number;
     readonly created_at?: string;
     readonly updated_at?: string;
 };
