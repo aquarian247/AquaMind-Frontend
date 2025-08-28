@@ -198,3 +198,5 @@ export type { WeatherData } from './models/WeatherData';
 
 export { ApiService } from './services/ApiService';
 export { AuthService } from './services/AuthService';
+export { HealthCheckService } from './services/HealthCheckService';
+export { InfrastructureService } from './services/InfrastructureService';

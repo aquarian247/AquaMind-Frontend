@@ -35,7 +35,10 @@ export type PatchedTGCModel = {
      */
     exponent_m?: number;
     readonly stage_overrides?: Array<TGCModelStage>;
-    readonly has_temperature_data?: string;
+    /**
+     * Check if temperature profile has data.
+     */
+    readonly has_temperature_data?: boolean;
     readonly created_at?: string;
     readonly updated_at?: string;
 };

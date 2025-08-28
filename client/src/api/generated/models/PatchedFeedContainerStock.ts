@@ -44,7 +44,7 @@ export type PatchedFeedContainerStock = {
     /**
      * Total value of remaining stock (quantity_kg * cost_per_kg)
      */
-    readonly total_value?: string;
+    readonly total_value?: number | null;
     readonly created_at?: string;
     readonly updated_at?: string;
 };
