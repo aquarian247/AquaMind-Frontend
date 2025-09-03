@@ -14,14 +14,17 @@ export class AuthService {
      * @returns AuthTokenResponse
      * @throws ApiError
      */
-    public static apiAuthTokenCreate(
+    public static apiV1AuthTokenCreate(
         requestBody: AuthToken,
     ): CancelablePromise<AuthTokenResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/auth/token/',
+            url: '/api/v1/auth/token/',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                500: `Internal Server Error`,
+            },
         });
     }
     /**
@@ -33,6 +36,10 @@ export class AuthService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/auth/dev-auth/',
+            errors: {
+                401: `Unauthorized`,
+                500: `Internal Server Error`,
+            },
         });
     }
     /**
@@ -41,14 +48,17 @@ export class AuthService {
      * @returns AuthTokenResponse
      * @throws ApiError
      */
-    public static apiV1AuthTokenCreate(
+    public static apiAuthTokenCreate(
         requestBody: AuthToken,
     ): CancelablePromise<AuthTokenResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/auth/token/',
+            url: '/api/auth/token/',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                500: `Internal Server Error`,
+            },
         });
     }
 }
