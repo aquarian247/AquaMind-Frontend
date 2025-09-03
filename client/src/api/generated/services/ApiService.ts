@@ -285,12 +285,12 @@ export class ApiService {
      * @returns EnvironmentalParameter
      * @throws ApiError
      */
-    public static apiV1EnvironmentalParametersPartialUpdate(
+    public static apiV1EnvironmentalParametersUpdate(
         id: number,
-        requestBody?: PatchedEnvironmentalParameter,
+        requestBody: EnvironmentalParameter,
     ): CancelablePromise<EnvironmentalParameter> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/parameters/{id}/',
             path: {
                 'id': id,
@@ -313,12 +313,12 @@ export class ApiService {
      * @returns EnvironmentalParameter
      * @throws ApiError
      */
-    public static apiV1EnvironmentalParametersUpdate(
+    public static apiV1EnvironmentalParametersPartialUpdate(
         id: number,
-        requestBody: EnvironmentalParameter,
+        requestBody?: PatchedEnvironmentalParameter,
     ): CancelablePromise<EnvironmentalParameter> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/parameters/{id}/',
             path: {
                 'id': id,
@@ -493,12 +493,12 @@ export class ApiService {
      * @returns EnvironmentalReading
      * @throws ApiError
      */
-    public static apiV1EnvironmentalReadingsPartialUpdate(
+    public static apiV1EnvironmentalReadingsUpdate(
         id: number,
-        requestBody?: PatchedEnvironmentalReading,
+        requestBody: EnvironmentalReading,
     ): CancelablePromise<EnvironmentalReading> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/readings/{id}/',
             path: {
                 'id': id,
@@ -523,12 +523,12 @@ export class ApiService {
      * @returns EnvironmentalReading
      * @throws ApiError
      */
-    public static apiV1EnvironmentalReadingsUpdate(
+    public static apiV1EnvironmentalReadingsPartialUpdate(
         id: number,
-        requestBody: EnvironmentalReading,
+        requestBody?: PatchedEnvironmentalReading,
     ): CancelablePromise<EnvironmentalReading> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/readings/{id}/',
             path: {
                 'id': id,
@@ -659,12 +659,12 @@ export class ApiService {
      * @returns PhotoperiodData
      * @throws ApiError
      */
-    public static apiV1EnvironmentalPhotoperiodPartialUpdate(
+    public static apiV1EnvironmentalPhotoperiodUpdate(
         id: number,
-        requestBody?: PatchedPhotoperiodData,
+        requestBody: PhotoperiodData,
     ): CancelablePromise<PhotoperiodData> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/photoperiod/{id}/',
             path: {
                 'id': id,
@@ -687,12 +687,12 @@ export class ApiService {
      * @returns PhotoperiodData
      * @throws ApiError
      */
-    public static apiV1EnvironmentalPhotoperiodUpdate(
+    public static apiV1EnvironmentalPhotoperiodPartialUpdate(
         id: number,
-        requestBody: PhotoperiodData,
+        requestBody?: PatchedPhotoperiodData,
     ): CancelablePromise<PhotoperiodData> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/photoperiod/{id}/',
             path: {
                 'id': id,
@@ -839,12 +839,12 @@ export class ApiService {
      * @returns WeatherData
      * @throws ApiError
      */
-    public static apiV1EnvironmentalWeatherPartialUpdate(
+    public static apiV1EnvironmentalWeatherUpdate(
         id: number,
-        requestBody?: PatchedWeatherData,
+        requestBody: WeatherData,
     ): CancelablePromise<WeatherData> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/weather/{id}/',
             path: {
                 'id': id,
@@ -869,12 +869,12 @@ export class ApiService {
      * @returns WeatherData
      * @throws ApiError
      */
-    public static apiV1EnvironmentalWeatherUpdate(
+    public static apiV1EnvironmentalWeatherPartialUpdate(
         id: number,
-        requestBody: WeatherData,
+        requestBody?: PatchedWeatherData,
     ): CancelablePromise<WeatherData> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/weather/{id}/',
             path: {
                 'id': id,
@@ -999,12 +999,12 @@ export class ApiService {
      * @returns StageTransitionEnvironmental
      * @throws ApiError
      */
-    public static apiV1EnvironmentalStageTransitionsPartialUpdate(
+    public static apiV1EnvironmentalStageTransitionsUpdate(
         id: number,
-        requestBody?: PatchedStageTransitionEnvironmental,
+        requestBody: StageTransitionEnvironmental,
     ): CancelablePromise<StageTransitionEnvironmental> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/stage-transitions/{id}/',
             path: {
                 'id': id,
@@ -1027,12 +1027,12 @@ export class ApiService {
      * @returns StageTransitionEnvironmental
      * @throws ApiError
      */
-    public static apiV1EnvironmentalStageTransitionsUpdate(
+    public static apiV1EnvironmentalStageTransitionsPartialUpdate(
         id: number,
-        requestBody: StageTransitionEnvironmental,
+        requestBody?: PatchedStageTransitionEnvironmental,
     ): CancelablePromise<StageTransitionEnvironmental> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/stage-transitions/{id}/',
             path: {
                 'id': id,
@@ -1174,12 +1174,12 @@ export class ApiService {
      * @returns Species
      * @throws ApiError
      */
-    public static apiV1BatchSpeciesPartialUpdate(
+    public static apiV1BatchSpeciesUpdate(
         id: number,
-        requestBody?: PatchedSpecies,
+        requestBody: Species,
     ): CancelablePromise<Species> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/species/{id}/',
             path: {
                 'id': id,
@@ -1206,12 +1206,12 @@ export class ApiService {
      * @returns Species
      * @throws ApiError
      */
-    public static apiV1BatchSpeciesUpdate(
+    public static apiV1BatchSpeciesPartialUpdate(
         id: number,
-        requestBody: Species,
+        requestBody?: PatchedSpecies,
     ): CancelablePromise<Species> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/species/{id}/',
             path: {
                 'id': id,
@@ -1364,12 +1364,12 @@ export class ApiService {
      * @returns LifeCycleStage
      * @throws ApiError
      */
-    public static apiV1BatchLifecycleStagesPartialUpdate(
+    public static apiV1BatchLifecycleStagesUpdate(
         id: number,
-        requestBody?: PatchedLifeCycleStage,
+        requestBody: LifeCycleStage,
     ): CancelablePromise<LifeCycleStage> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/lifecycle-stages/{id}/',
             path: {
                 'id': id,
@@ -1397,12 +1397,12 @@ export class ApiService {
      * @returns LifeCycleStage
      * @throws ApiError
      */
-    public static apiV1BatchLifecycleStagesUpdate(
+    public static apiV1BatchLifecycleStagesPartialUpdate(
         id: number,
-        requestBody: LifeCycleStage,
+        requestBody?: PatchedLifeCycleStage,
     ): CancelablePromise<LifeCycleStage> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/lifecycle-stages/{id}/',
             path: {
                 'id': id,
@@ -1625,12 +1625,12 @@ export class ApiService {
      * @returns Batch
      * @throws ApiError
      */
-    public static apiV1BatchBatchesPartialUpdate(
+    public static apiV1BatchBatchesUpdate(
         id: number,
-        requestBody?: PatchedBatch,
+        requestBody: Batch,
     ): CancelablePromise<Batch> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/batches/{id}/',
             path: {
                 'id': id,
@@ -1678,12 +1678,12 @@ export class ApiService {
      * @returns Batch
      * @throws ApiError
      */
-    public static apiV1BatchBatchesUpdate(
+    public static apiV1BatchBatchesPartialUpdate(
         id: number,
-        requestBody: Batch,
+        requestBody?: PatchedBatch,
     ): CancelablePromise<Batch> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/batches/{id}/',
             path: {
                 'id': id,
@@ -2027,12 +2027,12 @@ export class ApiService {
          * @returns BatchContainerAssignment
          * @throws ApiError
          */
-        public static apiV1BatchContainerAssignmentsPartialUpdate(
+        public static apiV1BatchContainerAssignmentsUpdate(
             id: number,
-            requestBody?: PatchedBatchContainerAssignment,
+            requestBody: BatchContainerAssignment,
         ): CancelablePromise<BatchContainerAssignment> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/batch/container-assignments/{id}/',
                 path: {
                     'id': id,
@@ -2079,12 +2079,12 @@ export class ApiService {
          * @returns BatchContainerAssignment
          * @throws ApiError
          */
-        public static apiV1BatchContainerAssignmentsUpdate(
+        public static apiV1BatchContainerAssignmentsPartialUpdate(
             id: number,
-            requestBody: BatchContainerAssignment,
+            requestBody?: PatchedBatchContainerAssignment,
         ): CancelablePromise<BatchContainerAssignment> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/batch/container-assignments/{id}/',
                 path: {
                     'id': id,
@@ -2314,12 +2314,12 @@ export class ApiService {
          * @returns BatchComposition
          * @throws ApiError
          */
-        public static apiV1BatchBatchCompositionsPartialUpdate(
+        public static apiV1BatchBatchCompositionsUpdate(
             id: number,
-            requestBody?: PatchedBatchComposition,
+            requestBody: BatchComposition,
         ): CancelablePromise<BatchComposition> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/batch/batch-compositions/{id}/',
                 path: {
                     'id': id,
@@ -2362,12 +2362,12 @@ export class ApiService {
          * @returns BatchComposition
          * @throws ApiError
          */
-        public static apiV1BatchBatchCompositionsUpdate(
+        public static apiV1BatchBatchCompositionsPartialUpdate(
             id: number,
-            requestBody: BatchComposition,
+            requestBody?: PatchedBatchComposition,
         ): CancelablePromise<BatchComposition> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/batch/batch-compositions/{id}/',
                 path: {
                     'id': id,
@@ -2628,12 +2628,12 @@ export class ApiService {
          * @returns BatchTransfer
          * @throws ApiError
          */
-        public static apiV1BatchTransfersPartialUpdate(
+        public static apiV1BatchTransfersUpdate(
             id: number,
-            requestBody?: PatchedBatchTransfer,
+            requestBody: BatchTransfer,
         ): CancelablePromise<BatchTransfer> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/batch/transfers/{id}/',
                 path: {
                     'id': id,
@@ -2680,12 +2680,12 @@ export class ApiService {
          * @returns BatchTransfer
          * @throws ApiError
          */
-        public static apiV1BatchTransfersUpdate(
+        public static apiV1BatchTransfersPartialUpdate(
             id: number,
-            requestBody: BatchTransfer,
+            requestBody?: PatchedBatchTransfer,
         ): CancelablePromise<BatchTransfer> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/batch/transfers/{id}/',
                 path: {
                     'id': id,
@@ -2919,12 +2919,12 @@ export class ApiService {
          * @returns MortalityEvent
          * @throws ApiError
          */
-        public static apiV1BatchMortalityEventsPartialUpdate(
+        public static apiV1BatchMortalityEventsUpdate(
             id: number,
-            requestBody?: PatchedMortalityEvent,
+            requestBody: MortalityEvent,
         ): CancelablePromise<MortalityEvent> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/batch/mortality-events/{id}/',
                 path: {
                     'id': id,
@@ -2966,12 +2966,12 @@ export class ApiService {
          * @returns MortalityEvent
          * @throws ApiError
          */
-        public static apiV1BatchMortalityEventsUpdate(
+        public static apiV1BatchMortalityEventsPartialUpdate(
             id: number,
-            requestBody: MortalityEvent,
+            requestBody?: PatchedMortalityEvent,
         ): CancelablePromise<MortalityEvent> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/batch/mortality-events/{id}/',
                 path: {
                     'id': id,
@@ -3192,12 +3192,12 @@ export class ApiService {
          * @returns GrowthSample
          * @throws ApiError
          */
-        public static apiV1BatchGrowthSamplesPartialUpdate(
+        public static apiV1BatchGrowthSamplesUpdate(
             id: number,
-            requestBody?: PatchedGrowthSample,
+            requestBody: GrowthSample,
         ): CancelablePromise<GrowthSample> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/batch/growth-samples/{id}/',
                 path: {
                     'id': id,
@@ -3239,12 +3239,12 @@ export class ApiService {
          * @returns GrowthSample
          * @throws ApiError
          */
-        public static apiV1BatchGrowthSamplesUpdate(
+        public static apiV1BatchGrowthSamplesPartialUpdate(
             id: number,
-            requestBody: GrowthSample,
+            requestBody?: PatchedGrowthSample,
         ): CancelablePromise<GrowthSample> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/batch/growth-samples/{id}/',
                 path: {
                     'id': id,
@@ -3397,12 +3397,12 @@ export class ApiService {
          * @returns Feed
          * @throws ApiError
          */
-        public static apiV1InventoryFeedsPartialUpdate(
+        public static apiV1InventoryFeedsUpdate(
             id: number,
-            requestBody?: PatchedFeed,
+            requestBody: Feed,
         ): CancelablePromise<Feed> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/inventory/feeds/{id}/',
                 path: {
                     'id': id,
@@ -3427,12 +3427,12 @@ export class ApiService {
          * @returns Feed
          * @throws ApiError
          */
-        public static apiV1InventoryFeedsUpdate(
+        public static apiV1InventoryFeedsPartialUpdate(
             id: number,
-            requestBody: Feed,
+            requestBody?: PatchedFeed,
         ): CancelablePromise<Feed> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/inventory/feeds/{id}/',
                 path: {
                     'id': id,
@@ -3571,12 +3571,12 @@ export class ApiService {
          * @returns FeedPurchase
          * @throws ApiError
          */
-        public static apiV1InventoryFeedPurchasesPartialUpdate(
+        public static apiV1InventoryFeedPurchasesUpdate(
             id: number,
-            requestBody?: PatchedFeedPurchase,
+            requestBody: FeedPurchase,
         ): CancelablePromise<FeedPurchase> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/inventory/feed-purchases/{id}/',
                 path: {
                     'id': id,
@@ -3601,12 +3601,12 @@ export class ApiService {
          * @returns FeedPurchase
          * @throws ApiError
          */
-        public static apiV1InventoryFeedPurchasesUpdate(
+        public static apiV1InventoryFeedPurchasesPartialUpdate(
             id: number,
-            requestBody: FeedPurchase,
+            requestBody?: PatchedFeedPurchase,
         ): CancelablePromise<FeedPurchase> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/inventory/feed-purchases/{id}/',
                 path: {
                     'id': id,
@@ -3755,12 +3755,12 @@ export class ApiService {
          * @returns FeedStock
          * @throws ApiError
          */
-        public static apiV1InventoryFeedStocksPartialUpdate(
+        public static apiV1InventoryFeedStocksUpdate(
             id: number,
-            requestBody?: PatchedFeedStock,
+            requestBody: FeedStock,
         ): CancelablePromise<FeedStock> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/inventory/feed-stocks/{id}/',
                 path: {
                     'id': id,
@@ -3785,12 +3785,12 @@ export class ApiService {
          * @returns FeedStock
          * @throws ApiError
          */
-        public static apiV1InventoryFeedStocksUpdate(
+        public static apiV1InventoryFeedStocksPartialUpdate(
             id: number,
-            requestBody: FeedStock,
+            requestBody?: PatchedFeedStock,
         ): CancelablePromise<FeedStock> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/inventory/feed-stocks/{id}/',
                 path: {
                     'id': id,
@@ -3986,12 +3986,12 @@ export class ApiService {
              * @returns FeedingEvent
              * @throws ApiError
              */
-            public static apiV1InventoryFeedingEventsPartialUpdate(
+            public static apiV1InventoryFeedingEventsUpdate(
                 id: number,
-                requestBody?: PatchedFeedingEvent,
+                requestBody: FeedingEvent,
             ): CancelablePromise<FeedingEvent> {
                 return __request(OpenAPI, {
-                    method: 'PATCH',
+                    method: 'PUT',
                     url: '/api/v1/inventory/feeding-events/{id}/',
                     path: {
                         'id': id,
@@ -4017,12 +4017,12 @@ export class ApiService {
              * @returns FeedingEvent
              * @throws ApiError
              */
-            public static apiV1InventoryFeedingEventsUpdate(
+            public static apiV1InventoryFeedingEventsPartialUpdate(
                 id: number,
-                requestBody: FeedingEvent,
+                requestBody?: PatchedFeedingEvent,
             ): CancelablePromise<FeedingEvent> {
                 return __request(OpenAPI, {
-                    method: 'PUT',
+                    method: 'PATCH',
                     url: '/api/v1/inventory/feeding-events/{id}/',
                     path: {
                         'id': id,
@@ -4350,12 +4350,12 @@ export class ApiService {
                  * @returns FeedContainerStock
                  * @throws ApiError
                  */
-                public static apiV1InventoryFeedContainerStockPartialUpdate(
+                public static apiV1InventoryFeedContainerStockUpdate(
                     id: number,
-                    requestBody?: PatchedFeedContainerStock,
+                    requestBody: FeedContainerStock,
                 ): CancelablePromise<FeedContainerStock> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/inventory/feed-container-stock/{id}/',
                         path: {
                             'id': id,
@@ -4381,12 +4381,12 @@ export class ApiService {
                  * @returns FeedContainerStock
                  * @throws ApiError
                  */
-                public static apiV1InventoryFeedContainerStockUpdate(
+                public static apiV1InventoryFeedContainerStockPartialUpdate(
                     id: number,
-                    requestBody: FeedContainerStock,
+                    requestBody?: PatchedFeedContainerStock,
                 ): CancelablePromise<FeedContainerStock> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/inventory/feed-container-stock/{id}/',
                         path: {
                             'id': id,
@@ -4545,12 +4545,12 @@ export class ApiService {
                  * @returns JournalEntry
                  * @throws ApiError
                  */
-                public static apiV1HealthJournalEntriesPartialUpdate(
+                public static apiV1HealthJournalEntriesUpdate(
                     id: number,
-                    requestBody?: PatchedJournalEntry,
+                    requestBody: JournalEntry,
                 ): CancelablePromise<JournalEntry> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/journal-entries/{id}/',
                         path: {
                             'id': id,
@@ -4576,12 +4576,12 @@ export class ApiService {
                  * @returns JournalEntry
                  * @throws ApiError
                  */
-                public static apiV1HealthJournalEntriesUpdate(
+                public static apiV1HealthJournalEntriesPartialUpdate(
                     id: number,
-                    requestBody: JournalEntry,
+                    requestBody?: PatchedJournalEntry,
                 ): CancelablePromise<JournalEntry> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/journal-entries/{id}/',
                         path: {
                             'id': id,
@@ -4715,12 +4715,12 @@ export class ApiService {
                  * @returns MortalityReason
                  * @throws ApiError
                  */
-                public static apiV1HealthMortalityReasonsPartialUpdate(
+                public static apiV1HealthMortalityReasonsUpdate(
                     id: number,
-                    requestBody?: PatchedMortalityReason,
+                    requestBody: MortalityReason,
                 ): CancelablePromise<MortalityReason> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/mortality-reasons/{id}/',
                         path: {
                             'id': id,
@@ -4745,12 +4745,12 @@ export class ApiService {
                  * @returns MortalityReason
                  * @throws ApiError
                  */
-                public static apiV1HealthMortalityReasonsUpdate(
+                public static apiV1HealthMortalityReasonsPartialUpdate(
                     id: number,
-                    requestBody: MortalityReason,
+                    requestBody?: PatchedMortalityReason,
                 ): CancelablePromise<MortalityReason> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/mortality-reasons/{id}/',
                         path: {
                             'id': id,
@@ -4893,12 +4893,12 @@ export class ApiService {
                  * @returns MortalityRecord
                  * @throws ApiError
                  */
-                public static apiV1HealthMortalityRecordsPartialUpdate(
+                public static apiV1HealthMortalityRecordsUpdate(
                     id: number,
-                    requestBody?: PatchedMortalityRecord,
+                    requestBody: MortalityRecord,
                 ): CancelablePromise<MortalityRecord> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/mortality-records/{id}/',
                         path: {
                             'id': id,
@@ -4924,12 +4924,12 @@ export class ApiService {
                  * @returns MortalityRecord
                  * @throws ApiError
                  */
-                public static apiV1HealthMortalityRecordsUpdate(
+                public static apiV1HealthMortalityRecordsPartialUpdate(
                     id: number,
-                    requestBody: MortalityRecord,
+                    requestBody?: PatchedMortalityRecord,
                 ): CancelablePromise<MortalityRecord> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/mortality-records/{id}/',
                         path: {
                             'id': id,
@@ -5073,12 +5073,12 @@ export class ApiService {
                  * @returns LiceCount
                  * @throws ApiError
                  */
-                public static apiV1HealthLiceCountsPartialUpdate(
+                public static apiV1HealthLiceCountsUpdate(
                     id: number,
-                    requestBody?: PatchedLiceCount,
+                    requestBody: LiceCount,
                 ): CancelablePromise<LiceCount> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/lice-counts/{id}/',
                         path: {
                             'id': id,
@@ -5104,12 +5104,12 @@ export class ApiService {
                  * @returns LiceCount
                  * @throws ApiError
                  */
-                public static apiV1HealthLiceCountsUpdate(
+                public static apiV1HealthLiceCountsPartialUpdate(
                     id: number,
-                    requestBody: LiceCount,
+                    requestBody?: PatchedLiceCount,
                 ): CancelablePromise<LiceCount> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/lice-counts/{id}/',
                         path: {
                             'id': id,
@@ -5249,12 +5249,12 @@ export class ApiService {
                  * @returns VaccinationType
                  * @throws ApiError
                  */
-                public static apiV1HealthVaccinationTypesPartialUpdate(
+                public static apiV1HealthVaccinationTypesUpdate(
                     id: number,
-                    requestBody?: PatchedVaccinationType,
+                    requestBody: VaccinationType,
                 ): CancelablePromise<VaccinationType> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/vaccination-types/{id}/',
                         path: {
                             'id': id,
@@ -5279,12 +5279,12 @@ export class ApiService {
                  * @returns VaccinationType
                  * @throws ApiError
                  */
-                public static apiV1HealthVaccinationTypesUpdate(
+                public static apiV1HealthVaccinationTypesPartialUpdate(
                     id: number,
-                    requestBody: VaccinationType,
+                    requestBody?: PatchedVaccinationType,
                 ): CancelablePromise<VaccinationType> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/vaccination-types/{id}/',
                         path: {
                             'id': id,
@@ -5467,12 +5467,12 @@ export class ApiService {
                  * @returns Treatment
                  * @throws ApiError
                  */
-                public static apiV1HealthTreatmentsPartialUpdate(
+                public static apiV1HealthTreatmentsUpdate(
                     id: number,
-                    requestBody?: PatchedTreatment,
+                    requestBody: Treatment,
                 ): CancelablePromise<Treatment> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/treatments/{id}/',
                         path: {
                             'id': id,
@@ -5498,12 +5498,12 @@ export class ApiService {
                  * @returns Treatment
                  * @throws ApiError
                  */
-                public static apiV1HealthTreatmentsUpdate(
+                public static apiV1HealthTreatmentsPartialUpdate(
                     id: number,
-                    requestBody: Treatment,
+                    requestBody?: PatchedTreatment,
                 ): CancelablePromise<Treatment> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/treatments/{id}/',
                         path: {
                             'id': id,
@@ -5637,12 +5637,12 @@ export class ApiService {
                  * @returns SampleType
                  * @throws ApiError
                  */
-                public static apiV1HealthSampleTypesPartialUpdate(
+                public static apiV1HealthSampleTypesUpdate(
                     id: number,
-                    requestBody?: PatchedSampleType,
+                    requestBody: SampleType,
                 ): CancelablePromise<SampleType> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/sample-types/{id}/',
                         path: {
                             'id': id,
@@ -5667,12 +5667,12 @@ export class ApiService {
                  * @returns SampleType
                  * @throws ApiError
                  */
-                public static apiV1HealthSampleTypesUpdate(
+                public static apiV1HealthSampleTypesPartialUpdate(
                     id: number,
-                    requestBody: SampleType,
+                    requestBody?: PatchedSampleType,
                 ): CancelablePromise<SampleType> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/sample-types/{id}/',
                         path: {
                             'id': id,
@@ -5808,12 +5808,12 @@ export class ApiService {
                  * @returns HealthParameter
                  * @throws ApiError
                  */
-                public static apiV1HealthHealthParametersPartialUpdate(
+                public static apiV1HealthHealthParametersUpdate(
                     id: number,
-                    requestBody?: PatchedHealthParameter,
+                    requestBody: HealthParameter,
                 ): CancelablePromise<HealthParameter> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/health-parameters/{id}/',
                         path: {
                             'id': id,
@@ -5838,12 +5838,12 @@ export class ApiService {
                  * @returns HealthParameter
                  * @throws ApiError
                  */
-                public static apiV1HealthHealthParametersUpdate(
+                public static apiV1HealthHealthParametersPartialUpdate(
                     id: number,
-                    requestBody: HealthParameter,
+                    requestBody?: PatchedHealthParameter,
                 ): CancelablePromise<HealthParameter> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/health-parameters/{id}/',
                         path: {
                             'id': id,
@@ -5996,12 +5996,12 @@ export class ApiService {
                  * @returns HealthSamplingEvent
                  * @throws ApiError
                  */
-                public static apiV1HealthHealthSamplingEventsPartialUpdate(
+                public static apiV1HealthHealthSamplingEventsUpdate(
                     id: number,
-                    requestBody?: PatchedHealthSamplingEvent,
+                    requestBody: HealthSamplingEvent,
                 ): CancelablePromise<HealthSamplingEvent> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/health-sampling-events/{id}/',
                         path: {
                             'id': id,
@@ -6028,12 +6028,12 @@ export class ApiService {
                  * @returns HealthSamplingEvent
                  * @throws ApiError
                  */
-                public static apiV1HealthHealthSamplingEventsUpdate(
+                public static apiV1HealthHealthSamplingEventsPartialUpdate(
                     id: number,
-                    requestBody: HealthSamplingEvent,
+                    requestBody?: PatchedHealthSamplingEvent,
                 ): CancelablePromise<HealthSamplingEvent> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/health-sampling-events/{id}/',
                         path: {
                             'id': id,
@@ -6206,12 +6206,12 @@ export class ApiService {
                  * @returns IndividualFishObservation
                  * @throws ApiError
                  */
-                public static apiV1HealthIndividualFishObservationsPartialUpdate(
+                public static apiV1HealthIndividualFishObservationsUpdate(
                     id: number,
-                    requestBody?: PatchedIndividualFishObservation,
+                    requestBody: IndividualFishObservation,
                 ): CancelablePromise<IndividualFishObservation> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/individual-fish-observations/{id}/',
                         path: {
                             'id': id,
@@ -6236,12 +6236,12 @@ export class ApiService {
                  * @returns IndividualFishObservation
                  * @throws ApiError
                  */
-                public static apiV1HealthIndividualFishObservationsUpdate(
+                public static apiV1HealthIndividualFishObservationsPartialUpdate(
                     id: number,
-                    requestBody: IndividualFishObservation,
+                    requestBody?: PatchedIndividualFishObservation,
                 ): CancelablePromise<IndividualFishObservation> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/individual-fish-observations/{id}/',
                         path: {
                             'id': id,
@@ -6383,12 +6383,12 @@ export class ApiService {
                  * @returns FishParameterScore
                  * @throws ApiError
                  */
-                public static apiV1HealthFishParameterScoresPartialUpdate(
+                public static apiV1HealthFishParameterScoresUpdate(
                     id: number,
-                    requestBody?: PatchedFishParameterScore,
+                    requestBody: FishParameterScore,
                 ): CancelablePromise<FishParameterScore> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/fish-parameter-scores/{id}/',
                         path: {
                             'id': id,
@@ -6413,12 +6413,12 @@ export class ApiService {
                  * @returns FishParameterScore
                  * @throws ApiError
                  */
-                public static apiV1HealthFishParameterScoresUpdate(
+                public static apiV1HealthFishParameterScoresPartialUpdate(
                     id: number,
-                    requestBody: FishParameterScore,
+                    requestBody?: PatchedFishParameterScore,
                 ): CancelablePromise<FishParameterScore> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/fish-parameter-scores/{id}/',
                         path: {
                             'id': id,
@@ -6576,12 +6576,12 @@ export class ApiService {
                  * @returns HealthLabSample
                  * @throws ApiError
                  */
-                public static apiV1HealthHealthLabSamplesPartialUpdate(
+                public static apiV1HealthHealthLabSamplesUpdate(
                     id: number,
-                    formData?: PatchedHealthLabSample,
+                    formData: HealthLabSample,
                 ): CancelablePromise<HealthLabSample> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/health/health-lab-samples/{id}/',
                         path: {
                             'id': id,
@@ -6607,12 +6607,12 @@ export class ApiService {
                  * @returns HealthLabSample
                  * @throws ApiError
                  */
-                public static apiV1HealthHealthLabSamplesUpdate(
+                public static apiV1HealthHealthLabSamplesPartialUpdate(
                     id: number,
-                    formData: HealthLabSample,
+                    formData?: PatchedHealthLabSample,
                 ): CancelablePromise<HealthLabSample> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/health/health-lab-samples/{id}/',
                         path: {
                             'id': id,
@@ -6765,12 +6765,12 @@ export class ApiService {
                  * @returns MaintenanceTask
                  * @throws ApiError
                  */
-                public static apiV1BroodstockMaintenanceTasksPartialUpdate(
+                public static apiV1BroodstockMaintenanceTasksUpdate(
                     id: number,
-                    requestBody?: PatchedMaintenanceTask,
+                    requestBody: MaintenanceTask,
                 ): CancelablePromise<MaintenanceTask> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/maintenance-tasks/{id}/',
                         path: {
                             'id': id,
@@ -6793,12 +6793,12 @@ export class ApiService {
                  * @returns MaintenanceTask
                  * @throws ApiError
                  */
-                public static apiV1BroodstockMaintenanceTasksUpdate(
+                public static apiV1BroodstockMaintenanceTasksPartialUpdate(
                     id: number,
-                    requestBody: MaintenanceTask,
+                    requestBody?: PatchedMaintenanceTask,
                 ): CancelablePromise<MaintenanceTask> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/maintenance-tasks/{id}/',
                         path: {
                             'id': id,
@@ -6989,12 +6989,12 @@ export class ApiService {
                  * @returns BroodstockFish
                  * @throws ApiError
                  */
-                public static apiV1BroodstockFishPartialUpdate(
+                public static apiV1BroodstockFishUpdate(
                     id: number,
-                    requestBody?: PatchedBroodstockFish,
+                    requestBody: BroodstockFish,
                 ): CancelablePromise<BroodstockFish> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/fish/{id}/',
                         path: {
                             'id': id,
@@ -7017,12 +7017,12 @@ export class ApiService {
                  * @returns BroodstockFish
                  * @throws ApiError
                  */
-                public static apiV1BroodstockFishUpdate(
+                public static apiV1BroodstockFishPartialUpdate(
                     id: number,
-                    requestBody: BroodstockFish,
+                    requestBody?: PatchedBroodstockFish,
                 ): CancelablePromise<BroodstockFish> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/fish/{id}/',
                         path: {
                             'id': id,
@@ -7176,12 +7176,12 @@ export class ApiService {
                  * @returns FishMovement
                  * @throws ApiError
                  */
-                public static apiV1BroodstockFishMovementsPartialUpdate(
+                public static apiV1BroodstockFishMovementsUpdate(
                     id: number,
-                    requestBody?: PatchedFishMovement,
+                    requestBody: FishMovement,
                 ): CancelablePromise<FishMovement> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/fish-movements/{id}/',
                         path: {
                             'id': id,
@@ -7204,12 +7204,12 @@ export class ApiService {
                  * @returns FishMovement
                  * @throws ApiError
                  */
-                public static apiV1BroodstockFishMovementsUpdate(
+                public static apiV1BroodstockFishMovementsPartialUpdate(
                     id: number,
-                    requestBody: FishMovement,
+                    requestBody?: PatchedFishMovement,
                 ): CancelablePromise<FishMovement> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/fish-movements/{id}/',
                         path: {
                             'id': id,
@@ -7351,12 +7351,12 @@ export class ApiService {
                  * @returns BreedingPlan
                  * @throws ApiError
                  */
-                public static apiV1BroodstockBreedingPlansPartialUpdate(
+                public static apiV1BroodstockBreedingPlansUpdate(
                     id: number,
-                    requestBody?: PatchedBreedingPlan,
+                    requestBody: BreedingPlan,
                 ): CancelablePromise<BreedingPlan> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/breeding-plans/{id}/',
                         path: {
                             'id': id,
@@ -7379,12 +7379,12 @@ export class ApiService {
                  * @returns BreedingPlan
                  * @throws ApiError
                  */
-                public static apiV1BroodstockBreedingPlansUpdate(
+                public static apiV1BroodstockBreedingPlansPartialUpdate(
                     id: number,
-                    requestBody: BreedingPlan,
+                    requestBody?: PatchedBreedingPlan,
                 ): CancelablePromise<BreedingPlan> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/breeding-plans/{id}/',
                         path: {
                             'id': id,
@@ -7512,12 +7512,12 @@ export class ApiService {
                  * @returns BreedingTraitPriority
                  * @throws ApiError
                  */
-                public static apiV1BroodstockTraitPrioritiesPartialUpdate(
+                public static apiV1BroodstockTraitPrioritiesUpdate(
                     id: number,
-                    requestBody?: PatchedBreedingTraitPriority,
+                    requestBody: BreedingTraitPriority,
                 ): CancelablePromise<BreedingTraitPriority> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/trait-priorities/{id}/',
                         path: {
                             'id': id,
@@ -7540,12 +7540,12 @@ export class ApiService {
                  * @returns BreedingTraitPriority
                  * @throws ApiError
                  */
-                public static apiV1BroodstockTraitPrioritiesUpdate(
+                public static apiV1BroodstockTraitPrioritiesPartialUpdate(
                     id: number,
-                    requestBody: BreedingTraitPriority,
+                    requestBody?: PatchedBreedingTraitPriority,
                 ): CancelablePromise<BreedingTraitPriority> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/trait-priorities/{id}/',
                         path: {
                             'id': id,
@@ -7677,12 +7677,12 @@ export class ApiService {
                  * @returns BreedingPair
                  * @throws ApiError
                  */
-                public static apiV1BroodstockBreedingPairsPartialUpdate(
+                public static apiV1BroodstockBreedingPairsUpdate(
                     id: number,
-                    requestBody?: PatchedBreedingPair,
+                    requestBody: BreedingPair,
                 ): CancelablePromise<BreedingPair> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/breeding-pairs/{id}/',
                         path: {
                             'id': id,
@@ -7705,12 +7705,12 @@ export class ApiService {
                  * @returns BreedingPair
                  * @throws ApiError
                  */
-                public static apiV1BroodstockBreedingPairsUpdate(
+                public static apiV1BroodstockBreedingPairsPartialUpdate(
                     id: number,
-                    requestBody: BreedingPair,
+                    requestBody?: PatchedBreedingPair,
                 ): CancelablePromise<BreedingPair> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/breeding-pairs/{id}/',
                         path: {
                             'id': id,
@@ -7858,12 +7858,12 @@ export class ApiService {
                  * @returns EggSupplier
                  * @throws ApiError
                  */
-                public static apiV1BroodstockEggSuppliersPartialUpdate(
+                public static apiV1BroodstockEggSuppliersUpdate(
                     id: number,
-                    requestBody?: PatchedEggSupplier,
+                    requestBody: EggSupplier,
                 ): CancelablePromise<EggSupplier> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/egg-suppliers/{id}/',
                         path: {
                             'id': id,
@@ -7886,12 +7886,12 @@ export class ApiService {
                  * @returns EggSupplier
                  * @throws ApiError
                  */
-                public static apiV1BroodstockEggSuppliersUpdate(
+                public static apiV1BroodstockEggSuppliersPartialUpdate(
                     id: number,
-                    requestBody: EggSupplier,
+                    requestBody?: PatchedEggSupplier,
                 ): CancelablePromise<EggSupplier> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/egg-suppliers/{id}/',
                         path: {
                             'id': id,
@@ -8070,12 +8070,12 @@ export class ApiService {
                  * @returns EggProduction
                  * @throws ApiError
                  */
-                public static apiV1BroodstockEggProductionsPartialUpdate(
+                public static apiV1BroodstockEggProductionsUpdate(
                     id: number,
-                    requestBody?: PatchedEggProduction,
+                    requestBody: EggProduction,
                 ): CancelablePromise<EggProduction> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/egg-productions/{id}/',
                         path: {
                             'id': id,
@@ -8098,12 +8098,12 @@ export class ApiService {
                  * @returns EggProduction
                  * @throws ApiError
                  */
-                public static apiV1BroodstockEggProductionsUpdate(
+                public static apiV1BroodstockEggProductionsPartialUpdate(
                     id: number,
-                    requestBody: EggProduction,
+                    requestBody?: PatchedEggProduction,
                 ): CancelablePromise<EggProduction> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/egg-productions/{id}/',
                         path: {
                             'id': id,
@@ -8229,12 +8229,12 @@ export class ApiService {
                  * @returns ExternalEggBatch
                  * @throws ApiError
                  */
-                public static apiV1BroodstockExternalEggBatchesPartialUpdate(
+                public static apiV1BroodstockExternalEggBatchesUpdate(
                     id: number,
-                    requestBody?: PatchedExternalEggBatch,
+                    requestBody: ExternalEggBatch,
                 ): CancelablePromise<ExternalEggBatch> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/external-egg-batches/{id}/',
                         path: {
                             'id': id,
@@ -8257,12 +8257,12 @@ export class ApiService {
                  * @returns ExternalEggBatch
                  * @throws ApiError
                  */
-                public static apiV1BroodstockExternalEggBatchesUpdate(
+                public static apiV1BroodstockExternalEggBatchesPartialUpdate(
                     id: number,
-                    requestBody: ExternalEggBatch,
+                    requestBody?: PatchedExternalEggBatch,
                 ): CancelablePromise<ExternalEggBatch> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/external-egg-batches/{id}/',
                         path: {
                             'id': id,
@@ -8404,12 +8404,12 @@ export class ApiService {
                  * @returns BatchParentage
                  * @throws ApiError
                  */
-                public static apiV1BroodstockBatchParentagesPartialUpdate(
+                public static apiV1BroodstockBatchParentagesUpdate(
                     id: number,
-                    requestBody?: PatchedBatchParentage,
+                    requestBody: BatchParentage,
                 ): CancelablePromise<BatchParentage> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/broodstock/batch-parentages/{id}/',
                         path: {
                             'id': id,
@@ -8432,12 +8432,12 @@ export class ApiService {
                  * @returns BatchParentage
                  * @throws ApiError
                  */
-                public static apiV1BroodstockBatchParentagesUpdate(
+                public static apiV1BroodstockBatchParentagesPartialUpdate(
                     id: number,
-                    requestBody: BatchParentage,
+                    requestBody?: PatchedBatchParentage,
                 ): CancelablePromise<BatchParentage> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/broodstock/batch-parentages/{id}/',
                         path: {
                             'id': id,
@@ -8628,12 +8628,12 @@ export class ApiService {
                  * @returns Geography
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureGeographiesPartialUpdate(
+                public static apiV1InfrastructureGeographiesUpdate(
                     id: number,
-                    requestBody?: PatchedGeography,
+                    requestBody: Geography,
                 ): CancelablePromise<Geography> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/infrastructure/geographies/{id}/',
                         path: {
                             'id': id,
@@ -8673,12 +8673,12 @@ export class ApiService {
                  * @returns Geography
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureGeographiesUpdate(
+                public static apiV1InfrastructureGeographiesPartialUpdate(
                     id: number,
-                    requestBody: Geography,
+                    requestBody?: PatchedGeography,
                 ): CancelablePromise<Geography> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/infrastructure/geographies/{id}/',
                         path: {
                             'id': id,
@@ -8896,12 +8896,12 @@ export class ApiService {
                  * @returns Area
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureAreasPartialUpdate(
+                public static apiV1InfrastructureAreasUpdate(
                     id: number,
-                    requestBody?: PatchedArea,
+                    requestBody: Area,
                 ): CancelablePromise<Area> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/infrastructure/areas/{id}/',
                         path: {
                             'id': id,
@@ -8942,12 +8942,12 @@ export class ApiService {
                  * @returns Area
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureAreasUpdate(
+                public static apiV1InfrastructureAreasPartialUpdate(
                     id: number,
-                    requestBody: Area,
+                    requestBody?: PatchedArea,
                 ): CancelablePromise<Area> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/infrastructure/areas/{id}/',
                         path: {
                             'id': id,
@@ -9186,12 +9186,12 @@ export class ApiService {
                  * @returns FreshwaterStation
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureFreshwaterStationsPartialUpdate(
+                public static apiV1InfrastructureFreshwaterStationsUpdate(
                     id: number,
-                    requestBody?: PatchedFreshwaterStation,
+                    requestBody: FreshwaterStation,
                 ): CancelablePromise<FreshwaterStation> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/infrastructure/freshwater-stations/{id}/',
                         path: {
                             'id': id,
@@ -9236,12 +9236,12 @@ export class ApiService {
                  * @returns FreshwaterStation
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureFreshwaterStationsUpdate(
+                public static apiV1InfrastructureFreshwaterStationsPartialUpdate(
                     id: number,
-                    requestBody: FreshwaterStation,
+                    requestBody?: PatchedFreshwaterStation,
                 ): CancelablePromise<FreshwaterStation> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/infrastructure/freshwater-stations/{id}/',
                         path: {
                             'id': id,
@@ -9472,12 +9472,12 @@ export class ApiService {
                  * @returns Hall
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureHallsPartialUpdate(
+                public static apiV1InfrastructureHallsUpdate(
                     id: number,
-                    requestBody?: PatchedHall,
+                    requestBody: Hall,
                 ): CancelablePromise<Hall> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/infrastructure/halls/{id}/',
                         path: {
                             'id': id,
@@ -9520,12 +9520,12 @@ export class ApiService {
                  * @returns Hall
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureHallsUpdate(
+                public static apiV1InfrastructureHallsPartialUpdate(
                     id: number,
-                    requestBody: Hall,
+                    requestBody?: PatchedHall,
                 ): CancelablePromise<Hall> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/infrastructure/halls/{id}/',
                         path: {
                             'id': id,
@@ -9742,12 +9742,12 @@ export class ApiService {
                  * @returns ContainerType
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureContainerTypesPartialUpdate(
+                public static apiV1InfrastructureContainerTypesUpdate(
                     id: number,
-                    requestBody?: PatchedContainerType,
+                    requestBody: ContainerType,
                 ): CancelablePromise<ContainerType> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/infrastructure/container-types/{id}/',
                         path: {
                             'id': id,
@@ -9787,12 +9787,12 @@ export class ApiService {
                  * @returns ContainerType
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureContainerTypesUpdate(
+                public static apiV1InfrastructureContainerTypesPartialUpdate(
                     id: number,
-                    requestBody: ContainerType,
+                    requestBody?: PatchedContainerType,
                 ): CancelablePromise<ContainerType> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/infrastructure/container-types/{id}/',
                         path: {
                             'id': id,
@@ -10036,12 +10036,12 @@ export class ApiService {
                  * @returns Container
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureContainersPartialUpdate(
+                public static apiV1InfrastructureContainersUpdate(
                     id: number,
-                    requestBody?: PatchedContainer,
+                    requestBody: Container,
                 ): CancelablePromise<Container> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/infrastructure/containers/{id}/',
                         path: {
                             'id': id,
@@ -10087,12 +10087,12 @@ export class ApiService {
                  * @returns Container
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureContainersUpdate(
+                public static apiV1InfrastructureContainersPartialUpdate(
                     id: number,
-                    requestBody: Container,
+                    requestBody?: PatchedContainer,
                 ): CancelablePromise<Container> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/infrastructure/containers/{id}/',
                         path: {
                             'id': id,
@@ -10344,12 +10344,12 @@ export class ApiService {
                  * @returns Sensor
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureSensorsPartialUpdate(
+                public static apiV1InfrastructureSensorsUpdate(
                     id: number,
-                    requestBody?: PatchedSensor,
+                    requestBody: Sensor,
                 ): CancelablePromise<Sensor> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/infrastructure/sensors/{id}/',
                         path: {
                             'id': id,
@@ -10395,12 +10395,12 @@ export class ApiService {
                  * @returns Sensor
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureSensorsUpdate(
+                public static apiV1InfrastructureSensorsPartialUpdate(
                     id: number,
-                    requestBody: Sensor,
+                    requestBody?: PatchedSensor,
                 ): CancelablePromise<Sensor> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/infrastructure/sensors/{id}/',
                         path: {
                             'id': id,
@@ -10649,12 +10649,12 @@ export class ApiService {
                  * @returns FeedContainer
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureFeedContainersPartialUpdate(
+                public static apiV1InfrastructureFeedContainersUpdate(
                     id: number,
-                    requestBody?: PatchedFeedContainer,
+                    requestBody: FeedContainer,
                 ): CancelablePromise<FeedContainer> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/infrastructure/feed-containers/{id}/',
                         path: {
                             'id': id,
@@ -10699,12 +10699,12 @@ export class ApiService {
                  * @returns FeedContainer
                  * @throws ApiError
                  */
-                public static apiV1InfrastructureFeedContainersUpdate(
+                public static apiV1InfrastructureFeedContainersPartialUpdate(
                     id: number,
-                    requestBody: FeedContainer,
+                    requestBody?: PatchedFeedContainer,
                 ): CancelablePromise<FeedContainer> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/infrastructure/feed-containers/{id}/',
                         path: {
                             'id': id,
@@ -10923,12 +10923,12 @@ export class ApiService {
                          * @returns TemperatureProfile
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioTemperatureProfilesPartialUpdate(
+                        public static apiV1ScenarioTemperatureProfilesUpdate(
                             profileId: number,
-                            requestBody?: PatchedTemperatureProfile,
+                            requestBody: TemperatureProfile,
                         ): CancelablePromise<TemperatureProfile> {
                             return __request(OpenAPI, {
-                                method: 'PATCH',
+                                method: 'PUT',
                                 url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
                                 path: {
                                     'profile_id': profileId,
@@ -10951,12 +10951,12 @@ export class ApiService {
                          * @returns TemperatureProfile
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioTemperatureProfilesUpdate(
+                        public static apiV1ScenarioTemperatureProfilesPartialUpdate(
                             profileId: number,
-                            requestBody: TemperatureProfile,
+                            requestBody?: PatchedTemperatureProfile,
                         ): CancelablePromise<TemperatureProfile> {
                             return __request(OpenAPI, {
-                                method: 'PUT',
+                                method: 'PATCH',
                                 url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
                                 path: {
                                     'profile_id': profileId,
@@ -11121,12 +11121,12 @@ export class ApiService {
                          * @returns TGCModel
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioTgcModelsPartialUpdate(
+                        public static apiV1ScenarioTgcModelsUpdate(
                             modelId: number,
-                            requestBody?: PatchedTGCModel,
+                            requestBody: TGCModel,
                         ): CancelablePromise<TGCModel> {
                             return __request(OpenAPI, {
-                                method: 'PATCH',
+                                method: 'PUT',
                                 url: '/api/v1/scenario/tgc-models/{model_id}/',
                                 path: {
                                     'model_id': modelId,
@@ -11149,12 +11149,12 @@ export class ApiService {
                          * @returns TGCModel
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioTgcModelsUpdate(
+                        public static apiV1ScenarioTgcModelsPartialUpdate(
                             modelId: number,
-                            requestBody: TGCModel,
+                            requestBody?: PatchedTGCModel,
                         ): CancelablePromise<TGCModel> {
                             return __request(OpenAPI, {
-                                method: 'PUT',
+                                method: 'PATCH',
                                 url: '/api/v1/scenario/tgc-models/{model_id}/',
                                 path: {
                                     'model_id': modelId,
@@ -11318,12 +11318,12 @@ export class ApiService {
                          * @returns FCRModel
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioFcrModelsPartialUpdate(
+                        public static apiV1ScenarioFcrModelsUpdate(
                             modelId: number,
-                            requestBody?: PatchedFCRModel,
+                            requestBody: FCRModel,
                         ): CancelablePromise<FCRModel> {
                             return __request(OpenAPI, {
-                                method: 'PATCH',
+                                method: 'PUT',
                                 url: '/api/v1/scenario/fcr-models/{model_id}/',
                                 path: {
                                     'model_id': modelId,
@@ -11346,12 +11346,12 @@ export class ApiService {
                          * @returns FCRModel
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioFcrModelsUpdate(
+                        public static apiV1ScenarioFcrModelsPartialUpdate(
                             modelId: number,
-                            requestBody: FCRModel,
+                            requestBody?: PatchedFCRModel,
                         ): CancelablePromise<FCRModel> {
                             return __request(OpenAPI, {
-                                method: 'PUT',
+                                method: 'PATCH',
                                 url: '/api/v1/scenario/fcr-models/{model_id}/',
                                 path: {
                                     'model_id': modelId,
@@ -11516,12 +11516,12 @@ export class ApiService {
                          * @returns MortalityModel
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioMortalityModelsPartialUpdate(
+                        public static apiV1ScenarioMortalityModelsUpdate(
                             modelId: number,
-                            requestBody?: PatchedMortalityModel,
+                            requestBody: MortalityModel,
                         ): CancelablePromise<MortalityModel> {
                             return __request(OpenAPI, {
-                                method: 'PATCH',
+                                method: 'PUT',
                                 url: '/api/v1/scenario/mortality-models/{model_id}/',
                                 path: {
                                     'model_id': modelId,
@@ -11544,12 +11544,12 @@ export class ApiService {
                          * @returns MortalityModel
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioMortalityModelsUpdate(
+                        public static apiV1ScenarioMortalityModelsPartialUpdate(
                             modelId: number,
-                            requestBody: MortalityModel,
+                            requestBody?: PatchedMortalityModel,
                         ): CancelablePromise<MortalityModel> {
                             return __request(OpenAPI, {
-                                method: 'PUT',
+                                method: 'PATCH',
                                 url: '/api/v1/scenario/mortality-models/{model_id}/',
                                 path: {
                                     'model_id': modelId,
@@ -11685,12 +11685,12 @@ export class ApiService {
                          * @returns BiologicalConstraints
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioBiologicalConstraintsPartialUpdate(
+                        public static apiV1ScenarioBiologicalConstraintsUpdate(
                             id: number,
-                            requestBody?: PatchedBiologicalConstraints,
+                            requestBody: BiologicalConstraints,
                         ): CancelablePromise<BiologicalConstraints> {
                             return __request(OpenAPI, {
-                                method: 'PATCH',
+                                method: 'PUT',
                                 url: '/api/v1/scenario/biological-constraints/{id}/',
                                 path: {
                                     'id': id,
@@ -11713,12 +11713,12 @@ export class ApiService {
                          * @returns BiologicalConstraints
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioBiologicalConstraintsUpdate(
+                        public static apiV1ScenarioBiologicalConstraintsPartialUpdate(
                             id: number,
-                            requestBody: BiologicalConstraints,
+                            requestBody?: PatchedBiologicalConstraints,
                         ): CancelablePromise<BiologicalConstraints> {
                             return __request(OpenAPI, {
-                                method: 'PUT',
+                                method: 'PATCH',
                                 url: '/api/v1/scenario/biological-constraints/{id}/',
                                 path: {
                                     'id': id,
@@ -11921,12 +11921,12 @@ export class ApiService {
                                  * @returns Scenario
                                  * @throws ApiError
                                  */
-                                public static apiV1ScenarioScenariosPartialUpdate(
+                                public static apiV1ScenarioScenariosUpdate(
                                     scenarioId: number,
-                                    requestBody?: PatchedScenario,
+                                    requestBody: Scenario,
                                 ): CancelablePromise<Scenario> {
                                     return __request(OpenAPI, {
-                                        method: 'PATCH',
+                                        method: 'PUT',
                                         url: '/api/v1/scenario/scenarios/{scenario_id}/',
                                         path: {
                                             'scenario_id': scenarioId,
@@ -11949,12 +11949,12 @@ export class ApiService {
                                  * @returns Scenario
                                  * @throws ApiError
                                  */
-                                public static apiV1ScenarioScenariosUpdate(
+                                public static apiV1ScenarioScenariosPartialUpdate(
                                     scenarioId: number,
-                                    requestBody: Scenario,
+                                    requestBody?: PatchedScenario,
                                 ): CancelablePromise<Scenario> {
                                     return __request(OpenAPI, {
-                                        method: 'PUT',
+                                        method: 'PATCH',
                                         url: '/api/v1/scenario/scenarios/{scenario_id}/',
                                         path: {
                                             'scenario_id': scenarioId,
@@ -12527,12 +12527,12 @@ export class ApiService {
                                          * @returns User
                                          * @throws ApiError
                                          */
-                                        public static apiV1UsersUsersPartialUpdate(
+                                        public static apiV1UsersUsersUpdate(
                                             id: number,
-                                            requestBody?: PatchedUser,
+                                            requestBody: User,
                                         ): CancelablePromise<User> {
                                             return __request(OpenAPI, {
-                                                method: 'PATCH',
+                                                method: 'PUT',
                                                 url: '/api/v1/users/users/{id}/',
                                                 path: {
                                                     'id': id,
@@ -12557,12 +12557,12 @@ export class ApiService {
                                          * @returns User
                                          * @throws ApiError
                                          */
-                                        public static apiV1UsersUsersUpdate(
+                                        public static apiV1UsersUsersPartialUpdate(
                                             id: number,
-                                            requestBody: User,
+                                            requestBody?: PatchedUser,
                                         ): CancelablePromise<User> {
                                             return __request(OpenAPI, {
-                                                method: 'PUT',
+                                                method: 'PATCH',
                                                 url: '/api/v1/users/users/{id}/',
                                                 path: {
                                                     'id': id,
