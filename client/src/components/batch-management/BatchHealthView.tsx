@@ -50,7 +50,7 @@ interface HealthRecord {
   };
 }
 
-interface MortalityEvent {
+interface MortalityEventView {
   id: number;
   date: string;
   count: number;
@@ -148,13 +148,19 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
   });
 
   // Map mortality events to expected format
-  const mortalityEvents: MortalityEvent[] = mortalityData.map(event => ({
+  const mortalityEvents: MortalityEventView[] = mortalityData.map((event: any) => ({
     id: event.id,
-    date: event.event_date || '', // Fixed field name
+    date: event.event_date || '', // from API
     count: event.count,
-    cause: event.cause || "UNKNOWN", // Fixed field name
+    cause: event.cause || "UNKNOWN",
     description: event.description || "",
-    containerName: event.container_info // Using container_info instead of container.name
+    // container_info may be a string in the API. If it's an object/null in some environments, coerce safely.
+    containerName:
+      typeof event?.container_info === 'string'
+        ? event.container_info
+        : event?.container_info
+          ? String(event.container_info)
+          : undefined,
   }));
 
   // Fetch health sampling events
