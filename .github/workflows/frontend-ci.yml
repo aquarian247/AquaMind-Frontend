@@ -26,9 +26,23 @@ jobs:
     - name: Run unit tests
       run: npm run test:ci
     
+    - name: Fetch Latest API Spec
+      run: |
+        mkdir -p tmp/openapi
+        curl -sSfL -o tmp/openapi/openapi.yaml \
+             https://raw.githubusercontent.com/aquarian247/AquaMind/main/api/openapi.yaml
+
+    - name: Regenerate API Client
+      run: npm run generate:api
+
+    - name: Sync OpenAPI spec for validation
+      run: |
+        mkdir -p api
+        cp tmp/openapi/openapi.yaml api/openapi.yaml
+
     - name: Type check (validate API contract)
       run: npm run type-check
-
+    
     # ------------------------------------------------------------------
     # Contract enforcement – ensure every endpoint used in the codebase
     # exists in the backend OpenAPI specification.  The spec should have
