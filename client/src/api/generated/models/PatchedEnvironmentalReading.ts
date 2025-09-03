@@ -56,6 +56,10 @@ export type PatchedEnvironmentalReading = {
     is_manual?: boolean;
     notes?: string;
     readonly created_at?: string;
+    /**
+     * Direct link to the batch-container assignment for precise salmon CV tracking
+     */
+    batch_container_assignment?: number | null;
     recorded_by?: number | null;
 };
 

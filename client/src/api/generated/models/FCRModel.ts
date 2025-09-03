@@ -13,8 +13,14 @@ export type FCRModel = {
      */
     name: string;
     readonly stages: Array<FCRModelStage>;
-    readonly total_duration: string;
-    readonly stage_coverage: string;
+    /**
+     * Calculate total duration across all stages.
+     */
+    readonly total_duration: number;
+    /**
+     * Check which lifecycle stages are covered.
+     */
+    readonly stage_coverage: Record<string, any>;
     readonly created_at: string;
     readonly updated_at: string;
 };
