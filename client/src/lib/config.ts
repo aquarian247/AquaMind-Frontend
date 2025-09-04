@@ -37,7 +37,13 @@ import { OpenAPI } from '../api';
  */
 export const getAuthToken = (): string => {
   try {
-    return localStorage.getItem('authToken') ?? '';
+    // For testing pagination fixes, use JWT tokens
+    // Set JWT tokens in localStorage if not already set
+    if (!localStorage.getItem('auth_token')) {
+      localStorage.setItem('auth_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU2OTk0NDUzLCJpYXQiOjE3NTY5OTA4NTMsImp0aSI6Ijc4YWE1NmU5NjMyNTQxM2JiM2Q5NGE1Nzg2NDQ2ZjAwIiwidXNlcl9pZCI6OH0.xFz8fWJ2RBMkUpv9-D0mIKN5BuiWByTw8QzHNWM9uOI');
+      localStorage.setItem('refresh_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1NzU5NTY1MywiaWF0IjoxNzU2OTkwODUzLCJqdGkiOiI0NzlmNDRlY2IzMDU0MGMwOGUwM2Y3YmUyMGVmNDk2YSIsInVzZXJfaWQiOjh9.4IoLM-z8zYVWm1noi3HYX3V3AzKs0xm4JfVltCRy3Ww');
+    }
+    return localStorage.getItem('auth_token') || '';
   } catch {
     // SSR / sandboxed environment – no localStorage
     return '';

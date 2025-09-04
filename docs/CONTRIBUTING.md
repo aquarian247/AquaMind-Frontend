@@ -24,12 +24,121 @@ VITE_USE_DJANGO_API=false npm run dev
 ```
 
 #### Django Backend Integration
+
+**⚠️ IMPORTANT**: When integrating with the Django backend, authentication setup is required. The frontend uses JWT tokens, but the backend may not have them configured by default.
+
 ```bash
-# Requires Django backend running
+# 1. Start Django backend
+cd /path/to/AquaMind
+python manage.py runserver 8000 --settings=aquamind.settings
+
+# 2. Configure frontend environment
 VITE_USE_DJANGO_API=true
 VITE_DJANGO_API_URL=http://localhost:8000
 npm run dev
 ```
+
+##### Authentication Setup (Critical)
+
+The frontend requires JWT tokens for authentication, but the Django backend may only have DRF tokens configured. Here's how to set up proper authentication:
+
+**Option A: Use JWT Tokens (Recommended)**
+```bash
+# Get JWT tokens from Django backend
+curl -s "http://localhost:8000/api/auth/jwt/" \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
+**Option B: Create Test User with JWT Support**
+```bash
+# In Django shell, create user with JWT tokens
+python manage.py shell --settings=aquamind.settings
+```
+```python
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+from rest_framework.authtoken.models import Token
+
+# Create admin user
+User = get_user_model()
+user, created = User.objects.get_or_create(
+    username='admin',
+    defaults={
+        'email': 'admin@example.com',
+        'is_active': True,
+        'password': make_password('admin123'),
+        'is_staff': True,
+        'is_superuser': True
+    }
+)
+
+# Create DRF token (fallback)
+token, _ = Token.objects.get_or_create(user=user)
+print(f'DRF Token: {token.key}')
+
+# Use JWT endpoint for JWT tokens
+# curl -s "http://localhost:8000/api/auth/jwt/" -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"admin123"}'
+```
+
+**Common Authentication Issues:**
+
+❌ **Problem**: "Invalid token" or 401 errors
+✅ **Solution**: Ensure you're using JWT tokens, not DRF tokens. The frontend AuthContext expects JWT format.
+
+❌ **Problem**: Frontend shows loading spinner indefinitely
+✅ **Solution**: Check browser console for authentication errors. Verify JWT tokens are properly stored in localStorage.
+
+❌ **Problem**: API calls work in curl but fail in frontend
+✅ **Solution**: The frontend proxy may be adding headers. Check network tab for actual request headers.
+
+**Testing Authentication:**
+```bash
+# Test API directly
+curl -s "http://localhost:8000/api/v1/batch/batches/" \
+  -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN"
+
+# Test frontend proxy
+curl -s "http://localhost:5001/api/v1/batch/batches/" \
+  -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN"
+```
+
+##### Large Dataset & Pagination Handling
+
+When working with large datasets (like feeding events), the frontend automatically handles multi-page fetching. However, there are some important considerations:
+
+**Automatic Multi-Page Fetching:**
+- The frontend uses `fetchAllPages()` utility for endpoints that return paginated data
+- It automatically fetches all pages until no more data is available
+- Progress callbacks provide loading feedback for large datasets
+- Caching prevents redundant API calls (5-10 minute cache duration)
+
+**Performance Considerations:**
+- Large datasets (>50,000 records) may take time to load completely
+- The UI shows loading states during data fetching
+- Network requests are batched efficiently
+- Consider filtering by date ranges for better performance
+
+**Testing Large Datasets:**
+```bash
+# Check total count of feeding events
+curl -s "http://localhost:8000/api/v1/inventory/feeding-events/?batch=258&page=1" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" | jq '.count'
+
+# The frontend will automatically fetch all pages when you view the Feed History tab
+```
+
+**Common Pagination Issues:**
+
+❌ **Problem**: Only seeing 20-50 records instead of thousands
+✅ **Solution**: Check if the API endpoint supports pagination and if the frontend is configured to fetch all pages.
+
+❌ **Problem**: Slow loading of large datasets
+✅ **Solution**: The pagination system includes progress indicators and caching. For very large datasets, consider date filtering.
+
+❌ **Problem**: Memory issues with extremely large datasets
+✅ **Solution**: The system uses efficient data structures and cleanup. For datasets >100k records, consider virtual scrolling.
 
 ### Architecture Testing
 
