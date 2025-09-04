@@ -98,93 +98,69 @@ export default function Infrastructure() {
     queryFn: api.infrastructure.getActiveAlerts,
   });
 
-  // Process data
-  const summary = summaryData || {
-    totalContainers: 247,
-    activeBiomass: 12450,
-    capacity: 14310,
-    sensorAlerts: 7,
-    feedingEventsToday: 124
+  const { data: containersData } = useQuery({
+    queryKey: ["infrastructure/containers"],
+    queryFn: () => api.infrastructure.getContainers(),
+  });
+
+  // Process data - use real API data with proper fallbacks
+  const summary = summaryData ? {
+    totalContainers: (summaryData as any).totalContainers || (summaryData as any).total_containers || 0,
+    activeBiomass: (summaryData as any).activeBiomass || (summaryData as any).active_biomass_kg || 0,
+    capacity: (summaryData as any).capacity || (summaryData as any).capacity_kg || 0,
+    sensorAlerts: (summaryData as any).sensorAlerts || (summaryData as any).sensor_alerts || 0,
+    feedingEventsToday: (summaryData as any).feedingEventsToday || (summaryData as any).feeding_events_today || 0
+  } : {
+    totalContainers: 0,
+    activeBiomass: 0,
+    capacity: 0,
+    sensorAlerts: 0,
+    feedingEventsToday: 0
   };
 
-  const geographies = geographiesData?.results || [
-    { id: 1, name: "Faroe Islands", totalContainers: 152, activeBiomass: 8200, capacity: 9000 },
-    { id: 2, name: "Scotland", totalContainers: 95, activeBiomass: 4250, capacity: 5310 }
-  ];
+  const geographies = geographiesData?.results?.map((geo: any) => {
+    // Since we only have one geography (Faroe Islands), assign all infrastructure metrics to it
+    // In a multi-geography setup, these would need to be calculated per geography
+    const totalContainers = summary.totalContainers;
+    const activeBiomass = summary.activeBiomass;
+    const capacity = summary.capacity;
+    const utilizationPercent = capacity > 0 ? Math.round(((activeBiomass / capacity) * 100) * 10) / 10 : 0;
 
-  // Alerts list (API results fallback to sensible hard-coded examples)
-  const alerts = alertsData?.results || [
-    {
-      id: 1,
-      containerId: 12,
-      containerName: "Vestmanna A12 Sea Pen",
-      type: "oxygen",
-      message: "O2 level: 76% (threshold: 80%)",
-      severity: "medium" as const,
-      timestamp: "15 min ago"
-    },
-    {
-      id: 2,
-      containerId: 5,
-      containerName: "Strond FW Station T05 Tank",
-      type: "temperature",
-      message: "Temperature: 14.2°C (threshold: max 14°C)",
-      severity: "high" as const,
-      timestamp: "32 min ago"
-    },
-    {
-      id: 3,
-      containerId: 8,
-      containerName: "Fuglafjørður B08 Sea Pen",
-      type: "biomass",
-      message: "Biomass: 94% of capacity",
-      severity: "medium" as const,
-      timestamp: "1 hour ago"
-    }
-  ];
+    return {
+      id: geo.id,
+      name: geo.name,
+      totalContainers: totalContainers,
+      activeBiomass: activeBiomass,
+      capacity: capacity,
+      utilizationPercent: utilizationPercent,
+      seaAreas: 1,        // We have areas in Faroe Islands
+      freshwaterStations: 1, // We have freshwater stations
+      status: 'active' as const,
+      lastUpdate: geo.updated_at || new Date().toISOString()
+    };
+  }) || [];
 
-  // Sample containers data
-  const sampleContainers = [
-    {
-      id: 12,
-      name: "Vestmanna A12 Sea Pen",
-      type: "sea_pen" as const,
-      geography: "Faroe Islands",
-      area: "Vestmanna",
-      biomass: 14760,
-      capacity: 18000,
-      currentBatch: "B-2025-06",
-      lastFeed: "2h ago",
-      sensorReadings: { temperature: 12.4, oxygen: 76 },
-      status: "active" as const
-    },
-    {
-      id: 5,
-      name: "Strond FW Station T05 Tank",
-      type: "tank" as const,
-      geography: "Faroe Islands",
-      area: "Strond",
-      biomass: 780,
-      capacity: 1200,
-      currentBatch: "B-2025-04",
-      lastFeed: "1h ago",
-      sensorReadings: { temperature: 14.2, co2: 12 },
-      status: "active" as const
-    },
-    {
-      id: 8,
-      name: "Fuglafjørður B08 Sea Pen",
-      type: "sea_pen" as const,
-      geography: "Faroe Islands",
-      area: "Fuglafjørður",
-      biomass: 16920,
-      capacity: 18000,
-      currentBatch: "B-2025-02",
-      lastFeed: "30m ago",
-      sensorReadings: { temperature: 11.8, oxygen: 88 },
-      status: "active" as const
-    }
-  ];
+  // Alerts list - handle gracefully when endpoint doesn't exist
+  const alerts = alertsData?.results || [];
+
+  // Process real containers data
+  const realContainers = containersData?.results?.slice(0, 3).map((container: any) => ({
+    id: container.id,
+    name: container.name,
+    type: container.container_type_name?.toLowerCase().includes('ring') ? 'sea_pen' as const :
+          container.container_type_name?.toLowerCase().includes('tank') ? 'tank' as const : 'cage' as const,
+    geography: "Faroe Islands", // Default since we only have one geography
+    area: container.area_name || container.hall_name || "Unknown",
+    biomass: 0, // Would need to be calculated from batch assignments
+    capacity: parseFloat(container.volume_m3 || '0') * 1000, // Convert m³ to kg assuming density ~1
+    currentBatch: "Unknown", // Would need to be determined from batch assignments
+    lastFeed: "Unknown", // Would need to be determined from feeding events
+    sensorReadings: {}, // Would need sensor data integration
+    status: container.active ? 'active' as const : 'inactive' as const
+  })) || [];
+
+  // Use real containers data, fallback to empty array if no data
+  const displayContainers = realContainers.length > 0 ? realContainers : [];
 
   // Navigation menu items
   const navigationSections = [
@@ -307,9 +283,9 @@ export default function Infrastructure() {
               {(summary.activeBiomass / 1000).toFixed(1)}k tons
             </div>
             <div className="flex items-center space-x-2 mt-2">
-              <Progress value={(summary.activeBiomass / summary.capacity) * 100} className="flex-1" />
+              <Progress value={summary.capacity > 0 ? Math.round(((summary.activeBiomass / summary.capacity) * 100) * 10) / 10 : 0} className="flex-1" />
               <span className="text-xs text-muted-foreground">
-                {Math.round((summary.activeBiomass / summary.capacity) * 100)}% of capacity
+                {summary.capacity > 0 ? (Math.round(((summary.activeBiomass / summary.capacity) * 100) * 10) / 10).toFixed(1) : 0}% of {(summary.capacity / 1000000).toFixed(1)}M kg
               </span>
             </div>
           </CardContent>
@@ -401,23 +377,33 @@ export default function Infrastructure() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {alerts.slice(0, 3).map((alert: Alert) => (
-                  <div key={alert.id} className="flex items-center justify-between p-3 rounded-lg border">
-                    <div className="flex-1">
-                      <div className="font-medium">{alert.containerName}</div>
-                      <div className="text-sm text-muted-foreground">{alert.message}</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getSeverityBadge(alert.severity)}>
-                        {alert.severity}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">{alert.timestamp}</span>
-                    </div>
+                {alerts.length > 0 ? (
+                  <>
+                    {alerts.slice(0, 3).map((alert: Alert) => (
+                      <div key={alert.id} className="flex items-center justify-between p-3 rounded-lg border">
+                        <div className="flex-1">
+                          <div className="font-medium">{alert.containerName}</div>
+                          <div className="text-sm text-muted-foreground">{alert.message}</div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getSeverityBadge(alert.severity)}>
+                            {alert.severity}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{alert.timestamp}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <Button variant="outline" className="w-full">
+                      View All Alerts
+                    </Button>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <AlertTriangle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No active alerts</p>
+                    <p className="text-sm">Infrastructure is operating normally</p>
                   </div>
-                ))}
-                <Button variant="outline" className="w-full">
-                  View All Alerts
-                </Button>
+                )}
               </CardContent>
             </Card>
 
@@ -433,70 +419,63 @@ export default function Infrastructure() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {sampleContainers.map((container) => {
-                    const IconComponent = getContainerIcon(container.type);
-                    return (
-                      <Card key={container.id}>
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center space-x-2">
-                              <IconComponent className="h-4 w-4 text-blue-500" />
-                              <div>
-                                <CardTitle className="text-sm">{container.name}</CardTitle>
-                                <p className="text-xs text-muted-foreground">{container.area}</p>
+                {displayContainers.length > 0 ? (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {displayContainers.map((container) => {
+                      const IconComponent = getContainerIcon(container.type);
+                      return (
+                        <Card key={container.id}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center space-x-2">
+                                <IconComponent className="h-4 w-4 text-blue-500" />
+                                <div>
+                                  <CardTitle className="text-sm">{container.name}</CardTitle>
+                                  <p className="text-xs text-muted-foreground">{container.area}</p>
+                                </div>
                               </div>
+                              <Badge variant={container.status === "active" ? "default" : "secondary"}>
+                                {container.status}
+                              </Badge>
                             </div>
-                            <Badge variant={container.status === "active" ? "default" : "secondary"}>
-                              {container.status}
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div>
-                            <div className="flex justify-between text-sm">
-                              <span>Biomass</span>
-                              <span>{Math.round((container.biomass / container.capacity) * 100)}% ({(container.biomass / 1000).toFixed(1)}k kg)</span>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <div>
+                              <div className="flex justify-between text-sm">
+                                <span>Capacity</span>
+                                <span>{(container.capacity / 1000).toFixed(1)}k kg</span>
+                              </div>
+                              <Progress value={0} className="mt-1" />
+                              <p className="text-xs text-muted-foreground mt-1">Biomass data not yet integrated</p>
                             </div>
-                            <Progress value={(container.biomass / container.capacity) * 100} className="mt-1" />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            {container.sensorReadings.oxygen && (
-                              <div>
-                                <span className="text-muted-foreground">O2</span>
-                                <div className="font-medium">{container.sensorReadings.oxygen}%</div>
-                              </div>
-                            )}
-                            {container.sensorReadings.temperature && (
-                              <div>
-                                <span className="text-muted-foreground">Temperature</span>
-                                <div className="font-medium">{container.sensorReadings.temperature}°C</div>
-                              </div>
-                            )}
-                            {container.sensorReadings.co2 && (
-                              <div>
-                                <span className="text-muted-foreground">CO2</span>
-                                <div className="font-medium">{container.sensorReadings.co2} mg/l</div>
-                              </div>
-                            )}
-                          </div>
 
-                          <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t">
-                            <div>
-                              <span className="text-muted-foreground">Batch</span>
-                              <div className="font-medium">{container.currentBatch}</div>
+                            <div className="text-center text-sm text-muted-foreground py-4">
+                              <div>Sensor data and batch information</div>
+                              <div>will be available once integrated</div>
                             </div>
-                            <div>
-                              <span className="text-muted-foreground">Last Feed</span>
-                              <div className="font-medium">{container.lastFeed}</div>
+
+                            <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t">
+                              <div>
+                                <span className="text-muted-foreground">Status</span>
+                                <div className="font-medium capitalize">{container.status}</div>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Type</span>
+                                <div className="font-medium">{container.type.replace('_', ' ')}</div>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Container className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Loading container data...</p>
+                    <p className="text-sm">Real container information will be displayed here</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </>
@@ -523,8 +502,10 @@ export default function Infrastructure() {
                       <div className="text-xs text-muted-foreground">Biomass (tons)</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-purple-600">{Math.round((geo.activeBiomass / geo.capacity) * 100)}%</div>
-                      <div className="text-xs text-muted-foreground">Capacity</div>
+                      <div className="text-2xl font-bold text-purple-600">{geo.utilizationPercent.toFixed(1)}%</div>
+                      <div className="text-xs text-muted-foreground">
+                        of {(geo.capacity / 1000000).toFixed(1)}M kg capacity
+                      </div>
                     </div>
                   </div>
                   
@@ -539,7 +520,7 @@ export default function Infrastructure() {
                     </div>
                   </div>
                   
-                  <Progress value={(geo.activeBiomass / geo.capacity) * 100} />
+                  <Progress value={Math.round(geo.utilizationPercent)} />
                   <div className="flex justify-between space-x-2">
                     <Button 
                       variant="outline" 
@@ -606,12 +587,12 @@ export default function Infrastructure() {
               </div>
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-sm">
                 <div className="p-3 bg-blue-50 rounded-lg">
-                  <div className="font-medium text-blue-900">2,700+ Containers</div>
+                  <div className="font-medium text-blue-900">{summary.totalContainers} Containers</div>
                   <div className="text-blue-700">Across all facilities</div>
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg">
-                  <div className="font-medium text-green-900">Multiple Types</div>
-                  <div className="text-green-700">Trays, tanks, rings</div>
+                  <div className="font-medium text-green-900">6 Container Types</div>
+                  <div className="text-green-700">Trays, tanks, rings, etc.</div>
                 </div>
                 <div className="p-3 bg-purple-50 rounded-lg">
                   <div className="font-medium text-purple-900">Smart Filtering</div>
@@ -661,16 +642,16 @@ export default function Infrastructure() {
               </div>
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-sm">
                 <div className="p-3 bg-cyan-50 rounded-lg">
-                  <div className="font-medium text-cyan-900">3,800+ Sensors</div>
-                  <div className="text-cyan-700">Real-time monitoring</div>
+                  <div className="font-medium text-cyan-900">0 Sensors</div>
+                  <div className="text-cyan-700">Ready for deployment</div>
                 </div>
                 <div className="p-3 bg-orange-50 rounded-lg">
-                  <div className="font-medium text-orange-900">8 Sensor Types</div>
-                  <div className="text-orange-700">Temperature, O₂, pH, etc.</div>
+                  <div className="font-medium text-orange-900">0 Sensor Types</div>
+                  <div className="text-orange-700">Infrastructure ready</div>
                 </div>
                 <div className="p-3 bg-red-50 rounded-lg">
                   <div className="font-medium text-red-900">Alert Management</div>
-                  <div className="text-red-700">Status and calibration</div>
+                  <div className="text-red-700">Ready for sensor deployment</div>
                 </div>
               </div>
             </CardContent>

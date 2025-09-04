@@ -128,10 +128,13 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
         const baseURL = 'http://localhost:8000'; // Should match your Django backend URL
         const summaryUrl = `${baseURL}/api/v1/inventory/feeding-events/summary/?batch=${batchId}&date=invalid`;
 
+        // Get the auth token from the configured authentication system
+        const authToken = getAuthToken();
+
         const response = await fetch(summaryUrl, {
           method: 'GET',
           headers: {
-            'Authorization': 'Token 72a903f683208965d0bae0478d861d471e28366e', // Django Token format
+            'Authorization': `Token ${authToken}`, // Use proper Django Token format
             'Content-Type': 'application/json',
           },
         });

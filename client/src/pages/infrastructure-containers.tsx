@@ -49,7 +49,17 @@ export default function InfrastructureContainers() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const { data: containersData, isLoading } = useQuery({
+  // Fetch dynamic filter options
+  const { data: filterOptions, isLoading: filtersLoading, error: filtersError } = useQuery({
+    queryKey: ["infrastructure/containers/filter-options"],
+    queryFn: () => {
+      console.log('Fetching filter options...');
+      return api.infrastructure.getContainerFilterOptions();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const { data: containersData, isLoading: containersLoading } = useQuery({
     // Non-URL key signals client-computed aggregation to the endpoint validator
     queryKey: [
       "infrastructure/containers/overview",
@@ -65,6 +75,34 @@ export default function InfrastructureContainers() {
         type: typeFilter,
         status: statusFilter,
       }),
+  });
+
+  const isLoading = containersLoading || filtersLoading;
+
+  // Fallback filter options in case dynamic loading fails
+  const fallbackFilterOptions = {
+    geographies: ['Faroe Islands'],
+    stations: ['Freshwater Stations', 'Sea Areas'],
+    containerTypes: [
+      'Egg & Alevin Trays (Tray)',
+      'Fry Tanks (Tank)',
+      'Parr Tanks (Tank)',
+      'Smolt Tanks (Tank)',
+      'Post-Smolt Tanks (Tank)',
+      'Sea Rings (Pen)'
+    ],
+    statuses: ['active', 'inactive']
+  };
+
+  // Use dynamic options if available, otherwise fallback
+  const currentFilterOptions = filterOptions || fallbackFilterOptions;
+
+  // Debug logging
+  console.log('Filter options status:', {
+    hasData: !!filterOptions,
+    isLoading: filtersLoading,
+    hasError: !!filtersError,
+    currentOptions: currentFilterOptions
   });
 
   // Cast result array to ContainerOverview[] to satisfy strict typing
@@ -160,6 +198,13 @@ export default function InfrastructureContainers() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 md:p-6">
+          {filtersError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">
+                Warning: Using fallback filter options. Dynamic options failed to load.
+              </p>
+            </div>
+          )}
           <div className="space-y-4">
             {/* Search - Full width on mobile */}
             <div className="space-y-2">
@@ -185,8 +230,9 @@ export default function InfrastructureContainers() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Regions</SelectItem>
-                    <SelectItem value="Faroe Islands">Faroe Islands</SelectItem>
-                    <SelectItem value="Scotland">Scotland</SelectItem>
+                    {currentFilterOptions.geographies.map(geo => (
+                      <SelectItem key={geo} value={geo}>{geo}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -199,8 +245,16 @@ export default function InfrastructureContainers() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Facilities</SelectItem>
-                    <SelectItem value="stations">Freshwater Stations</SelectItem>
-                    <SelectItem value="areas">Sea Areas</SelectItem>
+                    {currentFilterOptions.stations.map(station => {
+                      // Map detailed station names to filter values
+                      const isFreshwater = station.toLowerCase().includes('freshwater');
+                      const filterValue = isFreshwater ? 'stations' : 'areas';
+                      return (
+                        <SelectItem key={station} value={filterValue}>
+                          {station}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -213,12 +267,27 @@ export default function InfrastructureContainers() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="Tray">Egg & Alevin Trays</SelectItem>
-                    <SelectItem value="Fry Tank">Fry Tanks</SelectItem>
-                    <SelectItem value="Parr Tank">Parr Tanks</SelectItem>
-                    <SelectItem value="Smolt Tank">Smolt Tanks</SelectItem>
-                    <SelectItem value="Post-Smolt Tank">Post-Smolt Tanks</SelectItem>
-                    <SelectItem value="Ring">Sea Rings</SelectItem>
+                    {currentFilterOptions.containerTypes.map(containerType => {
+                      // Map full type names to filter values
+                      const typeMap: { [key: string]: string } = {
+                        "Egg & Alevin Trays (Tray)": "Tray",
+                        "Fry Tanks (Tank)": "Fry Tank",
+                        "Parr Tanks (Tank)": "Parr Tank",
+                        "Smolt Tanks (Tank)": "Smolt Tank",
+                        "Post-Smolt Tanks (Tank)": "Post-Smolt Tank",
+                        "Sea Rings (Pen)": "Ring"
+                      };
+                      const filterValue = typeMap[containerType] || containerType;
+                      const displayName = containerType
+                        .replace(' (Tray)', '')
+                        .replace(' (Tank)', '')
+                        .replace(' (Pen)', '');
+                      return (
+                        <SelectItem key={containerType} value={filterValue}>
+                          {displayName}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -231,9 +300,11 @@ export default function InfrastructureContainers() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    {currentFilterOptions.statuses.map(status => (
+                      <SelectItem key={status} value={status}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
