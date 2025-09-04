@@ -250,7 +250,7 @@ Built on Shadcn/ui with custom aquaculture-specific components:
 ## 📚 Documentation
 
 - `docs/DEPLOYMENT_ARCHITECTURE.md` - Production deployment guide
-- `docs/DEVELOPMENT_WORKFLOW.md` - Development best practices
+- `docs/CONTRIBUTING.md` - Development best practices
 - `docs/DJANGO_INTEGRATION_GUIDE.md` - Backend integration details
 - `docs/LOCAL_VLAN_SETUP.md` - Local testing with virtualization
 - `DJANGO_API_ALIGNMENT.md` - API compatibility documentation

@@ -20,33 +20,46 @@ export type BatchFeedingSummary = {
      */
     period_end: string;
     /**
-     * Total feed used in kg during the period
+     * Total feed used across all containers (kg)
      */
     total_feed_kg: string;
     /**
-     * Average batch biomass during the period (kg)
+     * Total batch biomass at start of period (kg)
      */
-    average_biomass_kg?: string | null;
+    total_starting_biomass_kg?: string | null;
     /**
-     * Average feeding percentage during the period
+     * Total batch biomass at end of period (kg)
      */
-    average_feeding_percentage?: string | null;
+    total_ending_biomass_kg?: string | null;
     /**
-     * Growth during the period (kg)
+     * Total batch growth during the period (kg)
      */
-    growth_kg?: string | null;
+    total_growth_kg?: string | null;
     /**
-     * Total feed consumed by the batch during this period (kg)
+     * Weighted average FCR across all containers
      */
-    total_feed_consumed_kg?: string | null;
+    weighted_avg_fcr?: string | null;
     /**
-     * Total biomass gain during this period (kg)
+     * Number of containers contributing to this summary
      */
-    total_biomass_gain_kg?: string | null;
+    container_count?: number;
     /**
-     * Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg)
+     * Overall confidence level (worst case across containers)
+     *
+     * * `VERY_HIGH` - Very High (< 10 days since weighing)
+     * * `HIGH` - High (10-20 days since weighing)
+     * * `MEDIUM` - Medium (20-40 days since weighing)
+     * * `LOW` - Low (> 40 days since weighing)
      */
-    fcr?: string | null;
+    overall_confidence_level?: 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW';
+    /**
+     * Overall estimation method across containers
+     *
+     * * `MEASURED` - All containers have direct measurements
+     * * `MIXED` - Some containers use interpolation
+     * * `INTERPOLATED` - Most containers use interpolation
+     */
+    estimation_method?: 'MEASURED' | 'MIXED' | 'INTERPOLATED' | '' | null;
     readonly created_at: string;
     readonly updated_at: string;
 };
