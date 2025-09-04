@@ -238,12 +238,14 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
       try {
         // Fetch with large page size to get all feed types
         const response = await ApiService.apiV1InventoryFeedingEventsList(
+          undefined, // batch
+          undefined, // container
+          undefined, // feed
           undefined, // feedingDate
+          undefined, // method
           undefined, // ordering
-          undefined, // page
-          1000,     // page_size - large number to get all results
-          undefined, // search
-          undefined  // sensor
+          1,        // page - use first page to get some results
+          undefined  // search
         );
         const types = [...new Set((response.results || []).map((e: any) => e.feed_name))];
         console.log('Available feed types (full results):', types);
@@ -262,15 +264,14 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
       try {
         // Fetch with large page size to get all containers
         const response = await ApiService.apiV1InfrastructureContainersList(
+          undefined, // active
           undefined, // area
-          undefined, // area_id
-          undefined, // geography
-          undefined, // geography_id
+          undefined, // containerType
+          undefined, // hall
+          undefined, // name
           undefined, // ordering
-          undefined, // page
-          1000,     // page_size - large number to get all results
-          undefined, // search
-          undefined  // status
+          1,        // page - use first page to get some results
+          undefined  // search
         );
         const containers = [...new Set((response.results || []).map((c: any) => c.name))];
         console.log('Available containers (full results):', containers);

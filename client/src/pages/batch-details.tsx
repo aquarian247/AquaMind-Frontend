@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, Heart, Utensils, BarChart3, MapPin } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { BatchTraceabilityView } from "@/components/batch-management/BatchTraceabilityView";
-import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
-import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
-import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
-import { api } from "@/lib/api";
+import { useIsMobile } from "../hooks/use-mobile";
+import { BatchTraceabilityView } from "../components/batch-management/BatchTraceabilityView";
+import { BatchHealthView } from "../components/batch-management/BatchHealthView";
+import { BatchFeedHistoryView } from "../components/batch-management/BatchFeedHistoryView";
+import { BatchAnalyticsView } from "../components/batch-management/BatchAnalyticsView";
+import { api } from "../lib/api";
 
 interface BatchDetails {
   id: number;
