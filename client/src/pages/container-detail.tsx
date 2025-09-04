@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ApiService } from "@/api/generated";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Factory,
   Fish,
   Activity,
@@ -20,9 +20,13 @@ import {
   Camera,
   Settings,
   Zap,
-  Timer
+  Timer,
+  Scale
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { FCRSummaryCard } from "@/components/batch-management/FCRSummaryCard";
+import { FCRTrendChart } from "@/components/batch-management/FCRTrendChart";
+import { useContainerFCRAnalytics } from "@/hooks/use-fcr-analytics";
 
 interface ContainerDetail {
   id: number;
@@ -65,6 +69,15 @@ interface ContainerDetail {
 export default function ContainerDetail({ params }: { params: { id: string } }) {
   const [, setLocation] = useLocation();
   const containerId = params.id;
+
+  // FCR Analytics for this container
+  const {
+    containerTrendsData,
+    isLoading: fcrLoading,
+    error: fcrError,
+    refresh: refreshFCR,
+    isRefreshing: fcrRefreshing
+  } = useContainerFCRAnalytics(Number(containerId));
 
   const { data: containerData, isLoading } = useQuery({
     queryKey: ["container", containerId],
@@ -287,8 +300,9 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
 
       {/* Detailed Information Tabs */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="fcr">FCR Analytics</TabsTrigger>
           <TabsTrigger value="environmental">Environmental</TabsTrigger>
           <TabsTrigger value="operations">Operations</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
@@ -450,6 +464,102 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="fcr" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* FCR Summary Card */}
+            <div className="lg:col-span-1">
+              <FCRSummaryCard
+                data={{
+                  currentFCR: container?.feedConversionRatio || null,
+                  confidenceLevel: 'MEDIUM', // Mock confidence for container level
+                  trend: 'stable',
+                  lastUpdated: new Date(),
+                  comparisonPeriod: 'Last 30 days',
+                  predictedFCR: null,
+                  deviation: null,
+                  scenariosUsed: 0
+                }}
+                onRefresh={refreshFCR}
+                isLoading={fcrLoading}
+              />
+            </div>
+
+            {/* FCR Trend Chart */}
+            <div className="lg:col-span-2">
+              <FCRTrendChart
+                data={containerTrendsData}
+                title={`FCR Trends - ${container?.name || 'Container'}`}
+                isLoading={fcrLoading}
+                error={fcrError?.message}
+                onRefresh={refreshFCR}
+                showConfidenceIndicators={true}
+              />
+            </div>
+          </div>
+
+          {/* Container FCR Insights */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Scale className="h-5 w-5 text-purple-500" />
+                Container Performance Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                  <Scale className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-blue-900 dark:text-blue-100">
+                      Container-Specific FCR Tracking
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-200 mt-1">
+                      This view shows FCR performance specific to {container?.name}. Container-level FCR helps identify
+                      equipment-specific issues and optimize individual unit performance.
+                    </p>
+                  </div>
+                </div>
+
+                {container?.feedConversionRatio && container.feedConversionRatio > 1.5 && (
+                  <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-yellow-900 dark:text-yellow-100">
+                        High FCR Detected
+                      </h4>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-200 mt-1">
+                        Current FCR ({container.feedConversionRatio.toFixed(2)}) is above optimal levels.
+                        Consider checking feed distribution, water quality, or maintenance schedules.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                    <div className="text-lg font-bold text-green-600">
+                      {container?.biomass || 0}kg
+                    </div>
+                    <div className="text-xs text-muted-foreground">Current Biomass</div>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                    <div className="text-lg font-bold text-blue-600">
+                      {container?.fishCount || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Fish Count</div>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+                    <div className="text-lg font-bold text-purple-600">
+                      {container?.dailyFeedAmount?.toFixed(1) || '0.0'}kg
+                    </div>
+                    <div className="text-xs text-muted-foreground">Daily Feed</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="operations" className="space-y-4">

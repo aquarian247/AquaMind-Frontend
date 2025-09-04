@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { api } from "@/lib/api";
+import { ApiService } from "@/api/generated/services/ApiService";
 
 interface BatchFeedHistoryViewProps {
   batchId: number;
@@ -100,72 +101,103 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
 
   const currentDateRange = getDateRange();
 
-  // Fetch feeding data
+  // Fetch feeding data using correct API endpoint
   const { data: feedingEvents = [] } = useQuery<FeedingEvent[]>({
     queryKey: ["batch/feeding-events", batchId, currentDateRange],
-    // TODO: replace placeholder with api.batch.getFeedingEvents once backend/spec exposes it
     queryFn: async () => {
-      const resp: any = await api.inventory.getFeedingEvents();
-      const from = currentDateRange.from ? new Date(currentDateRange.from) : null;
-      const to = currentDateRange.to ? new Date(currentDateRange.to) : null;
+      try {
+        // Use the correct API endpoint for feeding events with proper batch filtering
+        const response = await ApiService.apiV1InventoryFeedingEventsList(
+          batchId,    // batch - filter by specific batch
+          undefined,  // container
+          undefined,  // feed
+          undefined,  // feedingDate
+          undefined,  // method
+          undefined,  // ordering
+          1,          // page - get first page
+          undefined   // search
+        );
 
-      const results = (resp.results || [])
-        .filter((e: any) => e.batch === batchId)
-        .filter((e: any) => {
-          const d = new Date(e.feeding_date);
-          if (from && d < from) return false;
-          if (to && d > to) return false;
-          return true;
-        })
-        .map((e: any) => ({
-          id: e.id,
-          feedingDate: e.feeding_date,
-          feedingTime: new Date(e.feeding_date).toISOString().slice(11, 16),
-          amountKg: Number(e.amount_kg ?? 0),
-          feedType: e.feed_type_name ?? e.feed_type ?? "Unknown",
-          feedBrand: e.feed_name ?? e.feed_brand ?? "Generic",
-          containerName: e.container_name ?? "Unknown",
-          batchBiomassKg: Number(e.batch_biomass_kg ?? 0),
-          feedCost: Number(e.total_cost ?? e.estimated_cost ?? 0),
-          method: e.feeding_method_name ?? e.method ?? "Manual",
-          notes: e.notes ?? "",
-          recordedBy: e.recorded_by_username ?? "system",
-        }));
+        console.log('🍽️ Batch Feeding Events API Response:', {
+          batchId: batchId,
+          totalEvents: response.results?.length || 0,
+          hasNext: !!response.next,
+          hasPrevious: !!response.previous,
+          sampleEvent: response.results?.[0] ? {
+            id: response.results[0].id,
+            feed_name: response.results[0].feed_name,
+            container_name: response.results[0].container_name,
+            feeding_date: response.results[0].feeding_date
+          } : null
+        });
 
-      return results as FeedingEvent[];
+        const results = (response.results || []).map((e: any) => ({
+            id: e.id,
+            feedingDate: e.feeding_date,
+            feedingTime: e.feeding_time || new Date(e.feeding_date).toISOString().slice(11, 16),
+            amountKg: Number(e.amount_kg ?? 0),
+            feedType: e.feed_name ?? "Unknown", // Use feed_name as feedType
+            feedBrand: e.feed_name ?? "Generic", // Use feed_name as feedBrand
+            containerName: e.container_name ?? "Unknown",
+            batchBiomassKg: Number(e.batch_biomass_kg ?? 0),
+            feedCost: Number(e.feed_cost ?? 0),
+            method: e.method ?? "Manual",
+            notes: e.notes ?? "",
+            recordedBy: e.recorded_by_username ?? "system",
+          }));
+
+        console.log(`Fetched ${results.length} feeding events for batch ${batchId}`);
+        if (results.length > 0) {
+          console.log('Sample event:', results[0]);
+        }
+        return results as FeedingEvent[];
+      } catch (error) {
+        console.error("Failed to fetch feeding events:", error);
+        return [];
+      }
     },
   });
 
   const { data: feedingSummaries = [] } = useQuery<FeedingSummary[]>({
     queryKey: ["batch/feeding-summaries", batchId, periodFilter, dateRange],
-    // TODO: replace placeholder with api.batch.getFeedingSummaries once backend/spec exposes it
     queryFn: async () => {
-      const resp: any = await api.batch.getFeedingSummaries(batchId);
-      const list = (resp.results || []).map((r: any) => ({
-        id: r.id,
-        periodStart:
-          r.period_start ?? r.start_date ?? r.periodStart ??
-          new Date().toISOString(),
-        periodEnd:
-          r.period_end ?? r.end_date ?? r.periodEnd ??
-          new Date().toISOString(),
-        totalFeedKg: Number(r.total_feed_kg ?? r.totalFeedKg ?? 0),
-        totalFeedConsumedKg: Number(
-          r.total_feed_consumed_kg ?? r.totalFeedConsumedKg ?? 0,
-        ),
-        totalBiomassGainKg: Number(
-          r.total_biomass_gain_kg ?? r.totalBiomassGainKg ?? 0,
-        ),
-        fcr: Number(r.fcr ?? 0),
-        averageFeedingPercentage: Number(
-          r.average_feeding_percentage ?? r.avg_feeding_pct ?? 0,
-        ),
-        feedingEventsCount: Number(
-          r.events_count ?? r.feeding_events_count ?? 0,
-        ),
-        totalCost: Number(r.total_cost ?? 0),
-      }));
-      return list as FeedingSummary[];
+      try {
+        // Use the correct API endpoint for batch feeding summaries
+        const response = await ApiService.apiV1InventoryBatchFeedingSummariesList(
+          batchId, // batch parameter
+          undefined, // page
+          undefined  // search
+        );
+
+        const list = (response.results || []).map((r: any) => ({
+          id: r.id,
+          periodStart:
+            r.period_start ?? r.start_date ?? r.periodStart ??
+            new Date().toISOString(),
+          periodEnd:
+            r.period_end ?? r.end_date ?? r.periodEnd ??
+            new Date().toISOString(),
+          totalFeedKg: Number(r.total_feed_kg ?? r.totalFeedKg ?? 0),
+          totalFeedConsumedKg: Number(
+            r.total_feed_consumed_kg ?? r.totalFeedConsumedKg ?? 0,
+          ),
+          totalBiomassGainKg: Number(
+            r.total_biomass_gain_kg ?? r.totalBiomassGainKg ?? 0,
+          ),
+          fcr: Number(r.fcr ?? 0),
+          averageFeedingPercentage: Number(
+            r.average_feeding_percentage ?? r.feeding_percentage ?? r.avg_feeding_pct ?? 0,
+          ),
+          feedingEventsCount: Number(
+            r.events_count ?? r.feeding_events_count ?? r.feeding_events_count ?? 0,
+          ),
+          totalCost: Number(r.total_cost ?? r.feed_cost ?? 0),
+        }));
+        return list as FeedingSummary[];
+      } catch (error) {
+        console.error("Failed to fetch feeding summaries:", error);
+        return [];
+      }
     },
   });
 
@@ -204,7 +236,70 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     return acc;
   }, [] as FeedTypeUsage[]);
 
-  // Get unique feed types and containers for filters
+  // Fetch all available feed types and containers for dropdown population
+  const { data: allFeedTypes = [] } = useQuery<string[]>({
+    queryKey: ["feed-types"],
+    queryFn: async () => {
+      try {
+        // Fetch feeding events to get all available feed types (not filtered by batch)
+        const response = await ApiService.apiV1InventoryFeedingEventsList(
+          undefined, // batch - get ALL batches
+          undefined, // container
+          undefined, // feed
+          undefined, // feedingDate
+          undefined, // method
+          undefined, // ordering
+          1,        // page - get first page
+          undefined // search
+        );
+        const types = [...new Set((response.results || []).map((e: any) => e.feed_name))];
+        console.log('📊 Feed Types API Response:', {
+          totalEvents: response.results?.length || 0,
+          uniqueFeedTypes: types.length,
+          feedTypes: types,
+          hasNextPage: !!response.next,
+          hasPrevPage: !!response.previous
+        });
+        return types.filter(Boolean);
+      } catch (error) {
+        console.error("❌ Failed to fetch feed types:", error);
+        return [];
+      }
+    },
+  });
+
+  const { data: allContainers = [] } = useQuery<string[]>({
+    queryKey: ["containers"],
+    queryFn: async () => {
+      try {
+        // Fetch all containers for dropdown population
+        const response = await ApiService.apiV1InfrastructureContainersList(
+          undefined, // active
+          undefined, // area
+          undefined, // containerType
+          undefined, // hall
+          undefined, // name
+          undefined, // ordering
+          1,        // page - get first page
+          undefined  // search
+        );
+        const containers = [...new Set((response.results || []).map((c: any) => c.name))];
+        console.log('🏗️ Containers API Response:', {
+          totalContainers: response.results?.length || 0,
+          uniqueContainers: containers.length,
+          containers: containers.slice(0, 10), // Show first 10
+          hasNextPage: !!response.next,
+          hasPrevPage: !!response.previous
+        });
+        return containers.filter(Boolean);
+      } catch (error) {
+        console.error("❌ Failed to fetch containers:", error);
+        return [];
+      }
+    },
+  });
+
+  // Get unique feed types and containers for filters (from filtered events)
   const uniqueFeedTypes = [...new Set(feedingEvents.map(event => event.feedType))];
   const uniqueContainers = [...new Set(feedingEvents.map(event => event.containerName))];
 
@@ -213,6 +308,26 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     const matchesFeedType = feedTypeFilter === "all" || event.feedType === feedTypeFilter;
     const matchesContainer = containerFilter === "all" || event.containerName === containerFilter;
     return matchesFeedType && matchesContainer;
+  });
+
+  // Debug logging
+  console.log('📊 FEED TYPES:', {
+    'All available': allFeedTypes.length,
+    'From current batch': uniqueFeedTypes.length,
+    'All types': allFeedTypes,
+    'Batch types': uniqueFeedTypes
+  });
+  console.log('📦 CONTAINERS:', {
+    'All available': allContainers.length,
+    'From current batch': uniqueContainers.length,
+    'All containers (first 10)': allContainers.slice(0, 10),
+    'Batch containers': uniqueContainers.slice(0, 10)
+  });
+  console.log('📈 EVENTS:', {
+    'Total events': feedingEvents.length,
+    'Filtered events': filteredEvents.length,
+    'Current batch': batchId,
+    'Date range': currentDateRange
   });
 
   const getFeedingMethodColor = (method: string) => {
@@ -353,7 +468,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Feed Types</SelectItem>
-                {uniqueFeedTypes.map(type => (
+                {allFeedTypes.map(type => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}
               </SelectContent>
@@ -365,7 +480,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Containers</SelectItem>
-                {uniqueContainers.map(container => (
+                {allContainers.map(container => (
                   <SelectItem key={container} value={container}>{container}</SelectItem>
                 ))}
               </SelectContent>

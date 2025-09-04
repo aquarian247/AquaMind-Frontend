@@ -11,12 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { format, subDays, subWeeks, subMonths, parseISO, differenceInDays } from "date-fns";
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  Activity, 
+import {
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  Target,
+  Activity,
   Zap,
   Scale,
   Fish,
@@ -30,6 +30,9 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ApiService } from "@/api/generated/services/ApiService";
+import { FCRSummaryCard } from "./FCRSummaryCard";
+import { FCRTrendChart } from "./FCRTrendChart";
+import { useFCRAnalytics } from "@/hooks/use-fcr-analytics";
 
 interface BatchAnalyticsViewProps {
   batchId: number;
@@ -83,6 +86,17 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
   const [timeframe, setTimeframe] = useState("30");
   const [metricFilter, setMetricFilter] = useState("all");
   const isMobile = useIsMobile();
+
+  // FCR Analytics Hook
+  const {
+    fcrSummary,
+    fcrTrendsData,
+    isLoading: fcrLoading,
+    error: fcrError,
+    refresh: refreshFCR,
+    isRefreshing: fcrRefreshing,
+    hasData: hasFCRData
+  } = useFCRAnalytics({ batchId });
 
   // Fetch growth samples data
   const { data: growthSamplesData = [], isLoading: growthLoading, error: growthError } = useQuery({
@@ -712,6 +726,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
                 <SelectValue>
                   {activeTab === "performance" && "Performance Metrics"}
                   {activeTab === "growth" && "Growth Analytics"}
+                  {activeTab === "fcr" && "FCR Analytics"}
                   {activeTab === "environmental" && "Environmental Impact"}
                   {activeTab === "predictions" && "Predictive Insights"}
                   {activeTab === "benchmarks" && "Benchmarking"}
@@ -720,6 +735,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
               <SelectContent>
                 <SelectItem value="performance">Performance Metrics</SelectItem>
                 <SelectItem value="growth">Growth Analytics</SelectItem>
+                <SelectItem value="fcr">FCR Analytics</SelectItem>
                 <SelectItem value="environmental">Environmental Impact</SelectItem>
                 <SelectItem value="predictions">Predictive Insights</SelectItem>
                 <SelectItem value="benchmarks">Benchmarking</SelectItem>
@@ -727,9 +743,10 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
             </Select>
           </div>
         ) : (
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="growth">Growth</TabsTrigger>
+            <TabsTrigger value="fcr">FCR</TabsTrigger>
             <TabsTrigger value="environmental">Environmental</TabsTrigger>
             <TabsTrigger value="predictions">Predictions</TabsTrigger>
             <TabsTrigger value="benchmarks">Benchmarks</TabsTrigger>
@@ -989,6 +1006,117 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
                 <p className="text-muted-foreground">
                   Predictive insights require scenario models.
                 </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="fcr" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* FCR Summary Card */}
+            <div className="lg:col-span-1">
+              <FCRSummaryCard
+                data={fcrSummary}
+                onRefresh={refreshFCR}
+                isLoading={fcrLoading}
+              />
+            </div>
+
+            {/* FCR Trend Chart */}
+            <div className="lg:col-span-2">
+              <FCRTrendChart
+                data={fcrTrendsData}
+                title={`FCR Trends - ${batchName}`}
+                isLoading={fcrLoading}
+                error={fcrError?.message}
+                onRefresh={refreshFCR}
+                showConfidenceIndicators={true}
+              />
+            </div>
+          </div>
+
+          {/* FCR Insights */}
+          {hasFCRData && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-purple-500" />
+                  FCR Performance Insights
+                </CardTitle>
+                <CardDescription>
+                  Key insights and recommendations based on FCR analysis
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* FCR Trend Analysis */}
+                  <div className="flex items-start gap-3 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-blue-900 dark:text-blue-100">
+                        Current FCR Trend
+                      </h4>
+                      <p className="text-sm text-blue-700 dark:text-blue-200 mt-1">
+                        {fcrSummary.trend === 'down'
+                          ? "FCR is trending downward, indicating improving feed efficiency."
+                          : fcrSummary.trend === 'up'
+                          ? "FCR is trending upward, which may indicate operational issues requiring attention."
+                          : "FCR is stable, maintaining consistent feed efficiency."
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Confidence Level Insights */}
+                  {(fcrSummary.confidenceLevel === 'LOW' || fcrSummary.confidenceLevel === 'MEDIUM') && (
+                    <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
+                      <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-yellow-900 dark:text-yellow-100">
+                          Data Freshness Alert
+                        </h4>
+                        <p className="text-sm text-yellow-700 dark:text-yellow-200 mt-1">
+                          FCR data is {fcrSummary.confidenceLevel.toLowerCase()} confidence due to time since last weighing.
+                          Consider scheduling a growth sample to improve data accuracy.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Prediction vs Actual Comparison */}
+                  {fcrSummary.deviation !== null && fcrSummary.deviation !== undefined && Math.abs(fcrSummary.deviation) > 0.1 && (
+                    <div className="flex items-start gap-3 p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+                      <Scale className="h-5 w-5 text-orange-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-orange-900 dark:text-orange-100">
+                          Prediction Deviation
+                        </h4>
+                        <p className="text-sm text-orange-700 dark:text-orange-200 mt-1">
+                          Actual FCR deviates from predicted by {Math.abs(fcrSummary.deviation!).toFixed(2)} units.
+                          {fcrSummary.deviation! > 0
+                            ? " Actual performance is worse than expected - investigate feed management or health issues."
+                            : " Actual performance is better than expected - excellent feed efficiency achieved."
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Success Message */}
+                  {fcrSummary.confidenceLevel === 'VERY_HIGH' && fcrSummary.deviation !== null && fcrSummary.deviation !== undefined && Math.abs(fcrSummary.deviation) <= 0.1 && (
+                    <div className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium text-green-900 dark:text-green-100">
+                          Optimal Performance
+                        </h4>
+                        <p className="text-sm text-green-700 dark:text-green-200 mt-1">
+                          FCR is performing optimally with high confidence data and predictions closely matching actual results.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
           )}

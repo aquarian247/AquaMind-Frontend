@@ -62,28 +62,28 @@ const navigationItems = [
     path: "/inventory",
   },
   {
-    id: 11,
+    id: 10,
     label: "Analytics",
     icon: "fas fa-chart-line",
     path: "/analytics",
   },
   {
-    id: 12,
+    id: 11,
     label: "Reports",
     icon: "fas fa-file-alt",
     path: "/reports",
-  },
-  {
-    id: 11,
-    label: "Settings",
-    icon: "fas fa-cog",
-    path: "/settings",
   },
   {
     id: 12,
     label: "Mortality Report",
     icon: "fas fa-clipboard-list",
     path: "/mortality-reporting",
+  },
+  {
+    id: 13,
+    label: "Settings",
+    icon: "fas fa-cog",
+    path: "/settings",
   },
 ];
 

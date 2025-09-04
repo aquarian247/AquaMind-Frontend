@@ -87,12 +87,12 @@ const LoginPage: React.FC = () => {
           <img
             src="/logo-light.png"
             alt="Bakkafrost Logo"
-            className="h-10 w-auto mx-auto mb-4 block dark:hidden"
+            className="h-12 w-auto mx-auto mb-4 block dark:hidden"
           />
           <img
             src="/logo-dark.png"
             alt="Bakkafrost Logo"
-            className="h-10 w-auto mx-auto mb-4 hidden dark:block"
+            className="h-12 w-auto mx-auto mb-4 hidden dark:block"
           />
           <h1 className="text-3xl font-bold text-foreground">AquaMind</h1>
           <p className="text-muted-foreground mt-1">

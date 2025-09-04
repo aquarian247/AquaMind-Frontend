@@ -1,18 +1,18 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, Heart, Utensils, BarChart3 } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { BatchTraceabilityView } from "@/components/batch-management/BatchTraceabilityView";
-import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
-import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
-import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
-import { api } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, Heart, Utensils, BarChart3, MapPin } from "lucide-react";
+import { useIsMobile } from "../hooks/use-mobile";
+import { BatchTraceabilityView } from "../components/batch-management/BatchTraceabilityView";
+import { BatchHealthView } from "../components/batch-management/BatchHealthView";
+import { BatchFeedHistoryView } from "../components/batch-management/BatchFeedHistoryView";
+import { BatchAnalyticsView } from "../components/batch-management/BatchAnalyticsView";
+import { api } from "../lib/api";
 
 interface BatchDetails {
   id: number;
@@ -186,6 +186,7 @@ export default function BatchDetails() {
               <SelectTrigger className="w-full">
                 <SelectValue>
                   {activeTab === "overview" && "Batch Overview"}
+                  {activeTab === "containers" && "Containers"}
                   {activeTab === "health" && "Health"}
                   {activeTab === "feed-history" && "Feed History"}
                   {activeTab === "analytics" && "Analytics"}
@@ -194,6 +195,7 @@ export default function BatchDetails() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="overview">Batch Overview</SelectItem>
+                <SelectItem value="containers">Containers</SelectItem>
                 <SelectItem value="health">Health</SelectItem>
                 <SelectItem value="feed-history">Feed History</SelectItem>
                 <SelectItem value="analytics">Analytics</SelectItem>
@@ -204,8 +206,9 @@ export default function BatchDetails() {
             </Select>
           </div>
         ) : (
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="containers">Containers</TabsTrigger>
             <TabsTrigger value="health">Health</TabsTrigger>
             <TabsTrigger value="feed-history">Feed History</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -297,6 +300,83 @@ export default function BatchDetails() {
               </div>
             </div>
           </TabsContent>
+
+        <TabsContent value="containers" className="space-y-6">
+          {assignments && assignments.length > 0 ? (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">Container Assignments</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Containers currently assigned to this batch
+                  </p>
+                </div>
+                <Badge variant="outline">
+                  {assignments.length} container{assignments.length !== 1 ? 's' : ''}
+                </Badge>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {assignments.map((assignment: any) => {
+                  const container = containers?.find(c => c.id === assignment.container);
+                  return (
+                    <Card key={assignment.id}>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-base flex items-center gap-2">
+                            <Fish className="h-4 w-4" />
+                            {container?.name || `Container ${assignment.container}`}
+                          </CardTitle>
+                          <Badge variant={assignment.is_active ? "default" : "secondary"}>
+                            {assignment.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <label className="text-muted-foreground">Population</label>
+                            <p className="font-medium">{assignment.population_count?.toLocaleString() || '0'}</p>
+                          </div>
+                          <div>
+                            <label className="text-muted-foreground">Biomass</label>
+                            <p className="font-medium">{assignment.biomass_kg ? `${Number(assignment.biomass_kg).toFixed(1)} kg` : '0 kg'}</p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Lifecycle Stage</span>
+                            <Badge variant="outline" className="text-xs">
+                              {assignment.lifecycle_stage_name || assignment.lifecycle_stage || 'Unknown'}
+                            </Badge>
+                          </div>
+
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Assigned Date</span>
+                            <span className="text-sm font-medium">
+                              {assignment.assignment_date ? new Date(assignment.assignment_date).toLocaleDateString() : 'Unknown'}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <MapPin className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Container Assignments</h3>
+                <p className="text-muted-foreground">
+                  This batch doesn't have any container assignments yet.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         <TabsContent value="health" className="space-y-6">
           <BatchHealthView batchId={batch.id} batchName={batch.batch_number} />
