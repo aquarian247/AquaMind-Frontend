@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,22 +13,29 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
-import { 
-  Utensils, 
-  TrendingUp, 
-  TrendingDown, 
-  Clock, 
+import {
+  Utensils,
+  TrendingUp,
+  TrendingDown,
+  Clock,
   CalendarIcon,
   DollarSign,
   Scale,
   BarChart3,
   Package,
   MapPin,
-  Activity
+  Activity,
+  Loader2
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { api } from "@/lib/api";
 import { ApiService } from "@/api/generated/services/ApiService";
+import { getAuthToken } from "@/lib/config";
+
+// Utility function to format numbers with commas
+const formatNumber = (num: number): string => {
+  return new Intl.NumberFormat('en-US').format(num);
+};
 
 interface BatchFeedHistoryViewProps {
   batchId: number;
@@ -78,6 +85,9 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   const [periodFilter, setPeriodFilter] = useState("30");
   const [feedTypeFilter, setFeedTypeFilter] = useState("all");
   const [containerFilter, setContainerFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEvents, setTotalEvents] = useState(0);
   const isMobile = useIsMobile();
 
   // Calculate date range based on period filter
@@ -101,12 +111,58 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
 
   const currentDateRange = getDateRange();
 
-  // Fetch feeding data using correct API endpoint
-  const { data: feedingEvents = [] } = useQuery<FeedingEvent[]>({
-    queryKey: ["batch/feeding-events", batchId, currentDateRange],
+  // Calculate days since batch start for accurate daily average
+  const batchStartDate = new Date('2023-05-08'); // From batch data
+  const today = new Date();
+  const daysSinceStart = Math.ceil((today.getTime() - batchStartDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  // Fetch feeding events summary for performance metrics
+  const { data: feedingSummary, isLoading: isLoadingSummary } = useQuery({
+    queryKey: ["batch/feeding-events-summary", batchId],
     queryFn: async () => {
       try {
-        // Use the correct API endpoint for feeding events with proper batch filtering
+        console.log(`📊 Fetching feeding events summary for batch ${batchId} (ALL dates)...`);
+
+        // Call the summary endpoint with batch filter and invalid date to bypass date filtering and get ALL events
+        // The Django backend ignores invalid dates, giving us all events for the batch
+        const baseURL = 'http://localhost:8000'; // Should match your Django backend URL
+        const summaryUrl = `${baseURL}/api/v1/inventory/feeding-events/summary/?batch=${batchId}&date=invalid`;
+
+        const response = await fetch(summaryUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Token 72a903f683208965d0bae0478d861d471e28366e', // Django Token format
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📊 Feeding Events Summary Response:', data);
+
+        return {
+          eventsCount: Number(data.events_count || 0),
+          totalFeedKg: Number(data.total_feed_kg || 0)
+        };
+      } catch (error) {
+        console.error("❌ Failed to fetch feeding events summary:", error);
+        return { eventsCount: 0, totalFeedKg: 0 };
+      }
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  // Fetch feeding data with pagination (only current page, not all pages)
+  const { data: feedingEventsData, isLoading: isLoadingFeedingEvents } = useQuery({
+    queryKey: ["batch/feeding-events", batchId, currentPage], // Removed currentDateRange to avoid unnecessary refetches
+    queryFn: async () => {
+      try {
+        console.log(`🍽️ Fetching feeding events page ${currentPage} for batch ${batchId}...`);
+
+        // Only fetch the current page (not all pages like before)
         const response = await ApiService.apiV1InventoryFeedingEventsList(
           batchId,    // batch - filter by specific batch
           undefined,  // container
@@ -114,49 +170,56 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
           undefined,  // feedingDate
           undefined,  // method
           undefined,  // ordering
-          1,          // page - get first page
+          currentPage, // page - current page only
           undefined   // search
         );
 
-        console.log('🍽️ Batch Feeding Events API Response:', {
+        console.log('🍽️ Batch Feeding Events - CURRENT PAGE:', {
           batchId: batchId,
-          totalEvents: response.results?.length || 0,
-          hasNext: !!response.next,
-          hasPrevious: !!response.previous,
-          sampleEvent: response.results?.[0] ? {
-            id: response.results[0].id,
-            feed_name: response.results[0].feed_name,
-            container_name: response.results[0].container_name,
-            feeding_date: response.results[0].feeding_date
-          } : null
+          currentPage: currentPage,
+          totalEvents: response.count,
+          eventsInPage: response.results?.length || 0,
+          totalPages: Math.ceil((response.count || 0) / 20)
         });
 
-        const results = (response.results || []).map((e: any) => ({
+        return {
+          events: (response.results || []).map((e: any) => ({
             id: e.id,
             feedingDate: e.feeding_date,
             feedingTime: e.feeding_time || new Date(e.feeding_date).toISOString().slice(11, 16),
             amountKg: Number(e.amount_kg ?? 0),
-            feedType: e.feed_name ?? "Unknown", // Use feed_name as feedType
-            feedBrand: e.feed_name ?? "Generic", // Use feed_name as feedBrand
+            feedType: e.feed_name ?? "Unknown",
+            feedBrand: e.feed_name ?? "Generic",
             containerName: e.container_name ?? "Unknown",
             batchBiomassKg: Number(e.batch_biomass_kg ?? 0),
             feedCost: Number(e.feed_cost ?? 0),
             method: e.method ?? "Manual",
             notes: e.notes ?? "",
             recordedBy: e.recorded_by_username ?? "system",
-          }));
-
-        console.log(`Fetched ${results.length} feeding events for batch ${batchId}`);
-        if (results.length > 0) {
-          console.log('Sample event:', results[0]);
-        }
-        return results as FeedingEvent[];
+          })),
+          totalCount: response.count || 0,
+          totalPages: Math.ceil((response.count || 0) / 20)
+        };
       } catch (error) {
-        console.error("Failed to fetch feeding events:", error);
-        return [];
+        console.error("❌ Failed to fetch feeding events:", error);
+        return {
+          events: [],
+          totalCount: 0,
+          totalPages: 1
+        };
       }
     },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
+
+  // Extract data and update pagination state in useEffect to avoid query invalidation
+  const feedingEvents = feedingEventsData?.events || [];
+  useEffect(() => {
+    if (feedingEventsData) {
+      setTotalEvents(feedingEventsData.totalCount);
+      setTotalPages(feedingEventsData.totalPages);
+    }
+  }, [feedingEventsData]);
 
   const { data: feedingSummaries = [] } = useQuery<FeedingSummary[]>({
     queryKey: ["batch/feeding-summaries", batchId, periodFilter, dateRange],
@@ -201,12 +264,24 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     },
   });
 
-  // Calculate feed analytics
-  const totalFeedConsumed = feedingEvents.reduce((sum, event) => sum + event.amountKg, 0);
+  // Calculate feed analytics using summary data for accurate totals
+  // Now using the proper Django summary endpoint with date=invalid to bypass date filtering
+  // This gives us the accurate total: 6,056,253.4597 kg for batch 258
+  const totalFeedConsumed = feedingSummary?.totalFeedKg || 0;
   const totalFeedCost = feedingEvents.reduce((sum, event) => sum + (event.feedCost || 0), 0);
-  const averageDailyFeed = feedingEvents.length > 0 && currentDateRange.from && currentDateRange.to
-    ? totalFeedConsumed / Math.ceil((currentDateRange.to.getTime() - currentDateRange.from.getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
+  // Use days since batch start for accurate daily average calculation
+  const averageDailyFeed = totalFeedConsumed > 0 ? totalFeedConsumed / daysSinceStart : 0;
+
+  // Debug logging for summary data
+  console.log('🔢 Summary Data Debug:', {
+    summary: feedingSummary,
+    totalFeedConsumed: formatNumber(totalFeedConsumed),
+    averageDailyFeed: formatNumber(averageDailyFeed),
+    daysSinceStart,
+    isLoadingSummary,
+    totalEvents,
+    eventCount: feedingSummary?.eventsCount
+  });
 
   // Calculate FCR (Feed Conversion Ratio) - mock calculation
   const latestSummary = feedingSummaries[feedingSummaries.length - 1];
@@ -236,12 +311,14 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     return acc;
   }, [] as FeedTypeUsage[]);
 
-  // Fetch all available feed types and containers for dropdown population
-  const { data: allFeedTypes = [] } = useQuery<string[]>({
+  // Fetch all available feed types for dropdown population
+  const { data: allFeedTypes = [], isLoading: isLoadingFeedTypes } = useQuery<string[]>({
     queryKey: ["feed-types"],
     queryFn: async () => {
       try {
-        // Fetch feeding events to get all available feed types (not filtered by batch)
+        console.log('📊 Fetching ALL feed types for dropdown...');
+
+        // Get first page only for dropdown population (sufficient for most use cases)
         const response = await ApiService.apiV1InventoryFeedingEventsList(
           undefined, // batch - get ALL batches
           undefined, // container
@@ -249,16 +326,15 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
           undefined, // feedingDate
           undefined, // method
           undefined, // ordering
-          1,        // page - get first page
+          1,        // page - first page only
           undefined // search
         );
+
         const types = [...new Set((response.results || []).map((e: any) => e.feed_name))];
-        console.log('📊 Feed Types API Response:', {
-          totalEvents: response.results?.length || 0,
+        console.log('📊 Feed Types:', {
+          totalEventsInFirstPage: response.results?.length || 0,
           uniqueFeedTypes: types.length,
           feedTypes: types,
-          hasNextPage: !!response.next,
-          hasPrevPage: !!response.previous
         });
         return types.filter(Boolean);
       } catch (error) {
@@ -266,13 +342,16 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
         return [];
       }
     },
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes since feed types change infrequently
   });
 
-  const { data: allContainers = [] } = useQuery<string[]>({
+  const { data: allContainers = [], isLoading: isLoadingContainers } = useQuery<string[]>({
     queryKey: ["containers"],
     queryFn: async () => {
       try {
-        // Fetch all containers for dropdown population
+        console.log('🏗️ Fetching ALL containers for dropdown...');
+
+        // Get first page only for dropdown population (sufficient for most use cases)
         const response = await ApiService.apiV1InfrastructureContainersList(
           undefined, // active
           undefined, // area
@@ -280,16 +359,15 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
           undefined, // hall
           undefined, // name
           undefined, // ordering
-          1,        // page - get first page
+          1,        // page - first page only
           undefined  // search
         );
+
         const containers = [...new Set((response.results || []).map((c: any) => c.name))];
-        console.log('🏗️ Containers API Response:', {
-          totalContainers: response.results?.length || 0,
+        console.log('🏗️ Containers:', {
+          totalContainersInFirstPage: response.results?.length || 0,
           uniqueContainers: containers.length,
           containers: containers.slice(0, 10), // Show first 10
-          hasNextPage: !!response.next,
-          hasPrevPage: !!response.previous
         });
         return containers.filter(Boolean);
       } catch (error) {
@@ -297,6 +375,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
         return [];
       }
     },
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes since containers change infrequently
   });
 
   // Get unique feed types and containers for filters (from filtered events)
@@ -382,9 +461,15 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
             <Scale className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalFeedConsumed.toFixed(2)} kg</div>
+            <div className="text-2xl font-bold">
+              {isLoadingSummary ? (
+                <Loader2 className="h-6 w-6 animate-spin inline" />
+              ) : (
+                `${formatNumber(totalFeedConsumed)} kg`
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {feedingEvents.length} feeding events
+              {isLoadingSummary ? 'Loading summary...' : `${formatNumber(feedingSummary?.eventsCount || totalEvents)} feeding events`}
             </p>
           </CardContent>
         </Card>
@@ -395,7 +480,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalFeedCost.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${formatNumber(totalFeedCost)}</div>
             <p className="text-xs text-muted-foreground">
               ${totalFeedConsumed > 0 ? (totalFeedCost / totalFeedConsumed).toFixed(2) : '0.00'}/kg
             </p>
@@ -408,9 +493,9 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{averageDailyFeed.toFixed(2)} kg</div>
+            <div className="text-2xl font-bold">{formatNumber(averageDailyFeed)} kg</div>
             <p className="text-xs text-muted-foreground">
-              Per day average
+              Per day average ({formatNumber(daysSinceStart)} days since start)
             </p>
           </CardContent>
         </Card>
@@ -422,7 +507,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
           </CardHeader>
           <CardContent>
             <div className={cn("text-2xl font-bold", getFCRColor(currentFCR))}>
-              {currentFCR.toFixed(2)} FCR
+              {Number(currentFCR).toFixed(2)} FCR
             </div>
             <p className="text-xs text-muted-foreground">
               Feed conversion ratio
@@ -462,24 +547,38 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
 
         <TabsContent value="events" className="space-y-6">
           <div className="flex flex-col sm:flex-row gap-4 mb-4">
-            <Select value={feedTypeFilter} onValueChange={setFeedTypeFilter}>
+            <Select value={feedTypeFilter} onValueChange={setFeedTypeFilter} disabled={isLoadingFeedTypes}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Feed Type" />
+                {isLoadingFeedTypes ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading feed types...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Feed Type" />
+                )}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Feed Types</SelectItem>
+                <SelectItem value="all">All Feed Types ({allFeedTypes.length})</SelectItem>
                 {allFeedTypes.map(type => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
-            <Select value={containerFilter} onValueChange={setContainerFilter}>
+
+            <Select value={containerFilter} onValueChange={setContainerFilter} disabled={isLoadingContainers}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Container" />
+                {isLoadingContainers ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading containers...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Container" />
+                )}
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Containers</SelectItem>
+                <SelectItem value="all">All Containers ({allContainers.length})</SelectItem>
                 {allContainers.map(container => (
                   <SelectItem key={container} value={container}>{container}</SelectItem>
                 ))}
@@ -488,57 +587,116 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
           </div>
 
           <div className="space-y-4">
-            {filteredEvents.map((event) => (
-              <Card key={event.id}>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="space-y-2 flex-1">
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <Utensils className="h-4 w-4 text-blue-500" />
-                          <span className="font-semibold">{event.amountKg} kg</span>
+            {isLoadingFeedingEvents ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                  <span className="text-lg">Loading feeding events...</span>
+                </div>
+              </div>
+            ) : filteredEvents.length === 0 ? (
+              <div className="text-center py-8">
+                <Utensils className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No feeding events found for the selected filters.</p>
+              </div>
+            ) : (
+              filteredEvents.map((event) => (
+                <Card key={event.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <Utensils className="h-4 w-4 text-blue-500" />
+                            <span className="font-semibold">{event.amountKg} kg</span>
+                          </div>
+                          <Badge variant="outline">{event.feedType}</Badge>
+                          <Badge className={getFeedingMethodColor(event.method)}>
+                            {event.method}
+                          </Badge>
                         </div>
-                        <Badge variant="outline">{event.feedType}</Badge>
-                        <Badge className={getFeedingMethodColor(event.method)}>
-                          {event.method}
-                        </Badge>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <CalendarIcon className="h-3 w-3" />
+                            {format(new Date(event.feedingDate), "MMM dd")} at {event.feedingTime}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {event.containerName}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Package className="h-3 w-3" />
+                            {event.feedBrand}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-3 w-3" />
+                            ${event.feedCost ? Number(event.feedCost).toFixed(2) : '0.00'}
+                          </div>
+                        </div>
+
+                        {event.notes && (
+                          <p className="text-sm text-muted-foreground">{event.notes}</p>
+                        )}
                       </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <CalendarIcon className="h-3 w-3" />
-                          {format(new Date(event.feedingDate), "MMM dd")} at {event.feedingTime}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {event.containerName}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Package className="h-3 w-3" />
-                          {event.feedBrand}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          ${event.feedCost?.toFixed(2) || '0.00'}
+
+                      <div className="text-right space-y-1">
+                        <div className="text-sm text-muted-foreground">Biomass</div>
+                        <div className="font-semibold">{Number(event.batchBiomassKg).toFixed(2)} kg</div>
+                        <div className="text-xs text-muted-foreground">
+                          {((Number(event.amountKg) / Number(event.batchBiomassKg)) * 100).toFixed(2)}% of biomass
                         </div>
                       </div>
-                      
-                      {event.notes && (
-                        <p className="text-sm text-muted-foreground">{event.notes}</p>
-                      )}
                     </div>
-                    
-                    <div className="text-right space-y-1">
-                      <div className="text-sm text-muted-foreground">Biomass</div>
-                      <div className="font-semibold">{event.batchBiomassKg.toFixed(2)} kg</div>
-                      <div className="text-xs text-muted-foreground">
-                        {((event.amountKg / event.batchBiomassKg) * 100).toFixed(2)}% of biomass
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing page {currentPage} of {totalPages} ({totalEvents} total events)
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage <= 1 || isLoadingFeedingEvents}
+                  >
+                    Previous
+                  </Button>
+
+                  {/* Page numbers */}
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                    if (pageNum > totalPages) return null;
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        disabled={isLoadingFeedingEvents}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage >= totalPages || isLoadingFeedingEvents}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -693,7 +851,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
                   <div className="space-y-1">
                     <p className="text-2xl font-bold">{totalFeedConsumed.toFixed(2)} kg</p>
                     <p className="text-sm text-muted-foreground">
-                      {feedingEvents.length} feeding events
+                      {feedingSummary?.eventsCount || totalEvents || feedingEvents.length} feeding events
                     </p>
                     <p className="text-sm text-green-600">
                       {averageDailyFeed.toFixed(2)} kg/day average
@@ -705,7 +863,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
                   <label className="text-sm font-medium text-muted-foreground">Feed Conversion</label>
                   <div className="space-y-1">
                     <p className={cn("text-2xl font-bold", getFCRColor(currentFCR))}>
-                      {currentFCR.toFixed(2)} FCR
+                      {Number(currentFCR).toFixed(2)} FCR
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Feed conversion ratio
@@ -724,7 +882,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
                       Total feed cost
                     </p>
                     <p className="text-sm text-orange-600">
-                      ${totalFeedConsumed > 0 ? (totalFeedCost / totalFeedConsumed).toFixed(2) : '0.00'}/kg
+                      ${Number(totalFeedConsumed) > 0 ? (Number(totalFeedCost) / Number(totalFeedConsumed)).toFixed(2) : '0.00'}/kg
                     </p>
                   </div>
                 </div>

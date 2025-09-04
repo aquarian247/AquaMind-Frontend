@@ -13,21 +13,18 @@ Three complementary tools are provided:
 
 ## 1. Prerequisites
 
-1. **Backend**: Django server running on `http://localhost:8000`  
+1. **Backend**: Django server running on `http://localhost:8000`
    ```bash
    poetry run python manage.py runserver 0.0.0.0:8000
    ```
-2. **Frontend**: React dev server on `http://localhost:5001`  
+2. **Frontend**: React dev server on `http://localhost:5001`
    ```bash
    cd client && npm start
    ```
 3. **Node ≥ 16** and **npm** available globally.
-4. A **test user** with API access:  
-   ```
-   username: testuser
-   password: testpassword
-   ```
-   Adjust with env variables if needed.
+4. **Authentication Setup**: See [CONTRIBUTING.md Django Backend Integration](../CONTRIBUTING.md#django-backend-integration) for detailed authentication setup instructions.
+
+   **⚠️ CRITICAL**: The frontend requires JWT tokens, not DRF tokens. Follow the authentication setup guide to avoid 401 errors.
 
 ---
 
