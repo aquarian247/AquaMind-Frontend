@@ -511,17 +511,31 @@ export const api = {
         }
 
         if (filters?.station && filters.station !== "all") {
-          // Map frontend station filters to actual location patterns
-          const stationMapping: { [key: string]: string[] } = {
-            "stations": ["freshwater", "station"],
-            "areas": ["sea", "area"]
-          };
-
-          const searchTerms = stationMapping[filters.station] || [filters.station.toLowerCase()];
-          filteredContainers = filteredContainers.filter((c: any) => {
-            const locationText = `${c.area_name || ''} ${c.hall_name || ''} ${c.station_name || ''}`.toLowerCase();
-            return searchTerms.some(term => locationText.includes(term));
-          });
+          // Use definitive business rules to determine container location type
+          if (filters.station === "areas") {
+            // Show only area/sea containers using business rules:
+            // Rule 1: area_id is not null (directly assigned to area)
+            // Rule 2: hall_id is null (not in a hall, so must be in area)
+            // Rule 3: container_type category is PEN (pens are by definition sea containers)
+            filteredContainers = filteredContainers.filter((c: any) => {
+              // Rule 1: Direct area assignment
+              if (c.area != null) {
+                return true;
+              }
+              // Rule 2: No hall assignment (must be in area)
+              if (c.hall == null) {
+                return true;
+              }
+              // Rule 3: PEN category containers are always sea containers
+              if (c.container_type_name && c.container_type_name.toLowerCase().includes('pen')) {
+                return true;
+              }
+              return false;
+            });
+          } else if (filters.station === "stations") {
+            // Show only hall/freshwater containers (have hall_id)
+            filteredContainers = filteredContainers.filter((c: any) => c.hall != null);
+          }
           console.log(`After station filter "${filters.station}": ${filteredContainers.length} containers`);
         }
 

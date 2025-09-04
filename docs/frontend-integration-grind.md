@@ -74,6 +74,128 @@ console.log('OpenAPI.TOKEN:', await OpenAPI.TOKEN?.());
 
 ---
 
+### 5. toFixed() Errors on Coordinates/Numbers
+**Symptom**: "area.coordinates.lat.toFixed is not a function"
+**Root Cause**: API returns strings instead of numbers
+```typescript
+// ❌ BROKEN: API strings cause toFixed() errors
+coordinates: {
+  lat: (raw as any).latitude ?? 0,
+  lng: (raw as any).longitude ?? 0,
+}
+
+// ✅ FIXED: Parse as numbers with fallbacks
+coordinates: {
+  lat: parseFloat((raw as any).latitude) || 0,
+  lng: parseFloat((raw as any).longitude) || 0,
+}
+
+// ✅ EXTRA SAFETY: Template type checking
+{typeof area.coordinates.lat === 'number' && !isNaN(area.coordinates.lat)
+  ? area.coordinates.lat.toFixed(4)
+  : 'N/A'
+}
+```
+**Debug**: `console.log(typeof raw.latitude)` to check data types
+**Pro Tip**: Always parse API numeric strings with `parseFloat()` or `Number()`
+
+---
+
+### 7. "No Data Available" Messaging
+**Symptom**: UI shows hardcoded zeros or fake data instead of clear messaging
+**Root Cause**: No fallback handling for missing API data
+```typescript
+// ❌ ANTI-PATTERN: Hardcoded values
+<div className="text-2xl font-bold">{area.mortalityRate}%</div>
+<div className="text-2xl font-bold">{area.feedConversion}</div>
+
+// ✅ SOLUTION: Data-driven with fallbacks
+<div className="text-2xl font-bold">
+  {kpi?.hasData ? kpi.averageWeightKg.toFixed(2) : 'N/A'}
+</div>
+<p className="text-xs text-muted-foreground">
+  {kpi?.hasData ? 'kg per fish' : 'No data available'}
+</p>
+
+// ✅ KPI Cards Pattern
+{kpi?.hasData ? (
+  <div className="text-2xl font-bold text-blue-600">
+    {(kpi.totalBiomassKg / 1000).toFixed(1)}
+  </div>
+) : (
+  <div className="text-2xl font-bold text-blue-600">N/A</div>
+)}
+<p className="text-xs text-muted-foreground">
+  {kpi?.hasData ? 'tonnes' : 'No data available'}
+</p>
+
+// ✅ Environmental Data Pattern
+{environmentalData?.hasData ? (
+  `${environmentalData.waterTemperature}°C`
+) : 'N/A'}
+```
+**Debug**: Add `hasData` flag to all data objects
+**Pro Tip**: Never show "0" when data is actually missing - use "N/A" or "No data available"
+
+---
+
+### 8. FCR Trends Integration
+**Symptom**: Feed Conversion Ratio shows "N/A" instead of real data
+**Root Cause**: Not using the `/api/v1/operational/fcr-trends/` endpoint
+```typescript
+// ✅ SOLUTION: Use FCR trends endpoint for area-level data
+const { data: fcrData } = useQuery({
+  queryKey: ["area", areaId, "fcr"],
+  queryFn: async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) return { fcr: null, hasData: false };
+
+    const response = await fetch(
+      `http://localhost:8000/api/v1/operational/fcr-trends/?geography_id=${areaId}&page_size=1`,
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    const data = await response.json();
+    const fcrTrends = data.results || [];
+
+    if (fcrTrends.length > 0) {
+      const latestFcr = fcrTrends[0];
+      return {
+        fcr: parseFloat(latestFcr.fcr || '0'),
+        hasData: true
+      };
+    }
+
+    return { fcr: null, hasData: false };
+  }
+});
+
+// ✅ TEMPLATE: Display FCR with proper fallbacks
+{fcrData?.hasData ? (
+  <div className="text-2xl font-bold">
+    {fcrData.fcr?.toFixed(2)}
+  </div>
+) : (
+  <div className="text-2xl font-bold">N/A</div>
+)}
+<p className="text-xs text-muted-foreground">
+  {fcrData?.hasData ? 'FCR ratio' : 'No data available'}
+</p>
+
+// ✅ PROGRESS BAR: Visual FCR performance (lower is better)
+<Progress value={
+  fcrData?.hasData ?
+  Math.max(0, Math.min(100, 100 - ((fcrData.fcr || 0) - 1) * 25)) :
+  0
+} />
+```
+**Available Filters**: `geography_id`, `batch_id`, `assignment_id`, `start_date`, `end_date`
+**Pro Tip**: Use `geography_id` for area-level FCR data, `batch_id` for batch-specific data
+
+---
+
 ## 🔧 Essential Debugging Tools
 
 ### Console Logging Strategy
@@ -129,7 +251,7 @@ useQuery({
 });
 ```
 
-### 5. Error Boundaries Everywhere
+### 8. Error Boundaries Everywhere
 ```typescript
 try {
   const data = await apiCall();
@@ -138,6 +260,37 @@ try {
   console.warn('API failed, using fallback:', error);
   return fallbackData;
 }
+```
+
+### 6. Variable Naming Conflicts (NEW!)
+```typescript
+// ❌ ANTI-PATTERN: Multiple queries with similar names
+const { data: areasData } = useQuery({ queryKey: ["areas"] });
+const { data: containersData } = useQuery({ queryKey: ["containers"] });
+
+// Later in useMemo:
+const processedData = useMemo(() => {
+  // This creates confusion - which areasData?
+  if (!areasData?.results) return [];
+  // ...
+}, [areasData, containersData]); // Wrong dependencies!
+
+// ✅ SOLUTION: Clear naming conventions
+const { data: rawAreasData } = useQuery({ queryKey: ["areas"] });
+const { data: containersData } = useQuery({ queryKey: ["containers"] });
+const { data: assignmentsData } = useQuery({ queryKey: ["assignments"] });
+
+const processedAreasData = useMemo(() => {
+  if (!rawAreasData?.results || !containersData?.results) return { results: [] };
+  // Clear what data you're using
+  return calculateData(rawAreasData.results, containersData.results);
+}, [rawAreasData, containersData]); // Correct dependencies!
+
+// ✅ NAMING CONVENTIONS:
+// - Raw API data: `rawXxxData`
+// - Processed data: `processedXxxData` or `calculatedXxxData`
+// - UI data: `displayXxxData` or just `xxxData`
+// - Multiple queries: `primaryXxxData`, `secondaryXxxData`
 ```
 
 ---
@@ -191,6 +344,148 @@ curl -s "http://localhost:8000/api/v1/infrastructure/containers/" | jq '.count'
 6. **Use TypeScript interfaces** for API responses
 7. **Cache filter options** - they don't change often
 8. **Handle pagination manually** - don't trust auto-pagination
+
+## 🔑 **Definitive Business Rules for Container Relationships**
+
+### **Critical Pattern: Container Location Type Determination**
+
+**NEVER use string matching or user-editable names to determine container relationships.** Instead, use these definitive business rules:
+
+#### **Area/Sea Containers (show in areas pages):**
+```typescript
+// ✅ DEFINITIVE BUSINESS RULES - Use these everywhere
+const isAreaContainer = (container: any) => {
+  // Rule 1: Direct area assignment (area_id is not null)
+  if (container.area != null) return true;
+
+  // Rule 2: No hall assignment (hall_id is null)
+  if (container.hall == null) return true;
+
+  // Rule 3: PEN category containers are always sea containers
+  if (container.container_type_name?.toLowerCase().includes('pen')) return true;
+
+  return false;
+};
+```
+
+#### **Hall/Freshwater Containers (show in stations pages):**
+```typescript
+// ✅ DEFINITIVE BUSINESS RULES - Use these everywhere
+const isHallContainer = (container: any) => {
+  // Simple rule: has hall_id assigned
+  return container.hall != null;
+};
+```
+
+### **Why These Rules Are Definitive:**
+
+#### **✅ Data Integrity:**
+- Based on **database relationships**, not user-editable strings
+- **Foreign key constraints** ensure data consistency
+- **Independent of naming conventions** or user changes
+
+#### **✅ Business Logic:**
+- `area_id != null` → Directly assigned to sea area
+- `hall_id == null` → Not in freshwater hall, so must be in sea area
+- `category = PEN` → Pens are by definition sea containers
+
+#### **✅ Future-Proof:**
+- Works regardless of how users name areas/stations/halls
+- Survives database schema changes
+- Independent of API response formats
+
+### **Implementation Examples:**
+
+#### **Areas Page:**
+```typescript
+const areaContainers = uniqueContainers.filter(container => {
+  if (container.area === raw.id) return true;                    // Rule 1
+  if (container.hall == null) return true;                      // Rule 2
+  if (container.container_type_name?.includes('pen')) return true; // Rule 3
+  return false;
+});
+```
+
+#### **Containers Overview API:**
+```typescript
+if (filters.station === "areas") {
+  filteredContainers = filteredContainers.filter(c => {
+    if (c.area != null) return true;                           // Rule 1
+    if (c.hall == null) return true;                          // Rule 2
+    if (c.container_type_name?.includes('pen')) return true;   // Rule 3
+    return false;
+  });
+}
+```
+
+### **Migration Path:**
+
+**Phase 1 (Current)**: Replace all string-based matching with these rules
+**Phase 2 (Future)**: Remove any remaining string fallbacks
+**Phase 3 (Monitor)**: Use console warnings to identify violations
+
+**This pattern must be used consistently across ALL infrastructure pages and APIs.**
+
+## 🔢 **Number Formatting Standards**
+
+### **Critical Pattern: Large Number Display**
+
+**ALWAYS format large numbers with comma separators for readability:**
+
+```typescript
+// ✅ STANDARD: Use Intl.NumberFormat for all large numbers
+const formatNumber = (num: number): string => {
+  return new Intl.NumberFormat('en-US').format(num);
+};
+
+// Usage examples:
+{formatNumber(3500)}           // "3,500"
+{formatNumber(175000)}         // "175,000"
+{formatNumber(21805000)}       // "21,805,000"
+
+// ✅ Correct usage in components:
+<div className="font-semibold text-lg">
+  {formatNumber(Math.round(container.biomass))} kg
+</div>
+
+// ✅ Summary cards:
+<div className="text-2xl font-bold">
+  {formatNumber(Math.round(totalBiomass))} kg
+</div>
+```
+
+### **Units & Precision:**
+- **Biomass**: Display in `kg` (not tons) - use actual `biomass_kg` values
+- **Fish Count**: Display as integers with comma separators
+- **Capacity**: Display in appropriate units (kg, tons, etc.)
+- **Precision**: Round to whole numbers unless decimal precision is required
+
+### **Data Source Priority:**
+- **Aggregated Data**: Use `/api/v1/infrastructure/overview/` for totals (activeBiomass, totalContainers, etc.)
+- **Individual Calculations**: Only calculate from batch assignments when overview endpoint is unavailable
+- **Consistency**: Ensure all pages show the same aggregated values
+
+```typescript
+// ✅ PREFERRED: Use aggregated data
+const { data: overviewData } = useQuery({
+  queryKey: ["infrastructure/overview"],
+  queryFn: () => api.infrastructure.getOverview(),
+});
+
+// Use overviewData.activeBiomass for totals
+{formatNumber(Math.round(overviewData?.activeBiomass || 0))} kg
+
+// ❌ AVOID: Manual calculation unless necessary
+const totalBiomass = areas.reduce((sum, area) => sum + area.totalBiomass, 0);
+```
+
+### **Implementation Required:**
+- ✅ **Infrastructure Areas**: Summary uses aggregated data, individual cards use calculated values
+- ✅ **Infrastructure Containers**: Summary and individual displays
+- ✅ **Infrastructure Overview**: All KPI cards
+- ✅ **All future components**: Must use this pattern
+
+**Never display large numbers without comma separators.**
 
 ---
 
