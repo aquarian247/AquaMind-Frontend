@@ -129,18 +129,22 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
           .map((e: any) => ({
             id: e.id,
             feedingDate: e.feeding_date,
-            feedingTime: new Date(e.feeding_date).toISOString().slice(11, 16),
+            feedingTime: e.feeding_time || new Date(e.feeding_date).toISOString().slice(11, 16),
             amountKg: Number(e.amount_kg ?? 0),
-            feedType: e.feed_type_name ?? e.feed_type ?? "Unknown",
-            feedBrand: e.feed_name ?? e.feed_brand ?? "Generic",
+            feedType: e.feed_name ?? "Unknown", // Use feed_name as feedType
+            feedBrand: e.feed_name ?? "Generic", // Use feed_name as feedBrand
             containerName: e.container_name ?? "Unknown",
             batchBiomassKg: Number(e.batch_biomass_kg ?? 0),
-            feedCost: Number(e.total_cost ?? e.estimated_cost ?? 0),
-            method: e.feeding_method_name ?? e.method ?? "Manual",
+            feedCost: Number(e.feed_cost ?? 0),
+            method: e.method ?? "Manual",
             notes: e.notes ?? "",
             recordedBy: e.recorded_by_username ?? "system",
           }));
 
+        console.log(`Fetched ${results.length} feeding events for batch ${batchId}`);
+        if (results.length > 0) {
+          console.log('Sample event:', results[0]);
+        }
         return results as FeedingEvent[];
       } catch (error) {
         console.error("Failed to fetch feeding events:", error);
@@ -177,12 +181,12 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
           ),
           fcr: Number(r.fcr ?? 0),
           averageFeedingPercentage: Number(
-            r.average_feeding_percentage ?? r.avg_feeding_pct ?? 0,
+            r.average_feeding_percentage ?? r.feeding_percentage ?? r.avg_feeding_pct ?? 0,
           ),
           feedingEventsCount: Number(
-            r.events_count ?? r.feeding_events_count ?? 0,
+            r.events_count ?? r.feeding_events_count ?? r.feeding_events_count ?? 0,
           ),
-          totalCost: Number(r.total_cost ?? 0),
+          totalCost: Number(r.total_cost ?? r.feed_cost ?? 0),
         }));
         return list as FeedingSummary[];
       } catch (error) {
@@ -230,6 +234,11 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   // Get unique feed types and containers for filters
   const uniqueFeedTypes = [...new Set(feedingEvents.map(event => event.feedType))];
   const uniqueContainers = [...new Set(feedingEvents.map(event => event.containerName))];
+
+  // Debug logging
+  console.log('Unique feed types:', uniqueFeedTypes);
+  console.log('Unique containers:', uniqueContainers);
+  console.log(`Total events: ${feedingEvents.length}, Filtered events: ${filteredEvents.length}`);
 
   // Filter events based on selected filters
   const filteredEvents = feedingEvents.filter(event => {
