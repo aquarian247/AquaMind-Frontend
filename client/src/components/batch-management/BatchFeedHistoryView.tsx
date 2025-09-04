@@ -235,17 +235,17 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   const uniqueFeedTypes = [...new Set(feedingEvents.map(event => event.feedType))];
   const uniqueContainers = [...new Set(feedingEvents.map(event => event.containerName))];
 
-  // Debug logging
-  console.log('Unique feed types:', uniqueFeedTypes);
-  console.log('Unique containers:', uniqueContainers);
-  console.log(`Total events: ${feedingEvents.length}, Filtered events: ${filteredEvents.length}`);
-
   // Filter events based on selected filters
   const filteredEvents = feedingEvents.filter(event => {
     const matchesFeedType = feedTypeFilter === "all" || event.feedType === feedTypeFilter;
     const matchesContainer = containerFilter === "all" || event.containerName === containerFilter;
     return matchesFeedType && matchesContainer;
   });
+
+  // Debug logging
+  console.log('Unique feed types:', uniqueFeedTypes);
+  console.log('Unique containers:', uniqueContainers);
+  console.log(`Total events: ${feedingEvents.length}, Filtered events: ${filteredEvents.length}`);
 
   const getFeedingMethodColor = (method: string) => {
     switch (method.toLowerCase()) {
