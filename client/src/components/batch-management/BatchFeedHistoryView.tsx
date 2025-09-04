@@ -236,9 +236,18 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     queryKey: ["feed-types"],
     queryFn: async () => {
       try {
-        const response = await ApiService.apiV1InventoryFeedingEventsList();
+        // Fetch with large page size to get all feed types
+        const response = await ApiService.apiV1InventoryFeedingEventsList(
+          undefined, // feedingDate
+          undefined, // ordering
+          undefined, // page
+          1000,     // page_size - large number to get all results
+          undefined, // search
+          undefined  // sensor
+        );
         const types = [...new Set((response.results || []).map((e: any) => e.feed_name))];
-        console.log('Available feed types:', types);
+        console.log('Available feed types (full results):', types);
+        console.log('Total feeding events fetched:', response.results?.length || 0);
         return types.filter(Boolean);
       } catch (error) {
         console.error("Failed to fetch feed types:", error);
@@ -251,9 +260,21 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     queryKey: ["containers"],
     queryFn: async () => {
       try {
-        const response = await ApiService.apiV1InfrastructureContainersList();
+        // Fetch with large page size to get all containers
+        const response = await ApiService.apiV1InfrastructureContainersList(
+          undefined, // area
+          undefined, // area_id
+          undefined, // geography
+          undefined, // geography_id
+          undefined, // ordering
+          undefined, // page
+          1000,     // page_size - large number to get all results
+          undefined, // search
+          undefined  // status
+        );
         const containers = [...new Set((response.results || []).map((c: any) => c.name))];
-        console.log('Available containers:', containers);
+        console.log('Available containers (full results):', containers);
+        console.log('Total containers fetched:', response.results?.length || 0);
         return containers.filter(Boolean);
       } catch (error) {
         console.error("Failed to fetch containers:", error);
@@ -274,11 +295,24 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   });
 
   // Debug logging
-  console.log('Available feed types (all):', allFeedTypes);
-  console.log('Available containers (all):', allContainers);
-  console.log('Filtered feed types (from current batch):', uniqueFeedTypes);
-  console.log('Filtered containers (from current batch):', uniqueContainers);
-  console.log(`Total events: ${feedingEvents.length}, Filtered events: ${filteredEvents.length}`);
+  console.log('📊 FEED TYPES:', {
+    'All available': allFeedTypes.length,
+    'From current batch': uniqueFeedTypes.length,
+    'All types': allFeedTypes,
+    'Batch types': uniqueFeedTypes
+  });
+  console.log('📦 CONTAINERS:', {
+    'All available': allContainers.length,
+    'From current batch': uniqueContainers.length,
+    'All containers (first 10)': allContainers.slice(0, 10),
+    'Batch containers': uniqueContainers.slice(0, 10)
+  });
+  console.log('📈 EVENTS:', {
+    'Total events': feedingEvents.length,
+    'Filtered events': filteredEvents.length,
+    'Current batch': batchId,
+    'Date range': currentDateRange
+  });
 
   const getFeedingMethodColor = (method: string) => {
     switch (method.toLowerCase()) {
