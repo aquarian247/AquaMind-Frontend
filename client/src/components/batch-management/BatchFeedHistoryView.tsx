@@ -231,7 +231,38 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     return acc;
   }, [] as FeedTypeUsage[]);
 
-  // Get unique feed types and containers for filters
+  // Fetch all available feed types and containers for dropdown population
+  const { data: allFeedTypes = [] } = useQuery<string[]>({
+    queryKey: ["feed-types"],
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1InventoryFeedingEventsList();
+        const types = [...new Set((response.results || []).map((e: any) => e.feed_name))];
+        console.log('Available feed types:', types);
+        return types.filter(Boolean);
+      } catch (error) {
+        console.error("Failed to fetch feed types:", error);
+        return [];
+      }
+    },
+  });
+
+  const { data: allContainers = [] } = useQuery<string[]>({
+    queryKey: ["containers"],
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1InfrastructureContainersList();
+        const containers = [...new Set((response.results || []).map((c: any) => c.name))];
+        console.log('Available containers:', containers);
+        return containers.filter(Boolean);
+      } catch (error) {
+        console.error("Failed to fetch containers:", error);
+        return [];
+      }
+    },
+  });
+
+  // Get unique feed types and containers for filters (from filtered events)
   const uniqueFeedTypes = [...new Set(feedingEvents.map(event => event.feedType))];
   const uniqueContainers = [...new Set(feedingEvents.map(event => event.containerName))];
 
@@ -243,8 +274,10 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   });
 
   // Debug logging
-  console.log('Unique feed types:', uniqueFeedTypes);
-  console.log('Unique containers:', uniqueContainers);
+  console.log('Available feed types (all):', allFeedTypes);
+  console.log('Available containers (all):', allContainers);
+  console.log('Filtered feed types (from current batch):', uniqueFeedTypes);
+  console.log('Filtered containers (from current batch):', uniqueContainers);
   console.log(`Total events: ${feedingEvents.length}, Filtered events: ${filteredEvents.length}`);
 
   const getFeedingMethodColor = (method: string) => {
@@ -385,7 +418,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Feed Types</SelectItem>
-                {uniqueFeedTypes.map(type => (
+                {allFeedTypes.map(type => (
                   <SelectItem key={type} value={type}>{type}</SelectItem>
                 ))}
               </SelectContent>
@@ -397,7 +430,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Containers</SelectItem>
-                {uniqueContainers.map(container => (
+                {allContainers.map(container => (
                   <SelectItem key={container} value={container}>{container}</SelectItem>
                 ))}
               </SelectContent>
