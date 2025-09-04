@@ -106,27 +106,32 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     queryKey: ["batch/feeding-events", batchId, currentDateRange],
     queryFn: async () => {
       try {
-        // Use the correct API endpoint for feeding events
+        // Use the correct API endpoint for feeding events with proper batch filtering
         const response = await ApiService.apiV1InventoryFeedingEventsList(
-          undefined, // feedingDate
-          undefined, // ordering
-          undefined, // page
-          undefined, // search
-          undefined  // sensor
+          batchId,    // batch - filter by specific batch
+          undefined,  // container
+          undefined,  // feed
+          undefined,  // feedingDate
+          undefined,  // method
+          undefined,  // ordering
+          1,          // page - get first page
+          undefined   // search
         );
 
-        const from = currentDateRange.from ? new Date(currentDateRange.from) : null;
-        const to = currentDateRange.to ? new Date(currentDateRange.to) : null;
+        console.log('🍽️ Batch Feeding Events API Response:', {
+          batchId: batchId,
+          totalEvents: response.results?.length || 0,
+          hasNext: !!response.next,
+          hasPrevious: !!response.previous,
+          sampleEvent: response.results?.[0] ? {
+            id: response.results[0].id,
+            feed_name: response.results[0].feed_name,
+            container_name: response.results[0].container_name,
+            feeding_date: response.results[0].feeding_date
+          } : null
+        });
 
-        const results = (response.results || [])
-          .filter((e: any) => e.batch === batchId) // Filter by batch
-          .filter((e: any) => {
-            const d = new Date(e.feeding_date);
-            if (from && d < from) return false;
-            if (to && d > to) return false;
-            return true;
-          })
-          .map((e: any) => ({
+        const results = (response.results || []).map((e: any) => ({
             id: e.id,
             feedingDate: e.feeding_date,
             feedingTime: e.feeding_time || new Date(e.feeding_date).toISOString().slice(11, 16),
@@ -236,23 +241,28 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     queryKey: ["feed-types"],
     queryFn: async () => {
       try {
-        // Fetch with large page size to get all feed types
+        // Fetch feeding events to get all available feed types (not filtered by batch)
         const response = await ApiService.apiV1InventoryFeedingEventsList(
-          undefined, // batch
+          undefined, // batch - get ALL batches
           undefined, // container
           undefined, // feed
           undefined, // feedingDate
           undefined, // method
           undefined, // ordering
-          1,        // page - use first page to get some results
-          undefined  // search
+          1,        // page - get first page
+          undefined // search
         );
         const types = [...new Set((response.results || []).map((e: any) => e.feed_name))];
-        console.log('Available feed types (full results):', types);
-        console.log('Total feeding events fetched:', response.results?.length || 0);
+        console.log('📊 Feed Types API Response:', {
+          totalEvents: response.results?.length || 0,
+          uniqueFeedTypes: types.length,
+          feedTypes: types,
+          hasNextPage: !!response.next,
+          hasPrevPage: !!response.previous
+        });
         return types.filter(Boolean);
       } catch (error) {
-        console.error("Failed to fetch feed types:", error);
+        console.error("❌ Failed to fetch feed types:", error);
         return [];
       }
     },
@@ -262,7 +272,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     queryKey: ["containers"],
     queryFn: async () => {
       try {
-        // Fetch with large page size to get all containers
+        // Fetch all containers for dropdown population
         const response = await ApiService.apiV1InfrastructureContainersList(
           undefined, // active
           undefined, // area
@@ -270,15 +280,20 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
           undefined, // hall
           undefined, // name
           undefined, // ordering
-          1,        // page - use first page to get some results
+          1,        // page - get first page
           undefined  // search
         );
         const containers = [...new Set((response.results || []).map((c: any) => c.name))];
-        console.log('Available containers (full results):', containers);
-        console.log('Total containers fetched:', response.results?.length || 0);
+        console.log('🏗️ Containers API Response:', {
+          totalContainers: response.results?.length || 0,
+          uniqueContainers: containers.length,
+          containers: containers.slice(0, 10), // Show first 10
+          hasNextPage: !!response.next,
+          hasPrevPage: !!response.previous
+        });
         return containers.filter(Boolean);
       } catch (error) {
-        console.error("Failed to fetch containers:", error);
+        console.error("❌ Failed to fetch containers:", error);
         return [];
       }
     },
