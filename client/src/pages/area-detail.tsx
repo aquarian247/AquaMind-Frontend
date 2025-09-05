@@ -211,9 +211,9 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           };
         });
 
-        const totalBiomass = rings.reduce((sum, ring) => sum + ring.biomass, 0);
+        const totalBiomass = rings.reduce((sum: number, ring: Ring) => sum + ring.biomass, 0);
         console.log(`Calculated ring biomass for area ${params.id}:`, {
-          rings: rings.map(r => ({ id: r.id, biomass: r.biomass, fishCount: r.fishCount })),
+          rings: rings.map((r: Ring) => ({ id: r.id, biomass: r.biomass, fishCount: r.fishCount })),
           totalBiomass: totalBiomass,
           expectedTotal: 3.5 // 20 rings × 0.175 tons each
         });
@@ -672,7 +672,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                   {environmentalData?.hasData ? 'm/s' : 'No environmental data available'}
                 </p>
                 <div className="mt-2">
-                  <Progress value={environmentalData?.hasData ? (environmentalData.currentSpeed / 1) * 100 : 0} />
+                  <Progress value={environmentalData?.hasData && environmentalData.currentSpeed ? (environmentalData.currentSpeed / 1) * 100 : 0} />
                 </div>
               </CardContent>
             </Card>
