@@ -125,10 +125,18 @@ render(<QueryClientProvider client={qc}>...</QueryClientProvider>);
 
 * Config in `vite.config.ts`.
 * Excludes generated API client & `src/pages/**`.
-* Global thresholds are minimal (10 %) while suite grows.
-* **Expectations**:  
-  – Dashboard slice ≥ 30 % lines.  
-  – New testable files ≥ 80 %.
+* **Current: 38.93% overall** with focus on business logic.
+* **Realistic Target: 50-60%** - Focus on high-value areas.
+* **Priority Areas** (currently low coverage but high business value):
+  – **AuthContext** (30%) - Token management & authentication
+  – **Infrastructure pages** (0%) - Data aggregation & filtering
+  – **API utilities** (13%) - Data processing & fallbacks
+  – **Pagination utility** (0%) - Large dataset handling
+  – **Container filtering** (business rules for categorization)
+
+* **Coverage Strategy**: Quality over quantity - test business logic that matters.
+* **What to Test**: Authentication, data processing, business rules, error handling.
+* **What NOT to Test**: Simple UI components, basic rendering, CSS classes, static content.
 
 Check HTML/LCOV output in `coverage/`.
 
