@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
+import { AuthService, authenticatedFetch } from '@/services/auth.service';
+import { apiConfig } from '@/config/api.config';
 
 export const useAreaKpi = (areaId: number) => {
   return useQuery({
     queryKey: ['area-kpi', areaId],
     queryFn: async () => {
       try {
-        // Get auth token for authenticated requests
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found for area KPI data");
           return {
             totalBiomassKg: 0,
@@ -19,25 +19,10 @@ export const useAreaKpi = (areaId: number) => {
           };
         }
 
-        // Fetch all containers for this area with authentication
-        const containersResponse = await fetch(
-          `http://localhost:8000/api/v1/infrastructure/containers/?area=${areaId}&page_size=100`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        // Fetch all containers for this area using AuthService
+        const containersResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${areaId}&page_size=100`
         );
-
-        if (!containersResponse.ok) {
-          if (containersResponse.status === 401) {
-            console.warn("Auth token expired for containers data");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-          }
-          throw new Error(`API call failed: ${containersResponse.status}`);
-        }
 
         const containersData = await containersResponse.json();
         const containers = containersData.results || [];
@@ -53,25 +38,10 @@ export const useAreaKpi = (areaId: number) => {
           };
         }
 
-        // Fetch all active assignments with authentication
-        const assignmentsResponse = await fetch(
-          `http://localhost:8000/api/v1/batch/container-assignments/?page_size=500`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        // Fetch all active assignments using AuthService
+        const assignmentsResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=500`
         );
-
-        if (!assignmentsResponse.ok) {
-          if (assignmentsResponse.status === 401) {
-            console.warn("Auth token expired for assignments data");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-          }
-          throw new Error(`API call failed: ${assignmentsResponse.status}`);
-        }
 
         const assignmentsData = await assignmentsResponse.json();
         const assignments = assignmentsData.results || [];

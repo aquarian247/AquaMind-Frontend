@@ -1,21 +1,24 @@
 // API Configuration for Django Backend Integration
+// This file maintains backward compatibility while transitioning to the new config structure
+import { authConfig, apiConfig } from '../config/auth.config';
+
 export const API_CONFIG = {
-  // Backend configuration
-  DJANGO_API_URL: import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000',
+  // Backend configuration - now uses centralized config
+  DJANGO_API_URL: authConfig.baseUrl,
   USE_DJANGO_API: import.meta.env.VITE_USE_DJANGO_API === 'true',
-  
+
   // API versioning
-  API_VERSION: 'v1',
-  
+  API_VERSION: authConfig.apiVersion,
+
   // Authentication
   CSRF_COOKIE_NAME: 'csrftoken',
   CSRF_HEADER_NAME: 'X-CSRFToken',
-  
-  // Request timeouts
-  REQUEST_TIMEOUT: 30000,
-  
-  // Retry configuration
-  MAX_RETRIES: 3,
+
+  // Request timeouts - now uses centralized config
+  REQUEST_TIMEOUT: authConfig.timeout,
+
+  // Retry configuration - now uses centralized config
+  MAX_RETRIES: authConfig.retries,
   RETRY_DELAY: 1000,
 } as const;
 

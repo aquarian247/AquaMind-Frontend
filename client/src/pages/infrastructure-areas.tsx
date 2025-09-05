@@ -21,6 +21,8 @@ import {
 import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
 import { api } from "@/lib/api";
+import { AuthService, authenticatedFetch } from "@/services/auth.service";
+import { apiConfig } from "@/config/api.config";
 
 interface Area {
   id: number;
@@ -141,15 +143,13 @@ export default function InfrastructureAreas() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Get aggregated overview data for total biomass using the same auth approach as infrastructure.tsx
+  // Get aggregated overview data for total biomass using the AuthService
   const { data: overviewData } = useQuery({
     queryKey: ["infrastructure/overview"],
     queryFn: async () => {
       try {
-        // Get the current auth token (same approach as infrastructure.tsx)
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found for overview data");
           return {
             totalContainers: 70,
@@ -160,31 +160,9 @@ export default function InfrastructureAreas() {
           };
         }
 
-        const response = await fetch(
-          `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/infrastructure/overview/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        const response = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.overview}`
         );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn("Auth token expired for overview data");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-            return {
-              totalContainers: 70,
-              activeBiomass: 3500,
-              capacity: 21805000,
-              sensorAlerts: 0,
-              feedingEventsToday: 40,
-            };
-          }
-          throw new Error(`API call failed: ${response.status}`);
-        }
 
         const data = await response.json();
         return {
@@ -211,34 +189,16 @@ export default function InfrastructureAreas() {
     queryKey: ["areas", selectedGeography],
     queryFn: async () => {
       try {
-        // Get auth token like the working pages do
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found for areas data");
           return { results: [] };
         }
 
-        // Retrieve all areas with proper authentication
-        const response = await fetch(
-          `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/infrastructure/areas/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        // Retrieve all areas using AuthService
+        const response = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.areas}`
         );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn("Auth token expired for areas data");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-            return { results: [] };
-          }
-          throw new Error(`API call failed: ${response.status}`);
-        }
 
         const areasRes = await response.json();
         return areasRes;
@@ -253,39 +213,21 @@ export default function InfrastructureAreas() {
     queryKey: ["infrastructure/containers"],
     queryFn: async () => {
       try {
-        // Get auth token
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found for containers data");
           return { results: [] };
         }
 
-        // Fetch all containers with proper authentication (handle pagination)
+        // Fetch all containers using AuthService (handle pagination)
         const allContainers: any[] = [];
         let page = 1;
         let hasNextPage = true;
 
         while (hasNextPage) {
-          const response = await fetch(
-            `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/infrastructure/containers/?page=${page}&page_size=100`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            },
+          const response = await authenticatedFetch(
+            `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?page=${page}&page_size=100`
           );
-
-          if (!response.ok) {
-            if (response.status === 401) {
-              console.warn("Auth token expired for containers data");
-              localStorage.removeItem("auth_token");
-              localStorage.removeItem("refresh_token");
-              return { results: [] };
-            }
-            throw new Error(`API call failed: ${response.status}`);
-          }
 
           const pageData = await response.json();
           allContainers.push(...(pageData.results || []));
@@ -313,39 +255,21 @@ export default function InfrastructureAreas() {
     queryKey: ["infrastructure/assignments"],
     queryFn: async () => {
       try {
-        // Get auth token
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found for assignments data");
           return { results: [] };
         }
 
-        // Fetch batch assignments with proper authentication (handle pagination)
+        // Fetch batch assignments using AuthService (handle pagination)
         let assignments: any[] = [];
         let page = 1;
         let hasMoreAssignments = true;
 
         while (hasMoreAssignments) {
-          const response = await fetch(
-            `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/batch/container-assignments/?page=${page}&page_size=100`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            },
+          const response = await authenticatedFetch(
+            `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page=${page}&page_size=100`
           );
-
-          if (!response.ok) {
-            if (response.status === 401) {
-              console.warn("Auth token expired for assignments data");
-              localStorage.removeItem("auth_token");
-              localStorage.removeItem("refresh_token");
-              return { results: [] };
-            }
-            throw new Error(`API call failed: ${response.status}`);
-          }
 
           const pageData = await response.json();
           assignments.push(...(pageData.results || []));

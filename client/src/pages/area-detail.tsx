@@ -10,6 +10,8 @@ import { useState } from "react";
 import { useAreaKpi } from "@/hooks/aggregations/useAreaKpi";
 import { ApiService } from "@/api/generated";
 import { api } from "@/lib/api";
+import { AuthService, authenticatedFetch } from "@/services/auth.service";
+import { apiConfig } from "@/config/api.config";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -114,57 +116,25 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
     queryKey: ["area", params.id, "rings"],
     queryFn: async () => {
       try {
-        // Get auth token for authenticated requests
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found for area rings data");
           return { results: [] };
         }
 
-        // Fetch containers for this area (rings are containers)
-        const containersResponse = await fetch(
-          `http://localhost:8000/api/v1/infrastructure/containers/?area=${params.id}&page_size=100`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        // Fetch containers for this area using AuthService
+        const containersResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${params.id}&page_size=100`
         );
-
-        if (!containersResponse.ok) {
-          if (containersResponse.status === 401) {
-            console.warn("Auth token expired for containers data");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-          }
-          throw new Error(`API call failed: ${containersResponse.status}`);
-        }
 
         const containersData = await containersResponse.json();
         const containers = containersData.results || [];
         const containerIds = containers.map((c: any) => c.id);
 
-        // Fetch batch assignments for biomass calculations
-        const assignmentsResponse = await fetch(
-          `http://localhost:8000/api/v1/batch/container-assignments/?page_size=500`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        // Fetch batch assignments for biomass calculations using AuthService
+        const assignmentsResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=500`
         );
-
-        if (!assignmentsResponse.ok) {
-          if (assignmentsResponse.status === 401) {
-            console.warn("Auth token expired for assignments data");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-          }
-          throw new Error(`API call failed: ${assignmentsResponse.status}`);
-        }
 
         const assignmentsData = await assignmentsResponse.json();
         const assignments = assignmentsData.results || [];
@@ -237,10 +207,8 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
     queryKey: ["area", params.id, "environmental"],
     queryFn: async () => {
       try {
-        // Get auth token for authenticated requests
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found for environmental data");
           return {
             waterTemperature: null,
@@ -280,10 +248,8 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
     queryKey: ["area", params.id, "fcr-simple"],
     queryFn: async () => {
       try {
-        // Get auth token for authenticated requests
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found for FCR data");
           return {
             fcr: null,
@@ -291,25 +257,10 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           };
         }
 
-        // First, get containers for this area
-        const containersResponse = await fetch(
-          `http://localhost:8000/api/v1/infrastructure/containers/?area=${params.id}&page_size=100`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        // First, get containers for this area using AuthService
+        const containersResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${params.id}&page_size=100`
         );
-
-        if (!containersResponse.ok) {
-          if (containersResponse.status === 401) {
-            console.warn("Auth token expired for containers data");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-          }
-          throw new Error(`Containers API call failed: ${containersResponse.status}`);
-        }
 
         const containersData = await containersResponse.json();
         const containers = containersData.results || [];
@@ -326,51 +277,17 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-        const feedingResponse = await fetch(
-          `http://localhost:8000/api/v1/inventory/feeding-events/?container_id__in=${containerIds.join(',')}&feeding_date__gte=${thirtyDaysAgo.toISOString().split('T')[0]}&page_size=500`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        const feedingResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.feedingEvents}?container_id__in=${containerIds.join(',')}&feeding_date__gte=${thirtyDaysAgo.toISOString().split('T')[0]}&page_size=500`
         );
-
-        if (!feedingResponse.ok) {
-          if (feedingResponse.status === 401) {
-            console.warn("Auth token expired for feeding data");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-          }
-          console.warn("Feeding events API not available, returning no data");
-          return {
-            fcr: null,
-            hasData: false
-          };
-        }
 
         const feedingData = await feedingResponse.json();
         const feedingEvents = feedingData.results || [];
 
-        // Get batch assignments to calculate biomass
-        const assignmentsResponse = await fetch(
-          `http://localhost:8000/api/v1/batch/container-assignments/?page_size=500`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        // Get batch assignments to calculate biomass using AuthService
+        const assignmentsResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=500`
         );
-
-        if (!assignmentsResponse.ok) {
-          console.warn("Assignments API failed, using feeding data only");
-          // If we have feeding data but no assignments, we can't calculate FCR
-          return {
-            fcr: null,
-            hasData: false
-          };
-        }
 
         const assignmentsData = await assignmentsResponse.json();
         const assignments = assignmentsData.results || [];

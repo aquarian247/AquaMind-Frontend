@@ -1,6 +1,7 @@
 import { API_CONFIG } from "./config";
 import { ApiService } from "../api/generated";
 import { setAuthToken } from "../api";
+import { AuthService, authenticatedFetch } from "../services/auth.service";
 
 export interface DashboardKPIs {
   totalFish: number;
@@ -296,10 +297,8 @@ export const api = {
      */
     async getOverview() {
       try {
-        // Get the current auth token
-        const token = localStorage.getItem("auth_token");
-
-        if (!token) {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found - user needs to log in first");
           // Return fallback data with clear indication that auth is needed
           return {
@@ -312,33 +311,9 @@ export const api = {
           };
         }
 
-        const response = await fetch(
-          `${API_CONFIG.DJANGO_API_URL}/api/v1/infrastructure/overview/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          },
+        const response = await authenticatedFetch(
+          `${API_CONFIG.DJANGO_API_URL}/api/v1/infrastructure/overview/`
         );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn("Auth token expired or invalid - user needs to log in again");
-            // Clear invalid token
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-            return {
-              totalContainers: 70,
-              activeBiomass: 3500,
-              capacity: 21805000,
-              sensorAlerts: 0,
-              feedingEventsToday: 40,
-              _needsAuth: true,
-            };
-          }
-          throw new Error(`API call failed: ${response.status}`);
-        }
 
         const data = await response.json();
 
@@ -760,27 +735,12 @@ export const api = {
 
         const capacity = parseFloat(container.volume_m3 ?? "0") || 0;
 
-        // Fetch batch assignments for this container
-        const token = localStorage.getItem("auth_token");
-        if (!token) return null;
+        // Fetch batch assignments for this container using AuthService
+        if (!AuthService.isAuthenticated()) return null;
 
-        const response = await fetch(
-          `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/batch/container-assignments/?container=${id}&is_active=true`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+        const response = await authenticatedFetch(
+          `${API_CONFIG.DJANGO_API_URL}/api/v1/batch/container-assignments/?container=${id}&is_active=true`
         );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-          }
-          return null;
-        }
 
         const assignments = await response.json();
 
@@ -847,32 +807,15 @@ export const api = {
      * Get batch assignments for a specific container
      */
     getAssignments: async (containerId: number, activeOnly: boolean = true) => {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
+      if (!AuthService.isAuthenticated()) {
         console.warn("No auth token found for container assignments");
         return { results: [] };
       }
 
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/batch/container-assignments/?container=${containerId}&is_active=${activeOnly}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+        const response = await authenticatedFetch(
+          `${API_CONFIG.DJANGO_API_URL}/api/v1/batch/container-assignments/?container=${containerId}&is_active=${activeOnly}`
         );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn("Auth token expired for container assignments");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-            return { results: [] };
-          }
-          throw new Error(`API call failed: ${response.status}`);
-        }
 
         return await response.json();
       } catch (error) {
@@ -885,32 +828,15 @@ export const api = {
      * Get sensors for a specific container
      */
     getSensors: async (containerId: number) => {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
+      if (!AuthService.isAuthenticated()) {
         console.warn("No auth token found for container sensors");
         return { results: [] };
       }
 
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/infrastructure/sensors/?container=${containerId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
+        const response = await authenticatedFetch(
+          `${API_CONFIG.DJANGO_API_URL}/api/v1/infrastructure/sensors/?container=${containerId}`
         );
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            console.warn("Auth token expired for container sensors");
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("refresh_token");
-            return { results: [] };
-          }
-          throw new Error(`API call failed: ${response.status}`);
-        }
 
         return await response.json();
       } catch (error) {
