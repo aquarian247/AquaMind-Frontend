@@ -66,9 +66,12 @@ while (hasNextPage) {
 **Symptom**: UI shows 0, but curl returns data
 **Root Cause**: Authentication token issues
 ```typescript
-// ✅ SOLUTION: Debug token status
-console.log('Token:', localStorage.getItem('auth_token'));
-console.log('OpenAPI.TOKEN:', await OpenAPI.TOKEN?.());
+// ✅ SOLUTION: Debug with AuthService
+import { AuthService } from '@/services/auth.service';
+
+console.log('Token available:', AuthService.isAuthenticated());
+console.log('Access token:', AuthService.getAccessToken());
+console.log('Refresh token:', AuthService.getRefreshToken());
 ```
 **Quick Fix**: Check browser Network tab for 401 errors
 
@@ -147,15 +150,12 @@ coordinates: {
 const { data: fcrData } = useQuery({
   queryKey: ["area", areaId, "fcr"],
   queryFn: async () => {
-    const token = localStorage.getItem("auth_token");
-    if (!token) return { fcr: null, hasData: false };
+        // AuthService handles authentication automatically
+        if (!AuthService.isAuthenticated()) return { fcr: null, hasData: false };
 
-    const response = await fetch(
-      `http://localhost:8000/api/v1/operational/fcr-trends/?geography_id=${areaId}&page_size=1`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    );
+        const response = await authenticatedFetch(
+          `${apiConfig.baseUrl}/api/v1/operational/fcr-trends/?geography_id=${areaId}&page_size=1`
+        );
 
     const data = await response.json();
     const fcrTrends = data.results || [];

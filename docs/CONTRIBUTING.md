@@ -38,71 +38,69 @@ VITE_DJANGO_API_URL=http://localhost:8000
 npm run dev
 ```
 
-##### Authentication Setup (Critical)
+##### Authentication Setup (Standardized)
 
-The frontend requires JWT tokens for authentication, but the Django backend may only have DRF tokens configured. Here's how to set up proper authentication:
+The frontend uses a **centralized AuthService** (`/client/src/services/auth.service.ts`) that handles all authentication automatically. The system is designed for JWT tokens with automatic token refresh.
 
-**Option A: Use JWT Tokens (Recommended)**
+**Quick Start:**
 ```bash
-# Get JWT tokens from Django backend
-curl -s "http://localhost:8000/api/auth/jwt/" \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+# 1. Start Django backend
+cd /path/to/AquaMind
+python manage.py runserver 8000 --settings=aquamind.settings
+
+# 2. Start frontend with Django integration
+cd /path/to/AquaMind-Frontend
+VITE_USE_DJANGO_API=true npm run dev
+
+# 3. Login through the frontend UI - AuthService handles everything automatically
 ```
 
-**Option B: Create Test User with JWT Support**
-```bash
-# In Django shell, create user with JWT tokens
-python manage.py shell --settings=aquamind.settings
+**Authentication Architecture:**
+
+The frontend uses a **standardized authentication system** with these components:
+- **AuthService** (`/client/src/services/auth.service.ts`) - Centralized auth logic
+- **AuthContext** (`/client/src/contexts/AuthContext.tsx`) - React state management
+- **Authenticated Fetch** - Automatic token attachment to all API calls
+- **Event-driven** 401 handling with automatic token clearing
+
+**No Manual Token Management Required:**
+```typescript
+// ❌ OLD: Manual token handling (deprecated)
+const token = localStorage.getItem("auth_token");
+const response = await fetch(url, {
+  headers: { Authorization: `Bearer ${token}` }
+});
+
+// ✅ NEW: AuthService handles everything
+const response = await authenticatedFetch(url);
+// AuthService automatically:
+// - Gets token from localStorage
+// - Attaches Authorization header
+// - Handles 401 responses
+// - Refreshes tokens when needed
 ```
-```python
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-from rest_framework.authtoken.models import Token
 
-# Create admin user
-User = get_user_model()
-user, created = User.objects.get_or_create(
-    username='admin',
-    defaults={
-        'email': 'admin@example.com',
-        'is_active': True,
-        'password': make_password('admin123'),
-        'is_staff': True,
-        'is_superuser': True
-    }
-)
+**Testing Authentication:**
+```bash
+# Test Django backend directly
+curl -s "http://localhost:8000/api/v1/batch/batches/" \
+  -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN"
 
-# Create DRF token (fallback)
-token, _ = Token.objects.get_or_create(user=user)
-print(f'DRF Token: {token.key}')
-
-# Use JWT endpoint for JWT tokens
-# curl -s "http://localhost:8000/api/auth/jwt/" -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"admin123"}'
+# Test frontend proxy (automatic auth handled by AuthService)
+curl -s "http://localhost:5001/api/v1/batch/batches/"
+# AuthService adds Authorization header automatically
 ```
 
 **Common Authentication Issues:**
 
-❌ **Problem**: "Invalid token" or 401 errors
-✅ **Solution**: Ensure you're using JWT tokens, not DRF tokens. The frontend AuthContext expects JWT format.
+❌ **Problem**: "No authentication token available" error
+✅ **Solution**: Login through the frontend first. AuthService manages tokens automatically.
 
-❌ **Problem**: Frontend shows loading spinner indefinitely
-✅ **Solution**: Check browser console for authentication errors. Verify JWT tokens are properly stored in localStorage.
+❌ **Problem**: 401 errors after login
+✅ **Solution**: Check Django backend is running. AuthService handles token refresh automatically.
 
-❌ **Problem**: API calls work in curl but fail in frontend
-✅ **Solution**: The frontend proxy may be adding headers. Check network tab for actual request headers.
-
-**Testing Authentication:**
-```bash
-# Test API directly
-curl -s "http://localhost:8000/api/v1/batch/batches/" \
-  -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN"
-
-# Test frontend proxy
-curl -s "http://localhost:5001/api/v1/batch/batches/" \
-  -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN"
-```
+❌ **Problem**: API calls fail in frontend but work in curl
+✅ **Solution**: AuthService may not have tokens. Login through frontend UI first.
 
 ##### Large Dataset & Pagination Handling
 

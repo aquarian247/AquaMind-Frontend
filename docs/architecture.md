@@ -59,14 +59,14 @@ AquaMind is a comprehensive aquaculture management system built on Django 4.2.11
 | Presentation | Render UI components, theming, responsive layout |
 | Feature Logic | Domain-specific hooks & components per slice (`features/*`) |
 | Client State | Local component state & TanStack Query caches |
-| API Adapter  | `lib/api.ts` wraps fetch → adds auth headers, JWT refresh |
+| API Adapter  | `services/auth.service.ts` → centralized auth, `lib/api.ts` → wrappers |
 | Routing      | Declarative route map → lazy-loaded pages |
 
 ### Runtime Flow
 
 1. User navigates to a route; Wouter loads corresponding **page** (lazy import).
 2. Page’s custom hook triggers **TanStack Query** to request data from Django REST API (or Express mock when `VITE_USE_DJANGO_API=false`).
-3. Query layer uses central `fetchJson` which automatically attaches JWT & handles 401 refresh.
+3. Query layer uses `AuthService.authenticatedFetch()` which automatically attaches JWT & handles 401 refresh with event-driven state management.
 4. Data arrives → cached → rendered by presentational components.
 5. Mutations (POST/PUT) invalidate affected queries to keep UI fresh.
 
