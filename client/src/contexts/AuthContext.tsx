@@ -6,6 +6,7 @@ import { TokenRefresh } from '@/api/generated/models/TokenRefresh';
 import { setAuthToken, storeAuthToken, clearAuthToken } from '@/api/index';
 import { ApiError } from '@/api/generated/core/ApiError';
 import { jwtDecode } from 'jwt-decode';
+import { AuthService, AuthTokens } from '@/services/auth.service';
 
 // Types for JWT token response and decoded token
 interface JWTTokens {
@@ -133,29 +134,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initAuth = async () => {
       try {
         // Check if we have a token in localStorage
-        const accessToken = localStorage.getItem('auth_token');
-        const refreshToken = localStorage.getItem('refresh_token');
-        
+        const accessToken = AuthService.getAccessToken();
+        const refreshToken = AuthService.getRefreshToken();
+
         if (!accessToken || !refreshToken) {
           setState(prev => ({ ...prev, isLoading: false }));
           return;
         }
-        
+
         // Decode token to check expiration and get user info
         const decoded = jwtDecode<DecodedToken>(accessToken);
         const currentTime = Date.now() / 1000;
-        
+
         if (decoded.exp < currentTime) {
           // Token expired, try to refresh
-          const success = await refreshTokenInternal(refreshToken);
-          if (!success) {
+          const authService = AuthService.getInstance();
+          const newTokens = await authService.refreshTokens();
+
+          if (!newTokens) {
             // If refresh fails, clear everything
             handleLogout();
+            return;
           }
+
+          // Update decoded token with new access token
+          const newDecoded = jwtDecode<DecodedToken>(newTokens.access);
+
+          setAuthToken(newTokens.access);
+
+          // Set auth state with new token info
+          setState({
+            user: {
+              id: newDecoded.user_id,
+              username: newDecoded.username || '',
+              email: newDecoded.email || '',
+              is_active: true,
+              date_joined: new Date().toISOString(),
+              profile: {} as UserProfile,
+            } as User,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+            tokenInfo: {
+              accessToken: newTokens.access,
+              refreshToken: newTokens.refresh,
+              expiresAt: newDecoded.exp,
+              authSource: newDecoded.auth_source,
+            },
+          });
+
+          // Schedule token refresh
+          scheduleTokenRefresh(newDecoded.exp);
         } else {
           // Valid token, set auth state
           setAuthToken(accessToken);
-          
+
           // Set auth state with decoded token info
           setState({
             user: {
@@ -176,20 +209,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               authSource: decoded.auth_source,
             },
           });
-          
+
           // Schedule token refresh
           scheduleTokenRefresh(decoded.exp);
-          
-          // Fetch complete user profile
-          fetchUserProfile();
         }
+
+        // Fetch complete user profile
+        fetchUserProfile();
       } catch (error) {
         console.error('Error initializing auth:', error);
         handleLogout();
       }
     };
-    
+
     initAuth();
+  }, []);
+
+  // Listen for auth events from AuthService
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      console.log('AuthContext: Received unauthorized event, logging out');
+      handleLogout();
+    };
+
+    const handleLogoutEvent = () => {
+      console.log('AuthContext: Received logout event');
+      handleLogout();
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    window.addEventListener('auth:logout', handleLogoutEvent);
+
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.removeEventListener('auth:logout', handleLogoutEvent);
+    };
   }, []);
 
   // Schedule token refresh before expiration
@@ -258,74 +312,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleLogin = async (username: string, password: string): Promise<boolean> => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      /* Generated type (CustomTokenObtainPair) describes the *request*,
-         not the *response*.  Cast to `any` so we can access the real
-         JWT fields returned by the backend. */
-      const response = (await ApiService.apiV1UsersAuthTokenCreate({
-        username,
-        password,
-      })) as any;
-      
-      if (response.access && response.refresh) {
-        // Store tokens
-        localStorage.setItem('auth_token', response.access);
-        localStorage.setItem('refresh_token', response.refresh);
-        setAuthToken(response.access);
-        
-        // Decode token to get user info and expiration
-        const decoded = jwtDecode<DecodedToken>(response.access);
-        
-        setState({
-          user: {
-            id: decoded.user_id,
-            username: decoded.username || username,
-            email: decoded.email || '',
-            is_active: true,
-            date_joined: new Date().toISOString(),
-            profile: {} as UserProfile,
-          } as User,
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-          tokenInfo: {
-            accessToken: response.access,
-            refreshToken: response.refresh,
-            expiresAt: decoded.exp,
-            authSource: decoded.auth_source,
-          },
-        });
-        
-        // Schedule token refresh
-        scheduleTokenRefresh(decoded.exp);
-        
-        // Fetch complete user profile
-        await fetchUserProfile();
-        
-        return true;
-      }
-      
-      setState(prev => ({
-        ...prev,
+
+      // Use the centralized AuthService for login
+      const tokens = await AuthService.login(username, password);
+
+      // Decode token to get user info and expiration
+      const decoded = jwtDecode<DecodedToken>(tokens.access);
+
+      // Update OpenAPI client with new token
+      setAuthToken(tokens.access);
+
+      setState({
+        user: {
+          id: decoded.user_id,
+          username: decoded.username || username,
+          email: decoded.email || '',
+          is_active: true,
+          date_joined: new Date().toISOString(),
+          profile: {} as UserProfile,
+        } as User,
+        isAuthenticated: true,
         isLoading: false,
-        error: 'Login failed: Invalid response from server'
-      }));
-      return false;
+        error: null,
+        tokenInfo: {
+          accessToken: tokens.access,
+          refreshToken: tokens.refresh,
+          expiresAt: decoded.exp,
+          authSource: decoded.auth_source,
+        },
+      });
+
+      // Schedule token refresh
+      scheduleTokenRefresh(decoded.exp);
+
+      // Fetch complete user profile
+      await fetchUserProfile();
+
+      return true;
     } catch (error) {
       let errorMessage = 'Login failed: Unknown error';
-      
-      if (error instanceof ApiError && error.body) {
-        if (typeof error.body === 'object' && error.body !== null) {
-          if ('detail' in error.body) {
-            errorMessage = `${error.body.detail}`;
-          } else if ('non_field_errors' in error.body) {
-            errorMessage = `${error.body.non_field_errors}`;
-          } else if (error.status === 401) {
-            errorMessage = 'Invalid username or password';
-          }
+
+      if (error instanceof Error) {
+        if (error.message.includes('401')) {
+          errorMessage = 'Invalid username or password';
+        } else {
+          errorMessage = error.message;
         }
       }
-      
+
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -337,11 +371,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Logout function
   const handleLogout = () => {
-    // Clear tokens from localStorage
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
+    // Use centralized AuthService for logout
+    AuthService.logout();
     clearAuthToken();
-    
+
     // Reset auth state
     setState({
       user: null,
