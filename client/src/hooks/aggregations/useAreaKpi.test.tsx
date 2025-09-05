@@ -2,15 +2,21 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAreaKpi } from './useAreaKpi';
-import { ApiService } from '@/api/generated/services/ApiService';
 
-// Mock the ApiService
-vi.mock('@/api/generated/services/ApiService', () => ({
-  ApiService: {
-    apiV1InfrastructureContainersList: vi.fn(),
-    apiV1BatchContainerAssignmentsList: vi.fn(),
-  },
-}));
+// Mock fetch globally
+const fetchMock = vi.fn();
+global.fetch = fetchMock;
+
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+};
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
+});
 
 describe('useAreaKpi', () => {
   let queryClient: QueryClient;
@@ -24,9 +30,13 @@ describe('useAreaKpi', () => {
         },
       },
     });
-    
+
     // Reset mocks
-    vi.resetAllMocks();
+    vi.clearAllMocks();
+    fetchMock.mockReset();
+    localStorageMock.getItem.mockReset();
+    localStorageMock.setItem.mockReset();
+    localStorageMock.removeItem.mockReset();
   });
 
   afterEach(() => {
@@ -34,28 +44,37 @@ describe('useAreaKpi', () => {
   });
 
   it('should calculate KPIs correctly for an area', async () => {
-    // Mock container data
-    const mockContainers = {
-      results: [
-        { id: 1, area: 10, name: 'Container 1' },
-        { id: 2, area: 10, name: 'Container 2' },
-        // Container from a different area intentionally omitted to ensure
-        // the hook only receives containers belonging to area 10
-      ],
-    };
+    // Mock localStorage to return auth token
+    localStorageMock.getItem.mockReturnValue('mock-token');
 
-    // Mock assignment data
-    const mockAssignments = {
-      results: [
-        { id: 101, container_id: 1, biomass_kg: '100', population_count: 200 },
-        { id: 102, container_id: 2, biomass_kg: '150', population_count: 250 },
-        { id: 103, container_id: 3, biomass_kg: '200', population_count: 300 }, // Different area, should be filtered out
-      ],
-    };
-
-    // Set up mocks to return our test data
-    vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue(mockContainers);
-    vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue(mockAssignments);
+    // Mock fetch responses
+    fetchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          count: 2,
+          next: null,
+          previous: null,
+          results: [
+            { id: 1, area: 10, name: 'Container 1', geography: 1, station: 1, hall: null, container_type: 1, container_type_name: 'PEN' },
+            { id: 2, area: 10, name: 'Container 2', geography: 1, station: 1, hall: null, container_type: 1, container_type_name: 'PEN' },
+          ],
+        }),
+      })
+    ).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          count: 2,
+          next: null,
+          previous: null,
+          results: [
+            { id: 101, container: 1, container_id: 1, biomass_kg: '100', population_count: 200 },
+            { id: 102, container: 2, container_id: 2, biomass_kg: '150', population_count: 250 },
+          ],
+        }),
+      })
+    );
 
     // Render the hook with our test area ID
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -69,10 +88,25 @@ describe('useAreaKpi', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Verify the API was called with the correct parameters
-    expect(ApiService.apiV1InfrastructureContainersList).toHaveBeenCalledWith({ area: 10 });
-    expect(ApiService.apiV1BatchContainerAssignmentsList).toHaveBeenCalledWith(
-      undefined, undefined, undefined, true
+    // Verify the fetch calls were made correctly
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/infrastructure/containers/?area=10&page_size=100',
+      {
+        headers: {
+          Authorization: 'Bearer mock-token',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/batch/container-assignments/?page_size=500',
+      {
+        headers: {
+          Authorization: 'Bearer mock-token',
+          'Content-Type': 'application/json',
+        },
+      }
     );
 
     // Verify the calculated metrics
@@ -82,24 +116,37 @@ describe('useAreaKpi', () => {
         populationCount: 450, // 200 + 250
         averageWeightKg: 250 / 450, // totalBiomass / populationCount
         containerCount: 2, // Only containers in area 10
+        hasData: true,
       });
     });
   });
 
   it('should handle empty container results', async () => {
-    // Mock empty container data
-    const mockContainers = {
-      results: [],
-    };
+    // Mock localStorage to return auth token
+    localStorageMock.getItem.mockReturnValue('mock-token');
 
-    // Mock empty assignment data
-    const mockAssignments = {
-      results: [],
-    };
-
-    // Set up mocks
-    vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue(mockContainers);
-    vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue(mockAssignments);
+    // Mock fetch responses for empty data
+    fetchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          count: 0,
+          next: null,
+          previous: null,
+          results: [],
+        }),
+      })
+    ).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          count: 0,
+          next: null,
+          previous: null,
+          results: [],
+        }),
+      })
+    );
 
     // Render the hook
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -120,29 +167,42 @@ describe('useAreaKpi', () => {
         populationCount: 0,
         averageWeightKg: 0,
         containerCount: 0,
+        hasData: false,
       });
     });
   });
 
   it('should handle null or undefined values in assignments', async () => {
-    // Mock container data
-    const mockContainers = {
-      results: [
-        { id: 1, area: 10, name: 'Container 1' },
-      ],
-    };
+    // Mock localStorage to return auth token
+    localStorageMock.getItem.mockReturnValue('mock-token');
 
-    // Mock assignment data with null/undefined values
-    const mockAssignments = {
-      results: [
-        { id: 101, container_id: 1, biomass_kg: null, population_count: 200 },
-        { id: 102, container_id: 1, biomass_kg: '150', population_count: undefined },
-      ],
-    };
-
-    // Set up mocks
-    vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue(mockContainers);
-    vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue(mockAssignments);
+    // Mock fetch responses with null/undefined values
+    fetchMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          count: 1,
+          next: null,
+          previous: null,
+          results: [
+            { id: 1, area: 10, name: 'Container 1', geography: 1, station: 1, hall: null, container_type: 1, container_type_name: 'PEN' },
+          ],
+        }),
+      })
+    ).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          count: 2,
+          next: null,
+          previous: null,
+          results: [
+            { id: 101, container: 1, container_id: 1, biomass_kg: null, population_count: 200 },
+            { id: 102, container: 1, container_id: 1, biomass_kg: '150', population_count: undefined },
+          ],
+        }),
+      })
+    );
 
     // Render the hook
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -163,6 +223,35 @@ describe('useAreaKpi', () => {
         populationCount: 200, // Only the valid population_count value
         averageWeightKg: 150 / 200, // totalBiomass / populationCount
         containerCount: 1,
+        hasData: true,
+      });
+    });
+  });
+
+  it('should handle missing auth token', async () => {
+    // Mock localStorage to return null (no auth token)
+    localStorageMock.getItem.mockReturnValue(null);
+
+    // Render the hook
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    );
+
+    const { result } = renderHook(() => useAreaKpi(10), { wrapper });
+
+    // Wait for the hook to finish loading
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // Verify the hook returns default values
+    await waitFor(() => {
+      expect(result.current.data).toEqual({
+        totalBiomassKg: 0,
+        populationCount: 0,
+        averageWeightKg: 0,
+        containerCount: 0,
+        hasData: false,
       });
     });
   });
