@@ -1,6 +1,7 @@
 // API Configuration for Django Backend Integration
 // This file maintains backward compatibility while transitioning to the new config structure
-import { authConfig, apiConfig } from '../config/auth.config';
+import { authConfig } from '../config/auth.config';
+import { apiConfig } from '../config/api.config';
 
 export const API_CONFIG = {
   // Backend configuration - now uses centralized config
