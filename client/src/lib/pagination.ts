@@ -33,14 +33,14 @@ export async function fetchAllPages<T>(
       const response = await fetchPageFn(currentPage);
 
       // Update total pages estimate
-      if (currentPage === 1 && response.count > 0) {
+      if (currentPage === 1 && response.count > 0 && response.results?.length) {
         // Estimate total pages based on first page results
         const pageSize = response.results.length;
         totalPages = Math.ceil(response.count / pageSize);
         console.log(`📊 Estimated ${totalPages} pages total (${response.count} items)`);
       }
 
-      allResults.push(...response.results);
+      allResults.push(...(response.results || []));
       hasNextPage = response.next !== null;
 
       // Call progress callback if provided
@@ -77,7 +77,8 @@ export function extractPageFromUrl(url: string | null): number | null {
   try {
     const urlObj = new URL(url);
     const page = urlObj.searchParams.get('page');
-    return page ? parseInt(page, 10) : null;
+    const pageNum = page ? parseInt(page, 10) : null;
+    return (pageNum !== null && !isNaN(pageNum)) ? pageNum : null;
   } catch {
     return null;
   }
@@ -109,11 +110,13 @@ export async function fetchAllPagesWithProgress<T>(
         totalItems = response.count;
       }
 
-      allResults.push(...response.results);
+      allResults.push(...(response.results || []));
       hasNextPage = response.next !== null;
 
       // Call progress callback
-      onProgress(currentPage, Math.ceil(totalItems / response.results.length), allResults.length, totalItems);
+      const pageSize = response.results?.length || 0;
+      const totalPages = pageSize > 0 ? Math.ceil(totalItems / pageSize) : 0;
+      onProgress(currentPage, totalPages, allResults.length, totalItems);
 
       currentPage++;
     }
