@@ -38,71 +38,65 @@ VITE_DJANGO_API_URL=http://localhost:8000
 npm run dev
 ```
 
-##### Authentication Setup (Critical)
+##### Authentication Setup (Standardized)
 
-The frontend requires JWT tokens for authentication, but the Django backend may only have DRF tokens configured. Here's how to set up proper authentication:
+The frontend uses a centralized authentication system with JWT tokens. The authentication flow is handled by `AuthService` and requires proper backend configuration.
 
-**Option A: Use JWT Tokens (Recommended)**
+**Current Authentication Architecture:**
+- ✅ **JWT-based authentication** with access/refresh tokens
+- ✅ **Centralized AuthService** (`/src/services/auth.service.ts`)
+- ✅ **Event-driven auth state** management
+- ✅ **Automatic token refresh** on 401 responses
+- ✅ **Environment-based configuration** (`.env` files)
+
+**Backend Requirements:**
 ```bash
-# Get JWT tokens from Django backend
-curl -s "http://localhost:8000/api/auth/jwt/" \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
-```
+# Django backend must support JWT authentication
+pip install djangorestframework-simplejwt
 
-**Option B: Create Test User with JWT Support**
-```bash
-# In Django shell, create user with JWT tokens
-python manage.py shell --settings=aquamind.settings
-```
-```python
-from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
-from rest_framework.authtoken.models import Token
+# Settings configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
 
-# Create admin user
-User = get_user_model()
-user, created = User.objects.get_or_create(
-    username='admin',
-    defaults={
-        'email': 'admin@example.com',
-        'is_active': True,
-        'password': make_password('admin123'),
-        'is_staff': True,
-        'is_superuser': True
-    }
+# URL patterns
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
 )
 
-# Create DRF token (fallback)
-token, _ = Token.objects.get_or_create(user=user)
-print(f'DRF Token: {token.key}')
-
-# Use JWT endpoint for JWT tokens
-# curl -s "http://localhost:8000/api/auth/jwt/" -X POST -H "Content-Type: application/json" -d '{"username":"admin","password":"admin123"}'
+urlpatterns = [
+    path('api/v1/users/auth/token/', TokenObtainPairView.as_view()),
+    path('api/v1/users/auth/token/refresh/', TokenRefreshView.as_view()),
+]
 ```
 
-**Common Authentication Issues:**
-
-❌ **Problem**: "Invalid token" or 401 errors
-✅ **Solution**: Ensure you're using JWT tokens, not DRF tokens. The frontend AuthContext expects JWT format.
-
-❌ **Problem**: Frontend shows loading spinner indefinitely
-✅ **Solution**: Check browser console for authentication errors. Verify JWT tokens are properly stored in localStorage.
-
-❌ **Problem**: API calls work in curl but fail in frontend
-✅ **Solution**: The frontend proxy may be adding headers. Check network tab for actual request headers.
+**Frontend Environment Setup:**
+```bash
+# .env.local or .env.development
+VITE_DJANGO_API_URL=http://localhost:8000
+```
 
 **Testing Authentication:**
-```bash
-# Test API directly
-curl -s "http://localhost:8000/api/v1/batch/batches/" \
-  -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN"
+```typescript
+import { AuthService } from '@/services/auth.service';
 
-# Test frontend proxy
-curl -s "http://localhost:5001/api/v1/batch/batches/" \
-  -H "Authorization: Bearer YOUR_JWT_ACCESS_TOKEN"
+// Test login programmatically
+try {
+  const tokens = await AuthService.login('admin', 'admin123');
+  console.log('Login successful:', tokens);
+} catch (error) {
+  console.error('Login failed:', error);
+}
 ```
+
+**Troubleshooting:**
+- Check that `VITE_DJANGO_API_URL` is set correctly
+- Verify JWT endpoints are configured in Django
+- Ensure CORS is properly configured for the frontend origin
+- Check browser console for authentication errors
 
 ##### Large Dataset & Pagination Handling
 

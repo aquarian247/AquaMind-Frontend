@@ -128,7 +128,8 @@ render(<QueryClientProvider client={qc}>...</QueryClientProvider>);
 * **Current: 38.93% overall** with focus on business logic.
 * **Realistic Target: 50-60%** - Focus on high-value areas.
 * **Priority Areas** (currently low coverage but high business value):
-  – **AuthContext** (30%) - Token management & authentication
+  – **AuthService** (30%) - Centralized authentication & token management
+  – **AuthContext** (20%) - React state management for auth
   – **Infrastructure pages** (0%) - Data aggregation & filtering
   – **API utilities** (13%) - Data processing & fallbacks
   – **Pagination utility** (0%) - Large dataset handling
