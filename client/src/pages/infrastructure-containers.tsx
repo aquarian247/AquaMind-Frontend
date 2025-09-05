@@ -41,6 +41,11 @@ interface ContainerOverview {
   utilizationPercent: number;
 }
 
+// Utility function for formatting large numbers with comma separators
+const formatNumber = (num: number): string => {
+  return new Intl.NumberFormat('en-US').format(num);
+};
+
 export default function InfrastructureContainers() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -333,7 +338,7 @@ export default function InfrastructureContainers() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {Math.round(filteredContainers.reduce((sum, c) => sum + c.biomass, 0))} kg
+              {formatNumber(Math.round(filteredContainers.reduce((sum, c) => sum + c.biomass, 0)))} kg
             </div>
             <p className="text-xs text-muted-foreground">Current stock</p>
           </CardContent>
@@ -410,11 +415,11 @@ export default function InfrastructureContainers() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Biomass</span>
-                  <div className="font-semibold text-lg">{container.biomass} kg</div>
+                  <div className="font-semibold text-lg">{formatNumber(Math.round(container.biomass))} kg</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Fish Count</span>
-                  <div className="font-semibold text-lg">{container.fishCount.toLocaleString()}</div>
+                  <div className="font-semibold text-lg">{formatNumber(container.fishCount)}</div>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Thermometer className="h-3 w-3 text-blue-500" />

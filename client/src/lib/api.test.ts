@@ -152,4 +152,330 @@ describe('API Wrapper', () => {
       await expect(api.getWaterQualityChart()).rejects.toBeDefined();
     });
   });
+
+  describe('getInfrastructureOverview', () => {
+    it('returns overview data when API calls succeed', async () => {
+      // Mock fetch for the authenticated API call
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            total_containers: 100,
+            capacity_kg: 50000,
+            active_biomass_kg: 25000,
+            sensor_alerts: 2,
+            feeding_events_today: 25
+          })
+        })
+      );
+
+      // Mock localStorage
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: vi.fn(() => 'mock-token'),
+          setItem: vi.fn(),
+          removeItem: vi.fn(),
+        }
+      });
+
+      const result = await api.infrastructure.getOverview();
+
+      expect(result).toEqual({
+        totalContainers: 100,
+        capacity: 50000,
+        activeBiomass: 25000,
+        sensorAlerts: 2,
+        feedingEventsToday: 25,
+      });
+    });
+
+    it('returns fallback data when API calls fail', async () => {
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: false,
+          status: 401,
+          json: () => Promise.resolve({ detail: 'Unauthorized' })
+        })
+      );
+
+      Object.defineProperty(window, 'localStorage', {
+        value: {
+          getItem: vi.fn(() => 'mock-token'),
+          setItem: vi.fn(),
+          removeItem: vi.fn(),
+        }
+      });
+
+      const result = await api.infrastructure.getOverview();
+
+      expect(result).toEqual({
+        totalContainers: 70,
+        activeBiomass: 3500,
+        capacity: 21805000,
+        sensorAlerts: 0,
+        feedingEventsToday: 40,
+        _needsAuth: true,
+      });
+    });
+
+    it('handles network errors gracefully', async () => {
+      global.fetch = vi.fn(() =>
+        Promise.reject(new Error('Network error'))
+      );
+
+      const result = await api.infrastructure.getOverview();
+
+      expect(result).toEqual({
+        totalContainers: 70,
+        activeBiomass: 3500,
+        capacity: 21805000,
+        sensorAlerts: 0,
+        feedingEventsToday: 40,
+      });
+    });
+  });
+
+  describe('getContainersOverview', () => {
+    it('returns filtered container data with biomass calculations', async () => {
+      // Mock all required API calls
+      vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue({
+        results: [
+          {
+            id: 1,
+            name: 'Container 1',
+            area: 1,
+            hall: null,
+            container_type_name: 'PEN',
+            active: true,
+            volume_m3: 100,
+            area_name: 'Test Area'
+          }
+        ]
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue({
+        results: [
+          {
+            id: 1,
+            container: { id: 1 },
+            biomass_kg: '500'
+          }
+        ]
+      } as any);
+
+      const result = await api.infrastructure.getContainersOverview();
+
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0]).toHaveProperty('id', 1);
+      expect(result.results[0]).toHaveProperty('fishCount', 500);
+      expect(result.results[0]).toHaveProperty('type', 'PEN');
+      expect(result.results[0]).toHaveProperty('stage', 'Sea');
+    });
+
+    it('handles empty results gracefully', async () => {
+      vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue({
+        results: []
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue({
+        results: []
+      } as any);
+
+      const result = await api.infrastructure.getContainersOverview();
+
+      expect(result.results).toHaveLength(0);
+    });
+
+    it('applies geography filtering correctly', async () => {
+      vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue({
+        results: [
+          {
+            id: 1,
+            name: 'Scottish Container',
+            area: 1,
+            hall: null,
+            active: true,
+            volume_m3: 100,
+            area_name: 'Scotland Area'
+          },
+          {
+            id: 2,
+            name: 'Norwegian Container',
+            area: 2,
+            hall: null,
+            active: true,
+            volume_m3: 100,
+            area_name: 'Norwegian Area'
+          }
+        ]
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue({
+        results: []
+      } as any);
+
+      const result = await api.infrastructure.getContainersOverview({ geography: 'scotland' });
+
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].name).toBe('Scottish Container');
+    });
+
+    it('applies status filtering correctly', async () => {
+      vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue({
+        results: [
+          {
+            id: 1,
+            name: 'Active Container',
+            area: 1,
+            hall: null,
+            active: true,
+            volume_m3: 100,
+            area_name: 'Test Area'
+          },
+          {
+            id: 2,
+            name: 'Inactive Container',
+            area: 1,
+            hall: null,
+            active: false,
+            volume_m3: 100,
+            area_name: 'Test Area'
+          }
+        ]
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue({
+        results: []
+      } as any);
+
+      const result = await api.infrastructure.getContainersOverview({ status: 'active' });
+
+      expect(result.results).toHaveLength(1);
+      expect(result.results[0].name).toBe('Active Container');
+    });
+  });
+
+  describe('getContainerFilterOptions', () => {
+    it('returns filter options from API data', async () => {
+      // Mock all required API calls
+      vi.spyOn(ApiService, 'apiV1InfrastructureGeographiesList').mockResolvedValue({
+        results: [
+          { id: 1, name: 'Scotland' },
+          { id: 2, name: 'Norway' }
+        ]
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1InfrastructureFreshwaterStationsList').mockResolvedValue({
+        results: [
+          { id: 1, name: 'Station 1' }
+        ]
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1InfrastructureAreasList').mockResolvedValue({
+        results: [
+          { id: 1, name: 'Area 1' }
+        ]
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue({
+        results: [
+          { id: 1, name: 'Container 1', container_type_name: 'PEN', active: true }
+        ]
+      } as any);
+
+      const result = await api.infrastructure.getContainerFilterOptions();
+
+      expect(result.geographies).toContain('Scotland');
+      expect(result.geographies).toContain('Norway');
+      expect(result.stations).toContain('Freshwater Stations (Station 1)');
+      expect(result.stations).toContain('Sea Areas (Area 1)');
+      expect(result.statuses).toContain('inactive');
+      expect(result.containerTypes).toContain('PEN');
+    });
+
+    it('handles API failures with fallback values', async () => {
+      // Mock API failures
+      vi.spyOn(ApiService, 'apiV1InfrastructureGeographiesList').mockRejectedValue(new Error('API Error'));
+
+      const result = await api.infrastructure.getContainerFilterOptions();
+
+      expect(result.geographies).toEqual(['Faroe Islands']);
+      expect(result.stations).toEqual(['Freshwater Stations', 'Sea Areas']);
+      expect(result.areas || []).toEqual([]);
+    });
+  });
+
+  describe('Data Processing and Error Handling', () => {
+    it('handles null/undefined values in biomass calculation', async () => {
+      vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue({
+        results: [
+          {
+            id: 1,
+            name: 'Container 1',
+            area: 1,
+            hall: null,
+            active: true,
+            volume_m3: 100
+          }
+        ]
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue({
+        results: [
+          {
+            id: 1,
+            container: { id: 1 },
+            biomass_kg: null // Null value
+          },
+          {
+            id: 2,
+            container: { id: 1 },
+            biomass_kg: undefined // Undefined value
+          },
+          {
+            id: 3,
+            container: { id: 1 },
+            biomass_kg: '200' // Valid value
+          }
+        ]
+      } as any);
+
+      const result = await api.infrastructure.getContainersOverview();
+
+      expect(result.results[0].fishCount).toBe(200); // Only valid assignment counted
+    });
+
+    it('handles malformed API responses gracefully', async () => {
+      vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue({
+        results: null // Malformed response
+      } as any);
+
+      const result = await api.infrastructure.getContainersOverview();
+
+      expect(result.results).toHaveLength(0);
+    });
+
+    it('handles pagination in API calls', async () => {
+      // Mock paginated response
+      vi.spyOn(ApiService, 'apiV1InfrastructureContainersList').mockResolvedValue({
+        results: Array.from({ length: 100 }, (_, i) => ({
+          id: i + 1,
+          name: `Container ${i + 1}`,
+          area: 1,
+          hall: null,
+          active: true,
+          volume_m3: 100
+        })),
+        next: 'page=2'
+      } as any);
+
+      vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList').mockResolvedValue({
+        results: []
+      } as any);
+
+      const result = await api.infrastructure.getContainersOverview();
+
+      expect(result.results.length).toBeGreaterThan(50);
+    });
+  });
 });

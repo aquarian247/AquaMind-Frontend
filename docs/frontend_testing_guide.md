@@ -33,23 +33,46 @@ UI logic (pagination, field names, etc.) stays truthful.
 
 * Adds **jest-dom** matchers.
 * Mocks **Chart.js** so `canvas.getContext` never runs.
-* MSW server is started by default; useful for integration tests.
+* **MSW is disabled** by default to allow simple fetch mocks.
 * Polyfills a safe `AbortController`.
-* Logs any unhandled request when `onUnhandledRequest: 'error'`.
+* Stubs `matchMedia` and `ResizeObserver` for testing.
 
 ---
 
 ## Patterns for Mocking API Calls
 
-### 1. Unit tests for `src/lib/api.ts`
-Mock the underlying **generated client**:
+### 1. Simple Fetch Mocks (Recommended)
+Use Vitest's built-in mocking for reliable, simple API mocking:
+
+```ts
+// In test setup
+const fetchMock = vi.fn();
+global.fetch = fetchMock;
+
+// In test cases
+fetchMock.mockImplementationOnce(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({
+      count: 2,
+      next: null,
+      previous: null,
+      results: [
+        { id: 1, name: 'Test Item 1' },
+        { id: 2, name: 'Test Item 2' }
+      ]
+    })
+  })
+);
+```
+
+### 2. Alternative: Mock the generated API client
+For cases where you want to mock at the service layer:
 
 ```ts
 import { ApiService } from '@/api/generated';
 vi.spyOn(ApiService, 'apiV1BatchBatchesList').mockResolvedValue({ results: [] });
 ```
-
-Avoid network calls; keep tests fast and deterministic.
 
 🚩 **Paginated responses**  
 Most Django list endpoints return:
@@ -62,7 +85,7 @@ Most Django list endpoints return:
   "results": [ /* array of objects */ ]
 }
 ```
-Mock the full envelope so components that read `.results` (or check `.count`)
+Always mock the full envelope so components that read `.results` (or check `.count`)
 work exactly as in production.
 
 ---
@@ -89,12 +112,12 @@ render(<QueryClientProvider client={qc}>...</QueryClientProvider>);
 
 ---
 
-## Mock Service Worker (optional)
+## Mock Service Worker (Deprecated)
 
-* Handlers live in `client/src/test/msw`.
-* Prefer **path-based** rules (`path:/api/v1/*`) so host doesn’t matter.
-* Keep `server.events.on('request:start')` logs while debugging.
-* Switch `onUnhandledRequest` to `'warn'` or `'bypass'` when noise is high.
+* **MSW is currently disabled** in `setupTests.ts` due to reliability issues.
+* Handlers exist in `client/src/test/msw` but are not used.
+* **Use simple fetch mocks instead** for new tests.
+* If MSW is re-enabled, prefer path-based rules (`path:/api/v1/*`).
 
 ---
 
@@ -102,10 +125,18 @@ render(<QueryClientProvider client={qc}>...</QueryClientProvider>);
 
 * Config in `vite.config.ts`.
 * Excludes generated API client & `src/pages/**`.
-* Global thresholds are minimal (10 %) while suite grows.
-* **Expectations**:  
-  – Dashboard slice ≥ 30 % lines.  
-  – New testable files ≥ 80 %.
+* **Current: 38.93% overall** with focus on business logic.
+* **Realistic Target: 50-60%** - Focus on high-value areas.
+* **Priority Areas** (currently low coverage but high business value):
+  – **AuthContext** (30%) - Token management & authentication
+  – **Infrastructure pages** (0%) - Data aggregation & filtering
+  – **API utilities** (13%) - Data processing & fallbacks
+  – **Pagination utility** (0%) - Large dataset handling
+  – **Container filtering** (business rules for categorization)
+
+* **Coverage Strategy**: Quality over quantity - test business logic that matters.
+* **What to Test**: Authentication, data processing, business rules, error handling.
+* **What NOT to Test**: Simple UI components, basic rendering, CSS classes, static content.
 
 Check HTML/LCOV output in `coverage/`.
 
@@ -120,31 +151,34 @@ Scope (Batch Management views)
 - 1–2 key data points per view
 
 Mocking
-- Prefer `vi.spyOn(globalThis, 'fetch')` for unit-level read-only components.
+- **Use simple fetch mocks** (`global.fetch = vi.fn()`) for reliable testing.
 - Return minimal JSON shapes matching what the component reads.
 
 Example
 ```ts
-// Success
-vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-  // Django REST list endpoint example
-  new Response(
-    JSON.stringify({
+// Setup fetch mock
+const fetchMock = vi.fn();
+global.fetch = fetchMock;
+
+// Success case
+fetchMock.mockImplementationOnce(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({
       count: 0,
       next: null,
       previous: null,
       results: [],
-    }),
-    {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-    }
-  )
+    })
+  })
 );
 
-// Error
-vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-  new Response('Server Error', { status: 500 })
+// Error case
+fetchMock.mockImplementationOnce(() =>
+  Promise.resolve({
+    ok: false,
+    status: 500
+  })
 );
 ```
 
@@ -165,7 +199,7 @@ Assertions
 
 Environment
 - `matchMedia`, `ResizeObserver`, and Canvas are stubbed in `setupTests.ts`.
-- MSW is available for integration tests; unit tests typically mock `fetch` directly.
+- **Simple fetch mocks** are the standard approach; MSW is disabled.
 
 ---
 
@@ -175,7 +209,8 @@ Environment
 |---------|-----------|
 | `AbortController: signal not instance` | Use shim already in `setupTests.ts`. |
 | `getContext not implemented` | Ensure Chart.js is mocked (it is by default). |
-| Requests hit `localhost:3000` not mocked | Use path-based MSW handlers or mock the api module directly. |
-| Unhandled request error | Add a handler or spy, or lower `onUnhandledRequest` severity. |
+| Fetch calls not mocked | Use `global.fetch = vi.fn()` and `fetchMock.mockImplementationOnce()`. |
+| MSW errors (deprecated) | MSW is disabled; use simple fetch mocks instead. |
+| Test timeout | Ensure fetch mocks resolve quickly; use `Promise.resolve()` not `setTimeout()`. |
 
 Happy testing!

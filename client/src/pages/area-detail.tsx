@@ -90,8 +90,8 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
         type: (raw as any).area_type_name ?? (raw as any).type ?? "Sea",
         rings: 0,
         coordinates: {
-          lat: (raw as any).latitude ?? 0,
-          lng: (raw as any).longitude ?? 0,
+          lat: parseFloat((raw as any).latitude) || 0,
+          lng: parseFloat((raw as any).longitude) || 0,
         },
         status: (raw as any).active ? "active" : "inactive",
         waterDepth: 0,
@@ -112,7 +112,118 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
 
   const { data: ringsData, isLoading: isLoadingRings } = useQuery({
     queryKey: ["area", params.id, "rings"],
-    queryFn: () => api.infrastructure.getAreaRings(Number(params.id)),
+    queryFn: async () => {
+      try {
+        // Get auth token for authenticated requests
+        const token = localStorage.getItem("auth_token");
+
+        if (!token) {
+          console.warn("No auth token found for area rings data");
+          return { results: [] };
+        }
+
+        // Fetch containers for this area (rings are containers)
+        const containersResponse = await fetch(
+          `http://localhost:8000/api/v1/infrastructure/containers/?area=${params.id}&page_size=100`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!containersResponse.ok) {
+          if (containersResponse.status === 401) {
+            console.warn("Auth token expired for containers data");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+          }
+          throw new Error(`API call failed: ${containersResponse.status}`);
+        }
+
+        const containersData = await containersResponse.json();
+        const containers = containersData.results || [];
+        const containerIds = containers.map((c: any) => c.id);
+
+        // Fetch batch assignments for biomass calculations
+        const assignmentsResponse = await fetch(
+          `http://localhost:8000/api/v1/batch/container-assignments/?page_size=500`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!assignmentsResponse.ok) {
+          if (assignmentsResponse.status === 401) {
+            console.warn("Auth token expired for assignments data");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+          }
+          throw new Error(`API call failed: ${assignmentsResponse.status}`);
+        }
+
+        const assignmentsData = await assignmentsResponse.json();
+        const assignments = assignmentsData.results || [];
+
+        // Create biomass map per container
+        const biomassMap = new Map();
+        const populationMap = new Map();
+
+        assignments.forEach((assignment: any) => {
+          const containerId = assignment.container?.id || assignment.container_id;
+          if (containerId && containerIds.includes(containerId)) {
+            const currentBiomass = biomassMap.get(containerId) || 0;
+            const currentPopulation = populationMap.get(containerId) || 0;
+
+            biomassMap.set(containerId, currentBiomass + parseFloat(assignment.biomass_kg || '0'));
+            populationMap.set(containerId, currentPopulation + parseInt(assignment.population_count || '0'));
+          }
+        });
+
+        // Transform containers to ring format with calculated biomass
+        const rings = containers.map((container: any) => {
+          const containerBiomass = biomassMap.get(container.id) || 0;
+          const containerPopulation = populationMap.get(container.id) || 0;
+          const averageWeight = containerPopulation > 0 ? containerBiomass / containerPopulation : 0;
+
+          return {
+            id: container.id,
+            name: container.name || `Ring ${container.id}`,
+            areaId: container.area,
+            areaName: container.area_name || 'Unknown Area',
+            status: container.active ? 'active' : 'inactive',
+            biomass: containerBiomass / 1000, // Convert kg to tons
+            capacity: 50, // Default capacity in tons
+            fishCount: containerPopulation,
+            averageWeight: averageWeight, // kg per fish
+            waterDepth: container.water_depth || 20,
+            netCondition: 'good', // Default
+            lastInspection: container.updated_at || new Date().toISOString(),
+            coordinates: {
+              lat: parseFloat(container.latitude) || 0,
+              lng: parseFloat(container.longitude) || 0,
+            },
+            environmentalStatus: 'optimal', // Default
+          };
+        });
+
+        const totalBiomass = rings.reduce((sum: number, ring: Ring) => sum + ring.biomass, 0);
+        console.log(`Calculated ring biomass for area ${params.id}:`, {
+          rings: rings.map((r: Ring) => ({ id: r.id, biomass: r.biomass, fishCount: r.fishCount })),
+          totalBiomass: totalBiomass,
+          expectedTotal: 3.5 // 20 rings × 0.175 tons each
+        });
+
+        return { results: rings };
+      } catch (error) {
+        console.warn("Failed to fetch area rings data:", error);
+        return { results: [] };
+      }
+    },
   });
 
   const rings: Ring[] = ringsData?.results || [];
@@ -120,6 +231,191 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
   // Aggregated KPI data for this area
   const areaId = Number(params.id);
   const { data: kpi } = useAreaKpi(areaId);
+
+  // Environmental data for this area
+  const { data: environmentalData } = useQuery({
+    queryKey: ["area", params.id, "environmental"],
+    queryFn: async () => {
+      try {
+        // Get auth token for authenticated requests
+        const token = localStorage.getItem("auth_token");
+
+        if (!token) {
+          console.warn("No auth token found for environmental data");
+          return {
+            waterTemperature: null,
+            oxygenLevel: null,
+            salinity: null,
+            currentSpeed: null,
+            hasData: false
+          };
+        }
+
+        // Try to fetch environmental data (this might not exist in the API)
+        // For now, return null values with hasData: false
+        console.log("Environmental data fetching not implemented yet - API endpoint needed");
+
+        return {
+          waterTemperature: null,
+          oxygenLevel: null,
+          salinity: null,
+          currentSpeed: null,
+          hasData: false
+        };
+      } catch (error) {
+        console.warn("Failed to fetch environmental data:", error);
+        return {
+          waterTemperature: null,
+          oxygenLevel: null,
+          salinity: null,
+          currentSpeed: null,
+          hasData: false
+        };
+      }
+    },
+  });
+
+  // FCR data for this area - simplified approach using feeding events
+  const { data: fcrData } = useQuery({
+    queryKey: ["area", params.id, "fcr-simple"],
+    queryFn: async () => {
+      try {
+        // Get auth token for authenticated requests
+        const token = localStorage.getItem("auth_token");
+
+        if (!token) {
+          console.warn("No auth token found for FCR data");
+          return {
+            fcr: null,
+            hasData: false
+          };
+        }
+
+        // First, get containers for this area
+        const containersResponse = await fetch(
+          `http://localhost:8000/api/v1/infrastructure/containers/?area=${params.id}&page_size=100`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!containersResponse.ok) {
+          if (containersResponse.status === 401) {
+            console.warn("Auth token expired for containers data");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+          }
+          throw new Error(`Containers API call failed: ${containersResponse.status}`);
+        }
+
+        const containersData = await containersResponse.json();
+        const containers = containersData.results || [];
+        const containerIds = containers.map((c: any) => c.id);
+
+        if (containers.length === 0) {
+          return {
+            fcr: null,
+            hasData: false
+          };
+        }
+
+        // Get feeding events for these containers (last 30 days)
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const feedingResponse = await fetch(
+          `http://localhost:8000/api/v1/inventory/feeding-events/?container_id__in=${containerIds.join(',')}&feeding_date__gte=${thirtyDaysAgo.toISOString().split('T')[0]}&page_size=500`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!feedingResponse.ok) {
+          if (feedingResponse.status === 401) {
+            console.warn("Auth token expired for feeding data");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+          }
+          console.warn("Feeding events API not available, returning no data");
+          return {
+            fcr: null,
+            hasData: false
+          };
+        }
+
+        const feedingData = await feedingResponse.json();
+        const feedingEvents = feedingData.results || [];
+
+        // Get batch assignments to calculate biomass
+        const assignmentsResponse = await fetch(
+          `http://localhost:8000/api/v1/batch/container-assignments/?page_size=500`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!assignmentsResponse.ok) {
+          console.warn("Assignments API failed, using feeding data only");
+          // If we have feeding data but no assignments, we can't calculate FCR
+          return {
+            fcr: null,
+            hasData: false
+          };
+        }
+
+        const assignmentsData = await assignmentsResponse.json();
+        const assignments = assignmentsData.results || [];
+
+        // Create biomass map from assignments
+        const biomassMap = new Map();
+        assignments.forEach((assignment: any) => {
+          const containerId = assignment.container?.id || assignment.container_id;
+          if (containerId && containerIds.includes(containerId)) {
+            const current = biomassMap.get(containerId) || 0;
+            biomassMap.set(containerId, current + parseFloat(assignment.biomass_kg || '0'));
+          }
+        });
+
+        // Calculate total feed and biomass
+        const totalFeedKg = feedingEvents.reduce((sum: number, event: any) =>
+          sum + parseFloat(event.amount_kg || '0'), 0
+        );
+
+        const totalBiomassKg = Array.from(biomassMap.values()).reduce((sum, biomass) => sum + biomass, 0);
+
+        // Calculate FCR
+        const fcr = totalBiomassKg > 0 ? totalFeedKg / totalBiomassKg : null;
+
+        console.log(`Calculated FCR for area ${params.id}:`, {
+          totalFeedKg,
+          totalBiomassKg,
+          fcr,
+          feedingEvents: feedingEvents.length,
+          containers: containers.length
+        });
+
+        return {
+          fcr: fcr,
+          hasData: fcr !== null && fcr > 0
+        };
+      } catch (error) {
+        console.warn("Failed to fetch FCR data:", error);
+        return {
+          fcr: null,
+          hasData: false
+        };
+      }
+    },
+  });
 
   if (isLoading) {
     return (
@@ -226,11 +522,13 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {((kpi?.totalBiomassKg ?? 0) / 1000).toLocaleString()}
+              {kpi?.hasData ? ((kpi.totalBiomassKg / 1000).toFixed(1)) : 'N/A'}
             </div>
-            <p className="text-xs text-muted-foreground">tonnes</p>
+            <p className="text-xs text-muted-foreground">
+              {kpi?.hasData ? 'tonnes' : 'No data available'}
+            </p>
             <div className="mt-2">
-              <Progress value={(((kpi?.totalBiomassKg ?? 0) / 1000) / (area.capacity || 1)) * 100} />
+              <Progress value={kpi?.hasData ? (((kpi.totalBiomassKg / 1000) / (area.capacity || 1)) * 100) : 0} />
             </div>
           </CardContent>
         </Card>
@@ -242,11 +540,13 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {(kpi?.averageWeightKg ?? 0).toFixed(2)}
+              {kpi?.hasData ? (kpi.averageWeightKg).toFixed(2) : 'N/A'}
             </div>
-            <p className="text-xs text-muted-foreground">kg per fish</p>
+            <p className="text-xs text-muted-foreground">
+              {kpi?.hasData ? 'kg per fish' : 'No data available'}
+            </p>
             <div className="mt-2">
-              <Progress value={((kpi?.averageWeightKg ?? 0) / 6) * 100} />
+              <Progress value={kpi?.hasData ? ((kpi.averageWeightKg / 6) * 100) : 0} />
             </div>
           </CardContent>
         </Card>
@@ -257,10 +557,10 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             <TrendingUp className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{area.mortalityRate}%</div>
-            <p className="text-xs text-muted-foreground">monthly</p>
+            <div className="text-2xl font-bold text-red-600">N/A</div>
+            <p className="text-xs text-muted-foreground">No data available</p>
             <div className="mt-2">
-              <Progress value={area.mortalityRate * 10} />
+              <Progress value={0} />
             </div>
           </CardContent>
         </Card>
@@ -271,10 +571,14 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             <Activity className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{area.feedConversion}</div>
-            <p className="text-xs text-muted-foreground">FCR ratio</p>
+            <div className="text-2xl font-bold text-purple-600">
+              {fcrData?.hasData ? fcrData.fcr?.toFixed(2) : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {fcrData?.hasData ? 'FCR ratio' : 'No data available'}
+            </p>
             <div className="mt-2">
-              <Progress value={(area.feedConversion / 2) * 100} />
+              <Progress value={fcrData?.hasData ? Math.max(0, Math.min(100, 100 - ((fcrData.fcr || 0) - 1) * 25)) : 0} />
             </div>
           </CardContent>
         </Card>
@@ -316,8 +620,12 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                 <Thermometer className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{area.waterTemperature}°C</div>
-                <p className="text-xs text-muted-foreground">Optimal range: 8-16°C</p>
+                <div className="text-2xl font-bold">
+                  {environmentalData?.hasData ? `${environmentalData.waterTemperature}°C` : 'N/A'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {environmentalData?.hasData ? 'Optimal range: 8-16°C' : 'No environmental data available'}
+                </p>
               </CardContent>
             </Card>
 
@@ -327,8 +635,12 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                 <Droplets className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{area.oxygenLevel}</div>
-                <p className="text-xs text-muted-foreground">mg/L</p>
+                <div className="text-2xl font-bold">
+                  {environmentalData?.hasData ? environmentalData.oxygenLevel : 'N/A'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {environmentalData?.hasData ? 'mg/L' : 'No environmental data available'}
+                </p>
               </CardContent>
             </Card>
 
@@ -338,8 +650,12 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                 <Waves className="h-4 w-4 text-cyan-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{area.salinity}</div>
-                <p className="text-xs text-muted-foreground">ppt</p>
+                <div className="text-2xl font-bold">
+                  {environmentalData?.hasData ? environmentalData.salinity : 'N/A'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {environmentalData?.hasData ? 'ppt' : 'No environmental data available'}
+                </p>
               </CardContent>
             </Card>
 
@@ -349,10 +665,14 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                 <Wind className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{area.currentSpeed}</div>
-                <p className="text-xs text-muted-foreground">m/s</p>
+                <div className="text-2xl font-bold">
+                  {environmentalData?.hasData ? environmentalData.currentSpeed : 'N/A'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {environmentalData?.hasData ? 'm/s' : 'No environmental data available'}
+                </p>
                 <div className="mt-2">
-                  <Progress value={(area.currentSpeed / 1) * 100} />
+                  <Progress value={environmentalData?.hasData && environmentalData.currentSpeed ? (environmentalData.currentSpeed / 1) * 100 : 0} />
                 </div>
               </CardContent>
             </Card>
@@ -374,7 +694,9 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Coordinates:</span>
-                    <div className="font-medium">{area.coordinates.lat.toFixed(4)}, {area.coordinates.lng.toFixed(4)}</div>
+                    <div className="font-medium">
+                      {typeof area.coordinates.lat === 'number' && !isNaN(area.coordinates.lat) ? area.coordinates.lat.toFixed(4) : 'N/A'}, {typeof area.coordinates.lng === 'number' && !isNaN(area.coordinates.lng) ? area.coordinates.lng.toFixed(4) : 'N/A'}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Last Reading:</span>
@@ -413,22 +735,24 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                     <div>
                       <span className="text-muted-foreground">Current Stock:</span>
                       <div className="font-medium">
-                        {(kpi?.populationCount ?? 0).toLocaleString()} fish
+                        {kpi?.hasData ? (kpi.populationCount).toLocaleString() + ' fish' : 'No data available'}
                       </div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Capacity:</span>
-                      <div className="font-medium">{area.capacity.toLocaleString()} tonnes</div>
+                      <div className="font-medium">
+                        {area.capacity ? area.capacity.toLocaleString() + ' tonnes' : 'No data available'}
+                      </div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Utilization:</span>
                       <div className="font-medium">
-                        {Math.round((((kpi?.totalBiomassKg ?? 0) / 1000) / (area.capacity || 1)) * 100)}%
+                        {kpi?.hasData && area.capacity ? Math.round(((kpi.totalBiomassKg / 1000) / area.capacity) * 100) + '%' : 'No data available'}
                       </div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Generation:</span>
-                      <div className="font-medium">2023</div>
+                      <div className="font-medium">No data available</div>
                     </div>
                   </div>
                 </div>
@@ -447,19 +771,19 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Growth Rate:</span>
-                      <div className="font-medium">2.1%/week</div>
+                      <div className="font-medium">No data available</div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Feed Efficiency:</span>
-                      <div className="font-medium">92.5%</div>
+                      <div className="font-medium">No data available</div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Health Score:</span>
-                      <div className="font-medium">8.7/10</div>
+                      <div className="font-medium">No data available</div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Harvest Est.:</span>
-                      <div className="font-medium">Q2 2024</div>
+                      <div className="font-medium">No data available</div>
                     </div>
                   </div>
                 </div>
@@ -600,7 +924,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {filteredRings.reduce((sum, ring) => sum + ring.biomass, 0).toFixed(1)} tons
+                {filteredRings.length > 0 ? filteredRings.reduce((sum, ring) => sum + ring.biomass, 0).toFixed(1) + ' tons' : 'No data available'}
               </div>
               <p className="text-xs text-muted-foreground">Current stock</p>
             </CardContent>
@@ -626,7 +950,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">
-                {filteredRings.length > 0 ? (filteredRings.reduce((sum, ring) => sum + ring.waterDepth, 0) / filteredRings.length).toFixed(1) : 0}m
+                {filteredRings.length > 0 ? (filteredRings.reduce((sum, ring) => sum + ring.waterDepth, 0) / filteredRings.length).toFixed(1) + 'm' : 'No data available'}
               </div>
               <p className="text-xs text-muted-foreground">Water depth</p>
             </CardContent>
@@ -698,7 +1022,9 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Biomass</span>
-                      <div className="font-semibold text-lg">{ring.biomass} tons</div>
+                      <div className="font-semibold text-lg">
+                        {ring.biomass > 0 ? `${(ring.biomass * 1000).toLocaleString()} kg` : '0 kg'}
+                      </div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Fish Count</span>
@@ -706,7 +1032,9 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                     </div>
                     <div>
                       <span className="text-muted-foreground">Avg Weight</span>
-                      <div className="font-medium">{ring.averageWeight} kg</div>
+                      <div className="font-medium">
+                        {ring.averageWeight > 0 ? ring.averageWeight.toFixed(2) : '0.00'} kg
+                      </div>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Environment</span>
@@ -719,12 +1047,12 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Capacity Utilization</span>
-                      <span>{Math.round((ring.biomass / ring.capacity) * 100)}%</span>
+                      <span>{ring.capacity > 0 ? Math.round((ring.biomass / ring.capacity) * 100) : 0}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all" 
-                        style={{ width: `${Math.min((ring.biomass / ring.capacity) * 100, 100)}%` }}
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all"
+                        style={{ width: `${ring.capacity > 0 ? Math.min((ring.biomass / ring.capacity) * 100, 100) : 0}%` }}
                       ></div>
                     </div>
                   </div>

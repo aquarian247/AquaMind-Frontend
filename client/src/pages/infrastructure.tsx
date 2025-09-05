@@ -280,12 +280,15 @@ export default function Infrastructure() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {(summary.activeBiomass / 1000).toFixed(1)}k tons
+              {new Intl.NumberFormat('en-US').format(Math.round(summary.activeBiomass))}
             </div>
+            <p className="text-xs text-muted-foreground">
+              kg active biomass
+            </p>
             <div className="flex items-center space-x-2 mt-2">
               <Progress value={summary.capacity > 0 ? Math.round(((summary.activeBiomass / summary.capacity) * 100) * 10) / 10 : 0} className="flex-1" />
               <span className="text-xs text-muted-foreground">
-                {summary.capacity > 0 ? (Math.round(((summary.activeBiomass / summary.capacity) * 100) * 10) / 10).toFixed(1) : 0}% of {(summary.capacity / 1000000).toFixed(1)}M kg
+                {summary.capacity > 0 ? (Math.round(((summary.activeBiomass / summary.capacity) * 100) * 10) / 10).toFixed(1) : 0}% of {new Intl.NumberFormat('en-US').format(Math.round(summary.capacity / 1000))} tons capacity
               </span>
             </div>
           </CardContent>

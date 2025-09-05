@@ -267,6 +267,128 @@ const areasData = {
   ]
 };
 
+// Mock data for containers
+const containersData = {
+  count: 3,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 1,
+      area: 10,
+      name: 'Container 1',
+      geography: 1,
+      station: 1,
+      hall: null,
+      container_type: 1,
+      container_type_name: 'PEN',
+      active: true,
+      created_at: '2023-01-15T08:00:00Z',
+      updated_at: '2025-06-01T14:30:00Z'
+    },
+    {
+      id: 2,
+      area: 10,
+      name: 'Container 2',
+      geography: 1,
+      station: 1,
+      hall: null,
+      container_type: 1,
+      container_type_name: 'PEN',
+      active: true,
+      created_at: '2023-01-15T08:00:00Z',
+      updated_at: '2025-06-01T14:30:00Z'
+    },
+    {
+      id: 3,
+      area: 20,
+      name: 'Container 3',
+      geography: 2,
+      station: 2,
+      hall: null,
+      container_type: 1,
+      container_type_name: 'PEN',
+      active: true,
+      created_at: '2023-01-15T08:00:00Z',
+      updated_at: '2025-06-01T14:30:00Z'
+    }
+  ]
+};
+
+// Mock data for container assignments
+const assignmentsData = {
+  count: 5,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 101,
+      container: 1,
+      container_id: 1,
+      batch: 1,
+      biomass_kg: '100',
+      population_count: 200,
+      is_active: true,
+      start_date: '2025-01-01',
+      end_date: null,
+      created_at: '2025-01-01T08:00:00Z',
+      updated_at: '2025-07-01T08:00:00Z'
+    },
+    {
+      id: 102,
+      container: 2,
+      container_id: 2,
+      batch: 1,
+      biomass_kg: '150',
+      population_count: 250,
+      is_active: true,
+      start_date: '2025-01-01',
+      end_date: null,
+      created_at: '2025-01-01T08:00:00Z',
+      updated_at: '2025-07-01T08:00:00Z'
+    },
+    {
+      id: 103,
+      container: 3,
+      container_id: 3,
+      batch: 2,
+      biomass_kg: '200',
+      population_count: 300,
+      is_active: true,
+      start_date: '2025-01-01',
+      end_date: null,
+      created_at: '2025-01-01T08:00:00Z',
+      updated_at: '2025-07-01T08:00:00Z'
+    },
+    {
+      id: 104,
+      container: 1,
+      container_id: 1,
+      batch: 1,
+      biomass_kg: null,
+      population_count: 200,
+      is_active: true,
+      start_date: '2025-01-01',
+      end_date: null,
+      created_at: '2025-01-01T08:00:00Z',
+      updated_at: '2025-07-01T08:00:00Z'
+    },
+    {
+      id: 105,
+      container: 1,
+      container_id: 1,
+      batch: 1,
+      biomass_kg: '150',
+      population_count: undefined,
+      is_active: true,
+      start_date: '2025-01-01',
+      end_date: null,
+      created_at: '2025-01-01T08:00:00Z',
+      updated_at: '2025-07-01T08:00:00Z'
+    }
+  ]
+};
+
 // Default handlers for successful responses
 const handlers = [
   http.get('path:/api/v1/batch/batches*', () => {
@@ -295,6 +417,14 @@ const handlers = [
   
   http.get('path:/api/v1/infrastructure/areas*', () => {
     return HttpResponse.json(areasData);
+  }),
+
+  http.get('http://localhost:8000/api/v1/infrastructure/containers*', () => {
+    return HttpResponse.json(containersData);
+  }),
+
+  http.get('http://localhost:8000/api/v1/batch/container-assignments*', () => {
+    return HttpResponse.json(assignmentsData);
   })
 ];
 
