@@ -576,7 +576,7 @@ export default function InfrastructureAreas() {
             <SelectContent>
               <SelectItem value="all">All Geographies</SelectItem>
               {geographies.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
+                <SelectItem key={geo.id} value={geo.name}>
                   {geo.name}
                 </SelectItem>
               ))}

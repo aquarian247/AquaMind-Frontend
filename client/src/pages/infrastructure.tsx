@@ -149,7 +149,7 @@ export default function Infrastructure() {
     name: container.name,
     type: container.container_type_name?.toLowerCase().includes('ring') ? 'sea_pen' as const :
           container.container_type_name?.toLowerCase().includes('tank') ? 'tank' as const : 'cage' as const,
-    geography: "Faroe Islands", // Default since we only have one geography
+    geography: geographies.length > 0 ? geographies[0].name : "Unknown", // Use first available geography
     area: container.area_name || container.hall_name || "Unknown",
     biomass: 0, // Would need to be calculated from batch assignments
     capacity: parseFloat(container.volume_m3 || '0') * 1000, // Convert m³ to kg assuming density ~1
@@ -234,8 +234,11 @@ export default function Infrastructure() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Geographies</SelectItem>
-              <SelectItem value="faroe-islands">Faroe Islands</SelectItem>
-              <SelectItem value="scotland">Scotland</SelectItem>
+              {geographies.map((geo: any) => (
+                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
+                  {geo.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button className="bg-blue-600 hover:bg-blue-700">
@@ -268,7 +271,7 @@ export default function Infrastructure() {
               {summary.totalContainers}
             </div>
             <p className="text-xs text-muted-foreground">
-              +3 since last month
+              Total active containers
             </p>
           </CardContent>
         </Card>
@@ -304,7 +307,7 @@ export default function Infrastructure() {
               {summary.sensorAlerts}
             </div>
             <p className="text-xs text-muted-foreground">
-              +2 in last 24h
+              Active sensor alerts
             </p>
           </CardContent>
         </Card>

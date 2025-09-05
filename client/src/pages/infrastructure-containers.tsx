@@ -86,16 +86,9 @@ export default function InfrastructureContainers() {
 
   // Fallback filter options in case dynamic loading fails
   const fallbackFilterOptions = {
-    geographies: ['Faroe Islands'],
-    stations: ['Freshwater Stations', 'Sea Areas'],
-    containerTypes: [
-      'Egg & Alevin Trays (Tray)',
-      'Fry Tanks (Tank)',
-      'Parr Tanks (Tank)',
-      'Smolt Tanks (Tank)',
-      'Post-Smolt Tanks (Tank)',
-      'Sea Rings (Pen)'
-    ],
+    geographies: [],
+    stations: [],
+    containerTypes: [],
     statuses: ['active', 'inactive']
   };
 

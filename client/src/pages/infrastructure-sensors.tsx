@@ -55,6 +55,12 @@ export default function InfrastructureSensors() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [alertFilter, setAlertFilter] = useState("all");
 
+  // Fetch geographies for dynamic filter options
+  const { data: geographiesData } = useQuery({
+    queryKey: ["infrastructure/geographies"],
+    queryFn: api.infrastructure.getGeographies,
+  });
+
   const { data: sensorsData, isLoading } = useQuery({
     // Non-URL query key prevents validator complaints and signals client-computed data
     queryKey: [
@@ -74,6 +80,8 @@ export default function InfrastructureSensors() {
         alert: alertFilter,
       }),
   });
+
+  const geographies = geographiesData?.results || [];
 
   // Cast to SensorOverview[] to satisfy TypeScript strictness
   const sensors = (sensorsData?.results as SensorOverview[]) || [];
@@ -192,8 +200,11 @@ export default function InfrastructureSensors() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Regions</SelectItem>
-                    <SelectItem value="Faroe Islands">Faroe Islands</SelectItem>
-                    <SelectItem value="Scotland">Scotland</SelectItem>
+                    {geographies.map((geo: any) => (
+                      <SelectItem key={geo.id} value={geo.name}>
+                        {geo.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

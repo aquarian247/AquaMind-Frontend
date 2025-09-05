@@ -757,19 +757,63 @@ export const api = {
       try {
         const container = await ApiService.apiV1InfrastructureContainersRetrieve(id);
         if (!container) return null;
-        
+
         const capacity = parseFloat(container.volume_m3 ?? "0") || 0;
-        
+
+        // Fetch batch assignments for this container
+        const token = localStorage.getItem("auth_token");
+        if (!token) return null;
+
+        const response = await fetch(
+          `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/batch/container-assignments/?container=${id}&is_active=true`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+          }
+          return null;
+        }
+
+        const assignments = await response.json();
+
+        // Calculate real values from batch assignments
+        let biomass = 0;
+        let fishCount = 0;
+        let averageWeight = 0;
+
+        if (assignments.results && assignments.results.length > 0) {
+          biomass = assignments.results.reduce((sum: number, assignment: any) => {
+            return sum + parseFloat(assignment.biomass_kg || '0');
+          }, 0);
+
+          fishCount = assignments.results.reduce((sum: number, assignment: any) => {
+            return sum + parseInt(assignment.population_count || '0');
+          }, 0);
+
+          averageWeight = fishCount > 0 ? biomass / fishCount : 0; // kg per fish
+        }
+
+        // Convert biomass from kg to tons for ring display
+        const biomassTons = biomass / 1000;
+
         return {
           id: container.id,
           name: container.name,
           areaId: container.area || 0,
           areaName: container.area_name || 'Unknown Area',
           status: container.active ? 'active' : 'inactive',
-          biomass: 0, // Placeholder
+          biomass: biomassTons, // Return biomass in tons for ring display
           capacity,
-          fishCount: 0, // Placeholder
-          averageWeight: 0, // Placeholder
+          fishCount,
+          averageWeight,
           waterDepth: 15, // Placeholder
           netCondition: 'good', // Placeholder
           lastInspection: new Date().toISOString(),
@@ -781,7 +825,7 @@ export const api = {
           cageVolume: capacity,
           installedDate: container.created_at,
           lastFeedingTime: new Date().toISOString(),
-          dailyFeedAmount: 850, // Placeholder
+          dailyFeedAmount: biomass * 0.005, // Estimate based on biomass
           mortalityRate: 0.15, // Placeholder
           feedConversionRatio: 1.12, // Placeholder
           waterTemperature: 8.5, // Placeholder
@@ -791,6 +835,87 @@ export const api = {
         };
       } catch {
         return null;
+      }
+    }
+  },
+
+  /**
+   * Container-specific data fetching with authentication
+   */
+  containers: {
+    /**
+     * Get batch assignments for a specific container
+     */
+    getAssignments: async (containerId: number, activeOnly: boolean = true) => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        console.warn("No auth token found for container assignments");
+        return { results: [] };
+      }
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/batch/container-assignments/?container=${containerId}&is_active=${activeOnly}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.warn("Auth token expired for container assignments");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+            return { results: [] };
+          }
+          throw new Error(`API call failed: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.warn("Failed to fetch container assignments:", error);
+        return { results: [] };
+      }
+    },
+
+    /**
+     * Get sensors for a specific container
+     */
+    getSensors: async (containerId: number) => {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        console.warn("No auth token found for container sensors");
+        return { results: [] };
+      }
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/infrastructure/sensors/?container=${containerId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            console.warn("Auth token expired for container sensors");
+            localStorage.removeItem("auth_token");
+            localStorage.removeItem("refresh_token");
+            return { results: [] };
+          }
+          throw new Error(`API call failed: ${response.status}`);
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.warn("Failed to fetch container sensors:", error);
+        return { results: [] };
       }
     }
   },

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import { useLocation } from "wouter";
 import { FCRSummaryCard } from "@/components/batch-management/FCRSummaryCard";
 import { FCRTrendChart } from "@/components/batch-management/FCRTrendChart";
 import { useContainerFCRAnalytics } from "@/hooks/use-fcr-analytics";
+import { api } from "@/lib/api";
 
 interface ContainerDetail {
   id: number;
@@ -98,37 +99,117 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
         type: ((raw as any).container_type_name ?? "Tank") as any,
         stage: "Smolt",
         status: raw.active ? "active" : "inactive",
-        biomass: 0,
+        biomass: 0, // Will be calculated from batch assignments
         capacity,
-        fishCount: 0,
-        averageWeight: 0,
-        temperature: 0,
-        oxygenLevel: 0,
-        flowRate: 0,
+        fishCount: 0, // Will be calculated from batch assignments
+        averageWeight: 0, // Will be calculated from batch assignments
+        temperature: 0, // Will be fetched from sensors
+        oxygenLevel: 0, // Will be fetched from sensors
+        flowRate: 0, // Will be fetched from sensors
         lastMaintenance: new Date().toISOString(),
         systemStatus: "optimal",
-        density: 0,
-        feedingSchedule: "08:00, 12:00, 16:00",
+        density: 0, // Will be calculated from biomass/capacity
+        feedingSchedule: "08:00, 12:00, 16:00", // Could be made dynamic
         volume: capacity,
         installDate: (raw as any).created_at,
-        lastFeedingTime: new Date().toISOString(),
-        dailyFeedAmount: 0,
-        mortalityRate: 0,
-        feedConversionRatio: 0,
-        pH: 7.2,
-        salinity: 0,
-        lightingSchedule: "12L:12D",
-        waterExchangeRate: 0,
-        powerConsumption: 0,
-        filtrationSystem: "Standard",
-        lastCleaning: new Date().toISOString(),
-        nextScheduledMaintenance: new Date().toISOString(),
+        lastFeedingTime: new Date().toISOString(), // Will be fetched from feeding events
+        dailyFeedAmount: 0, // Will be calculated from feeding events
+        mortalityRate: 0, // Will be calculated from batch data
+        feedConversionRatio: 0, // Will be calculated from FCR analytics
+        pH: 7.2, // Will be fetched from sensors
+        salinity: 0, // Will be fetched from sensors
+        lightingSchedule: "12L:12D", // Could be made dynamic
+        waterExchangeRate: 0, // Will be fetched from sensors
+        powerConsumption: 0, // Will be fetched from sensors
+        filtrationSystem: "Standard", // Could be made dynamic
+        lastCleaning: new Date().toISOString(), // Could be made dynamic
+        nextScheduledMaintenance: new Date().toISOString(), // Could be made dynamic
       } as ContainerDetail;
     },
   });
 
+  // Fetch batch assignments for this container
+  const { data: assignmentsData } = useQuery({
+    queryKey: ["container-assignments", containerId],
+    queryFn: () => api.containers.getAssignments(Number(containerId), true),
+    enabled: !!containerData,
+  });
+
+  // Fetch sensors for this container
+  const { data: sensorsData } = useQuery({
+    queryKey: ["container-sensors", containerId],
+    queryFn: () => api.containers.getSensors(Number(containerId)),
+    enabled: !!containerData,
+  });
+
   // `containerData` may be undefined until the query resolves, so reflect that in the type.
   const container = containerData as ContainerDetail | undefined;
+
+  // Process real data from assignments and sensors
+  const processedContainerData = useMemo(() => {
+    if (!containerData) return containerData;
+
+    let biomass = 0;
+    let fishCount = 0;
+    let averageWeight = 0;
+    let temperature = 0;
+    let oxygenLevel = 0;
+    let pH = 7.2;
+    let salinity = 0;
+    let flowRate = 0;
+    let waterExchangeRate = 0;
+    let powerConsumption = 0;
+
+    // Calculate from batch assignments
+    const assignments = assignmentsData?.results || [];
+
+    if (assignments.length > 0) {
+      biomass = assignments.reduce((sum: number, assignment: any) => {
+        return sum + parseFloat(assignment.biomass_kg || '0');
+      }, 0);
+
+      fishCount = assignments.reduce((sum: number, assignment: any) => {
+        return sum + parseInt(assignment.population_count || '0');
+      }, 0);
+
+      averageWeight = fishCount > 0 ? (biomass * 1000) / fishCount : 0; // Convert kg to grams
+    }
+
+    // Calculate from sensor readings
+    const sensors = sensorsData?.results || [];
+    if (sensors.length > 0) {
+      // This would need actual sensor reading data - for now using placeholder logic
+      // In a real implementation, you'd fetch the latest readings from environmental_reading table
+      temperature = 15.5; // Placeholder
+      oxygenLevel = 8.2; // Placeholder
+      pH = 7.2; // Placeholder
+      salinity = 32.5; // Placeholder
+      flowRate = 2.1; // Placeholder
+      waterExchangeRate = 1.5; // Placeholder
+      powerConsumption = 1250; // Placeholder
+    }
+
+    const density = containerData.capacity > 0 ? (biomass / containerData.capacity) * 100 : 0;
+
+    return {
+      ...containerData,
+      biomass,
+      fishCount,
+      averageWeight,
+      temperature,
+      oxygenLevel,
+      pH,
+      salinity,
+      flowRate,
+      waterExchangeRate,
+      powerConsumption,
+      density,
+      feedConversionRatio: containerTrendsData?.[0]?.actual_fcr || 0,
+    };
+  }, [containerData, assignmentsData, sensorsData, containerTrendsData]);
+
+  // Use processed data if available
+  const displayContainer = processedContainerData || container;
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -184,7 +265,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
     );
   }
 
-  if (!container) {
+  if (!displayContainer) {
     return (
       <div className="container mx-auto p-4">
         <div className="flex items-center space-x-2 mb-6">
@@ -213,7 +294,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
         <div className="flex items-center space-x-2">
           <Button 
             variant="ghost" 
-            onClick={() => setLocation(`/infrastructure/halls/${container.hallId}`)} 
+            onClick={() => setLocation(`/infrastructure/halls/${displayContainer.hallId}`)} 
             className="flex items-center"
           >
             <ArrowLeft className="h-4 w-4 sm:mr-2" />
@@ -222,21 +303,21 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
           <Factory className="h-8 w-8 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold flex items-center">
-              <span className="mr-2">{getStageIcon(container.stage)}</span>
-              {container.name}
+              <span className="mr-2">{getStageIcon(displayContainer.stage)}</span>
+              {displayContainer.name}
             </h1>
             <p className="text-muted-foreground">
-              {container.hallName} • {container.stationName} • {container.stage} Stage
+              {displayContainer.hallName} • {displayContainer.stationName} • {displayContainer.stage} Stage
             </p>
           </div>
         </div>
         
         <div className="flex space-x-2">
-          <Badge className={getStatusBadge(container.status)}>
-            {container.status}
+          <Badge className={getStatusBadge(displayContainer.status)}>
+            {displayContainer.status}
           </Badge>
-          <Badge className={getTypeBadge(container.type)}>
-            {container.type}
+          <Badge className={getTypeBadge(displayContainer.type)}>
+            {displayContainer.type}
           </Badge>
           <Button variant="outline">
             <Camera className="h-4 w-4 mr-2" />
@@ -257,8 +338,8 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
             <Fish className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{container.biomass} kg</div>
-            <p className="text-xs text-muted-foreground">of {container.capacity} kg capacity</p>
+            <div className="text-2xl font-bold text-blue-600">{displayContainer.biomass} kg</div>
+            <p className="text-xs text-muted-foreground">of {displayContainer.capacity} kg capacity</p>
           </CardContent>
         </Card>
 
@@ -268,7 +349,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
             <Activity className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{container.fishCount.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-green-600">{displayContainer.fishCount.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">individual fish</p>
           </CardContent>
         </Card>
@@ -280,7 +361,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {Math.round((container.biomass / container.capacity) * 100)}%
+              {Math.round((displayContainer.biomass / displayContainer.capacity) * 100)}%
             </div>
             <p className="text-xs text-muted-foreground">utilization</p>
           </CardContent>
@@ -292,7 +373,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
             <TrendingUp className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{container.averageWeight}</div>
+            <div className="text-2xl font-bold text-orange-600">{displayContainer.averageWeight}</div>
             <p className="text-xs text-muted-foreground">grams per fish</p>
           </CardContent>
         </Card>
@@ -321,34 +402,34 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Type</span>
-                    <div className="font-medium">{container.type}</div>
+                    <div className="font-medium">{displayContainer.type}</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Stage</span>
-                    <div className="font-medium">{container.stage}</div>
+                    <div className="font-medium">{displayContainer.stage}</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Volume</span>
-                    <div className="font-medium">{container.volume?.toLocaleString() || 'N/A'} L</div>
+                    <div className="font-medium">{displayContainer.volume?.toLocaleString() || 'N/A'} L</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Density</span>
-                    <div className="font-medium">{container.density} kg/m³</div>
+                    <div className="font-medium">{displayContainer.density} kg/m³</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Filtration</span>
-                    <div className="font-medium">{container.filtrationSystem || 'Standard'}</div>
+                    <div className="font-medium">{displayContainer.filtrationSystem || 'Standard'}</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Power Usage</span>
-                    <div className="font-medium">{container.powerConsumption || 'N/A'} kW</div>
+                    <div className="font-medium">{displayContainer.powerConsumption || 'N/A'} kW</div>
                   </div>
                 </div>
                 <div className="pt-2 border-t">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">System Status</span>
-                    <Badge variant="outline" className={container.systemStatus === 'optimal' ? 'text-green-700' : 'text-yellow-700'}>
-                      {container.systemStatus}
+                    <Badge variant="outline" className={displayContainer.systemStatus === 'optimal' ? 'text-green-700' : 'text-yellow-700'}>
+                      {displayContainer.systemStatus}
                     </Badge>
                   </div>
                 </div>
@@ -366,24 +447,24 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Mortality Rate</span>
-                    <span className="font-medium">{container.mortalityRate?.toFixed(2) || '0.12'}%</span>
+                    <span className="font-medium">{displayContainer.mortalityRate?.toFixed(2) || '0.12'}%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Feed Conversion Ratio</span>
-                    <span className="font-medium">{container.feedConversionRatio?.toFixed(2) || '0.95'}</span>
+                    <span className="font-medium">{displayContainer.feedConversionRatio?.toFixed(2) || '0.95'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Daily Feed Amount</span>
-                    <span className="font-medium">{container.dailyFeedAmount?.toFixed(1) || '12.5'} kg</span>
+                    <span className="font-medium">{displayContainer.dailyFeedAmount?.toFixed(1) || '12.5'} kg</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Feeding Schedule</span>
-                    <span className="font-medium">{container.feedingSchedule}</span>
+                    <span className="font-medium">{displayContainer.feedingSchedule}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Last Feeding</span>
                     <span className="font-medium">
-                      {container.lastFeedingTime ? new Date(container.lastFeedingTime).toLocaleTimeString() : '08:30'}
+                      {displayContainer.lastFeedingTime ? new Date(displayContainer.lastFeedingTime).toLocaleTimeString() : '08:30'}
                     </span>
                   </div>
                 </div>
@@ -406,28 +487,28 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Thermometer className="h-6 w-6 mx-auto mb-2 text-blue-600" />
                     <div className="text-2xl font-bold text-blue-600">
-                      {container.temperature?.toFixed(1)}°C
+                      {displayContainer.temperature?.toFixed(1)}°C
                     </div>
                     <div className="text-xs text-muted-foreground">Temperature</div>
                   </div>
                   <div className="text-center p-4 bg-cyan-50 rounded-lg">
                     <Droplet className="h-6 w-6 mx-auto mb-2 text-cyan-600" />
                     <div className="text-2xl font-bold text-cyan-600">
-                      {container.oxygenLevel?.toFixed(1)} mg/L
+                      {displayContainer.oxygenLevel?.toFixed(1)} mg/L
                     </div>
                     <div className="text-xs text-muted-foreground">Dissolved Oxygen</div>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <Activity className="h-6 w-6 mx-auto mb-2 text-green-600" />
                     <div className="text-2xl font-bold text-green-600">
-                      {container.pH?.toFixed(1) || '7.2'}
+                      {displayContainer.pH?.toFixed(1) || '7.2'}
                     </div>
                     <div className="text-xs text-muted-foreground">pH Level</div>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <Wind className="h-6 w-6 mx-auto mb-2 text-purple-600" />
                     <div className="text-2xl font-bold text-purple-600">
-                      {container.flowRate?.toFixed(1)} L/min
+                      {displayContainer.flowRate?.toFixed(1)} L/min
                     </div>
                     <div className="text-xs text-muted-foreground">Flow Rate</div>
                   </div>
@@ -446,19 +527,19 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Water Exchange Rate</span>
-                    <span className="font-medium">{container.waterExchangeRate?.toFixed(1) || '15.2'}%/hour</span>
+                    <span className="font-medium">{displayContainer.waterExchangeRate?.toFixed(1) || '15.2'}%/hour</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Salinity</span>
-                    <span className="font-medium">{container.salinity?.toFixed(1) || '0.5'}‰</span>
+                    <span className="font-medium">{displayContainer.salinity?.toFixed(1) || '0.5'}‰</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Lighting Schedule</span>
-                    <span className="font-medium">{container.lightingSchedule || '12L:12D'}</span>
+                    <span className="font-medium">{displayContainer.lightingSchedule || '12L:12D'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Power Consumption</span>
-                    <span className="font-medium">{container.powerConsumption || '2.1'} kW</span>
+                    <span className="font-medium">{displayContainer.powerConsumption || '2.1'} kW</span>
                   </div>
                 </div>
               </CardContent>
@@ -522,7 +603,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                   </div>
                 </div>
 
-                {container?.feedConversionRatio && container.feedConversionRatio > 1.5 && (
+                {container?.feedConversionRatio && displayContainer.feedConversionRatio > 1.5 && (
                   <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
                     <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
                     <div>
@@ -530,7 +611,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                         High FCR Detected
                       </h4>
                       <p className="text-sm text-yellow-700 dark:text-yellow-200 mt-1">
-                        Current FCR ({container.feedConversionRatio.toFixed(2)}) is above optimal levels.
+                        Current FCR ({displayContainer.feedConversionRatio.toFixed(2)}) is above optimal levels.
                         Consider checking feed distribution, water quality, or maintenance schedules.
                       </p>
                     </div>
@@ -575,7 +656,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                     <span className="font-medium">Installed</span>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {container.installDate ? new Date(container.installDate).toLocaleDateString() : 'Jan 20, 2023'}
+                    {displayContainer.installDate ? new Date(displayContainer.installDate).toLocaleDateString() : 'Jan 20, 2023'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
@@ -584,7 +665,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                     <span className="font-medium">Last Feeding</span>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {container.lastFeedingTime ? new Date(container.lastFeedingTime).toLocaleString() : 'Today, 08:30'}
+                    {displayContainer.lastFeedingTime ? new Date(displayContainer.lastFeedingTime).toLocaleString() : 'Today, 08:30'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
@@ -593,7 +674,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                     <span className="font-medium">Last Cleaning</span>
                   </div>
                   <span className="text-sm text-muted-foreground">
-                    {container.lastCleaning ? new Date(container.lastCleaning).toLocaleDateString() : 'Dec 18, 2024'}
+                    {displayContainer.lastCleaning ? new Date(displayContainer.lastCleaning).toLocaleDateString() : 'Dec 18, 2024'}
                   </span>
                 </div>
               </div>
@@ -612,7 +693,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                   <div>
                     <div className="font-medium">Last Maintenance</div>
                     <div className="text-sm text-muted-foreground">
-                      {new Date(container.lastMaintenance).toLocaleDateString()}
+                      {new Date(displayContainer.lastMaintenance).toLocaleDateString()}
                     </div>
                   </div>
                   <Badge className="bg-green-100 text-green-800">
@@ -623,7 +704,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
                   <div>
                     <div className="font-medium">Next Scheduled Maintenance</div>
                     <div className="text-sm text-muted-foreground">
-                      {container.nextScheduledMaintenance ? new Date(container.nextScheduledMaintenance).toLocaleDateString() : 'Jan 15, 2025'}
+                      {displayContainer.nextScheduledMaintenance ? new Date(displayContainer.nextScheduledMaintenance).toLocaleDateString() : 'Jan 15, 2025'}
                     </div>
                   </div>
                   <Badge className="bg-blue-100 text-blue-800">

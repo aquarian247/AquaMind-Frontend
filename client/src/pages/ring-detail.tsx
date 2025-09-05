@@ -176,7 +176,7 @@ export default function RingDetail({ params }: { params: { id: string } }) {
             <Fish className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{ring.biomass}</div>
+            <div className="text-2xl font-bold text-blue-600">{ring.biomass?.toFixed(3)}</div>
             <p className="text-xs text-muted-foreground">tons</p>
           </CardContent>
         </Card>
@@ -211,7 +211,7 @@ export default function RingDetail({ params }: { params: { id: string } }) {
             <TrendingUp className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{ring.averageWeight}</div>
+            <div className="text-2xl font-bold text-orange-600">{ring.averageWeight?.toFixed(3)}</div>
             <p className="text-xs text-muted-foreground">kg per fish</p>
           </CardContent>
         </Card>
