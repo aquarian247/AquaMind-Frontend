@@ -1,7 +1,6 @@
 # Code Organization Guidelines (Frontend – React 18 + TypeScript)
 
-> **Scope** – These guidelines apply to the AquaMind **frontend** codebase (React 18, Vite, Tailwind CSS, Shadcn/ui, Wouter, TanStack Query, Chart.js & Recharts).  
-> They replace the previous Django-oriented rules.
+> **Scope** – These guidelines apply to the AquaMind **frontend** codebase (React 18, Vite, Tailwind CSS, Shadcn/ui, Wouter, TanStack Query, Chart.js & Recharts).
 
 ---
 
@@ -12,23 +11,15 @@ The **OpenAPI spec (`api/openapi.yaml`) is the single source of truth** for all 
 1. **Typed client generation** – `npm run generate:api` (CI workflow) regenerates `client/src/api/generated`.
 2. **Authentication** – token via `/api/v1/auth/token/`; the generated client handles auth header inclusion.
 3. **Change flow**  
-   Backend updates API ➜ pushes new `openapi.yaml` ➜ Frontend CI regenerates client & opens PR.  
-   _Manual fallback_: Run the **Manual API Client Sync** GitHub Action.
+   Backend updates API ➜ pushes new `openapi.yaml` ➜ Frontend CI regenerates client & opens PR.
 4. **Contract verification** – Backend CI runs **Schemathesis** to validate endpoints vs spec.
 5. **Usage** – Always import from the generated client; never hard-code fetch calls.
 
 ```ts
-import { api } from "@/api/generated";
+import { ApiService } from "@/api/generated";
 
-const batches = await api.batch.batchList();
+const batches = await ApiService.apiV1BatchBatchesList();
 ```
-
----
-
-## 1  Folder & File Structure
-
-> **Scope** – These guidelines apply to the AquaMind **frontend** codebase (React 18, Vite, Tailwind CSS, Shadcn/ui, Wouter, TanStack Query, Chart.js & Recharts).  
-> They replace the previous Django-oriented rules.
 
 ---
 
@@ -158,10 +149,9 @@ const ScenarioPlanningPage = lazy(() => import("features/scenario/pages/Scenario
 
 ## 9  Testing
 
-* **Jest + React-Testing-Library** for unit/integration.
-* **Vitest** may be used for pure TS utils.
+* **Vitest + React Testing Library** for all unit & integration tests.
 * Chart components – use snapshot & accessibility tests.
-* Hooks – test via `@testing-library/react-hooks`.
+* Test hooks via components or `renderHook` from `@testing-library/react`.
 
 ---
 
@@ -174,7 +164,7 @@ const ScenarioPlanningPage = lazy(() => import("features/scenario/pages/Scenario
 | ESLint (airbnb+react)     | 0 errors |
 | TypeScript strict mode    | enabled  |
 | CC per function           | < 15     |
-| Test Coverage             | ≥ 80 %  |
+| Test Coverage             | Defined in `vite.config.ts` (incrementally increasing). |
 
 Use `vite --report` to watch chunk growth.
 
@@ -219,8 +209,7 @@ features/batch-management/
 
 Adhering to these guidelines will keep the AquaMind frontend performant, maintainable and scalable as the product grows. When in doubt, optimise for **readability**, **single-responsibility**, and **user experience**.
 
-
- Following these guidelines ensures a consistent, maintainable, and scalable codebase that adheres to our established coding standards.
+---
 
 ## General Principles
 
@@ -232,6 +221,7 @@ Adhering to these guidelines will keep the AquaMind frontend performant, maintai
 - **Tailwind CSS & Shadcn/ui**: Primary styling methodology; avoid plain CSS.
 - **Generated API Client**: All network calls must use `client/src/api/generated`.
 
+---
 
 ## Code Organization Rules
 
@@ -262,23 +252,24 @@ Adhering to these guidelines will keep the AquaMind frontend performant, maintai
 
 ### API Interaction Layer (Generated Client)
 
-All network calls go through the generated client in `client/src/api/generated`. Do **not** add additional Axios/fetch wrappers.
+All network calls go through the generated client in `client/src/api/generated`. Do **not** edit generated code.
 
-* Extend client behaviour (e.g., retries, logging) via **interceptors** or wrapper functions in `lib/api-client.ts`, never by editing generated code.
+* Extend behaviour (e.g., retries, logging) via **wrapper functions** or **feature-level hooks**.
 * Provide feature-level hooks such as `useBatches()` in `features/batch-management/api.ts` which call the generated client internally.
 
 ```ts
 // features/batch-management/api.ts
-import { api } from "@/api/generated";
+import { ApiService } from "@/api/generated";
 import { useQuery } from "@tanstack/react-query";
 
 export function useBatches() {
   return useQuery({
     queryKey: ["batches"],
-    queryFn: () => api.batch.batchList(),
+    queryFn: () => ApiService.apiV1BatchBatchesList(),
   });
 }
 ```
+
 ### Bad Code Organization (Anti-Pattern)
 
 ```tsx

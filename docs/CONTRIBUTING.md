@@ -15,6 +15,21 @@ npm install
 npm run dev
 ```
 
+### Agent Rules — ALWAYS DO
+
+* **Contract-first** — `api/openapi.yaml` is the single source of truth.  
+  After any backend spec change run `npm run generate:api` and commit the regenerated client.
+* **Generated client only** — consume APIs via `client/src/api/generated`; never hand-craft `fetch`/Axios calls or edit generated code.
+* **Canonical auth endpoints** —  
+  `POST /api/v1/auth/token/` and `POST /api/v1/auth/token/refresh/` (optional: `GET /api/v1/users/auth/profile/`).  
+  _Avoid_ legacy `/api/token/*` or `/api/auth/jwt/*` routes.
+* **Testing** — Vitest + React Testing Library. Use simple `fetch` mocks (`vi.fn`) or mock the generated client. **Do not use MSW**.
+* **Scripts** — `npm run test` (one-off), `npm run test:watch` (watch), `npm run test:ci` (coverage).
+* **Environment** — use **`VITE_USE_DJANGO_API`** with `VITE_DJANGO_API_URL`; **do not** use `VITE_USE_BACKEND_API`.
+* **Quality gates** — code must lint & type-check before PR  
+  `npm run type-check && npm run lint` must pass.
+* **Documentation** — update README / docs when endpoints or workflows change.
+
 ### Backend Integration Testing
 
 #### Express Mock Server (Default)
@@ -68,8 +83,8 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    path('api/v1/users/auth/token/', TokenObtainPairView.as_view()),
-    path('api/v1/users/auth/token/refresh/', TokenRefreshView.as_view()),
+    path('api/v1/auth/token/', TokenObtainPairView.as_view()),
+    path('api/v1/auth/token/refresh/', TokenRefreshView.as_view()),
 ]
 ```
 
@@ -143,7 +158,7 @@ For testing the DMZ/Protected VLAN architecture locally, see `docs/LOCAL_VLAN_SE
 ### TypeScript
 - Strict type checking enabled
 - Use generated types from `client/src/api/generated/models/`
-- Shared API types are generated automatically into `client/src/api/generated` via `npm run generate:client`.
+> Run `npm run generate:api` after spec changes (CI does this automatically).
 
 ### React Components
 - Functional components with hooks
@@ -175,7 +190,7 @@ client/src/
 npm run dev
 
 # Test live backend (requires backend running)
-VITE_USE_BACKEND_API=true VITE_BACKEND_API_URL=http://localhost:8000 npm run dev
+VITE_USE_DJANGO_API=true VITE_DJANGO_API_URL=http://localhost:8000 npm run dev
 
 # Test production build
 npm run build && npm run start

@@ -24,7 +24,8 @@ UI logic (pagination, field names, etc.) stays truthful.
 
 | Command           | Description                                    |
 |-------------------|------------------------------------------------|
-| `npm run test`    | Interactive watch mode.                        |
+| `npm run test`    | One-off run.                                   |
+| `npm run test:watch` | Interactive watch mode.                     |
 | `npm run test:ci` | One-off run with coverage output to `client/coverage/`. |
 
 ---
@@ -33,7 +34,6 @@ UI logic (pagination, field names, etc.) stays truthful.
 
 * Adds **jest-dom** matchers.
 * Mocks **Chart.js** so `canvas.getContext` never runs.
-* **MSW is disabled** by default to allow simple fetch mocks.
 * Polyfills a safe `AbortController`.
 * Stubs `matchMedia` and `ResizeObserver` for testing.
 
@@ -112,27 +112,17 @@ render(<QueryClientProvider client={qc}>...</QueryClientProvider>);
 
 ---
 
-## Mock Service Worker (Deprecated)
-
-* **MSW is currently disabled** in `setupTests.ts` due to reliability issues.
-* Handlers exist in `client/src/test/msw` but are not used.
-* **Use simple fetch mocks instead** for new tests.
-* If MSW is re-enabled, prefer path-based rules (`path:/api/v1/*`).
-
----
-
 ## Coverage
 
 * Config in `vite.config.ts`.
 * Excludes generated API client & `src/pages/**`.
-* **Current: 38.93% overall** with focus on business logic.
-* **Realistic Target: 50-60%** - Focus on high-value areas.
+* **Thresholds are intentionally low** in `vite.config.ts` (10 % lines/branches) while the suite stabilises; these will be raised incrementally.
 * **Priority Areas** (currently low coverage but high business value):
-  – **AuthService** (30%) - Centralized authentication & token management
-  – **AuthContext** (20%) - React state management for auth
-  – **Infrastructure pages** (0%) - Data aggregation & filtering
-  – **API utilities** (13%) - Data processing & fallbacks
-  – **Pagination utility** (0%) - Large dataset handling
+  – **AuthService** - Centralized authentication & token management  
+  – **AuthContext** - React state management for auth  
+  – **Infrastructure pages** - Data aggregation & filtering  
+  – **API utilities** - Data processing & fallbacks  
+  – **Pagination utility** - Large dataset handling  
   – **Container filtering** (business rules for categorization)
 
 * **Coverage Strategy**: Quality over quantity - test business logic that matters.
@@ -211,7 +201,6 @@ Environment
 | `AbortController: signal not instance` | Use shim already in `setupTests.ts`. |
 | `getContext not implemented` | Ensure Chart.js is mocked (it is by default). |
 | Fetch calls not mocked | Use `global.fetch = vi.fn()` and `fetchMock.mockImplementationOnce()`. |
-| MSW errors (deprecated) | MSW is disabled; use simple fetch mocks instead. |
 | Test timeout | Ensure fetch mocks resolve quickly; use `Promise.resolve()` not `setTimeout()`. |
 
 Happy testing!

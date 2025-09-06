@@ -16,18 +16,16 @@ Your React frontend with Django backend integration is now configured for the VL
 - `.env.example` - Environment configuration templates
 
 ### 2. API Integration Layer
-- `client/src/lib/django-api.ts` - Complete Django REST API client
-- `client/src/lib/api.ts` - Unified API that switches between Django/Express
-- `client/src/lib/queryClient.ts` - Enhanced with CSRF token handling
+- `client/src/api/generated/*` – **Generated client (single source of truth)** © `openapi-generator`
+- `client/src/lib/api.ts` – Legacy unified wrapper (new code should prefer the generated client)
+- `client/src/lib/queryClient.ts` – React-Query setup with *optional* CSRF header injection for Django
 
 ### 3. Development & Debugging Tools
 - `client/src/lib/debug.ts` - Network diagnostics and logging utilities
-- Browser console tools for switching backends during development
-- Production troubleshooting capabilities
+- Production troubleshooting utilities
 
 ### 4. Documentation
 - `docs/DEPLOYMENT_ARCHITECTURE.md` - Complete VLAN deployment strategy
-- `docs/DEVELOPMENT_WORKFLOW.md` - Development and debugging workflows
 
 ## Configuration for Your Environment
 
@@ -61,9 +59,9 @@ VITE_LOG_LEVEL=error
 Your Django backend needs these endpoints for full compatibility across all 8 active apps:
 
 ### Authentication
-- `POST /api/v1/auth/login/` - User login
-- `GET /api/v1/auth/csrf/` - CSRF token
-- `GET /api/v1/auth/user/` - Current user info
+- `POST /api/v1/auth/token/` — Obtain **access** / **refresh** tokens
+- `POST /api/v1/auth/token/refresh/` — Refresh access token
+  *Optional*: `GET /api/v1/users/auth/profile/` — Retrieve current user profile
 
 ### Infrastructure App
 - `GET /api/v1/infrastructure/geographies/`
@@ -139,35 +137,18 @@ All list endpoints should return Django REST Framework pagination:
 3. Set environment variables to point to your Django API
 
 ### Phase 2: Backend Switching
-The system supports seamless switching between Django and Express:
-
-```javascript
-// Browser console commands
-DevelopmentTools.switchToDjango();  // Use real Django API
-DevelopmentTools.switchToExpress(); // Use Express stubs
-
-// Check current configuration
-console.log(DevelopmentTools.getEnvironmentInfo());
-```
+Switch backends via **environment variables**.  
+Set `VITE_USE_DJANGO_API` (and `VITE_DJANGO_API_URL`) then restart the dev server.
 
 ### Phase 3: Network Diagnostics
-For production troubleshooting:
-
-```javascript
-// Test API connectivity
-await NetworkDiagnostics.testConnection();
-
-// Verify CORS configuration
-await NetworkDiagnostics.checkCORS();
-```
+For manual connectivity checks use helper functions in `client/src/lib/debug.ts`.
 
 ## Security Implementation
 
 ### CSRF Protection
-The system automatically handles Django CSRF tokens:
-- Fetches tokens from `/api/v1/auth/csrf/`
-- Includes tokens in state-changing requests
-- Manages token refresh automatically
+When `VITE_USE_DJANGO_API=true`, `client/src/lib/queryClient.ts` injects the  
+`X-CSRFToken` header **only for state-changing requests** (`POST`, `PUT`, `PATCH`, `DELETE`)  
+if a cookie named `csrftoken` is present. No explicit call to a CSRF endpoint is required.
 
 ### CORS Configuration
 Your Django settings.py should include:
