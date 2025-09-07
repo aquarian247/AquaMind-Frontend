@@ -166,7 +166,7 @@ export function useFCRAnalytics({ batchId, filters, enabled = true }: UseFCRAnal
   // Calculate current FCR and confidence from feeding summaries
   if (feedingSummaries.length > 0) {
     const latestSummary = feedingSummaries[feedingSummaries.length - 1];
-    const currentFCR = latestSummary.weighted_avg_fcr ? parseFloat(latestSummary.weighted_avg_fcr) : null;
+    const currentFCR = latestSummary.fcr ? parseFloat(latestSummary.fcr) : null;
 
     if (currentFCR !== null) {
       fcrSummary.currentFCR = currentFCR;
