@@ -14,9 +14,6 @@ export type ScenarioModelChange = {
     new_tgc_model?: number | null;
     new_fcr_model?: number | null;
     new_mortality_model?: number | null;
-    /**
-     * Generate human-readable change description.
-     */
     readonly change_description: string;
 };
 

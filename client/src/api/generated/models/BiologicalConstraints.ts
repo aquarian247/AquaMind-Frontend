@@ -19,10 +19,7 @@ export type BiologicalConstraints = {
      * Whether this constraint set is currently active
      */
     is_active?: boolean;
-    /**
-     * Get stage constraints in a structured format.
-     */
-    readonly stage_constraints: Array<Record<string, any>>;
+    readonly stage_constraints: string;
     readonly created_at: string;
     readonly updated_at: string;
 };

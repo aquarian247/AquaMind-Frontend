@@ -14,14 +14,8 @@ export type PatchedTemperatureProfile = {
     name?: string;
     readonly readings?: Array<TemperatureReading>;
     readonly reading_count?: number;
-    /**
-     * Get the date range of readings.
-     */
-    readonly date_range?: Record<string, any> | null;
-    /**
-     * Get temperature statistics.
-     */
-    readonly temperature_summary?: Record<string, any> | null;
+    readonly date_range?: string;
+    readonly temperature_summary?: string;
     readonly created_at?: string;
     readonly updated_at?: string;
 };

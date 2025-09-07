@@ -20,46 +20,33 @@ export type BatchFeedingSummary = {
      */
     period_end: string;
     /**
-     * Total feed used across all containers (kg)
+     * Total feed used in kg during the period
      */
     total_feed_kg: string;
     /**
-     * Total batch biomass at start of period (kg)
+     * Average batch biomass during the period (kg)
      */
-    total_starting_biomass_kg?: string | null;
+    average_biomass_kg?: string | null;
     /**
-     * Total batch biomass at end of period (kg)
+     * Average feeding percentage during the period
      */
-    total_ending_biomass_kg?: string | null;
+    average_feeding_percentage?: string | null;
     /**
-     * Total batch growth during the period (kg)
+     * Growth during the period (kg)
      */
-    total_growth_kg?: string | null;
+    growth_kg?: string | null;
     /**
-     * Weighted average FCR across all containers
+     * Total feed consumed by the batch during this period (kg)
      */
-    weighted_avg_fcr?: string | null;
+    total_feed_consumed_kg?: string | null;
     /**
-     * Number of containers contributing to this summary
+     * Total biomass gain during this period (kg)
      */
-    container_count?: number;
+    total_biomass_gain_kg?: string | null;
     /**
-     * Overall confidence level (worst case across containers)
-     *
-     * * `VERY_HIGH` - Very High (< 10 days since weighing)
-     * * `HIGH` - High (10-20 days since weighing)
-     * * `MEDIUM` - Medium (20-40 days since weighing)
-     * * `LOW` - Low (> 40 days since weighing)
+     * Feed Conversion Ratio (total_feed_consumed_kg / total_biomass_gain_kg)
      */
-    overall_confidence_level?: 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW';
-    /**
-     * Overall estimation method across containers
-     *
-     * * `MEASURED` - All containers have direct measurements
-     * * `MIXED` - Some containers use interpolation
-     * * `INTERPOLATED` - Most containers use interpolation
-     */
-    estimation_method?: 'MEASURED' | 'MIXED' | 'INTERPOLATED' | '' | null;
+    fcr?: string | null;
     readonly created_at: string;
     readonly updated_at: string;
 };

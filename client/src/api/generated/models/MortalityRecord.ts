@@ -19,10 +19,6 @@ export type MortalityRecord = {
      */
     container: number;
     /**
-     * Name of the container where the mortality occurred.
-     */
-    readonly container_name: string | null;
-    /**
      * Date and time when the mortality event was recorded (auto-set).
      */
     readonly event_date: string;

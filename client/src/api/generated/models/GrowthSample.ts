@@ -11,10 +11,7 @@ export type GrowthSample = {
      * The specific container assignment this sample was taken from
      */
     assignment?: number;
-    /**
-     * Get detailed information about the batch container assignment.
-     */
-    readonly assignment_details: Record<string, any> | null;
+    readonly assignment_details: string;
     sample_date?: string;
     /**
      * Number of fish sampled

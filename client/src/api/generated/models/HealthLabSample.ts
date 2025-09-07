@@ -75,36 +75,24 @@ export type HealthLabSample = {
     /**
      * Batch number from the associated batch-container assignment.
      */
-    readonly batch_number: string | null;
+    readonly batch_number: string;
     /**
      * Container name from the associated batch-container assignment.
      */
-    readonly container_name: string | null;
+    readonly container_name: string;
     /**
      * Name of the sample type.
      */
-    readonly sample_type_name: string | null;
+    readonly sample_type_name: string;
     /**
      * Username of the person who recorded this sample.
      */
-    readonly recorded_by_username: string | null;
+    readonly recorded_by_username: string;
     /**
      * Detailed information about the batch-container assignment at the time of sampling.
      */
-    readonly batch_container_assignment_details: {
-        assignment_id?: number;
-        batch_id?: number;
-        container_id?: number;
-        assignment_date?: string;
-        is_active?: boolean;
-    };
-    /**
-     * Retrieve and format the related object's ID and string representation.
-     */
-    readonly batch: Record<string, any> | null;
-    /**
-     * Retrieve and format the related object's ID and string representation.
-     */
-    readonly container: Record<string, any> | null;
+    readonly batch_container_assignment_details: string;
+    readonly batch: string;
+    readonly container: string;
 };
 

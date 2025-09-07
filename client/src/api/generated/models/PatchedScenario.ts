@@ -52,14 +52,8 @@ export type PatchedScenario = {
     readonly model_changes?: Array<ScenarioModelChange>;
     readonly created_by?: number | null;
     readonly created_by_name?: string;
-    /**
-     * Determine initial lifecycle stage based on weight.
-     */
-    readonly initial_stage?: Record<string, string> | null;
-    /**
-     * Estimate harvest day based on growth model.
-     */
-    readonly projected_harvest_day?: number | null;
+    readonly initial_stage?: string;
+    readonly projected_harvest_day?: string;
     readonly created_at?: string;
     readonly updated_at?: string;
 };

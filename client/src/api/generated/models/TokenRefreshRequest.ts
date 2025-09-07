@@ -2,8 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type TokenRefresh = {
-    readonly access: string;
+/**
+ * Request schema for token refresh endpoint
+ */
+export type TokenRefreshRequest = {
+    /**
+     * The refresh token
+     */
     refresh: string;
 };
 

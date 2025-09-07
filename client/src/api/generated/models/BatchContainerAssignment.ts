@@ -27,17 +27,8 @@ export type BatchContainerAssignment = {
     notes?: string;
     readonly created_at: string;
     readonly updated_at: string;
-    /**
-     * Get basic batch information.
-     */
-    readonly batch_info: Record<string, any> | null;
-    /**
-     * Get basic container information.
-     */
-    readonly container_info: Record<string, any> | null;
-    /**
-     * Get lifecycle stage information.
-     */
-    readonly lifecycle_stage_info: Record<string, any> | null;
+    readonly batch_info: string;
+    readonly container_info: string;
+    readonly lifecycle_stage_info: string;
 };
 
