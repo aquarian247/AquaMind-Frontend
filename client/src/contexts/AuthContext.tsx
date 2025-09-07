@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { ApiService } from '@/api/generated/services/ApiService';
 import { User } from '@/api/generated/models/User';
 import { UserProfile } from '@/api/generated/models/UserProfile';
-import { TokenRefreshRequest } from '@/api/generated/models/TokenRefreshRequest';
+import { TokenRefresh } from '@/api/generated/models/TokenRefresh';
 import { setAuthToken, storeAuthToken, clearAuthToken } from '@/api/index';
 import { ApiError } from '@/api/generated/core/ApiError';
 import { jwtDecode } from 'jwt-decode';
@@ -261,7 +261,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setState(prev => ({ ...prev, isLoading: true }));
       
       const response = await ApiService.apiV1UsersAuthTokenRefreshCreate(
-        { refresh: refreshToken }
+        { refresh: refreshToken } as TokenRefresh
       );
       
       if (response.access) {

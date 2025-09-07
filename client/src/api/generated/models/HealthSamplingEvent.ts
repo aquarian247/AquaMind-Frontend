@@ -70,8 +70,35 @@ export type HealthSamplingEvent = {
      * User who conducted the sampling.
      */
     sampled_by?: number | null;
-    readonly batch_number: string;
-    readonly container_name: string;
-    readonly sampled_by_username: string;
+    /**
+     * Get the batch number from the assignment.
+     *
+     * Args:
+     * obj: The HealthSamplingEvent instance.
+     *
+     * Returns:
+     * str or None: The batch number, or None if not available.
+     */
+    readonly batch_number: string | null;
+    /**
+     * Get the container name from the assignment.
+     *
+     * Args:
+     * obj: The HealthSamplingEvent instance.
+     *
+     * Returns:
+     * str or None: The container name, or None if not available.
+     */
+    readonly container_name: string | null;
+    /**
+     * Get the username of the user who performed the sampling.
+     *
+     * Args:
+     * obj: The HealthSamplingEvent instance.
+     *
+     * Returns:
+     * str or None: The username, or None if not available.
+     */
+    readonly sampled_by_username: string | null;
 };
 

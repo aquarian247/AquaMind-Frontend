@@ -14,8 +14,14 @@ export type PatchedBatchTransfer = {
     readonly destination_lifecycle_stage_name?: string;
     readonly source_container_name?: string;
     readonly destination_container_name?: string;
-    readonly source_batch_info?: string;
-    readonly destination_batch_info?: string;
+    /**
+     * Get basic source batch information.
+     */
+    readonly source_batch_info?: Record<string, any> | null;
+    /**
+     * Get basic destination batch information.
+     */
+    readonly destination_batch_info?: Record<string, any> | null;
     /**
      * * `CONTAINER` - Container Transfer
      * * `LIFECYCLE` - Lifecycle Stage Change
