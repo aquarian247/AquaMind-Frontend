@@ -208,6 +208,18 @@ debugAPI.testConnection();
 debugAPI.testEndpoint('/api/v1/infrastructure/geographies/');
 ```
 
+### Integration smoke tests (optional)
+
+- Local auth-only smoke (fast):
+  ```bash
+  node quick-integration-test.cjs --auth-only
+  ```
+- Full headless check (optional):
+  ```bash
+  node test-integration.js -v
+  ```
+- CI hint: add a workflow step to run the auth-only smoke after services are reachable (Node 24.x).
+
 ## Pull Request Process
 
 1. Fork the repository
