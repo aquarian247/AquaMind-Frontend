@@ -149,5 +149,5 @@ export const DJANGO_ENDPOINTS = {
   // User authentication
   AUTH_LOGIN: '/api/v1/auth/token/',
   AUTH_USER: '/api/v1/users/users/me/',
-  AUTH_TOKEN_REFRESH: '/api/v1/users/auth/token/refresh/',
+  AUTH_TOKEN_REFRESH: '/api/v1/auth/token/refresh/',
 } as const;

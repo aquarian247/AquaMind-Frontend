@@ -21,8 +21,8 @@ export const authConfig = {
 
   // Auth Endpoints
   endpoints: {
-    login: '/api/v1/users/auth/token/',
-    refresh: '/api/v1/users/auth/token/refresh/',
+    login: '/api/v1/auth/token/',
+    refresh: '/api/v1/auth/token/refresh/',
     profile: '/api/v1/users/auth/profile/',
   },
 

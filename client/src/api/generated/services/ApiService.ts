@@ -171,8 +171,8 @@ import type { Species } from '../models/Species';
 import type { StageTransitionEnvironmental } from '../models/StageTransitionEnvironmental';
 import type { TemperatureProfile } from '../models/TemperatureProfile';
 import type { TGCModel } from '../models/TGCModel';
-import type { TokenObtainPair } from '../models/TokenObtainPair';
-import type { TokenRefresh } from '../models/TokenRefresh';
+import type { TokenRefreshRequest } from '../models/TokenRefreshRequest';
+import type { TokenRefreshResponse } from '../models/TokenRefreshResponse';
 import type { Treatment } from '../models/Treatment';
 import type { User } from '../models/User';
 import type { UserCreate } from '../models/UserCreate';
@@ -12307,12 +12307,12 @@ export class ApiService {
                                          * Takes a refresh type JSON web token and returns an access type JSON web
                                          * token if the refresh token is valid.
                                          * @param requestBody
-                                         * @returns TokenRefresh
+                                         * @returns TokenRefreshResponse
                                          * @throws ApiError
                                          */
                                         public static apiV1UsersAuthTokenRefreshCreate(
-                                            requestBody: TokenRefresh,
-                                        ): CancelablePromise<TokenRefresh> {
+                                            requestBody: TokenRefreshRequest,
+                                        ): CancelablePromise<TokenRefreshResponse> {
                                             return __request(OpenAPI, {
                                                 method: 'POST',
                                                 url: '/api/v1/users/auth/token/refresh/',
@@ -12599,94 +12599,6 @@ export class ApiService {
                                                     401: `Unauthorized`,
                                                     403: `Forbidden`,
                                                     404: `Not Found`,
-                                                    500: `Internal Server Error`,
-                                                },
-                                            });
-                                        }
-                                        /**
-                                         * Takes a set of user credentials and returns an access and refresh JSON web
-                                         * token pair to prove the authentication of those credentials.
-                                         * @param requestBody
-                                         * @returns TokenObtainPair
-                                         * @throws ApiError
-                                         */
-                                        public static apiTokenCreate(
-                                            requestBody: TokenObtainPair,
-                                        ): CancelablePromise<TokenObtainPair> {
-                                            return __request(OpenAPI, {
-                                                method: 'POST',
-                                                url: '/api/token/',
-                                                body: requestBody,
-                                                mediaType: 'application/json',
-                                                errors: {
-                                                    400: `Bad request (validation error)`,
-                                                    401: `Unauthorized`,
-                                                    403: `Forbidden`,
-                                                    500: `Internal Server Error`,
-                                                },
-                                            });
-                                        }
-                                        /**
-                                         * Takes a refresh type JSON web token and returns an access type JSON web
-                                         * token if the refresh token is valid.
-                                         * @param requestBody
-                                         * @returns TokenRefresh
-                                         * @throws ApiError
-                                         */
-                                        public static apiTokenRefreshCreate(
-                                            requestBody: TokenRefresh,
-                                        ): CancelablePromise<TokenRefresh> {
-                                            return __request(OpenAPI, {
-                                                method: 'POST',
-                                                url: '/api/token/refresh/',
-                                                body: requestBody,
-                                                mediaType: 'application/json',
-                                                errors: {
-                                                    400: `Bad request (validation error)`,
-                                                    401: `Unauthorized`,
-                                                    403: `Forbidden`,
-                                                    500: `Internal Server Error`,
-                                                },
-                                            });
-                                        }
-                                        /**
-                                         * Takes a set of user credentials and returns an access and refresh JSON web
-                                         * token pair to prove the authentication of those credentials.
-                                         * @param requestBody
-                                         * @returns TokenObtainPair
-                                         * @throws ApiError
-                                         */
-                                        public static apiAuthJwtCreate(
-                                            requestBody: TokenObtainPair,
-                                        ): CancelablePromise<TokenObtainPair> {
-                                            return __request(OpenAPI, {
-                                                method: 'POST',
-                                                url: '/api/auth/jwt/',
-                                                body: requestBody,
-                                                mediaType: 'application/json',
-                                                errors: {
-                                                    400: `Bad request (validation error)`,
-                                                    500: `Internal Server Error`,
-                                                },
-                                            });
-                                        }
-                                        /**
-                                         * Takes a refresh type JSON web token and returns an access type JSON web
-                                         * token if the refresh token is valid.
-                                         * @param requestBody
-                                         * @returns TokenRefresh
-                                         * @throws ApiError
-                                         */
-                                        public static apiAuthJwtRefreshCreate(
-                                            requestBody: TokenRefresh,
-                                        ): CancelablePromise<TokenRefresh> {
-                                            return __request(OpenAPI, {
-                                                method: 'POST',
-                                                url: '/api/auth/jwt/refresh/',
-                                                body: requestBody,
-                                                mediaType: 'application/json',
-                                                errors: {
-                                                    400: `Bad request (validation error)`,
                                                     500: `Internal Server Error`,
                                                 },
                                             });
