@@ -5,8 +5,8 @@ import { ApiService } from "@/api/generated/services/ApiService";
 import { api } from "@/lib/api";
 import type { ConfidenceLevel, FCRSummaryData } from "@/components/batch-management/FCRSummaryCard";
 import type { FCRDataPoint } from "@/components/batch-management/FCRTrendChart";
-import type { FCRDataPoint as GeneratedFCRDataPoint } from "@/api/generated/models/FCRDataPoint";
 import type { FCRTrends } from "@/api/generated/models/FCRTrends";
+import type { FCRDataPoint as GeneratedFCRDataPoint } from "@/api/generated/models/FCRDataPoint";
 
 // Mock data for development when API is not available
 const mockFCRData: FCRDataPoint[] = [
@@ -141,6 +141,7 @@ export function useFCRAnalytics({ batchId, filters, enabled = true }: UseFCRAnal
           })) || []
         ) || [];
 
+        setIsUsingMockData(false);
         return transformedData;
       } catch (error) {
         console.error("Failed to fetch FCR trends:", error);

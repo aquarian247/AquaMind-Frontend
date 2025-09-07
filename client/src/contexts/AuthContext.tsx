@@ -14,13 +14,6 @@ interface JWTTokens {
   refresh: string;
 }
 
-interface TokenRefreshRequest {
-  refresh: string;
-}
-
-interface TokenRefreshResponse {
-  access: string;
-}
 
 interface DecodedToken {
   user_id: number;
@@ -267,12 +260,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
       
-      /* The generated TokenRefresh model incorrectly marks `access`
-         as required/readonly on the request body.  We only need to send
-         the refresh token string – cast to satisfy the type checker. */
-      const response = (await ApiService.apiV1UsersAuthTokenRefreshCreate(
-        { refresh: refreshToken } as unknown as TokenRefresh
-      )) as any;
+      const response = await ApiService.apiV1UsersAuthTokenRefreshCreate(
+        { refresh: refreshToken } as TokenRefresh
+      );
       
       if (response.access) {
         // Store new access token
