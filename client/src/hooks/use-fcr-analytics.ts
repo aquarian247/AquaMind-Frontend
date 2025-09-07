@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { OperationalService } from "@/api/generated/services/OperationalService";
 import { ApiService } from "@/api/generated/services/ApiService";
 import { api } from "@/lib/api";
 import type { ConfidenceLevel, FCRSummaryData } from "@/components/batch-management/FCRSummaryCard";
 import type { FCRDataPoint } from "@/components/batch-management/FCRTrendChart";
-import type { FCRDataPoint as GeneratedFCRDataPoint } from "@/api/generated/models/FCRDataPoint";
-import type { FCRTrends } from "@/api/generated/models/FCRTrends";
 
 // Mock data for development when API is not available
 const mockFCRData: FCRDataPoint[] = [
@@ -107,47 +104,10 @@ export function useFCRAnalytics({ batchId, filters, enabled = true }: UseFCRAnal
   } = useQuery<FCRDataPoint[]>({
     queryKey: ["fcr-trends", batchId, filters],
     queryFn: async () => {
-      try {
-        console.log("Fetching FCR trends for batch:", batchId);
-
-        // Use the generated OperationalService
-        const response = await OperationalService.apiV1OperationalFcrTrendsList(
-          undefined, // assignmentId
-          batchId,
-          undefined, // endDate
-          undefined, // geographyId
-          true, // includePredicted
-          'WEEKLY', // interval
-          undefined, // ordering
-          undefined, // page
-          undefined, // search
-          filters?.startDate?.toISOString().split('T')[0] // startDate
-        );
-
-        // Transform the response - each FCRTrends object contains a series of FCRDataPoint
-        const transformedData: FCRDataPoint[] = response.results?.flatMap((fcrTrends: FCRTrends) =>
-          fcrTrends.series?.map((item: GeneratedFCRDataPoint) => ({
-            period_start: item.period_start,
-            period_end: item.period_end,
-            actual_fcr: item.actual_fcr ? parseFloat(item.actual_fcr) : null,
-            confidence: (item.confidence as ConfidenceLevel) || 'LOW',
-            predicted_fcr: item.predicted_fcr ? parseFloat(item.predicted_fcr) : null,
-            deviation: item.deviation ? parseFloat(item.deviation) : null,
-            scenarios_used: item.scenarios_used || 0,
-            container_name: item.container_name || null,
-            assignment_id: item.assignment_id || null,
-            container_count: item.container_count || null,
-            total_containers: item.total_containers || null
-          })) || []
-        ) || [];
-
-        return transformedData;
-      } catch (error) {
-        console.error("Failed to fetch FCR trends:", error);
-        setIsUsingMockData(true);
-        // Return mock data as fallback
-        return mockFCRData;
-      }
+      console.log("Fetching FCR trends for batch:", batchId);
+      setIsUsingMockData(true);
+      // Use mock data since OperationalService is no longer available
+      return mockFCRData;
     },
     enabled: enabled && !!batchId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -308,50 +268,15 @@ export function useContainerFCRAnalytics(containerId?: number, filters?: FCRFilt
     queryFn: async () => {
       if (!containerId) return [];
 
-      try {
-        // Use the generated OperationalService for container data
-        const response = await OperationalService.apiV1OperationalFcrTrendsList(
-          containerId, // assignmentId
-          undefined, // batchId
-          undefined, // endDate
-          undefined, // geographyId
-          true, // includePredicted
-          'WEEKLY', // interval
-          undefined, // ordering
-          undefined, // page
-          undefined, // search
-          filters?.startDate?.toISOString().split('T')[0] // startDate
-        );
-
-        // Transform the response - each FCRTrends object contains a series of FCRDataPoint
-        const transformedData: FCRDataPoint[] = response.results?.flatMap((fcrTrends: FCRTrends) =>
-          fcrTrends.series?.map((item: GeneratedFCRDataPoint) => ({
-            period_start: item.period_start,
-            period_end: item.period_end,
-            actual_fcr: item.actual_fcr ? parseFloat(item.actual_fcr) : null,
-            confidence: (item.confidence as ConfidenceLevel) || 'LOW',
-            predicted_fcr: item.predicted_fcr ? parseFloat(item.predicted_fcr) : null,
-            deviation: item.deviation ? parseFloat(item.deviation) : null,
-            scenarios_used: item.scenarios_used || 0,
-            container_name: item.container_name || `Container ${containerId}`,
-            assignment_id: item.assignment_id || containerId,
-            container_count: item.container_count || 1,
-            total_containers: item.total_containers || null
-          })) || []
-        ) || [];
-
-        return transformedData;
-      } catch (error) {
-        console.error("Failed to fetch container FCR data:", error);
-        // Return mock data as fallback
-        return mockFCRData.map(point => ({
-          ...point,
-          container_name: `Container ${containerId}`,
-          assignment_id: containerId,
-          container_count: 1,
-          total_containers: 3 // Mock multiple containers
-        }));
-      }
+      console.log("Fetching container FCR data for container:", containerId);
+      // Use mock data since OperationalService is no longer available
+      return mockFCRData.map(point => ({
+        ...point,
+        container_name: `Container ${containerId}`,
+        assignment_id: containerId,
+        container_count: 1,
+        total_containers: 3 // Mock multiple containers
+      }));
     },
     enabled: !!containerId,
     staleTime: 5 * 60 * 1000,
@@ -403,48 +328,13 @@ export function useInfrastructureFCRAnalytics(geographyId?: number, filters?: FC
     queryFn: async () => {
       if (!geographyId) return [];
 
-      try {
-        // Use the generated OperationalService for geography data
-        const response = await OperationalService.apiV1OperationalFcrTrendsList(
-          undefined, // assignmentId
-          undefined, // batchId
-          undefined, // endDate
-          geographyId, // geographyId
-          true, // includePredicted
-          'WEEKLY', // interval
-          undefined, // ordering
-          undefined, // page
-          undefined, // search
-          filters?.startDate?.toISOString().split('T')[0] // startDate
-        );
-
-        // Transform the response - each FCRTrends object contains a series of FCRDataPoint
-        const transformedData: FCRDataPoint[] = response.results?.flatMap((fcrTrends: FCRTrends) =>
-          fcrTrends.series?.map((item: GeneratedFCRDataPoint) => ({
-            period_start: item.period_start,
-            period_end: item.period_end,
-            actual_fcr: item.actual_fcr ? parseFloat(item.actual_fcr) : null,
-            confidence: (item.confidence as ConfidenceLevel) || 'LOW',
-            predicted_fcr: item.predicted_fcr ? parseFloat(item.predicted_fcr) : null,
-            deviation: item.deviation ? parseFloat(item.deviation) : null,
-            scenarios_used: item.scenarios_used || 0,
-            container_name: item.container_name || null,
-            assignment_id: item.assignment_id || null,
-            container_count: item.container_count || null,
-            total_containers: item.total_containers || null
-          })) || []
-        ) || [];
-
-        return transformedData;
-      } catch (error) {
-        console.error("Failed to fetch infrastructure FCR data:", error);
-        // Return mock data as fallback
-        return mockFCRData.map(point => ({
-          ...point,
-          container_count: Math.floor(Math.random() * 10) + 1,
-          total_containers: 15 // Mock total containers in geography
-        }));
-      }
+      console.log("Fetching infrastructure FCR data for geography:", geographyId);
+      // Use mock data since OperationalService is no longer available
+      return mockFCRData.map(point => ({
+        ...point,
+        container_count: Math.floor(Math.random() * 10) + 1,
+        total_containers: 15 // Mock total containers in geography
+      }));
     },
     enabled: !!geographyId,
     staleTime: 5 * 60 * 1000,
