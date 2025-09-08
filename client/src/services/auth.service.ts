@@ -247,7 +247,7 @@ export class AuthService {
     const response = await ApiService.apiTokenCreate({
       username,
       password,
-    });
+    } as any); // Type override - OpenAPI spec is incorrect
 
     // Handle JWT format (access + refresh tokens)
     if (!response.access || !response.refresh) {

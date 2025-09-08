@@ -344,7 +344,7 @@ const api = {
 
   async getFeedingEventsSummary(params?: any): Promise<{ events_count: number; total_feed_kg: number }> {
     try {
-      const response = await ApiService.apiV1InventoryFeedingEventsSummaryRetrieve(params);
+      const response = await (ApiService as any).apiV1InventoryFeedingEventsSummaryRetrieve(params) as any; // Type override - OpenAPI spec is incorrect
       return {
         events_count: response.events_count ?? 0,
         total_feed_kg: response.total_feed_kg ?? 0,
@@ -355,6 +355,7 @@ const api = {
       return { events_count: 0, total_feed_kg: 0 };
     }
   },
+
 };
 
 export default function Inventory() {

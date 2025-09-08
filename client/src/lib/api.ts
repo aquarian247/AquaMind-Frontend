@@ -861,10 +861,14 @@ export const api = {
       return ApiService.apiV1InventoryFeedingEventsList();
     },
 
-    async getFeedingEventsSummary(filters?: any) {
+    async getFeedingEventsSummary(filters?: any): Promise<{ events_count: number; total_feed_kg: number }> {
       // Use the summary endpoint with date range parameter
       const params = filters || {};
-      return ApiService.apiV1InventoryFeedingEventsSummaryRetrieve(params as any);
+      const response = await (ApiService as any).apiV1InventoryFeedingEventsSummaryRetrieve(params) as any; // Type override - OpenAPI spec is incorrect
+      return {
+        events_count: response.events_count ?? 0,
+        total_feed_kg: response.total_feed_kg ?? 0,
+      };
     },
 
     async createFeedingEvent(data: any) {

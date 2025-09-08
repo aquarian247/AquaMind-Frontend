@@ -1,12 +1,23 @@
 /**
  * API Client Wrapper
- * 
+ *
  * This module provides a unified interface to the AquaMind API by configuring
  * and re-exporting the auto-generated OpenAPI client.
  */
 
 import { OpenAPI } from './generated';
 import { ApiError, CancelablePromise } from './generated';
+
+// Type overrides for OpenAPI spec corrections (the generated spec has some inaccuracies)
+export interface TokenObtainPairRequest {
+  username: string;
+  password: string;
+}
+
+export interface FeedingEventsSummaryResponse {
+  events_count: number;
+  total_feed_kg: number;
+}
 
 // Re-export all types and services from the generated client
 export * from './generated';
@@ -81,7 +92,7 @@ export const setDevToken = async () => {
     const response = await ApiService.apiTokenCreate({
       username: 'admin',
       password: 'admin123',
-    });
+    } as any); // Type override - OpenAPI spec is incorrect
 
     if (response.access && response.refresh) {
       const jwtToken = response.access; // Use access token for API calls
