@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { ApiService } from '@/api/generated/services/ApiService';
 import { User } from '@/api/generated/models/User';
 import { UserProfile } from '@/api/generated/models/UserProfile';
-import { TokenRefreshRequest } from '@/api/generated/models/TokenRefreshRequest';
+import { TokenRefresh } from '@/api/generated/models/TokenRefresh';
 import { setAuthToken, storeAuthToken, clearAuthToken } from '@/api/index';
 import { ApiError } from '@/api/generated/core/ApiError';
 import { jwtDecode } from 'jwt-decode';
@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             error: null,
             tokenInfo: {
               accessToken: newTokens.access,
-              refreshToken: newTokens.refresh,
+              refreshToken: newTokens.refresh || null,
               expiresAt: newDecoded.exp,
               authSource: newDecoded.auth_source,
             },
@@ -285,7 +285,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setState(prev => ({ ...prev, isLoading: true }));
       
       const response = await ApiService.apiV1UsersAuthTokenRefreshCreate(
-        { refresh: refreshToken }
+        { access: '', refresh: refreshToken }
       );
       
       if (response.access) {
@@ -350,7 +350,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         error: null,
         tokenInfo: {
           accessToken: tokens.access,
-          refreshToken: tokens.refresh,
+          refreshToken: tokens.refresh || null,
           expiresAt: decoded.exp,
           authSource: decoded.auth_source,
         },

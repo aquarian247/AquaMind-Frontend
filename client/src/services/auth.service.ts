@@ -212,27 +212,22 @@ export class AuthService {
     }
 
     try {
-      // Use the Django JWT refresh endpoint: /api/token/refresh/
-      const refreshUrl = `${authConfig.baseUrl}/api/token/refresh/`;
+      const { ApiService } = await import('@/api/generated');
 
-      const response = await fetch(refreshUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh: refreshToken }),
+      const response = await ApiService.apiV1UsersAuthTokenRefreshCreate({
+        access: '',
+        refresh: refreshToken,
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Refresh token expired or invalid');
-          AuthService.clearTokens();
-          return null;
-        }
-        throw new Error(`Token refresh failed: ${response.status}`);
+      if (!response.access) {
+        throw new Error('Invalid refresh response format');
       }
 
-      const tokens: AuthTokens = await response.json();
+      const tokens: AuthTokens = {
+        access: response.access,
+        refresh: refreshToken, // Keep existing refresh token
+      };
+
       AuthService.storeTokens(tokens);
 
       return tokens;
@@ -247,34 +242,24 @@ export class AuthService {
    * Login with username and password
    */
   static async login(username: string, password: string): Promise<AuthTokens> {
-    // Use the Django JWT login endpoint: /api/token/
-    const loginUrl = `${authConfig.baseUrl}/api/token/`;
+    const { AuthService: GeneratedAuthService } = await import('@/api/generated/services/AuthService');
 
-    const response = await fetch(loginUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
+    const response = await GeneratedAuthService.apiV1AuthTokenCreate({
+      username,
+      password,
     });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new ApiError('Invalid username or password', 401);
-      }
-      throw new ApiError(`Login failed: ${response.status}`, response.status);
-    }
-
-    const responseData = await response.json();
+    // The backend returns JWT tokens despite the OpenAPI spec saying AuthTokenResponse
+    const jwtResponse = response as unknown as { access: string; refresh: string };
 
     // Handle JWT format (access + refresh tokens)
-    if (!responseData.access || !responseData.refresh) {
+    if (!jwtResponse.access || !jwtResponse.refresh) {
       throw new ApiError('Invalid JWT token response format', 500);
     }
 
     const tokens: AuthTokens = {
-      access: responseData.access,
-      refresh: responseData.refresh,
+      access: jwtResponse.access,
+      refresh: jwtResponse.refresh,
     };
 
     this.storeTokens(tokens);
