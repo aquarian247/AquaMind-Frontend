@@ -247,21 +247,16 @@ export class AuthService {
     const response = await ApiService.apiTokenCreate({
       username,
       password,
-      access: '',
-      refresh: '',
-    } as any);
-
-    // The backend returns JWT tokens despite the OpenAPI spec saying TokenObtainPair
-    const jwtResponse = response as unknown as { access: string; refresh: string };
+    });
 
     // Handle JWT format (access + refresh tokens)
-    if (!jwtResponse.access || !jwtResponse.refresh) {
+    if (!response.access || !response.refresh) {
       throw new ApiError('Invalid JWT token response format', 500);
     }
 
     const tokens: AuthTokens = {
-      access: jwtResponse.access,
-      refresh: jwtResponse.refresh,
+      access: response.access,
+      refresh: response.refresh,
     };
 
     this.storeTokens(tokens);

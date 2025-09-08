@@ -861,6 +861,12 @@ export const api = {
       return ApiService.apiV1InventoryFeedingEventsList();
     },
 
+    async getFeedingEventsSummary(filters?: any) {
+      // Use the summary endpoint with date range parameter
+      const params = filters || {};
+      return ApiService.apiV1InventoryFeedingEventsSummaryRetrieve(params as any);
+    },
+
     async createFeedingEvent(data: any) {
       return ApiService.apiV1InventoryFeedingEventsCreate(data);
     },

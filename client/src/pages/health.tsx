@@ -264,12 +264,12 @@ export default function Health() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {healthSummary?.averageHealthScore?.toFixed(1) || "4.2"}/5.0
+              {healthSummary?.averageHealthScore ? `${healthSummary.averageHealthScore.toFixed(1)}/5.0` : "No data"}
             </div>
             <div className="flex items-center space-x-2 mt-2">
-              <Progress value={(healthSummary?.averageHealthScore || 4.2) * 20} className="flex-1" />
+              <Progress value={(healthSummary?.averageHealthScore ?? 0) * 20} className="flex-1" />
               <span className="text-xs text-muted-foreground">
-                {healthSummary?.healthyBatches || 87}% healthy
+                {healthSummary?.healthyBatches ? `${healthSummary.healthyBatches}% healthy` : "No data"}
               </span>
             </div>
           </CardContent>
@@ -282,10 +282,10 @@ export default function Health() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {healthSummary?.activeTreatments || 5}
+              {healthSummary?.activeTreatments ?? 'No data'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {healthSummary?.batchesUnderTreatment || 3} batches under treatment
+              {healthSummary?.batchesUnderTreatment ? `${healthSummary.batchesUnderTreatment} batches under treatment` : "No data"}
             </p>
           </CardContent>
         </Card>
@@ -297,7 +297,7 @@ export default function Health() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {healthSummary?.recentMortality || 1.2}%
+              {healthSummary?.recentMortality ?? 'No data'}%
             </div>
             <p className="text-xs text-muted-foreground">
               Last 7 days (within normal range)
@@ -312,7 +312,7 @@ export default function Health() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {healthSummary?.avgLiceCount || 2.3}
+              {healthSummary?.avgLiceCount ?? 'No data'}
             </div>
             <p className="text-xs text-muted-foreground">
               Per fish (below treatment threshold)

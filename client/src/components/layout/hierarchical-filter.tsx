@@ -289,7 +289,19 @@ export default function HierarchicalFilter({ onFilterChange, showBatches = false
 }
 
 // Statistics Overview Component
-export function OperationsOverview() {
+interface OperationsOverviewProps {
+  totalSites?: number;
+  activePensTanks?: number;
+  activeBatches?: number;
+  capacityUtilization?: number;
+}
+
+export function OperationsOverview({
+  totalSites,
+  activePensTanks,
+  activeBatches,
+  capacityUtilization
+}: OperationsOverviewProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <Card>
@@ -298,8 +310,10 @@ export function OperationsOverview() {
             <MapPin className="h-5 w-5 text-blue-600" />
             <div>
               <p className="text-sm font-medium">Total Sites</p>
-              <p className="text-2xl font-bold">50</p>
-              <p className="text-xs text-gray-600">25 Faroe + 25 Scotland</p>
+              <p className="text-2xl font-bold">
+                {totalSites ?? <span className="text-gray-400">Loading...</span>}
+              </p>
+              <p className="text-xs text-gray-600">Geographies & areas</p>
             </div>
           </div>
         </CardContent>
@@ -311,8 +325,10 @@ export function OperationsOverview() {
             <Package className="h-5 w-5 text-green-600" />
             <div>
               <p className="text-sm font-medium">Active Pens/Tanks</p>
-              <p className="text-2xl font-bold">1,180</p>
-              <p className="text-xs text-gray-600">~900 pens + 280 tanks</p>
+              <p className="text-2xl font-bold">
+                {activePensTanks?.toLocaleString() ?? <span className="text-gray-400">Loading...</span>}
+              </p>
+              <p className="text-xs text-gray-600">Containers in use</p>
             </div>
           </div>
         </CardContent>
@@ -324,8 +340,10 @@ export function OperationsOverview() {
             <Fish className="h-5 w-5 text-orange-600" />
             <div>
               <p className="text-sm font-medium">Active Batches</p>
-              <p className="text-2xl font-bold">98</p>
-              <p className="text-xs text-gray-600">Various life stages</p>
+              <p className="text-2xl font-bold">
+                {activeBatches ?? <span className="text-gray-400">Loading...</span>}
+              </p>
+              <p className="text-xs text-gray-600">Current production</p>
             </div>
           </div>
         </CardContent>
@@ -337,8 +355,10 @@ export function OperationsOverview() {
             <Building className="h-5 w-5 text-purple-600" />
             <div>
               <p className="text-sm font-medium">Capacity Utilization</p>
-              <p className="text-2xl font-bold">87%</p>
-              <p className="text-xs text-gray-600">Across all facilities</p>
+              <p className="text-2xl font-bold">
+                {capacityUtilization !== undefined ? `${capacityUtilization}%` : <span className="text-gray-400">Loading...</span>}
+              </p>
+              <p className="text-xs text-gray-600">Biomass vs capacity</p>
             </div>
           </div>
         </CardContent>

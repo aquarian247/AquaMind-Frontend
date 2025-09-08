@@ -35,6 +35,7 @@ import {
   Factory
 } from "lucide-react";
 import { ApiService } from "@/api/generated/services/ApiService";
+import HierarchicalFilter, { OperationsOverview } from "@/components/layout/hierarchical-filter";
 
 // Types based on Django data model section 3.3
 interface Feed {
@@ -340,6 +341,20 @@ const api = {
       throw new Error("Failed to fetch feeding summaries");
     }
   },
+
+  async getFeedingEventsSummary(params?: any): Promise<{ events_count: number; total_feed_kg: number }> {
+    try {
+      const response = await ApiService.apiV1InventoryFeedingEventsSummaryRetrieve(params);
+      return {
+        events_count: response.events_count ?? 0,
+        total_feed_kg: response.total_feed_kg ?? 0,
+      };
+    } catch (error) {
+      console.error("Failed to fetch feeding events summary:", error);
+      // Return zero values instead of throwing to prevent the entire summary from failing
+      return { events_count: 0, total_feed_kg: 0 };
+    }
+  },
 };
 
 export default function Inventory() {
@@ -376,6 +391,36 @@ export default function Inventory() {
     queryFn: api.getFeedingEvents,
   });
 
+  // Get feeding events summary for the last 7 days (query each day individually and sum)
+  const getLast7DaysSummaries = async () => {
+    const summaries = [];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+
+      try {
+        const response = await api.getFeedingEventsSummary({ date: dateString });
+        summaries.push(response);
+      } catch (error) {
+        console.warn(`Failed to fetch summary for ${dateString}:`, error);
+      }
+    }
+
+    // Sum up all events
+    const totalEvents = summaries.reduce((sum, summary) => sum + (summary.events_count || 0), 0);
+    const totalFeedKg = summaries.reduce((sum, summary) => sum + (summary.total_feed_kg || 0), 0);
+
+    console.log(`Last 7 days summary: ${totalEvents} events, ${totalFeedKg}kg feed`);
+    return { events_count: totalEvents, total_feed_kg: totalFeedKg };
+  };
+
+  const { data: feedingEventsSummaryData, isLoading: feedingEventsSummaryLoading } = useQuery({
+    queryKey: ['feeding-events-summary-last-7-days'],
+    queryFn: getLast7DaysSummaries,
+  });
+
   const { data: containerStockData, isLoading: containerStockLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feed-container-stock/"],
     queryFn: api.getFeedContainerStock,
@@ -386,6 +431,16 @@ export default function Inventory() {
     queryFn: api.getBatchFeedingSummaries,
   });
 
+  // Get infrastructure data for real counts
+  const { data: infrastructureData } = useQuery({
+    queryKey: ["infrastructure"],
+    queryFn: () => Promise.all([
+      ApiService.apiV1InfrastructureGeographiesList(),
+      ApiService.apiV1InfrastructureContainersList(),
+      ApiService.apiV1BatchBatchesList()
+    ]),
+  });
+
   const feedTypes = feedTypesData?.results || [];
   const purchases = purchasesData?.results || [];
   const containers = containersData?.results || [];
@@ -394,6 +449,22 @@ export default function Inventory() {
   const containerStock = containerStockData?.results || [];
   const summaries = summariesData?.results || [];
 
+  // Extract feeding events summary data (now contains summed totals for last 7 days)
+  const feedingEventsSummary = feedingEventsSummaryData;
+
+  // Extract real data from API responses
+  const geographies = infrastructureData?.[0]?.results || [];
+  const allContainers = infrastructureData?.[1]?.results || [];
+  const batches = infrastructureData?.[2]?.results || [];
+
+  // Calculate real metrics for OperationsOverview
+  const totalSites = geographies.length;
+  const activePensTanks = allContainers.filter((c: any) => c.active).length;
+  const activeBatches = batches.filter((b: any) => b.status === 'active' || !b.status).length;
+  const totalCapacity = allContainers.reduce((sum: number, c: any) => sum + parseFloat(c.volume_m3 || '0'), 0);
+  const totalBiomass = batches.reduce((sum: number, b: any) => sum + parseFloat(b.current_biomass_kg || '0'), 0);
+  const capacityUtilization = totalCapacity > 0 ? Math.round((totalBiomass / (totalCapacity * 1000)) * 100) : 0;
+
   // Calculate dashboard metrics
   const totalInventoryValue = containerStock.reduce((sum, item) => 
     sum + (parseFloat(item.quantityKg) * parseFloat(item.costPerKg)), 0
@@ -401,9 +472,9 @@ export default function Inventory() {
 
   const totalQuantity = containerStock.reduce((sum, item) => sum + parseFloat(item.quantityKg), 0);
 
-  const averageFCR = summaries.length > 0 
+  const averageFCR = summaries.length > 0
     ? summaries.reduce((sum, s) => parseFloat(s.fcr || "0"), 0) / summaries.length
-    : 0;
+    : null; // Let UI handle missing FCR data
 
   const recentFeedingEvents = feedingEvents
     .sort((a, b) => new Date(b.feedingDate).getTime() - new Date(a.feedingDate).getTime())
@@ -464,9 +535,27 @@ export default function Inventory() {
     },
   });
 
+  const [filters, setFilters] = useState({});
+
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+  };
+
+  // Navigation menu items based on Django model and slides inspiration
+  const navigationSections = [
+    { id: "dashboard", label: "Overview", icon: BarChart3 },
+    { id: "feed-types", label: "Feed Types", icon: Settings },
+    { id: "purchases", label: "Purchases", icon: Truck },
+    { id: "distribution", label: "Distribution", icon: Factory },
+    { id: "feeding-events", label: "Feeding Events", icon: ClipboardList },
+    { id: "container-stock", label: "Stock Levels", icon: Boxes },
+    { id: "fcr-analysis", label: "Analytics", icon: TrendingUp },
+  ];
+
   // Check if any data is still loading
-  const isLoading = feedTypesLoading || purchasesLoading || containersLoading || 
-                   stockLoading || feedingEventsLoading || containerStockLoading || summariesLoading;
+  const isLoading = feedTypesLoading || purchasesLoading || containersLoading ||
+                   stockLoading || feedingEventsLoading || feedingEventsSummaryLoading ||
+                   containerStockLoading || summariesLoading;
 
   if (isLoading) {
     return (
@@ -479,17 +568,6 @@ export default function Inventory() {
     );
   }
 
-  // Navigation menu items based on Django model and slides inspiration
-  const navigationSections = [
-    { id: "dashboard", label: "Feedstock Dashboard", icon: BarChart3 },
-    { id: "feed-types", label: "Feed Types", icon: Settings },
-    { id: "purchases", label: "Purchase Registration", icon: Truck },
-    { id: "distribution", label: "Feed Distribution", icon: Factory },
-    { id: "feeding-events", label: "Feeding Events", icon: ClipboardList },
-    { id: "container-stock", label: "Container/Barge Stock", icon: Boxes },
-    { id: "fcr-analysis", label: "Batch FCR Analysis", icon: TrendingUp },
-  ];
-
   return (
     <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       <div className="text-center">
@@ -497,88 +575,81 @@ export default function Inventory() {
         <p className="text-sm sm:text-base text-gray-600 mt-2">FIFO tracking, cost optimization, and FCR monitoring</p>
       </div>
 
-      {/* KPI Cards - Always Visible */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
-        <Card className="touch-manipulation">
+      {/* Operations Overview for Large Scale */}
+      <OperationsOverview
+        totalSites={totalSites}
+        activePensTanks={activePensTanks}
+        activeBatches={activeBatches}
+        capacityUtilization={capacityUtilization}
+      />
+
+      {/* Feed Inventory Summary KPIs - 4 Status Boxes */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
-              <span className="hidden sm:inline">Total Inventory Value</span>
-              <span className="sm:hidden">Inventory</span>
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-lg lg:text-2xl font-bold">
-              <span className="hidden sm:inline">${totalInventoryValue.toLocaleString()}</span>
-              <span className="sm:hidden">${(totalInventoryValue / 1000).toFixed(0)}k</span>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              ${totalInventoryValue.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="hidden sm:inline">FIFO calculated value</span>
-              <span className="sm:hidden">FIFO value</span>
+              FIFO calculated value
             </p>
           </CardContent>
         </Card>
 
-        <Card className="touch-manipulation">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
-              <span className="hidden sm:inline">Total Feed Stock</span>
-              <span className="sm:hidden">Feed Stock</span>
-            </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Total Feed Stock</CardTitle>
+            <Scale className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-lg lg:text-2xl font-bold">
-              <span className="hidden sm:inline">{totalQuantity.toLocaleString()} kg</span>
-              <span className="sm:hidden">{(totalQuantity / 1000).toFixed(1)}t</span>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {(totalQuantity / 1000).toFixed(1)}k kg
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="hidden sm:inline">Across all containers</span>
-              <span className="sm:hidden">All containers</span>
+              Across {containers.filter(c => c.isActive).length} containers
             </p>
           </CardContent>
         </Card>
 
-        <Card className="touch-manipulation">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
-              <span className="hidden sm:inline">Average FCR</span>
-              <span className="sm:hidden">Avg FCR</span>
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
+            <Factory className="h-4 w-4 text-purple-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-lg lg:text-2xl font-bold">
-              {averageFCR.toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              <span className="hidden sm:inline">Feed conversion ratio</span>
-              <span className="sm:hidden">Conversion</span>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="touch-manipulation">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs lg:text-sm font-medium leading-tight">
-              <span className="hidden sm:inline">Active Containers</span>
-              <span className="sm:hidden">Containers</span>
-            </CardTitle>
-            <Boxes className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-lg lg:text-2xl font-bold">
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">
               {containers.filter(c => c.isActive).length}
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="hidden sm:inline">Currently in use</span>
-              <span className="sm:hidden">In use</span>
+              Storage locations
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Feeding Events</CardTitle>
+            <Calendar className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {feedingEventsSummaryData?.events_count ?? 'Loading...'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Last 7 days
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Navigation Menu - Health Style */}
+      {/* Hierarchical Filtering for Large Scale Operations */}
+      <HierarchicalFilter onFilterChange={handleFilterChange} showBatches={true} />
+
+      {/* Navigation Menu */}
       <div className="space-y-4">
         {/* Mobile Navigation */}
         <div className="md:hidden">
@@ -586,7 +657,7 @@ export default function Inventory() {
             <SelectTrigger className="w-full">
               <SelectValue>
                 <div className="flex items-center space-x-2">
-                  {navigationSections.find(s => s.id === activeSection)?.icon && 
+                  {navigationSections.find(s => s.id === activeSection)?.icon &&
                     React.createElement(navigationSections.find(s => s.id === activeSection)!.icon, { className: "h-4 w-4" })
                   }
                   <span>{navigationSections.find(s => s.id === activeSection)?.label}</span>
@@ -610,32 +681,21 @@ export default function Inventory() {
         </div>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-          {navigationSections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <Card
-                key={section.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                  activeSection === section.id 
-                    ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20" 
-                    : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                }`}
-                onClick={() => setActiveSection(section.id)}
-              >
-                <CardContent className="p-4 text-center">
-                  <Icon className={`h-6 w-6 mx-auto mb-2 ${
-                    activeSection === section.id ? "text-blue-600" : "text-gray-600"
-                  }`} />
-                  <p className={`text-sm font-medium ${
-                    activeSection === section.id ? "text-blue-900 dark:text-blue-100" : "text-gray-900 dark:text-gray-100"
-                  }`}>
-                    {section.label}
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="hidden md:flex bg-muted rounded-lg p-1">
+          {navigationSections.map((section) => (
+            <button
+              key={section.id}
+              onClick={() => setActiveSection(section.id)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeSection === section.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <section.icon className="h-4 w-4" />
+              <span>{section.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -681,8 +741,8 @@ export default function Inventory() {
                         <p className="font-medium">Container {stock.feedContainer}</p>
                         <p className="text-sm text-gray-600">{parseFloat(stock.quantityKg).toLocaleString()} kg</p>
                       </div>
-                      <Progress 
-                        value={Math.min(100, (parseFloat(stock.quantityKg) / 1000) * 10)} 
+                      <Progress
+                        value={Math.min(100, (parseFloat(stock.quantityKg) / 1000) * 10)}
                         className="w-20"
                       />
                     </div>
@@ -694,68 +754,8 @@ export default function Inventory() {
         </div>
       )}
 
-      {/* Feed Types Management */}
-      {activeSection === "feed-types" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Feed Types</h2>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
-                  <span>Add Feed Type</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Feed Type</DialogTitle>
-                  <DialogDescription>Create a new feed type for inventory management</DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="name">Feed Name</Label>
-                      <Input id="name" placeholder="Enter feed name" />
-                    </div>
-                    <div>
-                      <Label htmlFor="brand">Brand</Label>
-                      <Input id="brand" placeholder="Enter brand" />
-                    </div>
-                  </div>
-                  <Button className="w-full">Create Feed Type</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {feedTypes.map((feed) => (
-              <Card key={feed.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span>{feed.name}</span>
-                    <Badge variant={feed.isActive ? "default" : "secondary"}>
-                      {feed.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="text-sm"><strong>Brand:</strong> {feed.brand}</p>
-                    <p className="text-sm"><strong>Size:</strong> {feed.sizeCategory}</p>
-                    {feed.proteinPercentage && (
-                      <p className="text-sm"><strong>Protein:</strong> {feed.proteinPercentage}%</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Other sections simplified for brevity */}
-      {activeSection !== "dashboard" && activeSection !== "feed-types" && (
+      {/* Other sections */}
+      {activeSection !== "dashboard" && (
         <div className="space-y-6">
           <Card>
             <CardHeader>

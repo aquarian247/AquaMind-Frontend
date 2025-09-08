@@ -26,7 +26,7 @@ import HallDetail from "@/pages/hall-detail";
 import ContainerDetail from "@/pages/container-detail";
 import InfrastructureContainers from "@/pages/infrastructure-containers";
 import InfrastructureSensors from "@/pages/infrastructure-sensors";
-import Inventory from "@/pages/inventory-simple";
+import Inventory from "@/pages/inventory";
 import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
 import BatchManagement from "@/pages/batch-management";

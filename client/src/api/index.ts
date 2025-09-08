@@ -27,7 +27,7 @@ export const setAuthToken = (token: string | null) => {
     // Handle the case where HEADERS might be a Resolver function
     const currentHeaders = OpenAPI.HEADERS || {};
     const headers: Record<string, string> = {};
-    
+
     // Copy all headers except Authorization
     if (typeof currentHeaders === 'object') {
       Object.entries(currentHeaders).forEach(([key, value]) => {
@@ -36,7 +36,7 @@ export const setAuthToken = (token: string | null) => {
         }
       });
     }
-    
+
     OpenAPI.HEADERS = headers;
   }
 };
@@ -54,15 +54,58 @@ export const clearAuthToken = () => {
 
 export const initializeAuth = () => {
   const token = localStorage.getItem('auth_token');
+
+  // In development, use the dev token if no token is stored
   if (token) {
     setAuthToken(token);
     return true;
+  } else if (import.meta.env.DEV) {
+    // For development, try to get dev token
+    console.log('Development mode: attempting to get dev token...');
+    // We'll set the dev token later from the frontend
+    return false;
   }
+
   return false;
 };
 
 // Initialize auth on module load
 initializeAuth();
+
+// Development helper to set dev token using JWT login
+export const setDevToken = async () => {
+  try {
+    const { ApiService } = await import('./generated');
+
+    // Use JWT login endpoint with correct dev credentials
+    const response = await ApiService.apiTokenCreate({
+      username: 'admin',
+      password: 'admin123',
+    });
+
+    if (response.access && response.refresh) {
+      const jwtToken = response.access; // Use access token for API calls
+      storeAuthToken(jwtToken);
+      console.log('JWT dev token set successfully');
+      return true;
+    }
+  } catch (error) {
+    console.error('Failed to get JWT dev token:', error);
+    // Fallback to old dev-auth endpoint
+    try {
+      const response = await fetch(`${DJANGO_API_URL}/api/v1/auth/dev-auth/`);
+      if (response.ok) {
+        const data = await response.json();
+        storeAuthToken(data.token);
+        console.log('Fallback dev token set successfully');
+        return true;
+      }
+    } catch (fallbackError) {
+      console.error('Fallback dev token also failed:', fallbackError);
+    }
+  }
+  return false;
+};
 
 // Pagination helpers
 export interface PaginationParams {
