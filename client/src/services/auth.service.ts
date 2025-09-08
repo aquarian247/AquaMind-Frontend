@@ -212,19 +212,32 @@ export class AuthService {
     }
 
     try {
-      const { ApiService } = await import('@/api/generated');
+      const { authConfig } = await import('@/config/auth.config');
 
-      const response = await ApiService.apiTokenRefreshCreate({
-        access: '',
-        refresh: refreshToken,
+      // Use the refresh endpoint from config
+      const refreshUrl = `${authConfig.baseUrl}${authConfig.endpoints.refresh}`;
+
+      const response = await fetch(refreshUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh: refreshToken }),
       });
 
-      if (!response.access) {
-        throw new Error('Invalid refresh response format');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Token refresh failed' }));
+        throw new ApiError(errorData.detail || 'Token refresh failed', response.status);
+      }
+
+      const data = await response.json();
+
+      if (!data.access) {
+        throw new ApiError('Invalid refresh response format', 500);
       }
 
       const tokens: AuthTokens = {
-        access: response.access,
+        access: data.access,
         refresh: refreshToken, // Keep existing refresh token
       };
 
@@ -243,20 +256,34 @@ export class AuthService {
    */
   static async login(username: string, password: string): Promise<AuthTokens> {
     const { ApiService } = await import('@/api/generated');
+    const { authConfig } = await import('@/config/auth.config');
 
-    const response = await ApiService.apiTokenCreate({
-      username,
-      password,
-    } as any); // Type override - OpenAPI spec is incorrect
+    // Use the login endpoint from config
+    const loginUrl = `${authConfig.baseUrl}${authConfig.endpoints.login}`;
+
+    const response = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Login failed' }));
+      throw new ApiError(errorData.detail || 'Login failed', response.status);
+    }
+
+    const data = await response.json();
 
     // Handle JWT format (access + refresh tokens)
-    if (!response.access || !response.refresh) {
+    if (!data.access || !data.refresh) {
       throw new ApiError('Invalid JWT token response format', 500);
     }
 
     const tokens: AuthTokens = {
-      access: response.access,
-      refresh: response.refresh,
+      access: data.access,
+      refresh: data.refresh,
     };
 
     this.storeTokens(tokens);

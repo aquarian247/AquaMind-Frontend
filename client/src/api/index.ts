@@ -83,48 +83,38 @@ export const initializeAuth = () => {
 // Initialize auth on module load
 initializeAuth();
 
-// Development helper to set dev token using JWT login
-// NOTE: In production, this should use environment variables or a proper dev auth endpoint
+// Development helper to set dev token using dev endpoint
+// NOTE: This only works in development and uses a dev endpoint that doesn't require credentials
 export const setDevToken = async () => {
   try {
-    const { ApiService } = await import('./generated');
+    // Import auth config to get the dev endpoint
+    const { authConfig } = await import('@/config/auth.config');
 
-    // TODO: Replace with environment variables for production
-    const devUsername = import.meta.env.VITE_DEV_USERNAME;
-    const devPassword = import.meta.env.VITE_DEV_PASSWORD;
-
-    if (!devUsername || !devPassword) {
-      console.warn('Dev credentials not configured. Set VITE_DEV_USERNAME and VITE_DEV_PASSWORD environment variables.');
+    // Only use dev token setup in development environment
+    if (!authConfig.isDevelopment) {
+      console.log('Production environment - skipping dev token setup');
       return false;
     }
 
-    // Use JWT login endpoint with dev credentials
-    const response = await ApiService.apiTokenCreate({
-      username: devUsername,
-      password: devPassword,
-    } as any); // Type override - OpenAPI spec is incorrect
+    // Use the dev endpoint from config (no credentials required)
+    const response = await fetch(`${authConfig.baseUrl}${authConfig.endpoints.devToken}`);
 
-    if (response.access && response.refresh) {
-      const jwtToken = response.access; // Use access token for API calls
-      storeAuthToken(jwtToken);
-      console.log('JWT dev token set successfully');
-      return true;
-    }
-  } catch (error) {
-    console.error('Failed to get JWT dev token:', error);
-    // Fallback to old dev-auth endpoint
-    try {
-      const response = await fetch(`${DJANGO_API_URL}/api/v1/auth/dev-auth/`);
-      if (response.ok) {
-        const data = await response.json();
+    if (response.ok) {
+      const data = await response.json();
+      // The dev endpoint returns a token directly (not JWT format)
+      if (data.token) {
         storeAuthToken(data.token);
-        console.log('Fallback dev token set successfully');
+        console.log('Dev token set successfully');
         return true;
       }
-    } catch (fallbackError) {
-      console.error('Fallback dev token also failed:', fallbackError);
     }
+
+    console.warn('Dev endpoint not available or returned invalid response');
+
+  } catch (error) {
+    console.error('Failed to get dev token:', error);
   }
+
   return false;
 };
 
