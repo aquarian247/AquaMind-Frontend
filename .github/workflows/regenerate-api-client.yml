@@ -3,6 +3,13 @@ name: Regenerate API Client
 on:
   repository_dispatch:
     types: [api-spec-updated]
+  workflow_dispatch:
+    inputs:
+      backend_branch:
+        description: 'Backend branch to sync from'
+        required: false
+        default: 'main'
+        type: string
 
 jobs:
   regenerate-client:
@@ -25,13 +32,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Fetch OpenAPI spec from backend commit
+      - name: Fetch OpenAPI spec from backend
         run: |
           mkdir -p tmp/openapi
+          # Use backend commit if available (from automated trigger), otherwise use input branch (manual trigger)
+          if [ -n "${{ github.event.client_payload.backend_commit }}" ]; then
+            BACKEND_REF="${{ github.event.client_payload.backend_commit }}"
+            echo "Using backend commit: $BACKEND_REF"
+          else
+            BACKEND_REF="${{ inputs.backend_branch }}"
+            echo "Using backend branch: $BACKEND_REF"
+          fi
+
           curl -L \
-            https://raw.githubusercontent.com/aquarian247/AquaMind/${{ github.event.client_payload.backend_commit }}/api/openapi.yaml \
+            https://raw.githubusercontent.com/aquarian247/AquaMind/$BACKEND_REF/api/openapi.yaml \
             -o tmp/openapi/openapi.yaml
-          echo "Spec downloaded to tmp/openapi/openapi.yaml"
+          echo "Spec downloaded to tmp/openapi/openapi.yaml from $BACKEND_REF"
           
       - name: Generate API client
         run: npm run generate:api
@@ -47,16 +63,19 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: regenerate API client for ${{ github.event.client_payload.backend_commit }}"
+          commit-message: |
+            chore: regenerate API client from OpenAPI spec
           title: "chore: regenerate API client from OpenAPI spec"
           body: |
-            This PR was automatically generated to update the TypeScript API client based on changes to the OpenAPI specification.
-            
+            This PR updates the TypeScript API client based on changes to the OpenAPI specification.
+
             ## Details
-            - Backend commit: ${{ github.event.client_payload.backend_commit }}
-            - Backend branch: ${{ github.event.client_payload.backend_branch }}
-            - Backend workflow: ${{ github.event.client_payload.backend_workflow_url }}
-            
+            - Triggered by: ${{ github.event_name == 'repository_dispatch' && 'Backend workflow' || 'Manual workflow' }}
+            ${{ github.event_name == 'repository_dispatch' && format('- Backend commit: {0}
+            - Backend branch: {1}
+            - Backend workflow: {2}', github.event.client_payload.backend_commit, github.event.client_payload.backend_branch, github.event.client_payload.backend_workflow_url) || format('- Backend branch: {0}
+            - Triggered by: {1}', inputs.backend_branch, github.actor) }}
+
             Please review the changes to ensure they are compatible with the current frontend implementation.
           branch: auto/api-client-update
           base: main

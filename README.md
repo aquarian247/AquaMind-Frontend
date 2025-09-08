@@ -77,6 +77,43 @@ VITE_DEBUG_MODE=true
 VITE_LOG_LEVEL=debug
 ```
 
+### OpenAPI Specification Synchronization
+
+The frontend automatically generates TypeScript API clients from the backend's OpenAPI specification. To ensure you have the latest API definitions:
+
+#### Automated Sync (Recommended)
+The frontend automatically syncs when backend changes are detected via GitHub Actions.
+
+#### Manual Sync Commands
+
+```bash
+# Sync from main branch
+npm run sync:openapi
+
+# Sync from specific branch
+npm run sync:openapi:branch develop
+
+# Sync from specific branch using environment variable
+BACKEND_BRANCH=feature/new-endpoints npm run sync:openapi:branch $BACKEND_BRANCH
+```
+
+#### GitHub Actions Manual Trigger
+
+You can also trigger the sync manually via GitHub Actions:
+
+1. Go to **Actions** → **Regenerate API Client**
+2. Click **Run workflow**
+3. Select the backend branch to sync from
+4. The workflow will create a PR with the updated API client
+
+#### Local Development
+
+When working locally, always run `npm run sync:openapi` before starting development to ensure you have the latest API definitions. This is especially important when:
+
+- Backend API changes have been merged
+- You're getting TypeScript errors about missing API endpoints
+- You're implementing new features that use backend APIs
+
 (Use `VITE_USE_DJANGO_API` as the single toggle for backend selection.)
 
 ## 🔧 Development

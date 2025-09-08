@@ -8,7 +8,7 @@
 
 The **OpenAPI spec (`api/openapi.yaml`) is the single source of truth** for all frontend–backend interactions.
 
-1. **Typed client generation** – `npm run generate:api` (CI workflow) regenerates `client/src/api/generated`.
+1. **Typed client generation** – `npm run sync:openapi` (CI workflow) regenerates `client/src/api/generated`.
 2. **Authentication** – token via `/api/v1/auth/token/`; the generated client handles auth header inclusion.
 3. **Change flow**  
    Backend updates API ➜ pushes new `openapi.yaml` ➜ Frontend CI regenerates client & opens PR.

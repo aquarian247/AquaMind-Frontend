@@ -17,8 +17,8 @@ npm run dev
 
 ### Agent Rules — ALWAYS DO
 
-* **Contract-first** — `api/openapi.yaml` is the single source of truth.  
-  After any backend spec change run `npm run generate:api` and commit the regenerated client.
+* **Contract-first** — `api/openapi.yaml` is the single source of truth.
+  Run `npm run sync:openapi` to sync with backend and regenerate client.
 * **Generated client only** — consume APIs via `client/src/api/generated`; never hand-craft `fetch`/Axios calls or edit generated code.
 * **Canonical auth endpoints** —  
   `POST /api/v1/auth/token/` and `POST /api/v1/auth/token/refresh/` (optional: `GET /api/v1/users/auth/profile/`).  
@@ -262,6 +262,117 @@ refactor: improve API error handling
 - Use semantic HTML
 - Test with screen readers
 - Ensure keyboard navigation
+
+## OpenAPI Specification Synchronization
+
+### Why This Matters
+
+The frontend uses **contract-first development** with the OpenAPI specification as the single source of truth. All API interactions must use the **generated TypeScript client** from `client/src/api/generated`. The frontend's `api/openapi.yaml` must always stay synchronized with the backend's generated specification.
+
+### Automated Synchronization (Recommended)
+
+When the backend CI/CD completes successfully, it automatically triggers the frontend to regenerate its API client. This requires the `FRONTEND_REPO_PAT` secret to be configured in the backend repository.
+
+### Manual Synchronization
+
+When the automated workflow fails or you need immediate synchronization:
+
+#### Option 1: NPM Scripts (Recommended)
+```bash
+# Sync from main branch
+npm run sync:openapi
+
+# Sync from specific branch
+npm run sync:openapi:branch develop
+
+# Sync from specific branch using environment variable
+BACKEND_BRANCH=feature/new-endpoints npm run sync:openapi:branch $BACKEND_BRANCH
+```
+
+#### Option 2: GitHub Actions Manual Trigger
+1. Go to **Actions** → **Regenerate API Client**
+2. Click **Run workflow**
+3. Select the backend branch to sync from
+4. The workflow will create a PR with the updated API client
+
+#### Option 3: Direct API Calls (Fallback)
+```bash
+curl -L https://raw.githubusercontent.com/aquarian247/AquaMind/main/api/openapi.yaml -o api/openapi.yaml
+cp api/openapi.yaml tmp/openapi/openapi.yaml
+npm run generate:api
+```
+
+### Developer Workflow Integration
+
+**ALWAYS run OpenAPI synchronization before starting development:**
+
+```bash
+# Fresh clone or after backend API changes
+npm run sync:openapi
+
+# Start development
+npm run dev
+```
+
+**Before implementing new features that use backend APIs:**
+```bash
+# Ensure you have the latest API definitions
+npm run sync:openapi
+
+# Check for new endpoints or schema changes
+git diff api/openapi.yaml
+```
+
+**When you encounter TypeScript errors about missing API endpoints:**
+```bash
+# Sync and regenerate client
+npm run sync:openapi
+
+# Verify the endpoint exists
+grep -R "your-endpoint" client/src/api/generated
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+**"Cannot find module '@/api/generated/models/SomeModel'"**
+```bash
+# The OpenAPI spec is out of sync
+npm run sync:openapi
+```
+
+**"Property 'someField' does not exist on type 'SomeModel'"**
+```bash
+# Backend schema has changed
+npm run sync:openapi
+```
+
+**"Endpoint not found" errors**
+```bash
+# API structure has changed
+npm run sync:openapi
+```
+
+#### Verification Steps
+```bash
+# Check if OpenAPI is up to date
+npm run sync:openapi
+
+# Verify generated client has expected endpoints
+grep -R "/api/v1/" client/src/api/generated/services/
+
+# Run type checking
+npm run type-check
+```
+
+### Best Practices
+
+1. **Always sync before starting work** on features that touch backend APIs
+2. **Sync after backend merges** that affect API contracts
+3. **Check git diff** of `api/openapi.yaml` to understand API changes
+4. **Run type checking** after sync to catch integration issues early
+5. **Use the generated client only** - never hand-craft API calls
 
 ## Documentation
 
