@@ -39,23 +39,24 @@ export const api = {
       // Get environmental readings for water temperature
       const envReadings = await ApiService.apiV1EnvironmentalReadingsList();
       const tempReadings = envReadings.results.filter((r: any) => r.parameter_type === 'TEMPERATURE');
-      const avgWaterTemp = tempReadings.length > 0 
+      const avgWaterTemp = tempReadings.length > 0
         ? tempReadings.reduce((sum: number, r: any) => sum + r.value, 0) / tempReadings.length
-        : 12.5;
+        : 0; // Let UI handle missing data appropriately
 
       return {
         totalFish,
         healthRate,
         avgWaterTemp,
-        nextFeedingHours: 4
+        nextFeedingHours: 0 // Let UI handle scheduling display
       };
     } catch (error) {
-      // Fallback values if API calls fail
+      // Let UI components handle missing data gracefully
+      console.warn('Failed to fetch dashboard KPIs:', error);
       return {
         totalFish: 0,
         healthRate: 0,
-        avgWaterTemp: 12.5,
-        nextFeedingHours: 4
+        avgWaterTemp: 0,
+        nextFeedingHours: 0
       };
     }
   },
@@ -300,13 +301,13 @@ export const api = {
         // Check if user is authenticated
         if (!AuthService.isAuthenticated()) {
           console.warn("No auth token found - user needs to log in first");
-          // Return fallback data with clear indication that auth is needed
+          // Return empty data - let UI handle authentication requirements
           return {
-            totalContainers: 70,
-            activeBiomass: 3500,
-            capacity: 21805000,
+            totalContainers: 0,
+            activeBiomass: 0,
+            capacity: 0,
             sensorAlerts: 0,
-            feedingEventsToday: 40,
+            feedingEventsToday: 0,
             _needsAuth: true, // Flag to indicate auth is needed
           };
         }
@@ -326,13 +327,13 @@ export const api = {
         };
       } catch (error) {
         console.warn("Failed to fetch infrastructure overview:", error);
-        // Return known values as fallback
+        // Let UI handle missing data gracefully
         return {
-          totalContainers: 70,
-          activeBiomass: 3500,
-          capacity: 21805000,
+          totalContainers: 0,
+          activeBiomass: 0,
+          capacity: 0,
           sensorAlerts: 0,
-          feedingEventsToday: 40,
+          feedingEventsToday: 0,
         };
       }
     },
@@ -707,15 +708,15 @@ export const api = {
               areaId: c.area,
               areaName: c.area_name || 'Unknown Area',
               status: c.active ? 'active' : 'inactive',
-              biomass: 0, // Placeholder
+              biomass: 0,
               capacity,
-              fishCount: 0, // Placeholder
-              averageWeight: 0, // Placeholder
-              waterDepth: 15, // Placeholder
-              netCondition: 'good', // Placeholder
+              fishCount: 0,
+              averageWeight: 0,
+              waterDepth: 0, // Let UI handle missing water depth
+              netCondition: 'unknown', // Let UI handle missing net condition
               lastInspection: new Date().toISOString(),
-              coordinates: { lat: 0, lng: 0 }, // Placeholder
-              environmentalStatus: 'optimal' // Placeholder
+              coordinates: { lat: 0, lng: 0 },
+              environmentalStatus: 'unknown' // Let UI handle missing status
             };
           });
         
@@ -774,24 +775,24 @@ export const api = {
           capacity,
           fishCount,
           averageWeight,
-          waterDepth: 15, // Placeholder
-          netCondition: 'good', // Placeholder
+          waterDepth: 0, // Let UI handle missing water depth
+          netCondition: 'unknown', // Let UI handle missing net condition
           lastInspection: new Date().toISOString(),
-          coordinates: { lat: 0, lng: 0 }, // Placeholder
-          environmentalStatus: 'optimal', // Placeholder
+          coordinates: { lat: 0, lng: 0 },
+          environmentalStatus: 'unknown', // Let UI handle missing status
           // Additional fields for detail view
           netLastChanged: new Date().toISOString(),
-          netType: 'Standard',
+          netType: '',
           cageVolume: capacity,
           installedDate: container.created_at,
           lastFeedingTime: new Date().toISOString(),
-          dailyFeedAmount: biomass * 0.005, // Estimate based on biomass
-          mortalityRate: 0.15, // Placeholder
-          feedConversionRatio: 1.12, // Placeholder
-          waterTemperature: 8.5, // Placeholder
-          salinity: 34.8, // Placeholder
-          currentSpeed: 0.3, // Placeholder
-          oxygenSaturation: 95.2 // Placeholder
+          dailyFeedAmount: 0, // Let UI handle missing feed amount
+          mortalityRate: 0, // Let UI handle missing mortality rate
+          feedConversionRatio: 0, // Let UI handle missing FCR
+          waterTemperature: 0, // Let UI handle missing temperature
+          salinity: 0, // Let UI handle missing salinity
+          currentSpeed: 0, // Let UI handle missing current speed
+          oxygenSaturation: 0 // Let UI handle missing oxygen saturation
         };
       } catch {
         return null;
@@ -915,9 +916,9 @@ export const api = {
           const plans = await ApiService.apiV1BroodstockBreedingPlansList();
           
           const programs = plans.results.map((plan: any) => {
-            const currentGeneration = 3; // Placeholder
-            const targetGeneration = 5; // Placeholder
-            
+            const currentGeneration = 0; // Let UI handle generation display
+            const targetGeneration = 0; // Let UI handle generation display
+
             return {
               id: plan.id,
               name: plan.name || `Breeding Plan ${plan.id}`,
@@ -926,16 +927,16 @@ export const api = {
               currentGeneration,
               targetGeneration,
               progress: Math.min(100, (currentGeneration / targetGeneration) * 100),
-              populationSize: 0, // Placeholder
+              populationSize: 0,
               startDate: plan.created_at,
-              geneticGain: [2, 4, 7, 10, 12], // Placeholder
+              geneticGain: [], // Let UI handle missing genetic data
               traitWeights: {
-                growthRate: 40,
-                diseaseResistance: 30,
-                feedEfficiency: 20,
-                fleshQuality: 10
+                growthRate: 0,
+                diseaseResistance: 0,
+                feedEfficiency: 0,
+                fleshQuality: 0
               },
-              leadGeneticist: 'Dr. Alex Smith' // Placeholder
+              leadGeneticist: '' // Let UI handle missing geneticist info
             };
           });
           
@@ -960,14 +961,14 @@ export const api = {
               geography: c.area_name || 'Unknown Area',
               containerType: c.container_type_name || 'Tank',
               stage: 'Broodstock',
-              fishCount: 100, // Placeholder
-              capacity: parseFloat(c.volume_m3 || '0') || 500,
-              temperature: 12.5, // Placeholder
-              oxygen: 8.2, // Placeholder
-              ph: 7.4, // Placeholder
-              light: 14, // Placeholder
-              environmentalStatus: 'optimal', // Placeholder
-              utilizationRate: 80 // Placeholder
+              fishCount: 0, // Let UI handle missing fish count
+              capacity: parseFloat(c.volume_m3 || '0') || 0,
+              temperature: 0, // Let UI handle missing temperature
+              oxygen: 0, // Let UI handle missing oxygen
+              ph: 0, // Let UI handle missing pH
+              light: 0, // Let UI handle missing light
+              environmentalStatus: 'unknown', // Let UI handle missing status
+              utilizationRate: 0 // Let UI handle missing utilization
             };
           });
           
@@ -993,27 +994,27 @@ export const api = {
             geography: container.area_name || 'Unknown Area',
             containerType: container.container_type_name || 'Tank',
             stage: 'Broodstock',
-            fishCount: 100, // Placeholder
-            capacity: parseFloat(container.volume_m3 || '0') || 500,
-            utilizationRate: 80, // Placeholder
-            assignedProgram: 'Atlantic Salmon G5', // Placeholder
-            generation: 'G5', // Placeholder
-            temperature: 12.5, // Placeholder
-            oxygen: 8.2, // Placeholder
-            ph: 7.4, // Placeholder
-            salinity: 34.8, // Placeholder
-            light: 14, // Placeholder
-            flowRate: 120, // Placeholder
-            environmentalStatus: 'optimal', // Placeholder
+            fishCount: 0, // Let UI handle missing fish count
+            capacity: parseFloat(container.volume_m3 || '0') || 0,
+            utilizationRate: 0, // Let UI handle missing utilization
+            assignedProgram: '', // Let UI handle missing program
+            generation: '', // Let UI handle missing generation
+            temperature: 0, // Let UI handle missing temperature
+            oxygen: 0, // Let UI handle missing oxygen
+            ph: 0, // Let UI handle missing pH
+            salinity: 0, // Let UI handle missing salinity
+            light: 0, // Let UI handle missing light
+            flowRate: 0, // Let UI handle missing flow rate
+            environmentalStatus: 'unknown', // Let UI handle missing status
             status: container.active ? 'active' : 'inactive',
             lastFeedingTime: new Date().toISOString(),
             lastHealthCheck: new Date().toISOString(),
             lastSampling: new Date().toISOString(),
-            mortalityRate: '0.15%', // Placeholder
-            avgWeight: '5200', // Placeholder
-            conditionFactor: '1.15', // Placeholder
-            hasActiveAlerts: false, // Placeholder
-            alertCount: 0 // Placeholder
+            mortalityRate: '0%', // Let UI handle missing mortality rate
+            avgWeight: '0', // Let UI handle missing weight
+            conditionFactor: '0', // Let UI handle missing condition factor
+            hasActiveAlerts: false,
+            alertCount: 0
           };
         } catch {
           return null;
@@ -1026,27 +1027,17 @@ export const api = {
         // Return static placeholder data matching the expected shape
         return {
           correlationMatrix: {
-            traits: ['Growth Rate', 'Disease Resistance', 'Feed Efficiency', 'Flesh Quality'],
-            correlations: [
-              [1.0, 0.3, 0.5, 0.2],
-              [0.3, 1.0, 0.4, 0.1],
-              [0.5, 0.4, 1.0, 0.3],
-              [0.2, 0.1, 0.3, 1.0]
-            ]
+            traits: [],
+            correlations: []
           },
           snpAnalysis: {
-            totalSnps: 25000,
-            analyzedTraits: 4,
-            genomicMarkers: [
-              { type: 'growth', positions: [0.15, 0.35, 0.62, 0.78] },
-              { type: 'disease', positions: [0.22, 0.44, 0.67, 0.89] },
-              { type: 'quality', positions: [0.12, 0.33, 0.57, 0.91] },
-              { type: 'maturation', positions: [0.18, 0.29, 0.51, 0.82] }
-            ]
+            totalSnps: 0,
+            analyzedTraits: 0,
+            genomicMarkers: []
           },
           traitPerformance: {
-            labels: ['Growth Rate', 'Disease Resistance', 'Feed Efficiency', 'Flesh Quality'],
-            currentGeneration: [85, 92, 78, 88]
+            labels: [],
+            currentGeneration: []
           }
         };
       }
@@ -1145,23 +1136,23 @@ export const api = {
           totalBatches,
           healthyBatches: Math.round(healthRatePct),
           batchesUnderTreatment: treatmentsRecent.length,
-          averageHealthScore: 4.2, // placeholder until proper metric exists
-          recentMortality: 1.2,
+          averageHealthScore: 0, // Let UI handle missing health score
+          recentMortality: 0, // Let UI handle missing mortality data
           activeTreatments: treatmentsRecent.length,
           pendingReviews,
           avgLiceCount: Number(avgLiceCount.toFixed(2)),
         };
       } catch {
-        // Stable fallbacks
+        // Let UI handle missing data gracefully
         return {
-          totalBatches: 100,
-          healthyBatches: 87,
-          batchesUnderTreatment: 3,
-          averageHealthScore: 4.2,
-          recentMortality: 1.2,
-          activeTreatments: 5,
+          totalBatches: 0,
+          healthyBatches: 0,
+          batchesUnderTreatment: 0,
+          averageHealthScore: 0,
+          recentMortality: 0,
+          activeTreatments: 0,
           pendingReviews: 0,
-          avgLiceCount: 2.3,
+          avgLiceCount: 0,
         };
       }
       /* eslint-enable */
