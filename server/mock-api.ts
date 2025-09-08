@@ -251,7 +251,7 @@ export const mockApiHandlers = {
   // Authentication
   handleLogin: (req: Request, res: Response) => {
     const { username, password } = req.body;
-    
+
     if (username === "demo" && password === "demo123") {
       res.json({
         access: "mock-access-token-valid-for-development-only",
@@ -260,6 +260,21 @@ export const mockApiHandlers = {
     } else {
       res.status(401).json({
         detail: "No active account found with the given credentials"
+      });
+    }
+  },
+
+  handleRefresh: (req: Request, res: Response) => {
+    const { refresh } = req.body;
+
+    if (refresh === "mock-refresh-token-valid-for-development-only") {
+      res.json({
+        access: "mock-access-token-refreshed-valid-for-development-only",
+        refresh: "mock-refresh-token-valid-for-development-only"
+      });
+    } else {
+      res.status(401).json({
+        detail: "Token is invalid or expired"
       });
     }
   },
@@ -352,8 +367,8 @@ export const mockApiHandlers = {
 // Register mock API routes with Express
 export function registerMockApiRoutes(app: any) {
   // Authentication endpoints
-  app.post('/api/token/', mockApiHandlers.handleLogin);
   app.post('/api/v1/auth/token/', mockApiHandlers.handleLogin);
+  app.post('/api/v1/auth/token/refresh/', mockApiHandlers.handleRefresh);
   
   // Batch endpoints
   app.get('/api/v1/batch/batches/', mockApiHandlers.getBatches);
