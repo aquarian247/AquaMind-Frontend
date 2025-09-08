@@ -1,65 +1,6 @@
 import '@testing-library/jest-dom';
-import { vi, beforeAll, afterEach, afterAll } from 'vitest';
-import { server } from '@/test/msw/server';
+import { vi } from 'vitest';
 
-// Mock Chart.js to avoid canvas rendering issues in jsdom
-vi.mock('chart.js/auto', () => {
-  return {
-    default: class MockChart {
-      // Explicitly declare the property so TypeScript recognizes it
-      destroyed: boolean;
-
-      constructor() {
-        this.destroyed = false;
-      }
-      
-      destroy() {
-        this.destroyed = true;
-      }
-      
-      update() {
-        return this;
-      }
-      
-      // Add any other methods tests might need
-    }
-  };
-});
-
-// Establish API mocking before all tests
-beforeAll(() => {
-  // Disable MSW completely to allow simple fetch mocks to work
-  // server.listen({ onUnhandledRequest: 'bypass' });
-
-  /* ------------------------------------------------------------------
-   *  Lightweight instrumentation
-   * ------------------------------------------------------------------
-   *  Log each mocked request/response pair so that, when a test fails
-   *  because of an unexpected network interaction, the console output
-   *  provides immediate insight into what was requested and what MSW
-   *  returned.  The callbacks are intentionally minimal to avoid noisy
-   *  output while still being informative.
-   */
-  server.events.on('request:start', ({ request }) => {
-    // Example: [MSW] GET http://localhost:8000/api/v1/batch/batches/
-    console.log(`[MSW] ${request.method} ${request.url}`);
-  });
-
-  server.events.on('response:mocked', ({ response }) => {
-    // Example: [MSW] 200 http://localhost:8000/api/v1/batch/batches/
-    console.log(`[MSW] ${response.status} ${response.url}`);
-  });
-});
-
-// Reset any request handlers that we may add during the tests
-afterEach(() => {
-  // server.resetHandlers();
-});
-
-// Clean up after the tests are finished
-afterAll(() => {
-  // server.close();
-});
 
 // AbortController compatibility for tests
 (() => {

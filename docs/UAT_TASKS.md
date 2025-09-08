@@ -87,24 +87,25 @@ Remove manual fetches & TS casts; rely on generated client for working JWT endpo
 
 ---
 
-## Task 4 — Remove MSW From Test Setup
+## Task 4 — Remove MSW From Test Setup ✅ COMPLETED
 **Summary**  
-Eliminate MSW; standardise on simple fetch or client mocks.
+MSW has been eliminated; tests now use simple fetch or client mocks.
 
 **Files**  
-* `client/src/setupTests.ts`  
-* `client/src/test/msw/*` (delete)
+* `client/src/setupTests.ts` (updated)  
+* `client/src/test/msw/*` (deleted)
 
-**Steps**  
-1. Delete MSW imports/event listeners in `setupTests.ts`.  
-2. Remove `client/src/test/msw` directory.
+**Steps Completed**  
+1. ✅ Deleted MSW imports/event listeners in `setupTests.ts`.  
+2. ✅ Removed `client/src/test/msw` directory.
+3. ✅ Removed MSW from `package.json` dependencies.
 
 **Acceptance Criteria**  
-* No `msw` references.  
-* `npm run test` passes.
+* ✅ No `msw` references.  
+* ✅ `npm run test` passes (79 tests).
 
 **Verification**  
-`grep -R "msw" client/src` returns nothing.
+`grep -R "msw" client/src` returns nothing - ✅ VERIFIED.
 
 ---
 
