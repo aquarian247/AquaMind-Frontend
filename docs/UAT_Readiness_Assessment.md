@@ -17,7 +17,7 @@ Top blockers (must fix before UAT):
 * Authentication endpoint misalignment across config, generated client, and OpenAPI spec [5][6][11]
 * TokenRefresh model/type generation error requiring type casts [6][10]
 * Inconsistent environment variables across docs vs code [12][13]
-* Test script/documentation mismatch; MSW disabled but partially referenced [1][3][4]
+* Testing configuration standardized with simple fetch/client mocks [1][3][4]
 * Coverage thresholds set extremely low (effectively non-gating) [2]
 
 ---
@@ -26,7 +26,7 @@ Top blockers (must fix before UAT):
 
 * Reviewed configuration, authentication and API integration code paths  
 * Cross-checked OpenAPI specification against generated client and auth config  
-* Assessed testing setup, MSW usage, and coverage thresholds  
+* Assessed testing setup, mock strategy, and coverage thresholds  
 * Validated documentation claims against actual repository files  
 
 (References use [n] mapped in *Sources*.)
@@ -67,18 +67,18 @@ Target state: One variable (`VITE_USE_DJANGO_API`) consistently used across code
 
 ---
 
-### 3) Testing Configuration & MSW
+### 3) Testing Configuration
 
-* Coverage thresholds: lines/statements/functions 10 %, branches 5 % [2]  
-* Docs say `npm run test` is watch mode, but `package.json` runs `vitest run` (one-off) [1][4]  
-* MSW documented as disabled and is disabled in setup, but residual instrumentation remains [3][4]
+* Coverage thresholds: lines/statements/functions 10 %, branches 5 % [2]
+* Docs say `npm run test` is watch mode, but `package.json` runs `vitest run` (one-off) [1][4]
+* Testing strategy standardized on simple fetch/client mocks [3][4]
 
-Impact: Low quality gating; confusion about test execution; MSW residual code may mislead.
+Impact: Low quality gating; confusion about test execution.
 
 Target state:
 
-* Scripts/docs agree on test behaviour  
-* Clear policy on MSW (fully enabled or removed)  
+* Scripts/docs agree on test behaviour
+* Mock strategy clearly documented and consistently applied
 * Coverage thresholds raised to meaningful levels (e.g., 50 % lines, 30–40 % branches)
 
 ---
