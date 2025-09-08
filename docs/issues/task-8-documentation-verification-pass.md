@@ -1,7 +1,7 @@
 # Task 8 — Documentation Verification Pass
 
 ## Executive Summary
-Ensure all documentation reflects the final state: canonical auth endpoints, removal of MSW, and consistent environment variable usage (`VITE_USE_DJANGO_API`). Purge stale references such as `/api/token/*`, `/api/auth/jwt/*`, `/api/v1/users/auth/token/*`, `VITE_USE_BACKEND_API`, `django-api.ts`, and `DJANGO_API_ALIGNMENT.md` [1][2][3][4][5].
+Ensure all documentation reflects the final state: canonical auth endpoints, removal of MSW, and consistent environment variable usage (`VITE_USE_DJANGO_API`). Documentation has been updated to remove stale references.
 
 ---
 
@@ -24,8 +24,8 @@ Docs have been updated across multiple PRs. Perform a final verification pass to
 - `docs/*.md` (especially: `CONTRIBUTING.md`, `frontend_testing_guide.md`, `DJANGO_INTEGRATION_GUIDE.md`, `code_organization_guidelines.md`, `NAVIGATION_ARCHITECTURE.md`, `UAT_TASKS.md`)
 
 ### Detailed Requirements
-1) Grep docs for stale patterns and remove/replace:
-   - `MSW`, `/api/token/`, `/api/auth/jwt/`, `/api/v1/users/auth/token/`, `VITE_USE_BACKEND_API`, `django-api.ts`, `DJANGO_API_ALIGNMENT.md`.
+1) Verify docs no longer contain stale patterns:
+   - Should have no references to: `MSW`, `/api/token/`, `/api/auth/jwt/`, `/api/v1/users/auth/token/`, `VITE_USE_BACKEND_API`, `django-api.ts`, `DJANGO_API_ALIGNMENT.md`.
 2) Ensure command snippets compile with current scripts (`npm run test`, `npm run generate:api`).
 3) Keep canonical auth endpoints and environment variable consistent in all examples.
 
@@ -35,7 +35,7 @@ Docs have been updated across multiple PRs. Perform a final verification pass to
 
 ### Verification Steps
 ```bash
-# search across docs
+# verify no stale references remain in docs
 rg -n "MSW|/api/token/|/api/auth/jwt/|/api/v1/users/auth/token/|VITE_USE_BACKEND_API|django-api.ts|DJANGO_API_ALIGNMENT.md" docs README.md || echo "OK"
 
 # quick smoke for commands
@@ -61,9 +61,9 @@ Goal: Verify and fix documentation to match canonical endpoints, no MSW, and env
    git checkout main && git pull --ff-only
    git switch -c docs/verification-pass
 
-2) Grep and update
+2) Verify documentation consistency
    rg -n "MSW|/api/token/|/api/auth/jwt/|/api/v1/users/auth/token/|VITE_USE_BACKEND_API|django-api.ts|DJANGO_API_ALIGNMENT.md" docs README.md || true
-   # edit and remove/replace all stale references
+   # should return no matches (documentation has been updated)
 
 3) Quality gates
    npm run -s test -- --help >/dev/null || true

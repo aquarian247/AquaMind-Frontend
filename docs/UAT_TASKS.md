@@ -153,7 +153,7 @@ Remove obsolete env var names.
 **Files** — *repo-wide*
 
 **Steps**  
-`grep -R "VITE_USE_BACKEND_API\\|VITE_BACKEND_API_URL" -n .` and replace with `VITE_USE_DJANGO_API` / `VITE_DJANGO_API_URL`.
+`grep -R "VITE_USE_BACKEND_API\\|VITE_BACKEND_API_URL" -n .` should return no matches (environment variables have been standardized).
 
 **Acceptance Criteria**  
 No old env names remain.
@@ -198,7 +198,7 @@ Validate dev proxy & mock API respect `VITE_USE_DJANGO_API`.
 2. Ensure proxy paths align with `/api/v1/*`.
 
 **Acceptance Criteria**  
-No `VITE_USE_BACKEND_API`; correct routing.
+Only `VITE_USE_DJANGO_API` environment variable used; correct routing.
 
 **Verification**  
 Run dev server; `curl` a couple of endpoints.

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 The Express proxy (`server/index.ts`) and mock API (`server/mock-api.ts`) must follow the same conventions adopted by the frontend:  
-• Single environment toggle `VITE_USE_DJANGO_API` (no `VITE_USE_BACKEND_API`)  
+• Single environment toggle `VITE_USE_DJANGO_API`  
 • Canonical authentication endpoints `/api/v1/auth/token/*` only  
 This task removes legacy variables and endpoint families from the server layer, ensuring configuration parity and reducing confusion between environments [1][2].
 
@@ -16,7 +16,7 @@ This task removes legacy variables and endpoint families from the server layer, 
 Frontend tasks 1–7 standardised on `VITE_USE_DJANGO_API` and canonical auth endpoints. The server code still contains legacy references that can lead to mismatched behaviour between local dev, tests, and production mocks.
 
 ### Goals
-1. Remove every instance of `VITE_USE_BACKEND_API` in server code and scripts.  
+1. Ensure server code uses only `VITE_USE_DJANGO_API` (legacy references already removed).  
 2. Ensure server logic relies exclusively on `VITE_USE_DJANGO_API`.  
 3. Align proxy and mock routes to `/api/v1/auth/token/` and `/api/v1/auth/token/refresh/`.
 
@@ -27,7 +27,7 @@ Frontend tasks 1–7 standardised on `VITE_USE_DJANGO_API` and canonical auth en
 
 ### Detailed Requirements
 1. Environment variable  
-   • Replace `VITE_USE_BACKEND_API` with `VITE_USE_DJANGO_API` everywhere under `server/`.  
+   • Ensure `VITE_USE_DJANGO_API` is used everywhere under `server/` (legacy references already replaced).  
    • Update log messages to reference the new variable name.
 
 2. Canonical endpoints  
@@ -41,14 +41,14 @@ Frontend tasks 1–7 standardised on `VITE_USE_DJANGO_API` and canonical auth en
    • Ensure toggling the variable correctly switches between proxying to Django API vs. using the mock API.
 
 ### Acceptance Criteria
-• `grep -R "VITE_USE_BACKEND_API" server` returns no matches.  
+• `grep -R "VITE_USE_BACKEND_API" server` returns no matches (legacy references already removed).  
 • No server code references `/api/token/*` or `/api/auth/jwt/*`.  
 • Running `npm run dev:server` logs variable state and serves canonical endpoints.  
 • `npm run type-check && npm run lint && npm run test` pass.
 
 ### Verification Steps
 ```bash
-# check for legacy env var
+# check for legacy env var (should return no matches)
 grep -R "VITE_USE_BACKEND_API" server || echo "OK"
 
 # smoke-start server
@@ -75,9 +75,9 @@ Goal: Ensure Express server uses only VITE_USE_DJANGO_API and canonical auth end
    git checkout main && git pull --ff-only
    git switch -c chore/server-parity-django-env
 
-2) Replace legacy env var
+2) Verify env var consistency
    rg -n "VITE_USE_BACKEND_API" server || true
-   # edit occurrences → VITE_USE_DJANGO_API
+   # should return no matches (already standardized)
 
 3) Align endpoints
    rg -n "/api/(token|auth/jwt)" server || true

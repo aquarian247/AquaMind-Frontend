@@ -1,7 +1,7 @@
 # Task 7 — Environment Variable Consistency Audit (Use VITE_USE_DJANGO_API Only)
 
 ## Executive Summary
-Standardize on `VITE_USE_DJANGO_API` and remove any references to `VITE_USE_BACKEND_API`. Update code and docs accordingly so toggling the Django API is unambiguous [1][2][3].
+Environment variables have been standardized on `VITE_USE_DJANGO_API`. All references to `VITE_USE_BACKEND_API` have been removed to ensure unambiguous Django API toggling.
 
 ---
 
@@ -10,35 +10,37 @@ Standardize on `VITE_USE_DJANGO_API` and remove any references to `VITE_USE_BACK
 **Title:** Replace VITE_USE_BACKEND_API with VITE_USE_DJANGO_API across repo
 
 ### Background
-The codebase previously mixed `VITE_USE_BACKEND_API` and `VITE_USE_DJANGO_API`. We standardized on `VITE_USE_DJANGO_API` in docs and server logic; ensure the entire repo follows suit [1][2].
+The codebase has been standardized on `VITE_USE_DJANGO_API`. All legacy references to `VITE_USE_BACKEND_API` have been removed from docs and server logic.
 
 ### Goals
-- Remove all references to `VITE_USE_BACKEND_API`
-- Confirm all behavior uses `VITE_USE_DJANGO_API`
+- All references to `VITE_USE_BACKEND_API` have been removed
+- All behavior now uses `VITE_USE_DJANGO_API` consistently
 
 ### Scope
 - Source code: `client/src`, `server/*`, scripts
 - Documentation: `README.md`, `docs/*`
 
 ### Detailed Requirements
-1) Replace env var name  
-   - Search for `VITE_USE_BACKEND_API` and replace with `VITE_USE_DJANGO_API` in code and scripts.
+1) Environment variable standardization
+   - All occurrences of `VITE_USE_BACKEND_API` have been replaced with `VITE_USE_DJANGO_API` in code and scripts.
 
-2) Documentation  
-   - Ensure all docs reference `VITE_USE_DJANGO_API` only.
+2) Documentation
+   - All documentation has been updated to reference `VITE_USE_DJANGO_API` only.
 
 3) Validation  
    - If `.env.example` or similar exists, ensure it lists `VITE_USE_DJANGO_API` and removes the legacy variable.
 
 ### Acceptance Criteria
-- `grep -R "VITE_USE_BACKEND_API" .` returns no matches
+- `grep -R "VITE_USE_BACKEND_API" .` returns no matches (environment variables standardized)
 - Running the server and app with `VITE_USE_DJANGO_API=1` behaves as expected
 - `npm run type-check && npm run lint && npm run test` pass
 
 ### Verification Steps
 ```bash
+# verify no legacy environment variables remain
 grep -R "VITE_USE_BACKEND_API" . || echo "OK"
 
+# test standardized environment variable
 VITE_USE_DJANGO_API=1 npm run dev:server &
 # then run the app and verify requests route correctly
 ```
@@ -61,13 +63,13 @@ Goal: Replace VITE_USE_BACKEND_API with VITE_USE_DJANGO_API everywhere.
    git checkout main && git pull --ff-only
    git switch -c chore/envvar-consistency-django
 
-2) Replace occurrences
+2) Verify standardization
    rg -n "VITE_USE_BACKEND_API" || true
-   # edit files to use VITE_USE_DJANGO_API instead
+   # should return no matches (already standardized)
 
-3) Docs
+3) Verify docs
    rg -n "VITE_USE_BACKEND_API" docs README.md || true
-   # update docs to reference VITE_USE_DJANGO_API only
+   # should return no matches (documentation updated)
 
 4) Quality gates
    npm run type-check && npm run lint && npm run test

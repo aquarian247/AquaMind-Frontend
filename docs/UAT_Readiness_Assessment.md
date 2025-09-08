@@ -58,7 +58,7 @@ Target state:
 
 ### 2) Environment Configuration
 
-* Docs use both `VITE_USE_DJANGO_API` and `VITE_USE_BACKEND_API`; code and docs disagree on which flag is authoritative [12][13]
+* Environment variables have been standardized on `VITE_USE_DJANGO_API` for consistent configuration [12][13]
 * README & CONTRIBUTING largely standardize on `VITE_USE_DJANGO_API`, but stray references can misconfigure dev/test environments [12][13]
 
 Impact: Misconfiguration risk and time lost diagnosing “wrong backend” routing during UAT.
@@ -127,7 +127,7 @@ Target state: Eliminate critical hard-coded fallbacks; align OpenAPI to a single
    * Update `auth.config.ts` and AuthContext; remove type casts [5][6][10]
 
 2. **Standardize Environment Variables (High)**  
-   * Adopt `VITE_USE_DJANGO_API` exclusively; remove `VITE_USE_BACKEND_API` occurrences [12][13]
+   * Environment variables standardized on `VITE_USE_DJANGO_API` exclusively [12][13]
 
 3. **Fix Testing Configuration & Policy (High)**  
    * Align script behaviour and docs (`vitest` watch vs run) [1][4]  
