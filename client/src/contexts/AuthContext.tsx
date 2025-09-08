@@ -284,7 +284,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setState(prev => ({ ...prev, isLoading: true }));
       
-      const response = await ApiService.apiV1UsersAuthTokenRefreshCreate(
+      const response = await ApiService.apiTokenRefreshCreate(
         { access: '', refresh: refreshToken }
       );
       

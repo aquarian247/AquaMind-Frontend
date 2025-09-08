@@ -214,7 +214,7 @@ export class AuthService {
     try {
       const { ApiService } = await import('@/api/generated');
 
-      const response = await ApiService.apiV1UsersAuthTokenRefreshCreate({
+      const response = await ApiService.apiTokenRefreshCreate({
         access: '',
         refresh: refreshToken,
       });
@@ -242,14 +242,16 @@ export class AuthService {
    * Login with username and password
    */
   static async login(username: string, password: string): Promise<AuthTokens> {
-    const { AuthService: GeneratedAuthService } = await import('@/api/generated/services/AuthService');
+    const { ApiService } = await import('@/api/generated');
 
-    const response = await GeneratedAuthService.apiV1AuthTokenCreate({
+    const response = await ApiService.apiTokenCreate({
       username,
       password,
-    });
+      access: '',
+      refresh: '',
+    } as any);
 
-    // The backend returns JWT tokens despite the OpenAPI spec saying AuthTokenResponse
+    // The backend returns JWT tokens despite the OpenAPI spec saying TokenObtainPair
     const jwtResponse = response as unknown as { access: string; refresh: string };
 
     // Handle JWT format (access + refresh tokens)
