@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             error: null,
             tokenInfo: {
               accessToken: newTokens.access,
-              refreshToken: newTokens.refresh,
+              refreshToken: newTokens.refresh || null,
               expiresAt: newDecoded.exp,
               authSource: newDecoded.auth_source,
             },
@@ -350,7 +350,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         error: null,
         tokenInfo: {
           accessToken: tokens.access,
-          refreshToken: tokens.refresh,
+          refreshToken: tokens.refresh || null,
           expiresAt: decoded.exp,
           authSource: decoded.auth_source,
         },
