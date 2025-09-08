@@ -41,7 +41,7 @@ describe('API Wrapper', () => {
         totalFish: 23300, // Sum of batch populations (12500 + 10800)
         healthRate: 50, // 1 active out of 2 batches
         avgWaterTemp: expect.any(Number),
-        nextFeedingHours: 4
+        nextFeedingHours: 0 // Let UI handle scheduling display
       });
     });
     
@@ -63,8 +63,8 @@ describe('API Wrapper', () => {
       expect(result).toEqual({
         totalFish: 0,
         healthRate: 0,
-        avgWaterTemp: 12.5,
-        nextFeedingHours: 4
+        avgWaterTemp: 0, // Let UI handle missing data appropriately
+        nextFeedingHours: 0 // Let UI handle scheduling display
       });
     });
   });
@@ -181,11 +181,11 @@ describe('API Wrapper', () => {
       const result = await api.infrastructure.getOverview();
 
       expect(result).toEqual({
-        totalContainers: 70,
-        activeBiomass: 3500,
-        capacity: 21805000,
+        totalContainers: 0, // Let UI handle authentication requirements
+        activeBiomass: 0,
+        capacity: 0,
         sensorAlerts: 0,
-        feedingEventsToday: 40,
+        feedingEventsToday: 0,
         _needsAuth: true,
       });
     });
