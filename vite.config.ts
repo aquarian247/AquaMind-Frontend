@@ -50,7 +50,7 @@ export default defineConfig({
         "src/test/**",
         "src/pages/**",
       ],
-      thresholds: { lines: 10, statements: 10, functions: 10, branches: 5 },
+      thresholds: { lines: 40, statements: 40, functions: 40, branches: 20 },
     },
   },
 });
