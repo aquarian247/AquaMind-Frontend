@@ -90,8 +90,13 @@ export const setDevToken = async () => {
     const { ApiService } = await import('./generated');
 
     // TODO: Replace with environment variables for production
-    const devUsername = import.meta.env.VITE_DEV_USERNAME || 'admin';
-    const devPassword = import.meta.env.VITE_DEV_PASSWORD || 'admin123';
+    const devUsername = import.meta.env.VITE_DEV_USERNAME;
+    const devPassword = import.meta.env.VITE_DEV_PASSWORD;
+
+    if (!devUsername || !devPassword) {
+      console.warn('Dev credentials not configured. Set VITE_DEV_USERNAME and VITE_DEV_PASSWORD environment variables.');
+      return false;
+    }
 
     // Use JWT login endpoint with dev credentials
     const response = await ApiService.apiTokenCreate({
