@@ -215,10 +215,7 @@ export class AuthService {
       const { ApiService } = await import('@/api/generated');
 
       const response = await ApiService.apiV1UsersAuthTokenRefreshCreate({
-<<<<<<< HEAD
         access: '',
-=======
->>>>>>> origin/main
         refresh: refreshToken,
       });
 
@@ -228,11 +225,7 @@ export class AuthService {
 
       const tokens: AuthTokens = {
         access: response.access,
-<<<<<<< HEAD
         refresh: refreshToken, // Keep existing refresh token
-=======
-        refresh: refreshToken, // Refresh tokens are typically not rotated, keep the existing one
->>>>>>> origin/main
       };
 
       AuthService.storeTokens(tokens);
