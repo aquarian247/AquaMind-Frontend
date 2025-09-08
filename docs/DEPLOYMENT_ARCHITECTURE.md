@@ -88,19 +88,19 @@ deny from PROTECTED_VLAN_SUBNET to any
    
    # Terminal 2: React Frontend  
    cd react-frontend/
-   VITE_USE_BACKEND_API=true VITE_BACKEND_API_URL=http://localhost:8000 npm run dev
+   VITE_USE_DJANGO_API=true VITE_DJANGO_API_URL=http://localhost:8000 npm run dev
    ```
 
 2. **Frontend-Only Development**
    ```bash
    # Use Express stubs for rapid UI development
-   VITE_USE_BACKEND_API=false npm run dev
+   VITE_USE_DJANGO_API=false npm run dev
    ```
 
 3. **Hybrid Development**
    ```bash
    # Test specific features with Django, others with stubs
-   VITE_USE_BACKEND_API=true npm run dev
+   VITE_USE_DJANGO_API=true npm run dev
    # Switch dynamically in browser console:
    # DevelopmentTools.switchToExpress()
    # DevelopmentTools.switchToDjango()
@@ -141,8 +141,8 @@ console.log(DevelopmentTools.getEnvironmentInfo());
 
 ### Development Environment
 ```env
-VITE_BACKEND_API_URL=http://localhost:8000
-VITE_USE_BACKEND_API=true
+VITE_DJANGO_API_URL=http://localhost:8000
+VITE_USE_DJANGO_API=true
 DEBUG_MODE=true
 LOG_LEVEL=debug
 VITE_LOG_LEVEL=debug
@@ -150,16 +150,16 @@ VITE_LOG_LEVEL=debug
 
 ### Staging Environment
 ```env
-VITE_BACKEND_API_URL=https://api-staging.aquamind.internal
-VITE_USE_BACKEND_API=true
+VITE_DJANGO_API_URL=https://api-staging.aquamind.internal
+VITE_USE_DJANGO_API=true
 VITE_DEBUG_MODE=true
 VITE_LOG_LEVEL=info
 ```
 
 ### Production Environment
 ```env
-VITE_BACKEND_API_URL=https://api.aquamind.internal
-VITE_USE_BACKEND_API=true
+VITE_DJANGO_API_URL=https://api.aquamind.internal
+VITE_USE_DJANGO_API=true
 VITE_DEBUG_MODE=false
 VITE_LOG_LEVEL=error
 ```

@@ -25,7 +25,7 @@ npm run dev
   _Avoid_ legacy `/api/token/*` or `/api/auth/jwt/*` routes.
 * **Testing** — Vitest + React Testing Library. Use simple `fetch` mocks (`vi.fn`) or mock the generated client. **Do not use MSW**.
 * **Scripts** — `npm run test` (one-off), `npm run test:watch` (watch), `npm run test:ci` (coverage).
-* **Environment** — use **`VITE_USE_DJANGO_API`** with `VITE_DJANGO_API_URL`; **do not** use `VITE_USE_BACKEND_API`.
+* **Environment** — use **`VITE_USE_DJANGO_API`** with `VITE_DJANGO_API_URL`.
 * **Quality gates** — code must lint & type-check before PR  
   `npm run type-check && npm run lint` must pass.
 * **Documentation** — update README / docs when endpoints or workflows change.
