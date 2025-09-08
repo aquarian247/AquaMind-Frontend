@@ -190,7 +190,7 @@ Assertions
 
 Environment
 - `matchMedia`, `ResizeObserver`, and Canvas are stubbed in `setupTests.ts`.
-- **Simple fetch mocks** are the standard approach; MSW is disabled.
+- **Simple fetch mocks** are the standard approach; MSW has been completely removed.
 
 ---
 
