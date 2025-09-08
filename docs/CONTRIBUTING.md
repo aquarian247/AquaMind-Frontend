@@ -20,9 +20,9 @@ npm run dev
 * **Contract-first** — `api/openapi.yaml` is the single source of truth.
   Run `npm run sync:openapi` to sync with backend and regenerate client.
 * **Generated client only** — consume APIs via `client/src/api/generated`; never hand-craft `fetch`/Axios calls or edit generated code.
-* **Canonical auth endpoints** —  
-  `POST /api/v1/auth/token/` and `POST /api/v1/auth/token/refresh/` (optional: `GET /api/v1/users/auth/profile/`).  
-  _Avoid_ legacy `/api/token/*` or `/api/auth/jwt/*` routes.
+* **Canonical auth endpoints** —
+  `POST /api/token/` and `POST /api/token/refresh/` (optional: `GET /api/v1/users/auth/profile/`).
+  _Avoid_ legacy `/api/v1/auth/token/*` or `/api/auth/jwt/*` routes.
 * **Testing** — Vitest + React Testing Library. Use simple `fetch` mocks (`vi.fn`) or mock the generated client. **Do not use MSW**.
 * **Scripts** — `npm run test` (one-off), `npm run test:watch` (watch), `npm run test:ci` (coverage).
 * **Environment** — use **`VITE_USE_DJANGO_API`** with `VITE_DJANGO_API_URL`.

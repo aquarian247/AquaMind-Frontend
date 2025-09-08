@@ -1,13 +1,13 @@
 # Task 1 — Canonicalize Auth Endpoints in OpenAPI & Regenerate Client
 
 ## Executive Summary
-OpenAPI currently defines **duplicate** authentication routes (legacy `/api/auth/jwt/*` and `/api/token/*`) while the application and docs standardize on `/api/v1/auth/token/` + `/api/v1/auth/token/refresh/`.  
+OpenAPI currently defines **duplicate** authentication routes (broken `/api/v1/auth/token/*` and `/api/auth/jwt/*`) while the application and docs standardize on `/api/token/` + `/api/token/refresh/`.  
 The generated TypeScript model **`TokenRefresh`** marks `access` as **readonly**, forcing a type-cast workaround in `AuthContext`. Canonicalize the spec to a single pair of JWT endpoints and regenerate the client so application code can drop hacks and align with documentation [1] [2] [3] [4] [5] [6].
 
-Highlights  
-• Duplicates present: `/api/auth/jwt/*`, `/api/token/*`, `/api/v1/auth/token/` [1]  
-• Missing canonical refresh path `/api/v1/auth/token/refresh/` (exists today as `/api/token/refresh/`) [1]  
-• Generated model `TokenRefresh` has `readonly access`, causing TS casts [2] [3]  
+Highlights
+• Duplicates present: `/api/auth/jwt/*`, `/api/v1/auth/token/` (broken 404) [1]
+• Canonical endpoints: `/api/token/` and `/api/token/refresh/` [1]
+• Generated model `TokenRefresh` has `readonly access`, causing TS casts [2] [3]
 • Front-end config expects canonical endpoints but is inconsistent for refresh (login OK, refresh wrong path) [4] [5]
 
 ---
@@ -20,17 +20,17 @@ Highlights
 `api/openapi.yaml` currently exposes **three** auth endpoint families:
 
 * `/api/auth/jwt/*`
-* `/api/token/*`
-* `/api/v1/auth/token/*`
+* `/api/v1/auth/token/*` (broken 404)
+* `/api/token/*` (working)
 
-Docs and frontend standardize on the `/api/v1/auth/token/*` pair.  
+Docs and frontend standardize on the `/api/token/*` pair.
 The generated model `TokenRefresh` incorrectly treats `access` as `readonly` on the request body, forcing TS casts in `AuthContext`.
 
 ### Goals
-1. Single canonical pair only  
-   • POST `/api/v1/auth/token/` (login)  
-   • POST `/api/v1/auth/token/refresh/` (refresh)  
-2. Remove legacy duplications: `/api/token/*` and `/api/auth/jwt/*`  
+1. Single canonical pair only
+   • POST `/api/token/` (login)
+   • POST `/api/token/refresh/` (refresh)
+2. Remove legacy duplications: `/api/v1/auth/token/*` and `/api/auth/jwt/*`
 3. Fix refresh request model so body is `{ refresh: string }` (no `readonly`), response contains `{ access: string }`.
 
 ### Scope
@@ -40,12 +40,12 @@ The generated model `TokenRefresh` incorrectly treats `access` as `readonly` on 
 
 ### Detailed Requirements
 #### 1  Paths
-Keep:  
+Keep:
 ```
-POST /api/v1/auth/token/
-POST /api/v1/auth/token/refresh/
+POST /api/token/
+POST /api/token/refresh/
 ```
-Delete all `/api/token/*` and `/api/auth/jwt/*` routes.
+Delete all `/api/v1/auth/token/*` and `/api/auth/jwt/*` routes.
 
 #### 2  Schemas (`components/schemas`)
 Add:
@@ -81,8 +81,8 @@ npm run generate:api
 * `client/src/api/generated/models/TokenRefresh.ts` is no longer used as a request requiring `access`.
 
 ### Acceptance Criteria
-* `api/openapi.yaml` contains only the canonical pair under `/api/v1/auth/token/*`.  
-* Generated client includes a refresh method at `/api/v1/auth/token/refresh/`.  
+* `api/openapi.yaml` contains only the canonical pair under `/api/token/*`.
+* Generated client includes a refresh method at `/api/token/refresh/`.  
 * No “readonly access on request” in generated types; TS casts not required.  
 * `npm run type-check && npm run lint && npm run test` all pass.
 
@@ -92,7 +92,7 @@ npm run generate:api
 npm run generate:api
 
 # sanity checks
-grep -R "/api/v1/auth/token/" client/src/api/generated | wc -l
+grep -R "/api/token/" client/src/api/generated | wc -l
 grep -R "/api/token/\|/api/auth/jwt" api/openapi.yaml
 
 # quality gates
@@ -126,8 +126,8 @@ Repo: https://github.com/aquarian247/AquaMind-Frontend
 2) Spec edits (api/openapi.yaml)
    • Remove all legacy auth endpoints under /api/token/* and /api/auth/jwt/*.
    • Ensure only:
-       POST /api/v1/auth/token/
-       POST /api/v1/auth/token/refresh/
+POST /api/token/
+POST /api/token/refresh/
    • Add schemas:
        TokenRefreshRequest  – object { refresh: string }
        TokenRefreshResponse – object { access: string }
@@ -150,7 +150,7 @@ Repo: https://github.com/aquarian247/AquaMind-Frontend
    git push -u origin feature/canonicalize-auth-openapi
    # Open PR to main with before/after spec snippets.
 
-Success = only /api/v1/auth/token/* endpoints in spec & client, type checks/lint/tests pass, refresh request body is { refresh: string }.
+Success = only /api/token/* endpoints in spec & client, type checks/lint/tests pass, refresh request body is { refresh: string }.
 ```
 
 ---

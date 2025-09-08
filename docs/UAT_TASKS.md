@@ -14,20 +14,20 @@ Purpose: Achieve UAT readiness with clean authentication, consistent docs/config
 **Summary**
 Align OpenAPI spec with actual working JWT endpoints from backend.
 Add the working JWT endpoints that backend actually implements:
-* `POST /api/v1/auth/token/` (login)
-* `POST /api/v1/auth/token/refresh/` (refresh)
+* `POST /api/token/` (login)
+* `POST /api/token/refresh/` (refresh)
 
 **Files**
 * `api/openapi.yaml`
 
 **Steps**
-1. Ensure the canonical JWT endpoints `/api/v1/auth/token/` and `/api/v1/auth/token/refresh/` are properly defined in OpenAPI spec
-2. Remove legacy endpoints (`/api/token/`, `/api/auth/jwt/`) that are not the canonical implementation
+1. Ensure the canonical JWT endpoints `/api/token/` and `/api/token/refresh/` are properly defined in OpenAPI spec
+2. Remove legacy endpoints (`/api/v1/auth/token/`, `/api/auth/jwt/`) that are broken (404)
 3. Align schemas with `djangorestframework-simplejwt` response formats
 4. Run `npm run generate:api` and commit `client/src/api/generated`
 
 **Acceptance Criteria**
-* Generated client exposes JWT auth methods under `/api/v1/auth/token/…`
+* Generated client exposes JWT auth methods under `/api/token/…`
 * Endpoints match what backend actually implements
 * No broken 404 endpoints in spec
 * `npm run type-check` passes
@@ -47,8 +47,8 @@ Point all auth config to the actual working JWT endpoints from backend.
 * `client/src/services/auth.service.ts` (update any hardcoded URLs)
 
 **Steps**
-* Set `login` → `/api/v1/auth/token/`
-* Set `refresh` → `/api/v1/auth/token/refresh/`
+* Set `login` → `/api/token/`
+* Set `refresh` → `/api/token/refresh/`
 * Update any hardcoded endpoint references in auth service
 * Leave `profile` as `/api/v1/users/auth/profile/` if backend provides it
 
@@ -239,20 +239,20 @@ Tests deterministic; coverage bumps for auth modules.
 - No manual fetch calls or TS casts
 - All quality gates pass (type-check, lint, test)
 
-### ⚠️ **Critical Discovery from Backend Issue #40**
+### ✅ **Critical Discovery from Backend Issue #40**
 The UAT_TASKS.md was based on incorrect assumptions about "canonical" endpoints:
 - **Broken**: `/api/v1/auth/token/` (404 Not Found)
-- **Working**: `/api/v1/auth/token/` and `/api/v1/auth/token/refresh/` (JWT endpoints)
-- **Missing**: OpenAPI spec doesn't document the working endpoints!
+- **Working**: `/api/token/` and `/api/token/refresh/` (JWT endpoints)
+- **Corrected**: Documentation now reflects the actual working endpoints
 
 ### 🎯 **Corrected Path Forward**
 1. **Task 1 (REVISED)**: Ensure canonical JWT endpoints are properly documented in OpenAPI spec
-2. **Task 2 (REVISED)**: Update auth config to use `/api/v1/auth/token/` endpoints
+2. **Task 2 (REVISED)**: Update auth config to use `/api/token/` endpoints
 3. **Task 3**: ✅ **COMPLETED** - AuthContext uses generated client
 4. Continue with Tasks 4-10 as planned
 
 ### **Immediate Action Items**
-1. Ensure OpenAPI spec properly documents `/api/v1/auth/token/` and `/api/v1/auth/token/refresh/`
+1. Ensure OpenAPI spec properly documents `/api/token/` and `/api/token/refresh/`
 2. Update auth service to use these endpoints
 3. Regenerate API client
 4. Update documentation with correct endpoints

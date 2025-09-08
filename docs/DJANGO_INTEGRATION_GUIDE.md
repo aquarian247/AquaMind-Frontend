@@ -59,8 +59,8 @@ VITE_LOG_LEVEL=error
 Your Django backend needs these endpoints for full compatibility across all 8 active apps:
 
 ### Authentication
-- `POST /api/v1/auth/token/` — Obtain **access** / **refresh** tokens
-- `POST /api/v1/auth/token/refresh/` — Refresh access token
+- `POST /api/token/` — Obtain **access** / **refresh** tokens
+- `POST /api/token/refresh/` — Refresh access token
   *Optional*: `GET /api/v1/users/auth/profile/` — Retrieve current user profile
 
 ### Infrastructure App

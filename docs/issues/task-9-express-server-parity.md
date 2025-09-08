@@ -3,7 +3,7 @@
 ## Executive Summary
 The Express proxy (`server/index.ts`) and mock API (`server/mock-api.ts`) must follow the same conventions adopted by the frontend:  
 • Single environment toggle `VITE_USE_DJANGO_API`  
-• Canonical authentication endpoints `/api/v1/auth/token/*` only  
+• Canonical authentication endpoints `/api/token/*` only  
 This task removes legacy variables and endpoint families from the server layer, ensuring configuration parity and reducing confusion between environments [1][2].
 
 ---
@@ -18,7 +18,7 @@ Frontend tasks 1–7 standardised on `VITE_USE_DJANGO_API` and canonical auth en
 ### Goals
 1. Ensure server code uses only `VITE_USE_DJANGO_API` (legacy references already removed).  
 2. Ensure server logic relies exclusively on `VITE_USE_DJANGO_API`.  
-3. Align proxy and mock routes to `/api/v1/auth/token/` and `/api/v1/auth/token/refresh/`.
+3. Align proxy and mock routes to `/api/token/` and `/api/token/refresh/`.
 
 ### Scope
 • `server/index.ts`  
@@ -31,10 +31,10 @@ Frontend tasks 1–7 standardised on `VITE_USE_DJANGO_API` and canonical auth en
    • Update log messages to reference the new variable name.
 
 2. Canonical endpoints  
-   • Search for `/api/token/` or `/api/auth/jwt/` patterns and replace with `/api/v1/auth/token/` equivalents.  
-   • Mock routes in `mock-api.ts` should expose:  
-     – POST `/api/v1/auth/token/` (login)  
-     – POST `/api/v1/auth/token/refresh/` (refresh)
+   • Search for `/api/v1/auth/token/` or `/api/auth/jwt/` patterns and replace with `/api/token/` equivalents.
+   • Mock routes in `mock-api.ts` should expose:
+     – POST `/api/token/` (login)
+     – POST `/api/token/refresh/` (refresh)
 
 3. Startup sanity  
    • When `npm run dev:server` starts, log whether `VITE_USE_DJANGO_API` is enabled.  
@@ -42,7 +42,7 @@ Frontend tasks 1–7 standardised on `VITE_USE_DJANGO_API` and canonical auth en
 
 ### Acceptance Criteria
 • `grep -R "VITE_USE_BACKEND_API" server` returns no matches (legacy references already removed).  
-• No server code references `/api/token/*` or `/api/auth/jwt/*`.  
+• No server code references `/api/v1/auth/token/*` or `/api/auth/jwt/*`.  
 • Running `npm run dev:server` logs variable state and serves canonical endpoints.  
 • `npm run type-check && npm run lint && npm run test` pass.
 
@@ -81,7 +81,7 @@ Goal: Ensure Express server uses only VITE_USE_DJANGO_API and canonical auth end
 
 3) Align endpoints
    rg -n "/api/(token|auth/jwt)" server || true
-   # update to /api/v1/auth/token/ and /api/v1/auth/token/refresh/
+   # update to /api/token/ and /api/token/refresh/
 
 4) Confirm mock routes
    # add or verify POST handlers in server/mock-api.ts for login & refresh

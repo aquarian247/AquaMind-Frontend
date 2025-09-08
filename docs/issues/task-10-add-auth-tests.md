@@ -28,7 +28,7 @@ we need deterministic tests for the core authentication lifecycle to lock in beh
 
 ### Detailed Requirements
 1. **Login flow**  
-   – Mock generated client login method (`/api/v1/auth/token/`) to resolve `{ access, refresh }`.  
+   – Mock generated client login method (`/api/token/`) to resolve `{ access, refresh }`.  
    – Render a component tree with `<AuthProvider>` and a child that consumes context.  
    – Trigger `login()` via context; assert:  
      • `isAuthenticated === true`,  
@@ -37,7 +37,7 @@ we need deterministic tests for the core authentication lifecycle to lock in beh
 
 2. **Refresh success**  
    – Use `vi.useFakeTimers()`; advance time to just before expiry (e.g., 55 min on a 60 min token).  
-   – Mock refresh endpoint (`/api/v1/auth/token/refresh/`) to resolve a new `access`.  
+   – Mock refresh endpoint (`/api/token/refresh/`) to resolve a new `access`.  
    – Assert `access` token in context is updated and a new timer is scheduled.
 
 3. **Refresh failure → logout**  

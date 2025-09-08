@@ -11,7 +11,7 @@ Ensure all documentation reflects the final state: canonical auth endpoints, rem
 
 ### Background
 Docs have been updated across multiple PRs. Perform a final verification pass to ensure consistency with code changes:
-- Canonical `/api/v1/auth/token/*`
+- Canonical `/api/token/*`
 - No MSW usage
 - Env var: `VITE_USE_DJANGO_API` only
 
@@ -25,7 +25,7 @@ Docs have been updated across multiple PRs. Perform a final verification pass to
 
 ### Detailed Requirements
 1) Verify docs no longer contain stale patterns:
-   - Should have no references to: `MSW`, `/api/token/`, `/api/auth/jwt/`, `/api/v1/users/auth/token/`, `VITE_USE_BACKEND_API`, `django-api.ts`, `DJANGO_API_ALIGNMENT.md`.
+   - Should have no references to: `MSW`, `/api/v1/auth/token/`, `/api/auth/jwt/`, `/api/v1/users/auth/token/`, `VITE_USE_BACKEND_API`, `django-api.ts`, `DJANGO_API_ALIGNMENT.md`.
 2) Ensure command snippets compile with current scripts (`npm run test`, `npm run generate:api`).
 3) Keep canonical auth endpoints and environment variable consistent in all examples.
 
@@ -36,7 +36,7 @@ Docs have been updated across multiple PRs. Perform a final verification pass to
 ### Verification Steps
 ```bash
 # verify no stale references remain in docs
-rg -n "MSW|/api/token/|/api/auth/jwt/|/api/v1/users/auth/token/|VITE_USE_BACKEND_API|django-api.ts|DJANGO_API_ALIGNMENT.md" docs README.md || echo "OK"
+rg -n "MSW|/api/v1/auth/token/|/api/auth/jwt/|/api/v1/users/auth/token/|VITE_USE_BACKEND_API|django-api.ts|DJANGO_API_ALIGNMENT.md" docs README.md || echo "OK"
 
 # quick smoke for commands
 npm run -s test -- --help >/dev/null || true
@@ -62,7 +62,7 @@ Goal: Verify and fix documentation to match canonical endpoints, no MSW, and env
    git switch -c docs/verification-pass
 
 2) Verify documentation consistency
-   rg -n "MSW|/api/token/|/api/auth/jwt/|/api/v1/users/auth/token/|VITE_USE_BACKEND_API|django-api.ts|DJANGO_API_ALIGNMENT.md" docs README.md || true
+   rg -n "MSW|/api/v1/auth/token/|/api/auth/jwt/|/api/v1/users/auth/token/|VITE_USE_BACKEND_API|django-api.ts|DJANGO_API_ALIGNMENT.md" docs README.md || true
    # should return no matches (documentation has been updated)
 
 3) Quality gates

@@ -39,7 +39,7 @@ Top blockers (must fix before UAT):
 
 * Endpoints disagree across layers  
   * Config expects `/api/v1/users/auth/token/`, `/api/v1/users/auth/token/refresh/`, `/api/v1/users/auth/profile/` [5]  
-  * OpenAPI defines `/api/v1/auth/token/`, plus alternative JWT routes (`/api/auth/jwt/*`, `/api/token/*`) [11]  
+  * OpenAPI defines `/api/token/`, plus alternative JWT routes (`/api/auth/jwt/*`, `/api/v1/auth/token/*` (broken)) [11]  
   * Generated client is built from the OpenAPI spec and thus lacks the `/api/v1/users/auth/*` endpoints that **AuthContext** calls (e.g., `apiV1UsersAuthProfileRetrieve`, `apiV1UsersAuthTokenRefreshCreate`) [6][11]
 * **TokenRefresh** model/type issue  
   * Generated `TokenRefresh` incorrectly includes a readonly `access` field—request should send only `refresh`, response returns `access` [10]  
@@ -121,7 +121,7 @@ Target state: Eliminate critical hard-coded fallbacks; align OpenAPI to a single
 ## Remediation Plan (Pre-UAT)
 
 1. **Resolve Authentication Endpoint Conflicts (High)**  
-   * Decide canonical auth endpoints (recommend `/api/v1/auth/token/`, `/api/v1/auth/token/refresh/`, plus `/api/v1/users/auth/profile/`) [11]  
+   * Decide canonical auth endpoints (recommend `/api/token/`, `/api/token/refresh/`, plus `/api/v1/users/auth/profile/`) [11]  
    * Update OpenAPI spec; remove overlapping legacy variants [11]  
    * Regenerate client; ensure generation command matches checked-in spec [1][11]  
    * Update `auth.config.ts` and AuthContext; remove type casts [5][6][10]

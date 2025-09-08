@@ -14,7 +14,7 @@ After canonicalizing auth endpoints (Task 1) and aligning config (Task 2), remov
 • Calls `ApiService.apiV1UsersAuthTokenRefreshCreate` and type-casts `{ refresh } as unknown as TokenRefresh` because the generated model marks `access` as readonly on request [1][2].  
 • Uses a centralized `AuthService` for login but mixes generated and manual logic.
 
-With Task 1, the spec exposes canonical endpoints under `/api/v1/auth/token/*` with correct request/response types. We should delete the casts and call the generated refresh method directly.
+With Task 1, the spec exposes canonical endpoints under `/api/token/*` with correct request/response types. We should delete the casts and call the generated refresh method directly.
 
 ### Goals
 1. Use generated client for login and refresh flows.  
@@ -26,22 +26,22 @@ With Task 1, the spec exposes canonical endpoints under `/api/v1/auth/token/*` w
 • `client/src/services/auth.service.ts` (ensure it delegates to generated client)
 
 ### Detailed Requirements
-1. **Refresh flow**  
-   • Replace calls to `/api/v1/users/auth/token/refresh/` with the canonical generated method `/api/v1/auth/token/refresh/`.  
-   • Request body must be `{ refresh: string }`; response includes `{ access: string }`.  
+1. **Refresh flow**
+   • Replace calls to `/api/v1/users/auth/token/refresh/` with the canonical generated method `/api/token/refresh/`.
+   • Request body must be `{ refresh: string }`; response includes `{ access: string }`.
    • Remove `as unknown as TokenRefresh` cast.
 
-2. **Login flow**  
-   • Ensure login uses `/api/v1/auth/token/` endpoint via generated client (directly or via `AuthService`).  
+2. **Login flow**
+   • Ensure login uses `/api/token/` endpoint via generated client (directly or via `AuthService`).
    • Keep `setAuthToken(newAccess)` to update the OpenAPI runtime.
 
 3. **Cleanup**  
-   • Remove any references to `/api/token/*` and `/api/auth/jwt/*`.
+   • Remove any references to `/api/v1/auth/token/*` and `/api/auth/jwt/*`.
 
 ### Acceptance Criteria
 • No TS casts hacking models in `AuthContext.tsx`.  
 • `grep -R "as unknown as TokenRefresh" client/src` returns no matches.  
-• Login and refresh executed via generated client methods bound to `/api/v1/auth/token/*`.  
+• Login and refresh executed via generated client methods bound to `/api/token/*`.  
 • `npm run type-check && npm run lint && npm run test` pass.
 
 ### Verification Steps
@@ -72,12 +72,12 @@ Goal: Refactor AuthContext to rely only on the generated client for login and re
 
 2) Edits
    - client/src/contexts/AuthContext.tsx
-       * Replace refresh call with generated method hitting /api/v1/auth/token/refresh/
+       * Replace refresh call with generated method hitting /api/token/refresh/
        * Remove "as unknown as TokenRefresh" cast
        * Ensure setAuthToken(newAccess) is called after refresh/login
        * Keep scheduling logic intact
    - client/src/services/auth.service.ts (if needed)
-       * Ensure login delegates to generated client /api/v1/auth/token/
+       * Ensure login delegates to generated client /api/token/
 
 3) Sanity checks
    grep -R "as unknown as TokenRefresh" client/src || echo OK
