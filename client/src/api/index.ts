@@ -84,14 +84,19 @@ export const initializeAuth = () => {
 initializeAuth();
 
 // Development helper to set dev token using JWT login
+// NOTE: In production, this should use environment variables or a proper dev auth endpoint
 export const setDevToken = async () => {
   try {
     const { ApiService } = await import('./generated');
 
-    // Use JWT login endpoint with correct dev credentials
+    // TODO: Replace with environment variables for production
+    const devUsername = import.meta.env.VITE_DEV_USERNAME || 'admin';
+    const devPassword = import.meta.env.VITE_DEV_PASSWORD || 'admin123';
+
+    // Use JWT login endpoint with dev credentials
     const response = await ApiService.apiTokenCreate({
-      username: 'admin',
-      password: 'admin123',
+      username: devUsername,
+      password: devPassword,
     } as any); // Type override - OpenAPI spec is incorrect
 
     if (response.access && response.refresh) {
