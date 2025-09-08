@@ -10,7 +10,8 @@ import { apiConfig } from '../config/api.config';
 
 export interface AuthTokens {
   access: string;
-  refresh: string;
+  refresh?: string; // Optional for single-token systems
+  token?: string; // For Django TokenAuthentication
 }
 
 export interface ApiResponse<T = any> {
@@ -56,8 +57,18 @@ export class AuthService {
    * Store authentication tokens
    */
   static storeTokens(tokens: AuthTokens): void {
-    localStorage.setItem(authConfig.tokenKey, tokens.access);
-    localStorage.setItem(authConfig.refreshTokenKey, tokens.refresh);
+    // Handle both JWT (access/refresh) and single token formats
+    if (tokens.access) {
+      localStorage.setItem(authConfig.tokenKey, tokens.access);
+    } else if (tokens.token) {
+      // For single token systems (like Django TokenAuthentication)
+      localStorage.setItem(authConfig.tokenKey, tokens.token);
+    }
+
+    // Store refresh token if available
+    if (tokens.refresh) {
+      localStorage.setItem(authConfig.refreshTokenKey, tokens.refresh);
+    }
   }
 
   /**
@@ -201,7 +212,10 @@ export class AuthService {
     }
 
     try {
-      const response = await fetch(authConfig.baseUrl + authConfig.endpoints.refresh, {
+      // Use the Django JWT refresh endpoint: /api/token/refresh/
+      const refreshUrl = `${authConfig.baseUrl}/api/token/refresh/`;
+
+      const response = await fetch(refreshUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -233,7 +247,10 @@ export class AuthService {
    * Login with username and password
    */
   static async login(username: string, password: string): Promise<AuthTokens> {
-    const response = await fetch(authConfig.baseUrl + authConfig.endpoints.login, {
+    // Use the Django JWT login endpoint: /api/token/
+    const loginUrl = `${authConfig.baseUrl}/api/token/`;
+
+    const response = await fetch(loginUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -248,7 +265,18 @@ export class AuthService {
       throw new ApiError(`Login failed: ${response.status}`, response.status);
     }
 
-    const tokens: AuthTokens = await response.json();
+    const responseData = await response.json();
+
+    // Handle JWT format (access + refresh tokens)
+    if (!responseData.access || !responseData.refresh) {
+      throw new ApiError('Invalid JWT token response format', 500);
+    }
+
+    const tokens: AuthTokens = {
+      access: responseData.access,
+      refresh: responseData.refresh,
+    };
+
     this.storeTokens(tokens);
 
     return tokens;

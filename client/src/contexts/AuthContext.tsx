@@ -135,8 +135,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
 
-        // Decode token to check expiration and get user info
-        const decoded = jwtDecode<DecodedToken>(accessToken);
+        // Validate tokens are proper strings before decoding
+        if (typeof accessToken !== 'string' || typeof refreshToken !== 'string') {
+          console.warn('Invalid token format detected, clearing authentication');
+          handleLogout();
+          return;
+        }
+
+        let decoded: DecodedToken;
+        try {
+          // Decode token to check expiration and get user info
+          decoded = jwtDecode<DecodedToken>(accessToken);
+        } catch (decodeError) {
+          console.error('Failed to decode access token:', decodeError);
+          console.warn('Invalid or corrupted access token, clearing authentication');
+          handleLogout();
+          return;
+        }
+
         const currentTime = Date.now() / 1000;
 
         if (decoded.exp < currentTime) {
@@ -150,8 +166,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             return;
           }
 
-          // Update decoded token with new access token
-          const newDecoded = jwtDecode<DecodedToken>(newTokens.access);
+          let newDecoded: DecodedToken;
+          try {
+            // Update decoded token with new access token
+            newDecoded = jwtDecode<DecodedToken>(newTokens.access);
+          } catch (decodeError) {
+            console.error('Failed to decode refreshed access token:', decodeError);
+            console.warn('Invalid refreshed access token, clearing authentication');
+            handleLogout();
+            return;
+          }
 
           setAuthToken(newTokens.access);
 
