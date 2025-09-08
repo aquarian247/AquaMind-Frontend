@@ -1,0 +1,147 @@
+---
+alwaysApply: true
+---
+# AquaMind Frontend Authentication Setup - Cursor Rules
+# This file documents the canonical authentication configuration to prevent future confusion
+
+## 🔐 Authentication Endpoints (CANONICAL)
+
+### ✅ WORKING ENDPOINTS (Always Use These)
+```typescript
+// client/src/config/auth.config.ts
+endpoints: {
+  login: '/api/token/',           // POST - JWT login
+  refresh: '/api/token/refresh/', // POST - JWT refresh
+  profile: '/api/v1/users/auth/profile/', // GET - User profile
+}
+```
+
+### ❌ BROKEN/DO NOT USE
+- `/api/v1/auth/token/` (404 Not Found)
+- `/api/v1/auth/token/refresh/` (404 Not Found)
+- `/api/v1/auth/dev-auth/` (Returns DRF token format, not JWT)
+
+## 🎯 Token Format Expectations
+
+### JWT Endpoints Return:
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIs...",
+  "refresh": "eyJhbGciOiJIUzI1NiIs..."
+}
+```
+
+### Dev Endpoint Returns (BROKEN FORMAT):
+```json
+{
+  "token": "a9117a1855f00bef561edfa76061574bdaaddd25",
+  "user_id": 9,
+  "username": "devuser",
+  "email": "dev@example.com"
+}
+```
+
+## 🧪 Testing Authentication
+
+### ✅ CORRECT: Test with Real JWT Endpoints
+```bash
+# Test login
+curl -X POST http://localhost:8000/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+
+# Test refresh
+curl -X POST http://localhost:8000/api/token/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{"refresh":"eyJhbGciOiJIUzI1NiIs..."}'
+```
+
+### ❌ WRONG: Don't test dev endpoints for JWT auth
+```bash
+# This returns wrong format for JWT auth system
+curl http://localhost:8000/api/v1/auth/dev-auth/
+```
+
+## 📋 Development Workflow
+
+### 1. Always Reference OpenAPI Spec First
+```bash
+# Check available endpoints
+grep -R "api/token" /path/to/backend/api/openapi.yaml
+```
+
+### 2. Test Endpoints Before Implementation
+```bash
+# Verify endpoint works and returns expected format
+curl -s http://localhost:8000/api/token/ -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}' | jq .
+```
+
+### 3. Update Frontend Config
+- Only update `client/src/config/auth.config.ts`
+- Never hardcode endpoints elsewhere
+- Always use the `authConfig.endpoints` object
+
+## 🚨 Common Pitfalls to Avoid
+
+### 1. Don't Use Dev Auth for JWT Testing
+The dev endpoint (`/api/v1/auth/dev-auth/`) returns DRF token format, not JWT. This will break the JWT authentication system.
+
+### 2. Don't Trust Documentation Without Verification
+Always test endpoints directly before implementing. Documentation can be outdated.
+
+### 3. Don't Hardcode Endpoints
+Always use `authConfig.endpoints` instead of hardcoded strings.
+
+### 4. Don't Mix Token Formats
+JWT auth system expects `{"access": "...", "refresh": "..."}` format. DRF tokens are `{"token": "..."}`.
+
+## 🔍 Debugging Authentication Issues
+
+### Step 1: Check Endpoint Response Format
+```bash
+# Should return JWT format, not DRF format
+curl -s http://localhost:8000/api/token/ -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}' | jq .
+```
+
+### Step 2: Verify Frontend Config
+```typescript
+// client/src/config/auth.config.ts should have:
+endpoints: {
+  login: '/api/token/',           // ✅ Correct
+  refresh: '/api/token/refresh/', // ✅ Correct
+}
+```
+
+### Step 3: Check OpenAPI Spec
+```bash
+# Verify endpoints exist in spec
+grep -R "/api/token" /path/to/backend/api/openapi.yaml
+```
+
+## 📚 References
+
+- **OpenAPI Spec**: `api/openapi.yaml` (single source of truth)
+- **Frontend Config**: `client/src/config/auth.config.ts`
+- **Django Backend**: Uses `djangorestframework-simplejwt`
+- **Test Credentials**: `admin` / `admin123` (auth_user table)
+
+## ⚠️ IMPORTANT REMINDERS
+
+1. **OpenAPI spec is the single source of truth** for endpoint definitions
+2. **Always test endpoints directly** before implementing features
+3. **JWT format ≠ DRF token format** - they are incompatible
+4. **Dev endpoints are for development convenience only** - don't use them in production auth flows
+5. **Documentation can be outdated** - always verify against working endpoints
+
+---
+
+**Last Updated**: After fixing authentication endpoint confusion
+**Purpose**: Prevent future authentication debugging headaches
+**Contact**: Check GitHub Issue #40 for historical context
+
+
+---

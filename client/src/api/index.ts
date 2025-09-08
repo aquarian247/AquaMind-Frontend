@@ -66,15 +66,10 @@ export const clearAuthToken = () => {
 export const initializeAuth = () => {
   const token = localStorage.getItem('auth_token');
 
-  // In development, use the dev token if no token is stored
+  // Set token if it exists in localStorage
   if (token) {
     setAuthToken(token);
     return true;
-  } else if (import.meta.env.DEV) {
-    // For development, try to get dev token
-    console.log('Development mode: attempting to get dev token...');
-    // We'll set the dev token later from the frontend
-    return false;
   }
 
   return false;
@@ -83,40 +78,6 @@ export const initializeAuth = () => {
 // Initialize auth on module load
 initializeAuth();
 
-// Development helper to set dev token using dev endpoint
-// NOTE: This only works in development and uses a dev endpoint that doesn't require credentials
-export const setDevToken = async () => {
-  try {
-    // Import auth config to get the dev endpoint
-    const { authConfig } = await import('@/config/auth.config');
-
-    // Only use dev token setup in development environment
-    if (!authConfig.isDevelopment) {
-      console.log('Production environment - skipping dev token setup');
-      return false;
-    }
-
-    // Use the dev endpoint from config (no credentials required)
-    const response = await fetch(`${authConfig.baseUrl}${authConfig.endpoints.devToken}`);
-
-    if (response.ok) {
-      const data = await response.json();
-      // The dev endpoint returns a token directly (not JWT format)
-      if (data.token) {
-        storeAuthToken(data.token);
-        console.log('Dev token set successfully');
-        return true;
-      }
-    }
-
-    console.warn('Dev endpoint not available or returned invalid response');
-
-  } catch (error) {
-    console.error('Failed to get dev token:', error);
-  }
-
-  return false;
-};
 
 // Pagination helpers
 export interface PaginationParams {

@@ -21,11 +21,9 @@ export const authConfig = {
 
   // Auth Endpoints - JWT Authentication
   endpoints: {
-    login: '/api/v1/auth/token/',
-    refresh: '/api/v1/auth/token/refresh/',
+    login: '/api/token/',
+    refresh: '/api/token/refresh/',
     profile: '/api/v1/users/auth/profile/',
-    // Development endpoint for automatic token setup (only in dev)
-    devToken: '/api/v1/auth/dev-auth/',
   },
 
   // Auth Sources (for future AD/LDAP integration)
