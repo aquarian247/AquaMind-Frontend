@@ -29,6 +29,9 @@ Your React frontend with Django backend integration is now configured for the VL
 
 ## Configuration for Your Environment
 
+### JWT-Only Development Approach
+**Important**: This frontend is configured for JWT authentication exclusively, even in development mode. Always use JWT endpoints (`/api/token/`, `/api/token/refresh/`) for authentication. DRF Token endpoints are available on the backend for testing purposes only and should not be used by the frontend.
+
 ### Local Development Setup
 ```bash
 # Create environment file

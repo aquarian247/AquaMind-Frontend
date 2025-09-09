@@ -12,11 +12,14 @@ A quick reference for writing and running tests in this repo.
 
 Everything lives under `client/`. Test files use `*.test.ts(x)`.
 
-ℹ️ **Real API vs. mock endpoints**  
+ℹ️ **Real API vs. mock endpoints**
 The suite now targets the *real* Django REST API (`/api/v1/...`).  Tests should
-mock those URLs (or the generated ApiService) instead of the legacy “/api/foo”
+mock those URLs (or the generated ApiService) instead of the legacy "/api/foo"
 place-holders.  Keep the response shape identical to what Django returns so the
 UI logic (pagination, field names, etc.) stays truthful.
+
+ℹ️ **JWT Authentication in Tests**
+All authentication in tests should use JWT format. Mock the `/api/token/` and `/api/token/refresh/` endpoints with JWT responses containing `access` and `refresh` token fields. The frontend is configured for JWT-only authentication.
 
 ---
 
