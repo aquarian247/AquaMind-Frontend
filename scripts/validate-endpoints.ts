@@ -20,7 +20,6 @@ import path from 'path';
 import { promisify } from 'util';
 import { glob } from 'glob';
 import yaml from 'js-yaml';
-import chalk from 'chalk';
 
 // Configuration
 const CONFIG = {
@@ -65,21 +64,21 @@ interface EndpointReference {
  */
 async function getOpenApiPaths(): Promise<string[]> {
   try {
-    console.log(chalk.blue('📚 Reading OpenAPI specification...'));
+    console.log('📚 Reading OpenAPI specification...');
     const fileContent = await fs.promises.readFile(CONFIG.openApiPath, 'utf8');
     const openApiDoc = yaml.load(fileContent) as any;
     
     if (!openApiDoc || !openApiDoc.paths) {
-      console.error(chalk.red('❌ Invalid OpenAPI specification: missing paths object'));
+      console.error('❌ Invalid OpenAPI specification: missing paths object');
       process.exit(2);
     }
     
     // Extract all paths and normalize them
     const paths = Object.keys(openApiDoc.paths).map(normalizeEndpoint);
-    console.log(chalk.green(`✅ Found ${paths.length} valid endpoints in OpenAPI spec`));
+    console.log(`✅ Found ${paths.length} valid endpoints in OpenAPI spec`);
     return paths;
   } catch (error) {
-    console.error(chalk.red(`❌ Failed to parse OpenAPI spec: ${error}`));
+    console.error(`❌ Failed to parse OpenAPI spec: ${error}`);
     process.exit(2);
   }
 }
@@ -88,14 +87,14 @@ async function getOpenApiPaths(): Promise<string[]> {
  * Scan the frontend codebase for API endpoint patterns
  */
 async function scanSourceFiles(): Promise<EndpointReference[]> {
-  console.log(chalk.blue('🔍 Scanning source files for API endpoints...'));
-  
+  console.log('🔍 Scanning source files for API endpoints...');
+
   // Find all source files matching the globs
   const files = await glob(CONFIG.sourceGlobs, {
     ignore: CONFIG.excludeGlobs
   });
-  
-  console.log(chalk.blue(`📂 Scanning ${files.length} files...`));
+
+  console.log(`📂 Scanning ${files.length} files...`);
   
   const references: EndpointReference[] = [];
   
@@ -134,11 +133,11 @@ async function scanSourceFiles(): Promise<EndpointReference[]> {
         }
       }
     } catch (error) {
-      console.warn(chalk.yellow(`⚠️ Could not read file ${file}: ${error}`));
+      console.warn(`⚠️ Could not read file ${file}: ${error}`);
     }
   }
-  
-  console.log(chalk.green(`✅ Found ${references.length} API endpoint references`));
+
+  console.log(`✅ Found ${references.length} API endpoint references`);
   return references;
 }
 
@@ -174,10 +173,10 @@ function normalizeEndpoint(path: string): string {
  * Validate that all referenced endpoints exist in the OpenAPI spec
  */
 function validateEndpoints(
-  openApiPaths: string[], 
+  openApiPaths: string[],
   references: EndpointReference[]
 ): { valid: EndpointReference[], invalid: EndpointReference[] } {
-  console.log(chalk.blue('🔍 Validating endpoints...'));
+  console.log('🔍 Validating endpoints...');
   
   const valid: EndpointReference[] = [];
   const invalid: EndpointReference[] = [];
@@ -199,7 +198,7 @@ function validateEndpoints(
   for (const [path, refs] of pathMap.entries()) {
     // Skip paths with variables (we can't validate these precisely)
     if (path.includes('${') || path.includes('${}') || path.includes(':`')) {
-      console.log(chalk.yellow(`⚠️ Skipping dynamic path: ${path}`));
+      console.log(`⚠️ Skipping dynamic path: ${path}`);
       continue;
     }
     
@@ -245,18 +244,18 @@ function findSimilarPath(path: string, validPaths: string[]): string | null {
  * Format and print validation results
  */
 function printResults(
-  valid: EndpointReference[], 
+  valid: EndpointReference[],
   invalid: EndpointReference[]
 ): void {
-  console.log('\n' + chalk.blue('📊 Validation Results:'));
-  console.log(chalk.green(`✅ ${valid.length} valid endpoint references`));
-  
+  console.log('\n📊 Validation Results:');
+  console.log(`✅ ${valid.length} valid endpoint references`);
+
   if (invalid.length === 0) {
-    console.log(chalk.green('🎉 All endpoints are valid! No 404s here.'));
+    console.log('🎉 All endpoints are valid! No 404s here.');
     return;
   }
-  
-  console.log(chalk.red(`❌ ${invalid.length} invalid endpoint references`));
+
+  console.log(`❌ ${invalid.length} invalid endpoint references`);
   
   // Group by path for cleaner output
   const pathMap = new Map<string, EndpointReference[]>();
@@ -268,25 +267,25 @@ function printResults(
     pathMap.get(ref.path)!.push(ref);
   }
   
-  console.log('\n' + chalk.red('📝 Invalid Endpoints:'));
-  
+  console.log('\n📝 Invalid Endpoints:');
+
   for (const [path, refs] of pathMap.entries()) {
-    console.log('\n' + chalk.red(`❌ ${path}`));
-    
+    console.log(`\n❌ ${path}`);
+
     if (refs[0].suggestion) {
-      console.log(chalk.yellow(`   Did you mean: ${refs[0].suggestion}`));
+      console.log(`   Did you mean: ${refs[0].suggestion}`);
     }
-    
+
     // Show up to 3 references for each path
     const displayRefs = refs.slice(0, 3);
     const remaining = refs.length - displayRefs.length;
-    
+
     for (const ref of displayRefs) {
-      console.log(chalk.gray(`   ${ref.file}:${ref.line} - ${ref.context}`));
+      console.log(`   ${ref.file}:${ref.line} - ${ref.context}`);
     }
-    
+
     if (remaining > 0) {
-      console.log(chalk.gray(`   ... and ${remaining} more references`));
+      console.log(`   ... and ${remaining} more references`);
     }
   }
 }
@@ -295,31 +294,31 @@ function printResults(
  * Main function
  */
 async function main() {
-  console.log(chalk.blue('🚀 Starting API Endpoint Validation'));
-  
+  console.log('🚀 Starting API Endpoint Validation');
+
   try {
     // Get valid paths from OpenAPI spec
     const openApiPaths = await getOpenApiPaths();
-    
+
     // Scan source files for endpoint references
     const references = await scanSourceFiles();
-    
+
     // Validate endpoints
     const { valid, invalid } = validateEndpoints(openApiPaths, references);
-    
+
     // Print results
     printResults(valid, invalid);
-    
+
     // Exit with error if any invalid endpoints found
     if (invalid.length > 0) {
-      console.log('\n' + chalk.red('❌ Validation failed! Please fix the invalid endpoints.'));
+      console.log('\n❌ Validation failed! Please fix the invalid endpoints.');
       process.exit(1);
     }
-    
-    console.log('\n' + chalk.green('✅ Validation passed! All endpoints are valid.'));
+
+    console.log('\n✅ Validation passed! All endpoints are valid.');
     process.exit(0);
   } catch (error) {
-    console.error(chalk.red(`❌ Unexpected error: ${error}`));
+    console.error(`❌ Unexpected error: ${error}`);
     process.exit(2);
   }
 }
