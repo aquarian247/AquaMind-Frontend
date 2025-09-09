@@ -12649,46 +12649,4 @@ export class ApiService {
                                                 },
                                             });
                                         }
-                                        /**
-                                         * Takes a set of user credentials and returns an access and refresh JSON web
-                                         * token pair to prove the authentication of those credentials.
-                                         * @param requestBody
-                                         * @returns TokenObtainPair
-                                         * @throws ApiError
-                                         */
-                                        public static apiAuthJwtCreate(
-                                            requestBody: TokenObtainPair,
-                                        ): CancelablePromise<TokenObtainPair> {
-                                            return __request(OpenAPI, {
-                                                method: 'POST',
-                                                url: '/api/auth/jwt/',
-                                                body: requestBody,
-                                                mediaType: 'application/json',
-                                                errors: {
-                                                    400: `Bad request (validation error)`,
-                                                    500: `Internal Server Error`,
-                                                },
-                                            });
-                                        }
-                                        /**
-                                         * Takes a refresh type JSON web token and returns an access type JSON web
-                                         * token if the refresh token is valid.
-                                         * @param requestBody
-                                         * @returns TokenRefresh
-                                         * @throws ApiError
-                                         */
-                                        public static apiAuthJwtRefreshCreate(
-                                            requestBody: TokenRefresh,
-                                        ): CancelablePromise<TokenRefresh> {
-                                            return __request(OpenAPI, {
-                                                method: 'POST',
-                                                url: '/api/auth/jwt/refresh/',
-                                                body: requestBody,
-                                                mediaType: 'application/json',
-                                                errors: {
-                                                    400: `Bad request (validation error)`,
-                                                    500: `Internal Server Error`,
-                                                },
-                                            });
-                                        }
                                     }
