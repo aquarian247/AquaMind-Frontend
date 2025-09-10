@@ -570,10 +570,38 @@ export default function Inventory() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Feed Inventory Management</h1>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">FIFO tracking, cost optimization, and FCR monitoring</p>
+    <div className="container mx-auto p-4 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+        <div className="flex items-center space-x-2">
+          <Package className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold">Feed Inventory Management</h1>
+            <p className="text-muted-foreground">
+              FIFO tracking, cost optimization, and FCR monitoring
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Geography" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Geographies</SelectItem>
+              {geographies.map((geo: any) => (
+                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
+                  {geo.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Feed
+          </Button>
+        </div>
       </div>
 
       {/* Operations Overview for Large Scale */}

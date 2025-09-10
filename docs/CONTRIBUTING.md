@@ -19,15 +19,17 @@ npm run dev
 
 * **Contract-first** — `api/openapi.yaml` is the single source of truth.
   Run `npm run sync:openapi` to sync with backend and regenerate client.
-* **Generated client only** — consume APIs via `client/src/api/generated`; never hand-craft `fetch`/Axios calls or edit generated code.
+* **Hybrid API Strategy** — Use generated ApiService for standard operations; use `authenticatedFetch` only when backend lacks aggregation endpoints (see ADR: API Aggregation Strategy)
+* **Prefer Generated ApiService** — Always prefer `client/src/api/generated` for contract-first alignment; reserve `authenticatedFetch` for complex aggregations where backend endpoints don't exist
 * **Canonical auth endpoints** —
   `POST /api/token/` and `POST /api/token/refresh/` (optional: `GET /api/v1/users/auth/profile/`).
   _Avoid_ legacy `/api/v1/auth/token/*` or `/api/auth/jwt/*` routes.
 * **Testing** — Vitest + React Testing Library. Use simple `fetch` mocks (`vi.fn`) or mock the generated client. **Do not use MSW**.
 * **Scripts** — `npm run test` (one-off), `npm run test:watch` (watch), `npm run test:ci` (coverage).
 * **Environment** — use **`VITE_USE_DJANGO_API`** with `VITE_DJANGO_API_URL`.
-* **Quality gates** — code must lint & type-check before PR  
+* **Quality gates** — code must lint & type-check before PR
   `npm run type-check && npm run lint` must pass.
+* **Debug API issues first** — Check browser console for JavaScript errors (Map constructor, etc.) before debugging auth issues
 * **Documentation** — update README / docs when endpoints or workflows change.
 
 ### Backend Integration Testing
@@ -180,6 +182,116 @@ client/src/
 ├── hooks/              # Custom hooks
 ├── lib/                # Utilities and config
 └── App.tsx             # Main app component
+```
+
+## Debugging Authentication & API Issues
+
+### **🔍 Step-by-Step Debug Process**
+
+When encountering "N/A" values or authentication issues:
+
+1. **Check Browser Console First** - JavaScript errors (like `Map constructor` errors) can mask auth issues
+2. **Compare with Working Pages** - Look at `area-detail.tsx` - it works because it uses `authenticatedFetch`
+3. **Test API Method Choice**:
+   - ✅ **Use `authenticatedFetch`** for complex queries with data processing/auth requirements
+   - ✅ **Use Generated ApiService** for simple CRUD operations
+4. **Verify Authentication Flow**:
+   ```typescript
+   // ✅ Correct pattern (matches area-detail.tsx)
+   if (!AuthService.isAuthenticated()) {
+     console.warn("No auth token found");
+     return { results: [] };
+   }
+   const response = await authenticatedFetch(`${apiConfig.baseUrl}${apiConfig.endpoints.endpoint}`);
+   ```
+
+### **🚨 Common Pitfalls to Avoid**
+
+- **❌ Don't default to authenticatedFetch** - Generated ApiService should be your first choice
+- **❌ Don't create client-side aggregation** without documenting it as a backend feature request
+- **❌ Don't ignore JavaScript errors** in console - they can mask auth issues
+- **❌ Don't assume auth issues** without checking for JS runtime errors first
+- **❌ Don't use Map constructors** in production code - use plain objects instead
+
+### **✅ When authenticatedFetch is Appropriate**
+
+**Only use authenticatedFetch when:**
+1. Backend lacks aggregation endpoints (document as feature request)
+2. Complex client-side data processing is required
+3. Generated ApiService doesn't support the required query pattern
+
+**Example from area-detail.tsx (LEGACY - should be backend endpoint):**
+```typescript
+// ⚠️ LEGACY: This client-side aggregation should ideally be a backend endpoint
+const { data: ringsData } = useQuery({
+  queryFn: async () => {
+    if (!AuthService.isAuthenticated()) {
+      return { results: [] };
+    }
+
+    // Client-side aggregation - document as backend feature request
+    const containersResponse = await authenticatedFetch(
+      `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${params.id}&page_size=100`
+    );
+
+    const assignmentsResponse = await authenticatedFetch(
+      `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=1000`
+    );
+
+    // Process data client-side...
+  }
+});
+```
+
+### **🎯 Backend Feature Request Template**
+
+When using authenticatedFetch for aggregation, document:
+
+```
+🎯 BACKEND FEATURE REQUEST
+
+Title: Add Station Summary Aggregation Endpoints
+Priority: High (Performance & UX Impact)
+Impact: Reduces client-side data processing and improves page load times
+
+Current Problem:
+- Frontend fetches all halls, containers, batch assignments
+- Client-side aggregation: 1000+ API calls for complex calculations
+- Poor performance for large datasets
+- Increased bandwidth usage
+
+Requested Endpoints:
+
+1. GET /api/v1/stations/summary
+   Response: {
+     total_stations: number,
+     total_halls: number,
+     total_containers: number,
+     total_biomass_kg: number,
+     total_population: number
+   }
+
+2. GET /api/v1/stations/{id}/details
+   Response: {
+     halls_count: number,
+     containers_count: number,
+     biomass_total_kg: number,
+     population_total: number,
+     last_updated: string
+   }
+
+Benefits:
+- ✅ 90% reduction in API calls for dashboard views
+- ✅ Improved frontend performance
+- ✅ Reduced bandwidth usage
+- ✅ Better user experience
+- ✅ Proper backend business logic encapsulation
+
+Migration Plan:
+1. Backend implements endpoints
+2. Frontend updates to use new endpoints
+3. Remove client-side aggregation code
+4. Performance monitoring and optimization
 ```
 
 ## Testing

@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
+import { AuthService, authenticatedFetch } from "@/services/auth.service";
+import { apiConfig } from "@/config/api.config";
 
 interface Station {
   id: number;
@@ -161,11 +163,20 @@ export default function InfrastructureStations() {
   const { data: stationsData, isLoading } = useQuery({
     queryKey: ["stations", selectedGeography],
     queryFn: async () => {
-      const res = await ApiService.apiV1InfrastructureFreshwaterStationsList(
-        {} as any,
+      // Check if user is authenticated
+      if (!AuthService.isAuthenticated()) {
+        console.warn("No auth token found for stations data");
+        return { results: [] };
+      }
+
+      // ✅ Use authenticatedFetch for complex queries with auth requirements
+      // This pattern matches the working area-details page
+      const response = await authenticatedFetch(
+        `${apiConfig.baseUrl}${apiConfig.endpoints.stations}`
       );
 
-      const mapped = (res.results || []).map((raw: any): Station => ({
+      const data = await response.json();
+      const mapped = (data.results || []).map((raw: any): Station => ({
         id: raw.id,
         name: raw.name,
         geography: raw.geography_name ?? raw.geography ?? "Unknown",
@@ -179,13 +190,13 @@ export default function InfrastructureStations() {
         },
         status: raw.active ? "active" : "inactive",
         waterSource: (raw as any).water_source ?? "river",
-        lastInspection: new Date().toISOString(),
+        lastInspection: new Date().toISOString() as string,
       }));
 
       const filtered =
         selectedGeography === "all"
           ? mapped
-          : mapped.filter((s) =>
+          : mapped.filter((s: Station) =>
               s.geography
                 .toLowerCase()
                 .includes(selectedGeography.toLowerCase()),
@@ -196,6 +207,192 @@ export default function InfrastructureStations() {
   });
 
   const stations: Station[] = stationsData?.results || [];
+
+  // Fetch containers and batch assignments for real data calculations
+  const { data: stationDetailsData, isLoading: isLoadingDetails } = useQuery({
+    queryKey: ["station-details", selectedGeography, stations.length],
+    queryFn: async () => {
+      if (stations.length === 0) return { halls: 0, containers: 0, biomass: 0, hasData: false };
+
+      try {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
+          console.warn("No auth token found for station details data");
+          return { halls: 0, containers: 0, biomass: 0, hasData: false };
+        }
+
+        // Get all station IDs
+        const stationIds = stations.map(s => s.id);
+
+        // 🚨 TEMPORARY WORKAROUND: Using authenticatedFetch for client-side aggregation
+        // BACKEND FEATURE REQUEST: Add /api/v1/stations/summary endpoint for pre-aggregated data
+        // This reduces client-side processing and improves performance
+        // Current: Fetch all halls/containers/assignments, aggregate client-side
+        // Future: Backend provides /api/v1/stations/summary with pre-calculated totals
+        const allHallsResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.halls}?page_size=500`
+        );
+        const allHallsData = await allHallsResponse.json();
+        const allHalls = allHallsData.results || [];
+
+        // Filter halls by station
+        const stationHalls = allHalls.filter((hall: any) =>
+          stationIds.includes(hall.freshwater_station)
+        );
+        const hallIds = stationHalls.map((h: any) => h.id);
+
+        // Fetch all containers and filter by hall (following useStationKpi pattern)
+        const allContainersResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?page_size=500`
+        );
+        const allContainersData = await allContainersResponse.json();
+        const allContainers = allContainersData.results || [];
+
+        // Filter containers to only those in halls belonging to our stations
+        const stationContainers = allContainers.filter((container: any) =>
+          container.hall && hallIds.includes(container.hall)
+        );
+        const containerIds = stationContainers.map((c: any) => c.id);
+
+        // Fetch ALL batch assignments (following area details pattern)
+        const assignmentsResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=1000`
+        );
+        const assignmentsData = await assignmentsResponse.json();
+        const assignments = assignmentsData.results || [];
+
+        // Create biomass map per container
+        const biomassMap: Record<number, number> = {};
+        const populationMap: Record<number, number> = {};
+
+        assignments.forEach((assignment: any) => {
+          const containerId = assignment.container?.id || assignment.container_id;
+          if (containerId && containerIds.includes(containerId)) {
+            const currentBiomass = biomassMap[containerId] || 0;
+            const currentPopulation = populationMap[containerId] || 0;
+
+            biomassMap[containerId] = currentBiomass + parseFloat(assignment.biomass_kg || '0');
+            populationMap[containerId] = currentPopulation + parseInt(assignment.population_count || '0');
+          }
+        });
+
+        // Calculate total biomass and population across all containers
+        const totalBiomass = Object.values(biomassMap).reduce((sum: number, biomass: number) => sum + biomass, 0);
+        const totalPopulation = Object.values(populationMap).reduce((sum: number, population: number) => sum + population, 0);
+
+        console.log(`Calculated station details:`, {
+          stations: stationIds.length,
+          stationHalls: stationHalls.length,
+          stationContainers: stationContainers.length,
+          totalBiomass: totalBiomass,
+          totalPopulation: totalPopulation,
+          containerBiomassMap: biomassMap
+        });
+
+        return {
+          halls: stationHalls.length,
+          containers: stationContainers.length,
+          biomass: totalBiomass / 1000, // Convert kg to tons
+          hasData: true,
+        };
+      } catch (error) {
+        console.warn("Failed to fetch station details data:", error);
+        return { halls: 0, containers: 0, biomass: 0, hasData: false };
+      }
+    },
+    enabled: stations.length > 0,
+  });
+
+  // Fetch per-station details for individual cards
+  const { data: perStationData, isLoading: isLoadingPerStation } = useQuery({
+    queryKey: ["per-station-details", stations.length],
+    queryFn: async () => {
+      if (stations.length === 0) return {};
+
+      try {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
+          console.warn("No auth token found for per-station data");
+          return {};
+        }
+
+        const stationDetailsMap: Record<number, { halls: number; containers: number; biomass: number; hasData: boolean }> = {};
+
+        // Fetch details for each station
+        for (const station of stations) {
+          try {
+            // 🚨 TEMPORARY WORKAROUND: authenticatedFetch for per-station aggregation
+            // BACKEND FEATURE REQUEST: Add /api/v1/stations/{id}/details endpoint
+            // Should return: halls_count, containers_count, biomass_total, population_total
+            const stationHallsResponse = await authenticatedFetch(
+              `${apiConfig.baseUrl}${apiConfig.endpoints.halls}?freshwater_station=${station.id}&page_size=500`
+            );
+
+            const stationHallsData = await stationHallsResponse.json();
+            const stationHalls = stationHallsData.results || [];
+            const hallIds = stationHalls.map((h: any) => h.id);
+
+            // Fetch all containers and filter by hall
+            const allContainersResponse = await authenticatedFetch(
+              `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?page_size=500`
+            );
+
+            const allContainersData = await allContainersResponse.json();
+            const allContainers = allContainersData.results || [];
+
+            // Filter containers to only those in halls belonging to this station
+            const stationContainers = allContainers.filter((container: any) =>
+              container.hall && hallIds.includes(container.hall)
+            );
+            const containerIds = stationContainers.map((c: any) => c.id);
+
+            // Fetch ALL batch assignments (following area details pattern)
+            const assignmentsResponse = await authenticatedFetch(
+              `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=1000`
+            );
+
+            const assignmentsData = await assignmentsResponse.json();
+            const assignments = assignmentsData.results || [];
+
+            // Calculate biomass for this station
+            const biomassMap: Record<number, number> = {};
+            const populationMap: Record<number, number> = {};
+
+            assignments.forEach((assignment: any) => {
+              const containerId = assignment.container?.id || assignment.container_id;
+              if (containerId && containerIds.includes(containerId)) {
+                const currentBiomass = biomassMap[containerId] || 0;
+                const currentPopulation = populationMap[containerId] || 0;
+
+                biomassMap[containerId] = currentBiomass + parseFloat(assignment.biomass_kg || '0');
+                populationMap[containerId] = currentPopulation + parseInt(assignment.population_count || '0');
+              }
+            });
+
+            const totalBiomass = Object.values(biomassMap).reduce((sum: number, biomass: number) => sum + biomass, 0);
+            const totalPopulation = Object.values(populationMap).reduce((sum: number, population: number) => sum + population, 0);
+
+            stationDetailsMap[station.id] = {
+              halls: stationHalls.length,
+              containers: stationContainers.length,
+              biomass: totalBiomass / 1000, // Convert kg to tons
+              hasData: true,
+            };
+          } catch (error) {
+            console.warn(`Failed to fetch details for station ${station.id}:`, error);
+            stationDetailsMap[station.id] = { halls: 0, containers: 0, biomass: 0, hasData: false };
+          }
+        }
+
+        console.log(`Calculated per-station details:`, stationDetailsMap);
+        return stationDetailsMap;
+      } catch (error) {
+        console.warn("Failed to fetch per-station details:", error);
+        return {};
+      }
+    },
+    enabled: stations.length > 0,
+  });
 
   // Filter stations based on search and status
   const filteredStations = stations.filter(station => {
@@ -296,10 +493,10 @@ export default function InfrastructureStations() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {filteredStations.reduce((sum, station) => sum + station.halls, 0)}
+              {isLoadingDetails ? 'Loading...' : (stationDetailsData?.hasData ? stationDetailsData.halls : 'N/A')}
             </div>
             <p className="text-xs text-muted-foreground">
-              Production halls
+              {isLoadingDetails ? 'Loading hall data...' : (stationDetailsData?.hasData ? 'Production halls' : 'No hall data available')}
             </p>
           </CardContent>
         </Card>
@@ -311,10 +508,10 @@ export default function InfrastructureStations() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {filteredStations.reduce((sum, station) => sum + station.totalContainers, 0)}
+              {isLoadingDetails ? 'Loading...' : (stationDetailsData?.hasData ? stationDetailsData.containers : 'N/A')}
             </div>
             <p className="text-xs text-muted-foreground">
-              Tank containers
+              {isLoadingDetails ? 'Loading container data...' : (stationDetailsData?.hasData ? 'Tank containers' : 'No container data available')}
             </p>
           </CardContent>
         </Card>
@@ -326,10 +523,10 @@ export default function InfrastructureStations() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {(filteredStations.reduce((sum, station) => sum + station.totalBiomass, 0) / 1000).toFixed(1)}k
+              {isLoadingDetails ? 'Loading...' : (stationDetailsData?.hasData && stationDetailsData.biomass ? stationDetailsData.biomass.toFixed(1) + 'k' : 'N/A')}
             </div>
             <p className="text-xs text-muted-foreground">
-              Tons across stations
+              {isLoadingDetails ? 'Loading biomass data...' : (stationDetailsData?.hasData && stationDetailsData.biomass ? 'Tons across stations' : 'No biomass data available')}
             </p>
           </CardContent>
         </Card>
@@ -355,15 +552,21 @@ export default function InfrastructureStations() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2 text-sm">
                 <div>
                   <span className="text-muted-foreground">Halls:</span>
-                  <div className="font-medium">{selectedStation.halls}</div>
+                  <div className="font-medium">
+                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[selectedStation.id]?.hasData ? perStationData[selectedStation.id].halls : 'N/A')}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Containers:</span>
-                  <div className="font-medium">{selectedStation.totalContainers}</div>
+                  <div className="font-medium">
+                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[selectedStation.id]?.hasData ? perStationData[selectedStation.id].containers : 'N/A')}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Biomass:</span>
-                  <div className="font-medium">{selectedStation.totalBiomass} tons</div>
+                  <div className="font-medium">
+                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[selectedStation.id]?.hasData && perStationData[selectedStation.id].biomass ? perStationData[selectedStation.id].biomass.toFixed(1) + ' tons' : 'N/A')}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Water Source:</span>
@@ -425,15 +628,21 @@ export default function InfrastructureStations() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Halls</span>
-                  <div className="font-semibold text-lg">{station.halls}</div>
+                  <div className="font-semibold text-lg">
+                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[station.id]?.hasData ? perStationData[station.id].halls : 'N/A')}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Containers</span>
-                  <div className="font-semibold text-lg">{station.totalContainers}</div>
+                  <div className="font-semibold text-lg">
+                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[station.id]?.hasData ? perStationData[station.id].containers : 'N/A')}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Biomass</span>
-                  <div className="font-medium">{station.totalBiomass} tons</div>
+                  <div className="font-medium">
+                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[station.id]?.hasData && perStationData[station.id].biomass ? perStationData[station.id].biomass.toFixed(1) + ' tons' : 'N/A')}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Last Inspection</span>

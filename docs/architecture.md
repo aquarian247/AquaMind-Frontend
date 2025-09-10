@@ -315,4 +315,53 @@ AquaMind is designed to be deployed in various environments with different confi
 
 ## Architecture Decision Records
 
-For significant architectural decisions, refer to the Architecture Decision Records (ADRs) in the `/docs/adr` directory. These records document the context, decision, and consequences of important architectural choices made during the development of AquaMind.
+### **ADR: API Aggregation Strategy - Frontend vs Backend Responsibility**
+
+**Context:**
+The frontend requires aggregated data (e.g., "total halls per station", "total biomass per area") but the backend lacks dedicated aggregation endpoints. This creates tension between:
+- Using generated ApiService for perfect frontend-backend alignment (contract-first principle)
+- Using authenticatedFetch for client-side aggregation when backend endpoints don't exist
+
+**Decision:**
+Implement a **hybrid approach** with clear guidelines:
+
+1. **Use Generated ApiService** for all standard CRUD operations and simple queries
+2. **Use authenticatedFetch** for complex aggregations where backend endpoints don't exist
+3. **Document missing aggregation endpoints** as backend feature requests
+4. **Prefer backend aggregation** over client-side processing when possible
+
+**Implementation Pattern:**
+```typescript
+// ✅ Simple operations - use ApiService
+const stations = await ApiService.apiV1InfrastructureFreshwaterStationsList();
+
+// ✅ Complex aggregations - use authenticatedFetch with client-side processing
+const { data: stationSummary } = useQuery({
+  queryFn: async () => {
+    // Client-side aggregation when backend endpoint doesn't exist
+    const [halls, containers, assignments] = await Promise.all([
+      authenticatedFetch(`${apiConfig.baseUrl}${apiConfig.endpoints.halls}?page_size=500`),
+      authenticatedFetch(`${apiConfig.baseUrl}${apiConfig.endpoints.containers}?page_size=500`),
+      authenticatedFetch(`${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=1000`)
+    ]);
+    // Aggregate client-side...
+  }
+});
+```
+
+**Rationale:**
+- Maintains contract-first principle for 80% of operations
+- Allows complex aggregations when backend maturity lags
+- Clear migration path as backend adds aggregation endpoints
+- Prevents blocking frontend development on backend feature gaps
+
+**Consequences:**
+- ✅ Frontend can proceed with client-side aggregation for missing endpoints
+- ✅ Clear upgrade path when backend adds proper aggregation endpoints
+- ✅ Maintains API contract alignment for standard operations
+- ⚠️ Client-side aggregation increases frontend complexity and data transfer
+- ⚠️ Requires careful monitoring of performance impact
+
+**Status:** Accepted | **Date:** Current | **Owner:** Frontend Team
+
+For additional architectural decisions, refer to the Architecture Decision Records (ADRs) in the `/docs/adr` directory.
