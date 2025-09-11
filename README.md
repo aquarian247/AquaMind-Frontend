@@ -16,6 +16,7 @@ AquaMind Frontend is a modern, responsive web application that provides real-tim
 - **Environmental Monitoring**: Real-time sensor data and environmental parameters
 - **Broodstock Management**: Breeding programs and genetic tracking
 - **Scenario Planning**: Predictive analytics with TGC, FCR, and mortality modeling
+- **Audit Trail**: Complete change history tracking across all modules (62+ history endpoints)
 - **Multi-theme Support**: Ocean Depths, Warm Earth, Solarized themes with light/dark modes
 
 ## 🏗️ Architecture
@@ -36,7 +37,7 @@ This frontend is designed to integrate with the AquaMind Django REST API backend
 - **Development**: Can run against Express.js mock server (included)
 - **Production**: Connects to Django REST API in protected VLAN
 - **Authentication**: JWT tokens with CSRF protection
-- **API Endpoints**: 50+ endpoints across 8 Django apps
+- **API Endpoints**: 100+ endpoints across 8 Django apps (including 62+ audit trail history endpoints)
 
 ## 🚀 Quick Start
 
@@ -79,23 +80,35 @@ VITE_LOG_LEVEL=debug
 
 ### OpenAPI Specification Synchronization
 
-The frontend automatically generates TypeScript API clients from the backend's OpenAPI specification. To ensure you have the latest API definitions:
+⚠️ **Important**: The automated sync between backend and frontend repositories is currently unreliable. **Manual sync is required** before starting any frontend development session.
 
-#### Automated Sync (Recommended)
-The frontend automatically syncs when backend changes are detected via GitHub Actions.
+The frontend generates TypeScript API clients from the backend's OpenAPI specification. Always sync before development to ensure you have the latest API definitions.
 
-#### Manual Sync Commands
+#### Manual Sync (Required - Recommended)
+
+**Before starting any frontend development session**, run:
 
 ```bash
-# Sync from main branch
+# Sync OpenAPI spec and regenerate API client
 npm run sync:openapi
 
-# Sync from specific branch
-npm run sync:openapi:branch develop
-
-# Sync from specific branch using environment variable
-BACKEND_BRANCH=feature/new-endpoints npm run sync:openapi:branch $BACKEND_BRANCH
+# This will:
+# 1. Fetch the latest OpenAPI spec from backend main branch
+# 2. Regenerate the TypeScript API client
+# 3. Update all generated models and services
+# 4. Run type checking to verify compatibility
 ```
+
+#### Troubleshooting
+
+If you encounter TypeScript errors after sync:
+1. Ensure the backend is running and accessible
+2. Check that the backend OpenAPI spec is valid
+3. Verify you're on the correct backend branch (usually `main`)
+4. Run `npm run type-check` to see specific errors
+
+#### Automated Sync (Currently Unreliable)
+The GitHub Actions workflow attempts to sync automatically when backend changes are merged, but this process is not consistently reliable. Manual sync is the current best practice.
 
 #### GitHub Actions Manual Trigger
 
