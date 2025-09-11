@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { LifeCycleStage } from './LifeCycleStage';
-export type PaginatedLifeCycleStageList = {
+import type { GrowthSampleHistory } from './GrowthSampleHistory';
+export type PaginatedGrowthSampleHistoryList = {
     count: number;
     next?: string | null;
     previous?: string | null;
-    results: Array<LifeCycleStage>;
+    results: Array<GrowthSampleHistory>;
 };
 
