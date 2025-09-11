@@ -1,91 +1,93 @@
-name: Regenerate API Client
+# DISABLED: Regenerate API Client
+# This workflow is disabled due to reliability issues with automated sync.
+# Use manual sync instead: npm run sync:openapi
+#
+# on:
+#   repository_dispatch:
+#     types: [api-spec-updated]
+#   workflow_dispatch:
+#     inputs:
+#       backend_branch:
+#         description: 'Backend branch to sync from'
+#         required: false
+#         default: 'main'
+#         type: string
 
-on:
-  repository_dispatch:
-    types: [api-spec-updated]
-  workflow_dispatch:
-    inputs:
-      backend_branch:
-        description: 'Backend branch to sync from'
-        required: false
-        default: 'main'
-        type: string
-
-jobs:
-  regenerate-client:
-    runs-on: ubuntu-latest
-    
-    permissions:
-      contents: write
-      pull-requests: write
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24.x'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Fetch OpenAPI spec from backend
-        run: |
-          mkdir -p tmp/openapi
-          # Use backend commit if available (from automated trigger), otherwise use input branch (manual trigger)
-          if [ -n "${{ github.event.client_payload.backend_commit }}" ]; then
-            BACKEND_REF="${{ github.event.client_payload.backend_commit }}"
-            echo "Using backend commit: $BACKEND_REF"
-          else
-            BACKEND_REF="${{ inputs.backend_branch }}"
-            echo "Using backend branch: $BACKEND_REF"
-          fi
-
-          curl -L \
-            https://raw.githubusercontent.com/aquarian247/AquaMind/$BACKEND_REF/api/openapi.yaml \
-            -o tmp/openapi/openapi.yaml
-          echo "Spec downloaded to tmp/openapi/openapi.yaml from $BACKEND_REF"
-          
-      - name: Generate API client
-        run: npm run generate:api
-      
-      - name: Check for changes
-        id: git-check
-        run: |
-          git add -A
-          git diff --cached --quiet && echo "changes=false" >> $GITHUB_OUTPUT || echo "changes=true" >> $GITHUB_OUTPUT
-      
-      - name: Create Pull Request
-        if: steps.git-check.outputs.changes == 'true'
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: |
-            chore: regenerate API client from OpenAPI spec
-          title: "chore: regenerate API client from OpenAPI spec"
-          body: |
-            This PR updates the TypeScript API client based on changes to the OpenAPI specification.
-
-            ## Details
-            - Triggered by: ${{ github.event_name == 'repository_dispatch' && 'Backend workflow' || 'Manual workflow' }}
-            ${{ github.event_name == 'repository_dispatch' && format('- Backend commit: {0}
-            - Backend branch: {1}
-            - Backend workflow: {2}', github.event.client_payload.backend_commit, github.event.client_payload.backend_branch, github.event.client_payload.backend_workflow_url) || format('- Backend branch: {0}
-            - Triggered by: {1}', inputs.backend_branch, github.actor) }}
-
-            Please review the changes to ensure they are compatible with the current frontend implementation.
-          branch: auto/api-client-update
-          base: main
-          labels: spec-sync
-          delete-branch: true
-      
-      - name: Report status
-        if: steps.git-check.outputs.changes == 'true'
-        run: echo "✅ API client regenerated and PR created successfully"
-      
-      - name: Report no changes
-        if: steps.git-check.outputs.changes == 'false'
-        run: echo "ℹ️ No changes detected in the API client"
+# jobs:
+#   regenerate-client:
+#     runs-on: ubuntu-latest
+#
+#     permissions:
+#       contents: write
+#       pull-requests: write
+#
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+#
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '24.x'
+#           cache: 'npm'
+#
+#       - name: Install dependencies
+#         run: npm ci
+#
+#       - name: Fetch OpenAPI spec from backend
+#         run: |
+#           mkdir -p tmp/openapi
+#           # Use backend commit if available (from automated trigger), otherwise use input branch (manual trigger)
+#           if [ -n "${{ github.event.client_payload.backend_commit }}" ]; then
+#             BACKEND_REF="${{ github.event.client_payload.backend_commit }}"
+#             echo "Using backend commit: $BACKEND_REF"
+#           else
+#             BACKEND_REF="${{ inputs.backend_branch }}"
+#             echo "Using backend branch: $BACKEND_REF"
+#           fi
+#
+#           curl -L \
+#             https://raw.githubusercontent.com/aquarian247/AquaMind/$BACKEND_REF/api/openapi.yaml \
+#             -o tmp/openapi/openapi.yaml
+#             echo "Spec downloaded to tmp/openapi/openapi.yaml from $BACKEND_REF"
+#
+#       - name: Generate API client
+#         run: npm run generate:api
+#
+#       - name: Check for changes
+#         id: git-check
+#         run: |
+#           git add -A
+#           git diff --cached --quiet && echo "changes=false" >> $GITHUB_OUTPUT || echo "changes=true" >> $GITHUB_OUTPUT
+#
+#       - name: Create Pull Request
+#         if: steps.git-check.outputs.changes == 'true'
+#         uses: peter-evans/create-pull-request@v5
+#         with:
+#           token: ${{ secrets.GITHUB_TOKEN }}
+#           commit-message: |
+#             chore: regenerate API client from OpenAPI spec
+#           title: "chore: regenerate API client from OpenAPI spec"
+#           body: |
+#             This PR updates the TypeScript API client based on changes to the OpenAPI specification.
+#
+#             ## Details
+#             - Triggered by: ${{ github.event_name == 'repository_dispatch' && 'Backend workflow' || 'Manual workflow' }}
+#             ${{ github.event_name == 'repository_dispatch' && format('- Backend commit: {0}
+#             - Backend branch: {1}
+#             - Backend workflow: {2}', github.event.client_payload.backend_commit, github.event.client_payload.backend_branch, github.event.client_payload.backend_workflow_url) || format('- Backend branch: {0}
+#             - Triggered by: {1}', inputs.backend_branch, github.actor) }}
+#
+#             Please review the changes to ensure they are compatible with the current frontend implementation.
+#           branch: auto/api-client-update
+#           base: main
+#           labels: spec-sync
+#           delete-branch: true
+#
+#       - name: Report status
+#         if: steps.git-check.outputs.changes == 'true'
+#         run: echo "✅ API client regenerated and PR created successfully"
+#
+#       - name: Report no changes
+#         if: steps.git-check.outputs.changes == 'false'
+#         run: echo "ℹ️ No changes detected in the API client"
