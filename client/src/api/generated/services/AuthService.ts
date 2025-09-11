@@ -14,40 +14,6 @@ export class AuthService {
      * @returns AuthTokenResponse
      * @throws ApiError
      */
-    public static apiV1AuthTokenCreate(
-        requestBody: AuthToken,
-    ): CancelablePromise<AuthTokenResponse> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/auth/token/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * Development-only endpoint that returns an auth token without credentials. **Disabled in production.**
-     * @returns AuthTokenResponse
-     * @throws ApiError
-     */
-    public static apiV1AuthDevAuthRetrieve(): CancelablePromise<AuthTokenResponse> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/auth/dev-auth/',
-            errors: {
-                401: `Unauthorized`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * Custom view for obtaining auth tokens that also returns user info
-     * @param requestBody
-     * @returns AuthTokenResponse
-     * @throws ApiError
-     */
     public static apiAuthTokenCreate(
         requestBody: AuthToken,
     ): CancelablePromise<AuthTokenResponse> {
