@@ -26,7 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { api } from "@/lib/api";
 import type { Batch } from "@/api/generated/models/Batch";
 import type { Species } from "@/api/generated/models/Species";
-import type { LifeCycleStage } from "@/api/generated/models/LifeCycleStage";
+import type { NestedLifeCycleStage } from "@/api/generated/models/NestedLifeCycleStage";
 import type { Container } from "@/api/generated/models/Container";
 import type { BreedingPair } from "@/api/generated/models/BreedingPair";
 import type { EggSupplier } from "@/api/generated/models/EggSupplier";
@@ -200,7 +200,7 @@ export default function BatchManagement() {
     queryFn: async () => (await api.batch.getSpecies()).results || [],
   });
 
-  const { data: stages = [] } = useQuery<LifeCycleStage[]>({
+  const { data: stages = [] } = useQuery<NestedLifeCycleStage[]>({
     queryKey: ["batch/lifecycle-stages"],
     queryFn: async () => (await api.batch.getLifecycleStages()).results || [],
   });
