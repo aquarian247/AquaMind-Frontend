@@ -2,7 +2,8 @@
 # This workflow is disabled due to reliability issues with automated sync.
 # Use manual sync instead: npm run sync:openapi
 #
-# on:
+on:
+  workflow_dispatch: # Explicitly disabled - never triggers automatically
 #   repository_dispatch:
 #     types: [api-spec-updated]
 #   workflow_dispatch:
