@@ -466,6 +466,20 @@ npm run sync:openapi
 npm run sync:openapi
 ```
 
+**Branch sync script fails**
+```bash
+# Manual fallback for branch-specific sync
+curl -L https://raw.githubusercontent.com/aquarian247/AquaMind/YOUR_BRANCH/api/openapi.yaml -o api/openapi.yaml
+cp api/openapi.yaml tmp/openapi/openapi.yaml
+npm run generate:api
+```
+
+**Verify sync worked**
+```bash
+# Check if new endpoints are in generated client
+grep -r "your-endpoint" client/src/api/generated/services/
+```
+
 #### Verification Steps
 ```bash
 # Check if OpenAPI is up to date
