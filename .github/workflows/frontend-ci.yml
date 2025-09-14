@@ -68,6 +68,11 @@ jobs:
           echo "To enable validation, ensure api/openapi.yaml is present"
         fi
 
+    - name: Install Complexity Analysis Tools
+      run: |
+        echo "📦 Installing lizard for complexity analysis..."
+        python3 -m pip install lizard
+
     - name: Analyze Code Complexity
       run: |
         echo "🔍 Running complexity analysis..."
