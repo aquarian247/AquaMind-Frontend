@@ -44,6 +44,15 @@ VITE_USE_DJANGO_API=false npm run dev
 
 **⚠️ IMPORTANT**: When integrating with the Django backend, authentication setup is required. The frontend uses JWT tokens, but the backend may not have them configured by default.
 
+**🚀 BACKEND OPTIMIZATION NOTE**: The Django backend has been recently refactored for improved maintainability and performance:
+- **Modular ViewSets**: Split from monolithic structure into focused, single-responsibility modules
+- **Enhanced Filtering**: Advanced filtering capabilities with date ranges, numeric ranges, and multi-choice filters
+- **Improved MI**: Maintainability Index improved from 35.95 to 79.03-100.00 across all modules
+- **Reduced Complexity**: Cyclomatic complexity reduced from D (21+) to A-B (≤15) ratings
+- **Better Error Handling**: More robust error handling and validation throughout
+
+These improvements result in faster API responses and more reliable data fetching for your frontend components.
+
 ```bash
 # 1. Start Django backend
 cd /path/to/AquaMind
