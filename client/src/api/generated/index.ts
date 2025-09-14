@@ -79,6 +79,7 @@ export type { JournalEntry } from './models/JournalEntry';
 export type { JournalEntryHistory } from './models/JournalEntryHistory';
 export type { LiceCount } from './models/LiceCount';
 export type { LiceCountHistory } from './models/LiceCountHistory';
+export type { LifeCycleStage } from './models/LifeCycleStage';
 export type { MaintenanceTask } from './models/MaintenanceTask';
 export type { MortalityEvent } from './models/MortalityEvent';
 export type { MortalityEventHistory } from './models/MortalityEventHistory';
@@ -151,6 +152,7 @@ export type { PaginatedJournalEntryHistoryList } from './models/PaginatedJournal
 export type { PaginatedJournalEntryList } from './models/PaginatedJournalEntryList';
 export type { PaginatedLiceCountHistoryList } from './models/PaginatedLiceCountHistoryList';
 export type { PaginatedLiceCountList } from './models/PaginatedLiceCountList';
+export type { PaginatedLifeCycleStageList } from './models/PaginatedLifeCycleStageList';
 export type { PaginatedMaintenanceTaskList } from './models/PaginatedMaintenanceTaskList';
 export type { PaginatedMortalityEventHistoryList } from './models/PaginatedMortalityEventHistoryList';
 export type { PaginatedMortalityEventList } from './models/PaginatedMortalityEventList';
@@ -214,6 +216,7 @@ export type { PatchedHealthSamplingEvent } from './models/PatchedHealthSamplingE
 export type { PatchedIndividualFishObservation } from './models/PatchedIndividualFishObservation';
 export type { PatchedJournalEntry } from './models/PatchedJournalEntry';
 export type { PatchedLiceCount } from './models/PatchedLiceCount';
+export type { PatchedLifeCycleStage } from './models/PatchedLifeCycleStage';
 export type { PatchedMaintenanceTask } from './models/PatchedMaintenanceTask';
 export type { PatchedMortalityEvent } from './models/PatchedMortalityEvent';
 export type { PatchedMortalityModel } from './models/PatchedMortalityModel';

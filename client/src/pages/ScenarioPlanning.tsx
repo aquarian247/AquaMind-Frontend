@@ -37,6 +37,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ApiService } from "@/api/generated/services/ApiService";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ScenarioKPIs } from "@/features/scenario/components/ScenarioKPIs";
+import { ScenarioOverview } from "@/features/scenario/components/ScenarioOverview";
+import { useScenarioData } from "@/features/scenario/hooks/useScenarioData";
 
 interface ScenarioPlanningKPIs {
   totalActiveScenarios: number;
@@ -95,82 +98,19 @@ export default function ScenarioPlanning() {
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
 
-  // Fetch Temperature Profiles
-  const { data: temperatureProfiles } = useQuery<any>({
-    queryKey: ["scenario:temperatureProfiles"],
-    queryFn: () => ApiService.apiV1ScenarioTemperatureProfilesList()
-  });
+  // Use custom hook for data management
+  const {
+    temperatureProfiles,
+    tgcModels,
+    fcrModels,
+    mortalityModels,
+    biologicalConstraints,
+    scenarios,
+    kpis,
+    isLoading,
+    scenariosLoading
+  } = useScenarioData(searchTerm, statusFilter);
 
-  // Fetch TGC Models
-  const { data: tgcModels } = useQuery<any>({
-    queryKey: ["scenario:tgcModels"],
-    queryFn: () => ApiService.apiV1ScenarioTgcModelsList()
-  });
-
-  // Fetch FCR Models
-  const { data: fcrModels } = useQuery<any>({
-    queryKey: ["scenario:fcrModels"],
-    queryFn: () => ApiService.apiV1ScenarioFcrModelsList()
-  });
-
-  // Fetch Mortality Models
-  const { data: mortalityModels } = useQuery<any>({
-    queryKey: ["scenario:mortalityModels"],
-    queryFn: () => ApiService.apiV1ScenarioMortalityModelsList()
-  });
-
-  // Fetch Biological Constraints
-  const { data: biologicalConstraints } = useQuery<any>({
-    queryKey: ["scenario:biologicalConstraints"],
-    queryFn: async () => {
-      try {
-        const response = await ApiService.apiV1ScenarioBiologicalConstraintsList();
-        return response;
-      } catch (error) {
-        console.error("Failed to fetch biological constraints:", error);
-        throw new Error("Failed to fetch biological constraints");
-      }
-    }
-  });
-
-  // Fetch Scenarios with filtering
-  const { data: scenarios, isLoading: scenariosLoading } = useQuery<any>({
-    queryKey: ["scenario:scenarios", { search: searchTerm, status: statusFilter }],
-    queryFn: () => ApiService.apiV1ScenarioScenariosList(
-      undefined, 
-      undefined, 
-      undefined, 
-      searchTerm || undefined, 
-      statusFilter !== 'all' ? statusFilter : undefined
-    )
-  });
-
-  /* ----------------------------------------------------------
-   * Derive KPI values client-side from the scenarios list.
-   * -------------------------------------------------------- */
-  const computedKpis: ScenarioPlanningKPIs = useMemo(() => {
-    const list = scenarios?.results ?? [];
-    if (list.length === 0) {
-      return {
-        totalActiveScenarios: 0,
-        scenariosInProgress: 0,
-        completedProjections: 0,
-        averageProjectionDuration: 0,
-      };
-    }
-    const totalActiveScenarios = list.length;
-    const scenariosInProgress = list.filter((s: any) => s.status === "running").length;
-    const completedProjections = list.filter((s: any) => s.status === "completed").length;
-    const averageProjectionDuration =
-      list.reduce((sum: number, s: any) => sum + (s.duration_days ?? 0), 0) / list.length;
-
-    return {
-      totalActiveScenarios,
-      scenariosInProgress,
-      completedProjections,
-      averageProjectionDuration,
-    };
-  }, [scenarios]);
 
   // Delete scenario mutation
   const deleteScenarioMutation = useMutation({
@@ -289,59 +229,7 @@ export default function ScenarioPlanning() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Scenarios</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{computedKpis.totalActiveScenarios}</div>
-            <p className="text-xs text-muted-foreground">
-              +2 from last month
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{computedKpis.scenariosInProgress}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently running
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{computedKpis.completedProjections}</div>
-            <p className="text-xs text-muted-foreground">
-              Total projections
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Duration</CardTitle>
-            <Calculator className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{Math.round(computedKpis.averageProjectionDuration)}</div>
-            <p className="text-xs text-muted-foreground">
-              days per scenario
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <ScenarioKPIs kpis={kpis} isLoading={isLoading} />
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
@@ -354,52 +242,13 @@ export default function ScenarioPlanning() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Scenarios</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {scenarios?.results?.slice(0, 5).map((scenario: any) => (
-                    <div key={scenario.id} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{scenario.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {scenario.duration_days} days • {scenario.genotype}
-                        </p>
-                      </div>
-                      <Badge variant={scenario.status === 'completed' ? 'default' : 'secondary'}>
-                        {scenario.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Model Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">TGC Models</span>
-                    <span className="font-medium">{tgcModels?.results?.length || 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Temperature Profiles</span>
-                    <span className="font-medium">{temperatureProfiles?.results?.length || 0}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Active Projections</span>
-                    <span className="font-medium">{computedKpis.scenariosInProgress}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <ScenarioOverview
+            scenarios={scenarios}
+            tgcModels={tgcModels}
+            temperatureProfiles={temperatureProfiles}
+            kpis={kpis}
+            isLoading={isLoading}
+          />
         </TabsContent>
 
         <TabsContent value="scenarios" className="space-y-4">

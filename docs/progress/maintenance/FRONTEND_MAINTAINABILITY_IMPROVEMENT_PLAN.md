@@ -17,7 +17,8 @@ Session protocol (apply in every phase)
    - `docs/code_organization_guidelines.md`
    - `docs/NAVIGATION_ARCHITECTURE.md`
    - `docs/frontend_testing_guide.md`
-   - `docs/api_alignment/FRONTEND_ADAPTATION_PRINCIPLES.md`
+   - `docs/CONTRIBUTING.md`
+   - `docs/DJANGO_INTEGRATION_GUIDE.md`
    - `client/src/config/auth.config.ts` (verify canonical endpoints)
 2) Re-check current metrics in `docs/metrics/` and note targets
 3) Make focused edits only; run tests, build, and lizard after changes
@@ -149,7 +150,8 @@ Issue 4
   - No direct fetch remaining (outside generated client); tests and build pass.
 
   References
-  - `docs/api_alignment/FRONTEND_ADAPTATION_PRINCIPLES.md`
+  - `docs/CONTRIBUTING.md`
+  - `docs/DJANGO_INTEGRATION_GUIDE.md`
 
 Issue 5
 - Title: Frontend: Add lizard-based complexity and size audit to CI (warn-only)
