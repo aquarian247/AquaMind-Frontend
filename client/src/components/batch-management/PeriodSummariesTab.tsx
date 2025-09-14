@@ -48,7 +48,7 @@ interface PeriodSummariesTabProps {
   setDateRange: (range: { from?: Date; to?: Date }) => void;
   feedingSummaries: FeedingSummary[];
   totalFeedConsumed: number;
-  feedingSummary: { eventsCount: number } | null;
+  feedingSummary: { eventsCount: number; totalFeedKg?: number } | null | undefined;
   totalEvents: number;
   feedingEvents: FeedingEvent[];
   currentFCR: number;

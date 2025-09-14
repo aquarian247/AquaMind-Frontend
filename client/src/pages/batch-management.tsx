@@ -28,6 +28,7 @@ import { useBatchData } from "@/features/batch/hooks/useBatchData";
 import { useBatchKPIs } from "@/features/batch/hooks/useBatchKPIs";
 import { mapExtendedToBatch } from "@/features/batch/types";
 import type { InsertBatch, ExtendedBatch } from "@/features/batch/types";
+import type { Batch } from "@/api/generated/models/Batch";
 
 
 const batchFormSchema = z.object({
@@ -64,51 +65,6 @@ const batchFormSchema = z.object({
 
 type BatchFormData = z.infer<typeof batchFormSchema>;
 
-interface ExtendedBatch {
-  // Core fields from Django API
-  id: number;
-  batch_number: string;
-  species: number;
-  species_name?: string;
-  lifecycle_stage?: number;
-  status: string;
-  batch_type?: string;
-  start_date: string;
-  expected_end_date?: string;
-  actual_end_date?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  population_count?: number;
-  biomass_kg?: number;
-  
-  // Calculated fields from Django API
-  calculated_population_count?: number;
-  calculated_biomass_kg?: string;
-  current_lifecycle_stage?: {
-    id: number;
-    name: string;
-  };
-  expected_harvest_date?: string;
-  egg_source?: string;
-  
-  // Frontend-calculated fields
-  fcr?: number;
-  survivalRate?: number;
-  avgWeight?: number;
-  daysActive?: number;
-  containerCount?: number;
-  healthStatus?: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
-  mortalityRate?: number;
-  biomassGrowthRate?: number;
-  
-  // Legacy fields for compatibility
-  name?: string; // Maps to batch_number
-  initialCount?: number;
-  speciesName?: string;
-  stageName?: string;
-  containerName?: string;
-}
 
 interface BatchKPIs {
   totalActiveBatches: number;

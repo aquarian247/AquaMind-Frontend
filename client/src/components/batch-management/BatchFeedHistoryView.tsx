@@ -122,7 +122,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
         };
       } catch (error) {
         console.error("❌ Failed to fetch feeding events summary:", error);
-        return { eventsCount: 0, totalFeedKg: 0 };
+        return null;
       }
     },
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes

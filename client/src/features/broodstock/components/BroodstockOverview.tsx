@@ -164,7 +164,7 @@ export function BroodstockOverview({
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {programs?.results?.slice(0, 3).map((program: Program) => (
+              {programs?.slice(0, 3).map((program: Program) => (
                 <div key={program.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
                     <div className="flex-1">
@@ -227,8 +227,8 @@ export function BroodstockOverview({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {activities?.results?.length > 0 ? (
-              activities.results.map((activity: any) => (
+            {activities && activities.length > 0 ? (
+              activities.map((activity: any) => (
                 <div key={activity.id} className="flex items-start space-x-3">
                   <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-2 mt-1">
                     {getActivityIcon(activity.type)}
@@ -269,8 +269,8 @@ export function BroodstockOverview({
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {tasks?.results?.length > 0 ? (
-              tasks.results.map((task: any) => (
+            {tasks && tasks.length > 0 ? (
+              tasks.map((task: any) => (
                 <div key={task.id} className={`p-3 rounded border-l-4 ${getPriorityColor(task.priority)}`}>
                   <div className="flex justify-between items-start">
                     <h4 className="font-medium text-gray-800 dark:text-gray-200">

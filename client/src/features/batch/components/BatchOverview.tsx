@@ -170,12 +170,7 @@ export function BatchOverview({
             <Card
               key={batch.id}
               className={cn(
-                "cursor-pointer transition-all hover:shadow-md border-l-4",
-                healthStatus === 'excellent' && "border-l-green-500",
-                healthStatus === 'good' && "border-l-blue-500",
-                healthStatus === 'fair' && "border-l-yellow-500",
-                healthStatus === 'poor' && "border-l-orange-500",
-                healthStatus === 'critical' && "border-l-red-500",
+                "cursor-pointer transition-all hover:shadow-md border-l-4 border-l-green-500",
                 selectedBatch?.id === batch.id && "ring-2 ring-primary"
               )}
               onClick={() => onBatchSelect(batch)}

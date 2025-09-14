@@ -44,15 +44,15 @@ export function BroodstockPrograms({ programs, isLoading }: BroodstockProgramsPr
   }
 
   // Calculate program summary statistics
-  const activePrograms = programs?.results?.filter((p: Program) => p.status === 'active').length || 0;
-  const totalPopulation = (programs?.results ?? [])
+  const activePrograms = programs?.filter((p: Program) => p.status === 'active').length || 0;
+  const totalPopulation = (programs ?? [])
     .reduce((sum: number, p: Program) => sum + p.populationSize, 0);
-  const avgProgress = programs?.results?.length > 0 ?
+  const avgProgress = programs && programs.length > 0 ?
     Math.round(
-      (programs.results ?? []).reduce(
+      (programs ?? []).reduce(
         (sum: number, p: Program) => sum + p.progress,
         0
-      ) / ((programs.results?.length ?? 1) || 1)
+      ) / ((programs?.length ?? 1) || 1)
     ) : 0;
 
   return (
@@ -110,8 +110,8 @@ export function BroodstockPrograms({ programs, isLoading }: BroodstockProgramsPr
 
       {/* Programs Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {programs?.results?.length > 0 ? (
-          programs.results.map((program: Program) => (
+        {programs && programs.length > 0 ? (
+          programs.map((program: Program) => (
             <Card key={program.id} className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">

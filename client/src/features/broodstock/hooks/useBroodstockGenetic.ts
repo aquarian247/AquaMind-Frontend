@@ -25,7 +25,7 @@ export function useBroodstockGenetic() {
   });
 
   return {
-    traitData: traitsQuery.data,
+    traitData: traitsQuery.data || null,
     isLoading: traitsQuery.isLoading
   };
 }

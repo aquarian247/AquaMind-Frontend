@@ -22,7 +22,7 @@ export const useStationKpi = (stationId: number) => {
       
       // Fetch all active assignments
       const assignmentsResponse = await ApiService.apiV1BatchContainerAssignmentsList(
-        undefined, undefined, undefined, true
+        undefined, undefined, undefined, undefined
       );
       const assignments = assignmentsResponse.results || [];
       

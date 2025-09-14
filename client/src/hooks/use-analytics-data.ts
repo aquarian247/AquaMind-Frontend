@@ -3,7 +3,7 @@ import { differenceInDays, parseISO } from "date-fns";
 
 interface GrowthSample {
   id: number;
-  sample_date: string;
+  sample_date: string | undefined;
   avg_weight_g: string;
   avg_length_cm: string;
   assignment: number;
@@ -11,7 +11,7 @@ interface GrowthSample {
 
 interface BatchAssignment {
   id: number;
-  population_count: number;
+  population_count: number | undefined;
   biomass_kg: string;
 }
 
@@ -23,8 +23,8 @@ interface FeedingSummary {
 }
 
 interface EnvironmentalReading {
-  parameter: string | { name: string };
-  reading_value: string;
+  parameter: number;
+  value: string;
   reading_time: string;
 }
 
@@ -83,10 +83,10 @@ export function useAnalyticsData({
   scenarios,
   growthMetrics
 }: {
-  growthSamplesData: GrowthSample[];
-  batchAssignments: BatchAssignment[];
+  growthSamplesData: import("@/api/generated/models/GrowthSample").GrowthSample[];
+  batchAssignments: import("@/api/generated/models/BatchContainerAssignment").BatchContainerAssignment[];
   feedingSummaries: FeedingSummary[];
-  environmentalReadings: EnvironmentalReading[];
+  environmentalReadings: import("@/api/generated/models/EnvironmentalReading").EnvironmentalReading[];
   scenarios: Scenario[];
   growthMetrics: GrowthMetrics[];
 }) {

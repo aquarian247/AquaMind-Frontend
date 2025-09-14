@@ -44,11 +44,11 @@ export function useBroodstockPrograms() {
   });
 
   return {
-    programs: programsQuery.data ? { results: programsQuery.data } : null,
+    programs: programsQuery.data || null,
     programsLoading: programsQuery.isLoading,
-    activities: activitiesQuery.data,
+    activities: activitiesQuery.data?.results || null,
     activitiesLoading: activitiesQuery.isLoading,
-    tasks: tasksQuery.data,
+    tasks: tasksQuery.data?.results || null,
     tasksLoading: tasksQuery.isLoading
   };
 }
