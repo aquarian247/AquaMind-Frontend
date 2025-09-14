@@ -52,7 +52,10 @@ export default function BatchDetails() {
 
   const { data: containers } = useQuery<Container[]>({
     queryKey: ["infrastructure/containers"],
-    queryFn: async () => (await api.infrastructure.getContainers()).results as Container[],
+    queryFn: async () => {
+      const response = await api.infrastructure.getContainers();
+      return response.results || [];
+    },
   });
 
   const { data: species } = useQuery({
