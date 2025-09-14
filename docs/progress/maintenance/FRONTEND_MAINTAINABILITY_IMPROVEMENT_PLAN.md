@@ -10,7 +10,7 @@ Working mode
 Baseline & scope
 - Goal: reduce file sizes, cyclomatic/cognitive complexity, and standardize API usage
 - Out-of-scope: visual redesign or new features
-- Baseline metrics artifacts: `docs/metrics/frontend_lizard_YYYY-MM-DD.txt`, `docs/metrics/frontend_lizard_components_YYYY-MM-DD.txt`, `docs/DAILY_METRICS_REPORT.md`
+- Baseline metrics artifacts: `docs/metrics/frontend_lizard_YYYY-MM-DD.txt`, `docs/metrics/frontend_lizard_components_YYYY-MM-DD.txt`, `docs/METRICS_REPORT.md`
 
 Session protocol (apply in every phase)
 1) Read these docs first:
@@ -21,7 +21,7 @@ Session protocol (apply in every phase)
    - `client/src/config/auth.config.ts` (verify canonical endpoints)
 2) Re-check current metrics in `docs/metrics/` and note targets
 3) Make focused edits only; run tests, build, and lizard after changes
-4) Update `docs/DAILY_METRICS_REPORT.md` deltas if the phase changes metrics meaningfully
+4) Update `docs/METRICS_REPORT.md` deltas if the phase changes metrics meaningfully
 
 Targets
 - Page shell ≤150 LOC; components ≤300 LOC
@@ -168,7 +168,7 @@ Issue 5
   - CI outputs table; no false positives block merges.
 
   References
-  - `docs/DAILY_METRICS_REPORT.md`, metrics files
+  - `docs/METRICS_REPORT.md`, metrics files
 
 Issue 6
 - Title: Frontend: Update guidelines and add refactor playbook for large pages/components
