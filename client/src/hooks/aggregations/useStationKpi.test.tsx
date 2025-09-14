@@ -82,7 +82,7 @@ describe('useStationKpi', () => {
     expect(ApiService.apiV1InfrastructureHallsList).toHaveBeenCalledWith({ freshwater_station: 5 });
     expect(ApiService.apiV1InfrastructureContainersList).toHaveBeenCalled();
     expect(ApiService.apiV1BatchContainerAssignmentsList).toHaveBeenCalledWith(
-      undefined, undefined, undefined, true
+      undefined, undefined, undefined, undefined
     );
 
     // Verify the calculated metrics
