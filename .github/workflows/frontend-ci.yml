@@ -61,7 +61,34 @@ jobs:
           echo "⚠️ OpenAPI spec not found, skipping endpoint validation"
           echo "To enable validation, ensure api/openapi.yaml is present"
         fi
-      
+
+    - name: Analyze Code Complexity
+      run: |
+        echo "🔍 Running complexity analysis..."
+        python3 -m lizard client/src --exclude 'client/src/api/generated/**/*' -o docs/metrics/frontend_lizard_latest.txt
+        python3 -m lizard client/src/components client/src/pages --exclude 'client/src/api/generated/**/*' -o docs/metrics/frontend_lizard_components_latest.txt
+
+        echo "📊 Complexity analysis completed. Checking for violations..."
+        if python3 -m lizard client/src --exclude 'client/src/api/generated/**/*' --CCN 15 --length 300 2>&1 | grep -q "CCN.*1[5-9]\|CCN.*[2-9][0-9]\|length.*30[0-9]\|length.*[4-9][0-9][0-9]"; then
+          echo "⚠️ Complexity violations detected, but continuing (warn-only mode)"
+          echo "Review the generated metrics files for details"
+          echo "Current threshold: CCN > 15 or function length > 300 lines"
+        else
+          echo "✅ No complexity violations detected"
+        fi
+
+        echo "🧹 Cleaning up old metrics files..."
+        find docs/metrics -name 'frontend_lizard_*.txt' -mtime +7 -delete 2>/dev/null || true
+
+    - name: Upload Complexity Metrics
+      uses: actions/upload-artifact@v4
+      with:
+        name: complexity-metrics
+        path: |
+          docs/metrics/frontend_lizard_latest.txt
+          docs/metrics/frontend_lizard_components_latest.txt
+        retention-days: 30
+
     - name: Build
       run: npm run build
       
