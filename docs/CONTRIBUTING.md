@@ -193,6 +193,8 @@ client/src/
 └── App.tsx             # Main app component
 ```
 
+> **📖 For detailed guidelines on component decomposition and feature slicing, see [Code Organization Guidelines](../code_organization_guidelines.md) and [Refactoring Large Pages Guide](../refactor_large_pages.md)**
+
 ## Debugging Authentication & API Issues
 
 ### **🔍 Step-by-Step Debug Process**
@@ -378,6 +380,8 @@ refactor: improve API error handling
 - Optimize bundle size with code splitting
 - Use proper loading states
 
+> **⚡ For component performance optimization and large page refactoring, see [Refactoring Large Pages Guide](../refactor_large_pages.md)**
+
 ### Accessibility
 - Follow ARIA guidelines
 - Use semantic HTML
@@ -515,6 +519,11 @@ Update relevant documentation:
 - `README.md` for user-facing changes
 - `docs/` for architectural changes
 - Component documentation for new UI components
+
+> **📚 Key documentation references:**
+> - [Code Organization Guidelines](../code_organization_guidelines.md) - Architecture patterns and file structure
+> - [Refactoring Large Pages Guide](../refactor_large_pages.md) - Step-by-step refactoring instructions
+> - [Complexity Thresholds Guide](../complexity-thresholds-and-remediation.md) - Code quality metrics and analysis
 
 ## Questions?
 
