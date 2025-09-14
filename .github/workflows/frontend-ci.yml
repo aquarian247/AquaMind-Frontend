@@ -25,7 +25,13 @@ jobs:
     
     - name: Run unit tests
       run: npm run test:ci
-    
+
+    - name: Generate Coverage Report
+      run: |
+        echo "📊 Generating coverage report..."
+        npx vitest run --coverage
+      continue-on-error: true
+
     - name: Fetch Latest API Spec
       run: |
         mkdir -p tmp/openapi

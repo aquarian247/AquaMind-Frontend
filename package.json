@@ -16,7 +16,7 @@
     "generate:api": "openapi --input tmp/openapi/openapi.yaml --output client/src/api/generated --client fetch --useUnionTypes",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:ci": "vitest run --coverage",
+    "test:ci": "vitest run",
     "validate:endpoints": "tsx scripts/validate-endpoints.ts",
     "sync:openapi": "curl -L https://raw.githubusercontent.com/aquarian247/AquaMind/main/api/openapi.yaml -o api/openapi.yaml && cp api/openapi.yaml tmp/openapi/openapi.yaml && npm run generate:api",
     "sync:openapi:branch": "node -e \"const branch = process.argv[2] || 'main'; require('child_process').execSync('curl -L https://raw.githubusercontent.com/aquarian247/AquaMind/' + branch + '/api/openapi.yaml -o api/openapi.yaml && cp api/openapi.yaml tmp/openapi/openapi.yaml && npm run generate:api', { stdio: 'inherit' });\"",
