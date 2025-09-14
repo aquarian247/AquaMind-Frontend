@@ -179,24 +179,198 @@ Use `vite --report` to watch chunk growth.
 
 ---
 
-## 12  Example – Good Feature Slice (`batch-management`)
+## 12  Feature Slice Examples
+
+### ✅ Good: Complete Feature Slice (`batch-management`)
 
 ```
 features/batch-management/
-├── api.ts           # TanStack Query defs (getBatches, transferBatch …)
-├── hooks.ts         # useBatchFilters, useTransferDialog
-├── pages/
-│   ├── BatchListPage.tsx
-│   └── BatchDetailPage.tsx
-├── components/
-│   ├── BatchTable.tsx
-│   └── BatchTransferDialog.tsx
-└── index.ts         # barrel export for router lazy-import
+├── api.ts              # TanStack Query hooks (useBatches, useBatchTransfers)
+├── hooks.ts            # Business logic hooks (useBatchFilters, useBatchAnalytics)
+├── pages/              # Route targets (thin shells)
+│   ├── BatchManagementPage.tsx     # Main page (<150 LOC)
+│   └── BatchDetailPage.tsx         # Detail view (<150 LOC)
+├── components/         # Feature-specific components
+│   ├── BatchTableView.tsx          # Data table (200-300 LOC)
+│   ├── BatchAnalyticsView.tsx      # Charts/analytics (200-300 LOC)
+│   ├── BatchTransferDialog.tsx     # Modal dialogs (100-200 LOC)
+│   └── BatchFilters.tsx            # Filter controls (100-200 LOC)
+├── types.ts           # Feature-specific types
+└── index.ts           # Barrel export for router lazy-import
+```
+
+### ✅ Real Example: Batch Management Decomposition
+
+**Before (Monolithic):**
+```tsx
+// ❌ BatchManagementPage.tsx - 650 LOC
+function BatchManagementPage() {
+  // 80 LOC: State management for filters, dialogs, pagination
+  // 120 LOC: Data fetching with useQuery + useMutation
+  // 150 LOC: Table rendering with DataTable component
+  // 100 LOC: Analytics charts with Chart.js integration
+  // 80 LOC: Transfer dialog with form validation
+  // 120 LOC: Filter controls and search functionality
+}
+```
+
+**After (Feature Slice):**
+```tsx
+// ✅ features/batch-management/pages/BatchManagementPage.tsx - 120 LOC
+import { useLocation } from 'wouter';
+import { BatchTableView } from '../components/BatchTableView';
+import { BatchAnalyticsView } from '../components/BatchAnalyticsView';
+import { useBatchFilters } from '../hooks/useBatchFilters';
+
+export function BatchManagementPage() {
+  const [location] = useLocation();
+  const { filters, updateFilters } = useBatchFilters();
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Batch Management</h1>
+        <Button onClick={() => navigate('/batches/analytics')}>
+          Analytics View
+        </Button>
+      </div>
+
+      <BatchFilters filters={filters} onChange={updateFilters} />
+
+      {isAnalyticsView ? (
+        <BatchAnalyticsView filters={filters} />
+      ) : (
+        <BatchTableView filters={filters} />
+      )}
+    </div>
+  );
+}
+```
+
+### ✅ API Layer Pattern
+
+```ts
+// features/batch-management/api.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ApiService } from '@/api/generated';
+
+export function useBatches(filters?: BatchFilters) {
+  return useQuery({
+    queryKey: ['batches', filters],
+    queryFn: () => ApiService.apiV1BatchBatchesList({
+      page: filters?.page,
+      search: filters?.search,
+      ordering: filters?.sortBy,
+    }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useBatchTransfers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (params: TransferParams) =>
+      ApiService.apiV1BatchBatchesTransferCreate(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['batches'] });
+    },
+  });
+}
+```
+
+### ✅ Business Logic Hooks Pattern
+
+```ts
+// features/batch-management/hooks/useBatchAnalytics.ts
+import { useMemo } from 'react';
+import { useBatches } from '../api';
+
+export function useBatchAnalytics(timeRange: string) {
+  const { data: batches } = useBatches();
+
+  const analytics = useMemo(() => {
+    if (!batches?.results) return null;
+
+    const filtered = batches.results.filter(batch =>
+      isWithinTimeRange(batch.created_at, timeRange)
+    );
+
+    return {
+      totalBatches: filtered.length,
+      totalBiomass: filtered.reduce((sum, b) => sum + b.biomass_kg, 0),
+      averageFCR: filtered.reduce((sum, b) => sum + b.fcr_ratio, 0) / filtered.length,
+      growthRate: calculateGrowthRate(filtered),
+    };
+  }, [batches, timeRange]);
+
+  return analytics;
+}
+```
+
+### ✅ Component Extraction Pattern
+
+```tsx
+// features/batch-management/components/BatchTableView.tsx
+import { useBatches } from '../api';
+import { useBatchFilters } from '../hooks/useBatchFilters';
+
+interface BatchTableViewProps {
+  onTransferClick?: (batch: Batch) => void;
+  onViewDetails?: (batch: Batch) => void;
+}
+
+export function BatchTableView({
+  onTransferClick,
+  onViewDetails
+}: BatchTableViewProps) {
+  const { filters } = useBatchFilters();
+  const { data: batches, isLoading } = useBatches(filters);
+
+  const columns = useMemo(() => [
+    {
+      key: 'name',
+      header: 'Batch Name',
+      cell: (batch: Batch) => batch.name,
+    },
+    // ... more columns
+  ], []);
+
+  if (isLoading) return <SkeletonTable />;
+
+  return (
+    <DataTable
+      columns={columns}
+      data={batches?.results || []}
+      onRowClick={onViewDetails}
+      actions={[
+        {
+          label: 'Transfer',
+          onClick: onTransferClick,
+          disabled: (batch) => !batch.can_transfer,
+        },
+      ]}
+    />
+  );
+}
 ```
 
 ---
 
-## 13  Anti-Patterns to Avoid
+## 13  Refactoring Large Components
+
+Large page components (>500 LOC) must be decomposed following the patterns above. See the detailed [Refactoring Large Pages Guide](../refactor_large_pages.md) for step-by-step instructions and real-world examples.
+
+**Key Principles:**
+- Extract data fetching to feature API hooks
+- Move business logic to custom hooks
+- Split UI into focused components
+- Keep page shells under 150 LOC
+- Ensure each component has a single responsibility
+
+---
+
+## 14  Anti-Patterns to Avoid
 
 1. **Massive monolithic page components** (>500 LOC).
 2. Business logic inside JSX (move to hooks / utils).
@@ -205,13 +379,11 @@ features/batch-management/
 
 ---
 
-## 14  Conclusion
+## 15  Conclusion
 
 Adhering to these guidelines will keep the AquaMind frontend performant, maintainable and scalable as the product grows. When in doubt, optimise for **readability**, **single-responsibility**, and **user experience**.
 
----
-
-## General Principles
+## 16  General Principles
 
 ### Code Structure
 

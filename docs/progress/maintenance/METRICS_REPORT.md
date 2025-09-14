@@ -4,7 +4,7 @@ Date: 2025-09-14 (UTC)
 
 ### Executive Summary
 - Majority of logic leverages generated `ApiService`, with a few direct `fetch` calls left in infra and auth flows.
-- One cyclomatic complexity warning: `hooks/aggregations/useBatchFcr.ts` function CC=23.
+- **✅ COMPLETED: Cyclomatic complexity reduced** - `hooks/aggregations/useBatchFcr.ts` refactored from CC=23 to max CC=13 (main function now CC=4).
 - Many oversized pages/components exceed guideline limits (300 LOC components; 100–150 LOC top-level pages), signaling need for decomposition.
 - Auth endpoints align with canonical JWT configuration in `client/src/config/auth.config.ts`.
 
@@ -12,7 +12,7 @@ Date: 2025-09-14 (UTC)
 - Lizard summary (src only, excluding generated/tests):
   - Total NLOC: ~2605
   - Avg CCN per function: 2.0
-  - Warnings: 1 (CC>15) in `useBatchFcr.ts`
+  - **✅ COMPLETED: No CC warnings** - `useBatchFcr.ts` complexity reduced below 15 (main function CC=4, max CC=13)
 - Largest Components (LOC):
   - components/batch-management/BatchAnalyticsView.tsx → 1191
   - components/batch-management/BatchFeedHistoryView.tsx → 1137
@@ -42,8 +42,8 @@ Date: 2025-09-14 (UTC)
 1) Decompose oversized pages
    - Split route-level pages into 100–150 LOC shells + feature hooks/components.
    - Prioritize: `broodstock.tsx`, `batch-management.tsx`, `ScenarioPlanning.tsx`.
-2) Refactor high-CC hook
-   - `hooks/aggregations/useBatchFcr.ts`: Extract data shaping into pure helpers; reduce branches; add early returns.
+2) **✅ COMPLETED: Refactored high-CC hook**
+   - `hooks/aggregations/useBatchFcr.ts`: Extracted 5 pure helper functions; reduced main function from CC=23 to CC=4; added comprehensive unit tests.
 3) Centralize fetch usage
    - Replace direct `fetch` with `ApiService` or the app-wide `getQueryFn()` to ensure auth headers, retries, and logging.
    - Target: `auth.service.ts`, `BatchFeedHistoryView.tsx`, `lib/queryClient.ts`, `lib/debug.ts`.

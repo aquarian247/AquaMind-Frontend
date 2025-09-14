@@ -14,99 +14,115 @@ export interface DateRange {
   to?: string | Date;
 }
 
+// Pure helper: Filter feeding events by batch and date range
+export function filterFeedingEvents(events: any[], batchId: number, range?: DateRange): any[] {
+  let filtered = events.filter(event => event.batch === batchId);
+
+  if (!range) return filtered;
+
+  const fromDate = range.from ? new Date(range.from) : null;
+  const toDate = range.to ? new Date(range.to) : null;
+
+  return filtered.filter(event => {
+    const eventDate = new Date(event.feeding_date ?? '1970-01-01');
+    if (fromDate && eventDate < fromDate) return false;
+    if (toDate && eventDate > toDate) return false;
+    return true;
+  });
+}
+
+// Pure helper: Calculate total feed amount
+export function calculateTotalFeedKg(feedingEvents: any[]): number {
+  return feedingEvents.reduce(
+    (sum, event) => {
+      const amount = Number(event.amount_kg || 0);
+      return sum + (isNaN(amount) ? 0 : amount);
+    },
+    0
+  );
+}
+
+// Pure helper: Sort growth samples by date
+export function sortGrowthSamples(samples: any[]): any[] {
+  return [...samples].sort((a, b) => {
+    const dateA = new Date(a.sample_date ?? '1970-01-01').getTime();
+    const dateB = new Date(b.sample_date ?? '1970-01-01').getTime();
+    return dateA - dateB;
+  });
+}
+
+// Pure helper: Select samples for FCR calculation
+export function selectFcrSamples(samples: any[], range?: DateRange): any[] {
+  if (samples.length === 0) return [];
+
+  const baseline = samples[0];
+  let latest = samples[samples.length - 1];
+
+  if (range?.to) {
+    const toDate = new Date(range.to);
+    for (let i = samples.length - 1; i >= 0; i--) {
+      const sampleDate = new Date(samples[i].sample_date ?? '1970-01-01');
+      if (sampleDate <= toDate) {
+        latest = samples[i];
+        break;
+      }
+    }
+  }
+
+  const baselineDate = new Date(baseline.sample_date ?? '1970-01-01');
+  const latestDate = new Date(latest.sample_date ?? '1970-01-01');
+
+  if (baseline.id !== latest.id && latestDate >= baselineDate) {
+    return [baseline, latest];
+  }
+
+  return [baseline];
+}
+
+// Pure helper: Calculate biomass gain
+export async function calculateBiomassGain(
+  growthSamples: any[],
+  batchId: number
+): Promise<number> {
+  if (growthSamples.length < 2) return 0;
+
+  const earliestSample = growthSamples[0];
+  const latestSample = growthSamples[1];
+
+  const batchDetails = await ApiService.apiV1BatchBatchesRetrieve(batchId);
+  const estimatedPopulation = Number(batchDetails?.calculated_population_count || 0);
+
+  const earliestWeight = Number(earliestSample.avg_weight_g || 0);
+  const latestWeight = Number(latestSample.avg_weight_g || 0);
+
+  const weightGainGrams = (isNaN(latestWeight) ? 0 : latestWeight) - (isNaN(earliestWeight) ? 0 : earliestWeight);
+  return (weightGainGrams / 1000) * estimatedPopulation;
+}
+
 export const useBatchFcr = (batchId: number, range?: DateRange) => {
   return useQuery<BatchFcrResult>({
     queryKey: ['batch-fcr', batchId, range?.from ?? null, range?.to ?? null],
     queryFn: async () => {
-      // Fetch feeding events
+      // Fetch feeding events and filter
       const feedingEventsResponse = await ApiService.apiV1InventoryFeedingEventsList();
-      let feedingEvents: any[] = (feedingEventsResponse as any).results || [];
-      
-      // Filter events by batch
-      feedingEvents = feedingEvents.filter(event => event.batch === batchId);
-      
-      // Filter by date range if provided
-      if (range) {
-        const fromDate = range.from ? new Date(range.from) : null;
-        const toDate = range.to ? new Date(range.to) : null;
-        
-        feedingEvents = feedingEvents.filter(event => {
-          const eventDate = new Date(event.feeding_date ?? '1970-01-01');
-          if (fromDate && eventDate < fromDate) return false;
-          if (toDate && eventDate > toDate) return false;
-          return true;
-        });
-      }
-      
+      const allFeedingEvents: any[] = (feedingEventsResponse as any).results || [];
+      const feedingEvents = filterFeedingEvents(allFeedingEvents, batchId, range);
+
       // Calculate total feed amount
-      const totalFeedKg = feedingEvents.reduce(
-        (sum, event) => sum + Number(event.amount_kg || 0),
-        0
-      );
-      
-      // Fetch growth samples
+      const totalFeedKg = calculateTotalFeedKg(feedingEvents);
+
+      // Fetch and process growth samples
       const growthSamplesResponse = await ApiService.apiV1BatchGrowthSamplesList(batchId as any);
-      let growthSamples: any[] = (growthSamplesResponse as any).results || [];
-      
-      // Sort samples by date
-      growthSamples.sort((a, b) => {
-        const dateA = new Date(a.sample_date ?? '1970-01-01').getTime();
-        const dateB = new Date(b.sample_date ?? '1970-01-01').getTime();
-        return dateA - dateB;
-      });
-      
-      // Select baseline and latest samples for FCR calculation
-      let growthSamplesForCalc: any[] = [];
-      
-      if (growthSamples.length > 0) {
-        // Baseline is always the earliest sample
-        const baseline = growthSamples[0];
-        
-        // Find the latest sample within the date range (if provided)
-        let latest = growthSamples[growthSamples.length - 1];
-        
-        if (range?.to) {
-          const toDate = new Date(range.to);
-          // Find the latest sample that's not after toDate
-          for (let i = growthSamples.length - 1; i >= 0; i--) {
-            const sampleDate = new Date(growthSamples[i].sample_date ?? '1970-01-01');
-            if (sampleDate <= toDate) {
-              latest = growthSamples[i];
-              break;
-            }
-          }
-        }
-        
-        // Ensure baseline and latest are different samples and latest is not before baseline
-        const baselineDate = new Date(baseline.sample_date ?? '1970-01-01');
-        const latestDate = new Date(latest.sample_date ?? '1970-01-01');
-        
-        if (baseline.id !== latest.id && latestDate >= baselineDate) {
-          growthSamplesForCalc = [baseline, latest];
-        } else {
-          growthSamplesForCalc = [baseline];
-        }
-      }
-      
-      let biomassGainKg = 0;
-      
-      // Calculate biomass gain if we have at least two samples
-      if (growthSamplesForCalc.length >= 2) {
-        const earliestSample = growthSamplesForCalc[0];
-        const latestSample = growthSamplesForCalc[1];
-        
-        // Get batch details to find population count
-        const batchDetails = await ApiService.apiV1BatchBatchesRetrieve(batchId);
-        const estimatedPopulation = Number(batchDetails?.calculated_population_count || 0);
-        
-        // Calculate biomass gain
-        const weightGainGrams = Number(latestSample.avg_weight_g || 0) - Number(earliestSample.avg_weight_g || 0);
-        biomassGainKg = (weightGainGrams / 1000) * estimatedPopulation;
-      }
-      
+      const allGrowthSamples: any[] = (growthSamplesResponse as any).results || [];
+      const sortedGrowthSamples = sortGrowthSamples(allGrowthSamples);
+      const growthSamplesForCalc = selectFcrSamples(sortedGrowthSamples, range);
+
+      // Calculate biomass gain
+      const biomassGainKg = await calculateBiomassGain(growthSamplesForCalc, batchId);
+
       // Calculate FCR
       const fcr = biomassGainKg > 0 ? totalFeedKg / biomassGainKg : null;
-      
+
       return {
         fcr,
         totalFeedKg,

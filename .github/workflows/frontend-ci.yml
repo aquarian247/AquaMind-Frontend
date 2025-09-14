@@ -24,8 +24,15 @@ jobs:
       run: npm ci
     
     - name: Run unit tests
+      id: tests
       run: npm run test:ci
-    
+
+    - name: Generate Coverage Report
+      run: |
+        echo "📊 Generating coverage report..."
+        npx vitest run --coverage
+      continue-on-error: true
+
     - name: Fetch Latest API Spec
       run: |
         mkdir -p tmp/openapi
@@ -41,6 +48,7 @@ jobs:
         cp tmp/openapi/openapi.yaml api/openapi.yaml
 
     - name: Type check (validate API contract)
+      id: type-check
       run: npm run type-check
     
     # ------------------------------------------------------------------
@@ -61,16 +69,74 @@ jobs:
           echo "⚠️ OpenAPI spec not found, skipping endpoint validation"
           echo "To enable validation, ensure api/openapi.yaml is present"
         fi
-      
+
+    - name: Install Complexity Analysis Tools
+      run: |
+        echo "📦 Installing lizard for complexity analysis..."
+        python3 -m pip install lizard
+
+    - name: Analyze Code Complexity
+      run: |
+        echo "🔍 Running complexity analysis..."
+
+        # Ensure output directory exists
+        mkdir -p docs/metrics
+
+        # Run complexity analysis (capture output to avoid exit code issues)
+        echo "📊 Running full codebase analysis..."
+        if python3 -m lizard client/src --exclude 'client/src/api/generated/**/*' -o docs/metrics/frontend_lizard_latest.txt 2>&1; then
+          echo "✅ Full analysis completed successfully"
+        else
+          echo "⚠️ Full analysis completed with warnings"
+        fi
+
+        echo "📊 Running components analysis..."
+        if python3 -m lizard client/src/components client/src/pages --exclude 'client/src/api/generated/**/*' -o docs/metrics/frontend_lizard_components_latest.txt 2>&1; then
+          echo "✅ Components analysis completed successfully"
+        else
+          echo "⚠️ Components analysis completed with warnings"
+        fi
+
+        echo "📊 Checking for violations..."
+        # Check for violations but don't fail the step
+        if python3 -m lizard client/src --exclude 'client/src/api/generated/**/*' --CCN 15 --length 300 2>&1 | grep -q "CCN.*1[5-9]\|CCN.*[2-9][0-9]\|length.*30[0-9]\|length.*[4-9][0-9][0-9]"; then
+          echo "⚠️ Complexity violations detected, but continuing (warn-only mode)"
+          echo "Review the generated metrics files for details"
+          echo "Current threshold: CCN > 15 or function length > 300 lines"
+        else
+          echo "✅ No complexity violations detected"
+        fi
+
+        echo "🧹 Cleaning up old metrics files..."
+        find docs/metrics -name 'frontend_lizard_*.txt' -mtime +7 -delete 2>/dev/null || true
+
+    - name: Upload Complexity Metrics
+      uses: actions/upload-artifact@v4
+      with:
+        name: complexity-metrics
+        path: |
+          docs/metrics/frontend_lizard_latest.txt
+          docs/metrics/frontend_lizard_components_latest.txt
+        retention-days: 30
+
     - name: Build
       run: npm run build
       
     - name: Report contract validation status
       if: always()
       run: |
-        if [ "${{ job.status }}" == "success" ]; then
-          echo "✅ Contract validation passed - all types compile successfully"
+        # Check if critical steps (TypeScript + Tests) passed
+        # Note: Complexity analysis is warn-only and doesn't affect validation status
+        if [ "${{ steps.type-check.outcome }}" == "success" ] && [ "${{ steps.tests.outcome }}" == "success" ]; then
+          echo "✅ Contract validation passed - TypeScript compilation and tests successful"
+          echo "ℹ️ Complexity analysis completed (warn-only mode)"
         else
-          echo "❌ Contract validation failed - type errors detected"
+          echo "❌ Contract validation failed - critical steps failed"
+          if [ "${{ steps.type-check.outcome }}" != "success" ]; then
+            echo "  - TypeScript compilation failed"
+          fi
+          if [ "${{ steps.tests.outcome }}" != "success" ]; then
+            echo "  - Unit tests failed"
+          fi
           exit 1
         fi

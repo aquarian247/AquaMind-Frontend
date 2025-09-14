@@ -1,7 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useBatchFcr } from './useBatchFcr';
+import {
+  useBatchFcr,
+  filterFeedingEvents,
+  calculateTotalFeedKg,
+  sortGrowthSamples,
+  selectFcrSamples,
+  calculateBiomassGain
+} from './useBatchFcr';
 import { ApiService } from '@/api/generated/services/ApiService';
 
 // Mock the ApiService
@@ -325,6 +332,184 @@ describe('useBatchFcr', () => {
         eventCount: 0,
         sampleCount: 0
       });
+    });
+  });
+
+  describe('filterFeedingEvents', () => {
+    it('should filter events by batch ID', () => {
+      const events = [
+        { id: 1, batch: 42, feeding_date: '2025-01-01' },
+        { id: 2, batch: 99, feeding_date: '2025-01-02' },
+        { id: 3, batch: 42, feeding_date: '2025-01-03' },
+      ];
+
+      const result = filterFeedingEvents(events, 42);
+
+      expect(result).toHaveLength(2);
+      expect(result.map(e => e.id)).toEqual([1, 3]);
+    });
+
+    it('should filter events by date range', () => {
+      const events = [
+        { id: 1, batch: 42, feeding_date: '2025-01-01' },
+        { id: 2, batch: 42, feeding_date: '2025-01-15' },
+        { id: 3, batch: 42, feeding_date: '2025-02-01' },
+      ];
+
+      const dateRange = { from: '2025-01-05', to: '2025-01-25' };
+      const result = filterFeedingEvents(events, 42, dateRange);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(2);
+    });
+
+    it('should handle null feeding dates', () => {
+      const events = [
+        { id: 1, batch: 42, feeding_date: null },
+        { id: 2, batch: 42, feeding_date: '2025-01-15' },
+      ];
+
+      const dateRange = { from: '2025-01-10', to: '2025-01-20' };
+      const result = filterFeedingEvents(events, 42, dateRange);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].id).toBe(2);
+    });
+  });
+
+  describe('calculateTotalFeedKg', () => {
+    it('should calculate total feed amount correctly', () => {
+      const events = [
+        { amount_kg: '10.5' },
+        { amount_kg: '15.0' },
+        { amount_kg: null },
+        { amount_kg: '5' },
+      ];
+
+      const result = calculateTotalFeedKg(events);
+      expect(result).toBe(30.5);
+    });
+
+    it('should handle empty array', () => {
+      const result = calculateTotalFeedKg([]);
+      expect(result).toBe(0);
+    });
+
+    it('should handle invalid amounts', () => {
+      const events = [
+        { amount_kg: '10' },
+        { amount_kg: 'invalid' },
+        { amount_kg: null },
+      ];
+
+      const result = calculateTotalFeedKg(events);
+      expect(result).toBe(10);
+    });
+  });
+
+  describe('sortGrowthSamples', () => {
+    it('should sort samples by date ascending', () => {
+      const samples = [
+        { id: 1, sample_date: '2025-01-15' },
+        { id: 2, sample_date: '2025-01-01' },
+        { id: 3, sample_date: '2025-01-10' },
+      ];
+
+      const result = sortGrowthSamples(samples);
+
+      expect(result.map(s => s.id)).toEqual([2, 3, 1]);
+    });
+
+    it('should handle null sample dates', () => {
+      const samples = [
+        { id: 1, sample_date: null },
+        { id: 2, sample_date: '2025-01-01' },
+      ];
+
+      const result = sortGrowthSamples(samples);
+
+      expect(result.map(s => s.id)).toEqual([1, 2]);
+    });
+  });
+
+  describe('selectFcrSamples', () => {
+    it('should return empty array for no samples', () => {
+      const result = selectFcrSamples([]);
+      expect(result).toEqual([]);
+    });
+
+    it('should return single sample when only one exists', () => {
+      const samples = [{ id: 1, sample_date: '2025-01-01' }];
+      const result = selectFcrSamples(samples);
+      expect(result).toEqual([samples[0]]);
+    });
+
+    it('should select baseline and latest samples correctly', () => {
+      const samples = [
+        { id: 1, sample_date: '2025-01-01' },
+        { id: 2, sample_date: '2025-01-10' },
+        { id: 3, sample_date: '2025-01-20' },
+      ];
+
+      const result = selectFcrSamples(samples);
+      expect(result.map(s => s.id)).toEqual([1, 3]); // First and last
+    });
+
+    it('should filter latest sample by date range', () => {
+      const samples = [
+        { id: 1, sample_date: '2025-01-01' },
+        { id: 2, sample_date: '2025-01-10' },
+        { id: 3, sample_date: '2025-01-25' }, // Outside range
+      ];
+
+      const dateRange = { to: '2025-01-20' };
+      const result = selectFcrSamples(samples, dateRange);
+      expect(result.map(s => s.id)).toEqual([1, 2]); // First and latest within range
+    });
+
+    it('should return both samples when they have different IDs', () => {
+      const samples = [
+        { id: 1, sample_date: '2025-01-01' },
+        { id: 2, sample_date: '2025-01-01' }, // Same date as first but different ID
+      ];
+
+      const result = selectFcrSamples(samples);
+      expect(result).toEqual([samples[0], samples[1]]);
+    });
+  });
+
+  describe('calculateBiomassGain', () => {
+    beforeEach(() => {
+      vi.spyOn(ApiService, 'apiV1BatchBatchesRetrieve').mockResolvedValue({
+        calculated_population_count: 1000,
+      });
+    });
+
+    it('should return 0 for less than 2 samples', async () => {
+      const result = await calculateBiomassGain([{ id: 1 }], 42);
+      expect(result).toBe(0);
+    });
+
+    it('should calculate biomass gain correctly', async () => {
+      const samples = [
+        { id: 1, avg_weight_g: '500' },
+        { id: 2, avg_weight_g: '700' },
+      ];
+
+      const result = await calculateBiomassGain(samples, 42);
+      // ((700-500)/1000) * 1000 = 200
+      expect(result).toBe(200);
+    });
+
+    it('should handle invalid weight values', async () => {
+      const samples = [
+        { id: 1, avg_weight_g: 'invalid' },
+        { id: 2, avg_weight_g: '700' },
+      ];
+
+      const result = await calculateBiomassGain(samples, 42);
+      // ((700-0)/1000) * 1000 = 700
+      expect(result).toBe(700);
     });
   });
 });
