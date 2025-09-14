@@ -51,6 +51,7 @@ export default defineConfig({
         "src/pages/**",
       ],
       thresholds: { lines: 40, statements: 40, functions: 40, branches: 20 },
+      warnOnLowCoverage: true,
     },
   },
 });
