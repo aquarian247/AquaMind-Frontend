@@ -53,12 +53,13 @@ Phase 3 — Reduce CC in high-complexity hook
   - Max CC < 15 for functions in file
   - Hook API unchanged; tests pass
 
-Phase 4 — Centralize remaining direct fetch calls
+Phase 4 — Centralize remaining direct fetch calls ✅ COMPLETED
 - Files: `services/auth.service.ts`, `components/batch-management/BatchFeedHistoryView.tsx`, `lib/queryClient.ts`, `lib/debug.ts`
 - Approach: replace direct `fetch` with generated `ApiService` or `getQueryFn()`; preserve headers, retries, and timeouts
 - Acceptance:
   - No direct `fetch` in app code (generated client internal calls excluded)
   - Auth flow verified against canonical endpoints
+- Completed: 2025-09-14 - Replaced direct fetch calls in auth.service.ts (login/refresh) and BatchFeedHistoryView.tsx (feeding events summary) with ApiService methods. Debug and queryClient utilities determined to be infrastructure code and left unchanged.
 
 Phase 5 — Introduce lightweight CI gates for size/complexity
 - Approach: add npm script to run lizard on src; fail on CC>15 or excessive file length (warn-only initially); add size audit for top pages/components

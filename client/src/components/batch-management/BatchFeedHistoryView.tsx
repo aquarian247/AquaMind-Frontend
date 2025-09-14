@@ -7,7 +7,6 @@ import { subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-
 import { Utensils } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ApiService } from "@/api/generated/services/ApiService";
-import { getAuthToken } from "@/lib/config";
 import { FeedSummaryCards } from "./FeedSummaryCards";
 import { FeedingEventsTab } from "./FeedingEventsTab";
 import { FeedAnalyticsTab } from "./FeedAnalyticsTab";
@@ -105,32 +104,21 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
       try {
         console.log(`📊 Fetching feeding events summary for batch ${batchId} (ALL dates)...`);
 
-        // Call the summary endpoint with batch filter and invalid date to bypass date filtering and get ALL events
+        // Use the generated ApiService with batch filter and invalid date to bypass date filtering and get ALL events
         // The Django backend ignores invalid dates, giving us all events for the batch
-        const baseURL = 'http://localhost:8000'; // Should match your Django backend URL
-        const summaryUrl = `${baseURL}/api/v1/inventory/feeding-events/summary/?batch=${batchId}&date=invalid`;
+        const response = await ApiService.feedingEventsSummary(
+          batchId,    // batch - filter by specific batch
+          undefined,  // container
+          'invalid',  // date - invalid date to bypass filtering
+          undefined,  // endDate
+          undefined   // startDate
+        );
 
-        // Get the auth token from the configured authentication system
-        const authToken = getAuthToken();
-
-        const response = await fetch(summaryUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Token ${authToken}`, // Use proper Django Token format
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('📊 Feeding Events Summary Response:', data);
+        console.log('📊 Feeding Events Summary Response:', response);
 
         return {
-          eventsCount: Number(data.events_count || 0),
-          totalFeedKg: Number(data.total_feed_kg || 0)
+          eventsCount: Number(response.events_count || 0),
+          totalFeedKg: Number(response.total_feed_kg || 0)
         };
       } catch (error) {
         console.error("❌ Failed to fetch feeding events summary:", error);
