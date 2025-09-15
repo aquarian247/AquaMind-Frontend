@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { TypeBadge } from "../components/TypeBadge";
-import { useHistoryDetail, HistoryType } from "../hooks/useHistory";
+import { useHistoryDetail } from "../hooks/useHistory";
+import { HistoryType } from "../hooks/useHistoryFilters";
 import { format } from "date-fns";
 
 interface RecordDetailPageProps {

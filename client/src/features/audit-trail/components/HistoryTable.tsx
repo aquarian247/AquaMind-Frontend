@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Eye, ArrowUpDown } from "lucide-react";
+import { Eye, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -12,19 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TypeBadge } from "./TypeBadge";
 import { EmptyState } from "./EmptyState";
-
-// Generic history record type (will be more specific based on the actual API response)
-interface HistoryRecord {
-  id: number;
-  history_id?: number;
-  history_date: string;
-  history_user: string;
-  history_type: '+' | '~' | '-';
-  history_change_reason?: string;
-  name?: string;
-  // Add other common fields that might exist
-  [key: string]: any;
-}
+import { HistoryRecord } from "../api/api";
 
 interface HistoryTableProps {
   data?: {
@@ -35,6 +23,11 @@ interface HistoryTableProps {
   };
   isLoading?: boolean;
   onViewDetail?: (record: any) => void;
+  onNextPage?: () => void;
+  onPrevPage?: () => void;
+  onGoToPage?: (page: number) => void;
+  currentPage?: number;
+  pageSize?: number;
   className?: string;
 }
 
@@ -42,6 +35,11 @@ export function HistoryTable({
   data,
   isLoading,
   onViewDetail,
+  onNextPage,
+  onPrevPage,
+  onGoToPage,
+  currentPage = 1,
+  pageSize = 25,
   className
 }: HistoryTableProps) {
   if (isLoading) {
@@ -143,13 +141,35 @@ export function HistoryTable({
         </TableBody>
       </Table>
 
-      {/* Pagination info */}
+      {/* Pagination controls */}
       <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/50">
         <div className="text-sm text-muted-foreground">
-          Showing {data.results.length} of {data.count} records
+          Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, data.count)} of {data.count} records
         </div>
-        <div className="text-sm text-muted-foreground">
-          Page {Math.ceil((data.results.length > 0 ? 1 : 0))} of {Math.ceil(data.count / 25)}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onPrevPage}
+            disabled={!data.previous || currentPage <= 1}
+            className="h-8"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          <div className="text-sm text-muted-foreground px-2">
+            Page {currentPage} of {Math.ceil(data.count / pageSize)}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onNextPage}
+            disabled={!data.next}
+            className="h-8"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </div>

@@ -5,7 +5,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AppDomain, getAvailableModels } from "../hooks/useHistory";
+import { getAvailableModels } from "../index";
+import type { AppDomain } from "../index";
 
 interface ModelSelectorProps {
   appDomain: AppDomain;

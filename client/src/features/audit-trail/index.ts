@@ -14,5 +14,7 @@ export { FilterBar } from './components/FilterBar';
 export { HistoryTable } from './components/HistoryTable';
 
 // Re-export types and constants
-export type { HistoryType, HistoryFilters, AppDomain } from './hooks/useHistory';
-export { APP_DOMAINS, getAvailableModels, getHistoryTypeLabel, getHistoryTypeColor } from './hooks/useHistory';
+export type { HistoryFilters, AppDomain, HistoryRecord, PaginatedHistoryResponse } from './api/api';
+export type { HistoryType } from './hooks/useHistoryFilters';
+export { APP_DOMAINS, getAvailableModels } from './api/api';
+export { getHistoryTypeLabel, getHistoryTypeColor } from './hooks/useHistory';

@@ -1,28 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { History, BarChart3, Database, Stethoscope, Calculator, Users } from "lucide-react";
 import { FilterBar } from "../components/FilterBar";
 import { HistoryTable } from "../components/HistoryTable";
 import { ModelSelector } from "../components/ModelSelector";
-import { useHistoryList, APP_DOMAINS, AppDomain } from "../hooks/useHistory";
+import { useHistoryList } from "../hooks/useHistory";
+import { APP_DOMAINS, getAvailableModels } from "../index";
+import type { AppDomain } from "../index";
 import { useHistoryFilters } from "../hooks/useHistoryFilters";
 
 export function OverviewPage() {
   const [selectedTab, setSelectedTab] = useState<AppDomain>(APP_DOMAINS.BATCH);
   const { filters, updateFilters, resetFilters, getApiFilters } = useHistoryFilters();
 
+  // Initialize default model when component loads or tab changes
+  useEffect(() => {
+    if (!filters.selectedModel) {
+      const availableModels = getAvailableModels(selectedTab);
+      if (availableModels.length > 0) {
+        updateFilters({ selectedModel: availableModels[0].value });
+      }
+    }
+  }, [selectedTab, filters.selectedModel, updateFilters]);
+
+  // Get the effective model (use selectedModel if available, otherwise get first available model)
+  const effectiveModel = filters.selectedModel || getAvailableModels(selectedTab)[0]?.value || '';
+
   const { data, isLoading, error } = useHistoryList(
     selectedTab,
-    filters.selectedModel || '',
+    effectiveModel,
     getApiFilters()
   );
 
-  // For now, only show data for batch tab since we're only fetching batch data
-  const displayData = selectedTab === 'batch' ? data : undefined;
+  // Use data for the currently selected tab
+  const displayData = data;
 
   const handleTabChange = (value: string) => {
-    setSelectedTab(value as AppDomain);
-    // Reset model selection when changing tabs
+    const newTab = value as AppDomain;
+    setSelectedTab(newTab);
+    // Reset model selection when changing tabs, but it will be set to default by useEffect
     updateFilters({ selectedModel: undefined });
   };
 
@@ -101,18 +117,22 @@ export function OverviewPage() {
         <div className="mt-4">
           <ModelSelector
             appDomain={selectedTab}
-            selectedModel={filters.selectedModel}
+            selectedModel={effectiveModel}
             onModelChange={(model) => updateFilters({ selectedModel: model })}
           />
         </div>
 
         {/* Content for each tab */}
-        {Object.values(APP_DOMAINS).map((domain) => (
+        {Object.values(APP_DOMAINS).map((domain: AppDomain) => (
           <TabsContent key={domain} value={domain} className="mt-6">
             <HistoryTable
               data={selectedTab === domain ? displayData : undefined}
               isLoading={selectedTab === domain ? isLoading : false}
               onViewDetail={handleViewDetail}
+              onNextPage={() => updateFilters({ page: (filters.page || 1) + 1 })}
+              onPrevPage={() => updateFilters({ page: Math.max(1, (filters.page || 1) - 1) })}
+              currentPage={filters.page || 1}
+              pageSize={filters.pageSize || 25}
             />
           </TabsContent>
         ))}

@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import { HistoryType, getHistoryTypeLabel, getHistoryTypeColor } from "../hooks/useHistory";
+import { getHistoryTypeLabel, getHistoryTypeColor } from "../hooks/useHistory";
+import { HistoryType } from "../hooks/useHistoryFilters";
 
 interface TypeBadgeProps {
   type: HistoryType;

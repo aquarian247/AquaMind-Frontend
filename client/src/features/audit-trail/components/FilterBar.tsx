@@ -18,8 +18,7 @@ import {
 import { CalendarIcon, X, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { HistoryFilterState } from "../hooks/useHistoryFilters";
-import { HistoryType } from "../hooks/useHistory";
+import { HistoryFilterState, HistoryType } from "../hooks/useHistoryFilters";
 
 interface FilterBarProps {
   filters: HistoryFilterState;
@@ -219,6 +218,25 @@ export function FilterBar({
                 <SelectItem value="+">Created</SelectItem>
                 <SelectItem value="~">Updated</SelectItem>
                 <SelectItem value="-">Deleted</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Page Size Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Page Size</Label>
+            <Select
+              value={filters.pageSize?.toString() || "25"}
+              onValueChange={(value) => onFiltersChange({ pageSize: parseInt(value) })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="25" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
           </div>

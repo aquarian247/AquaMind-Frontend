@@ -1,5 +1,8 @@
 import { useState, useCallback } from 'react';
-import { HistoryFilters, HistoryType } from './useHistory';
+import { HistoryFilters } from '../api/api';
+
+// History type for change types
+export type HistoryType = '+' | '~' | '-';
 
 export interface HistoryFilterState extends HistoryFilters {
   selectedModel?: string;

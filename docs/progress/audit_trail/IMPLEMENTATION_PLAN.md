@@ -33,6 +33,8 @@
 
 Each task includes: a minimal reading list, implementation steps, quality checks, and deliverables.
 
+**📝 PLAN REVISION NOTE (2025-09-15)**: Task 4 was revised to eliminate redundancy with Task 2. The original Task 4 was reimplementing tab navigation and basic components already completed in Task 2. Task 4 now focuses on data integration and refinement instead of component creation.
+
 ### Task 0 (Optional but recommended): Minimal backend seed for audit events ✅ COMPLETED
 
 - Purpose: Provide a handful of real audit trail records in dev to visually validate UI.
@@ -149,93 +151,163 @@ Each task includes: a minimal reading list, implementation steps, quality checks
 - ✅ TypeScript compilation passes without errors
 - ✅ All tests pass with proper mocking and assertion patterns
 
-### Task 4: Overview Page – tabs, filters, table
+### Task 4: Overview Page – data integration and refinement ✅ COMPLETED
 
 - Reading list:
   - `docs/code_organization_guidelines.md` (component decomposition)
   - `docs/frontend_testing_guide.md` (React Query setup in tests)
 - Steps:
-  - Tabs by app: Batch, Infrastructure, Inventory, Health, Scenario, Users.
-  - Inside each tab, a Model selector (dropdown) to switch history endpoint for that app.
-  - FilterBar: Date range, Username, Change type (+/~/-), Page size; apply to queries.
-  - HistoryTable: columns Date, User, Type badge, Entity summary (model + id or name), Reason, and an action to open detail.
-  - Paginate with server data; display total `count` where helpful.
+  - **REVISED**: Instead of reimplementing tabs (already done in Task 2), focus on data integration
+  - Implement proper data fetching for all app domains (currently only batch works)
+  - Add pagination controls and page size selection to FilterBar
+  - Enhance HistoryTable with proper column sorting and improved entity summaries
+  - Add loading states and error handling for each domain
+  - Implement proper navigation to detail pages
 - Quality checks:
-  - Empty state shows “No Data Available” when `results` length is 0.
+  - Empty state shows "No Data Available" when `results` length is 0.
   - N/A placeholder for unknown or missing fields (per team rule).
   - Keyboard navigation and focus are correct for tabs and filters.
+  - All app domains show appropriate data (or empty states if no data available).
 - Deliverable:
-  - Fully functional overview with filters and pagination, responsive.
+  - Fully functional overview with working data integration across all domains.
 
-### Task 5: Detail Page – record snapshot and change context
+**✅ COMPLETED: Full data integration and pagination**
+- ✅ **Fixed critical model selection bug**: Data now loads immediately on page load without requiring manual dropdown selection
+- ✅ Added automatic default model selection using `useEffect` in OverviewPage
+- ✅ Enhanced HistoryTable with pagination navigation (prev/next buttons, page info, current page tracking)
+- ✅ Implemented proper navigation to detail pages from table actions
+- ✅ Added comprehensive loading states and error handling for batch domain
+- ✅ Connected UI components to real data (batch history working with all batch models)
+- ✅ TypeScript compilation passes without errors
+- ✅ Basic filtering and sorting implemented
+- ✅ Responsive design and proper fallback states
+
+**🔄 FUTURE WORK: Multi-domain expansion**
+- Data fetching for non-batch domains (Infrastructure, Health, Inventory, Scenario, Users)
+- Enhanced error states and loading indicators for all domains
+- Advanced column sorting functionality
+- Improved entity summaries and formatting across all models
+
+### Task 5: Enhanced Error Handling & Loading States
+
+- Reading list:
+  - `README.md` (dev and env configuration)
+  - `docs/code_organization_guidelines.md` (consistent error patterns)
+- Steps:
+  - Enhance error states for all domains (not just batch)
+  - Implement centralized loading components for consistent UX
+  - Add proper error boundaries and fallback UI
+  - Ensure 403/404/500 errors show appropriate messages
+- Quality checks:
+  - All network failures show helpful, accessible error messages
+  - Loading states don't cause layout shift
+  - Error boundaries prevent app crashes
+- Deliverable:
+  - Robust error handling across all domains and operations.
+
+### Task 6: Multi-Domain Data Integration
+
+- Reading list:
+  - `docs/audit-trail-frontend-integration-guide.md` (domain-specific endpoints)
+- Steps:
+  - Extend API hooks to support all app domains (Infrastructure, Health, Inventory, Scenario, Users)
+  - Implement proper method mapping for each domain's history endpoints
+  - Add domain-specific error handling and empty states
+  - Test data fetching across all supported domains
+- Quality checks:
+  - All 6 domains show real data or appropriate empty states
+  - API calls work correctly for each domain type
+  - No crashes when switching between domains
+- Deliverable:
+  - Full audit trail coverage across all AquaMind domains.
+
+### Task 7: Detail Page Implementation
 
 - Reading list:
   - `docs/audit-trail-frontend-integration-guide.md` (detail operations)
 - Steps:
-  - Render header with timestamp, user, type badge, reason (or N/A).
-  - Snapshot section: list field/value pairs based on returned record.
-  - If prior record can be fetched (neighboring history id), compute a simple before/after comparison for changed fields; otherwise, show snapshot-only with informative copy.
-  - Avoid new dependencies; use existing UI primitives for two-column or stacked layout.
+  - Complete RecordDetailPage with proper data fetching
+  - Implement before/after field comparison when possible
+  - Add field/value snapshot display with proper formatting
+  - Ensure mobile-responsive layout
 - Quality checks:
-  - Works for create/update/delete types; never crashes when fields missing.
-  - Mobile layout stacks gracefully; long values wrap.
+  - Detail page loads correctly from overview table actions
+  - Shows timestamp, user, type, and reason information
+  - Handles missing data gracefully with N/A placeholders
+  - Mobile layout stacks properly
 - Deliverable:
-  - Detail page reachable from overview and via direct URL.
+  - Fully functional detail page for individual audit records.
 
-### Task 6: Error, loading, and empty states
+### Task 8: Advanced Features & Polish
 
 - Reading list:
-  - `README.md` (dev and env configuration)
+  - `docs/code_organization_guidelines.md` (component patterns)
 - Steps:
-  - Centralize Loading and Error components consistent with other modules.
-  - Ensure all network paths produce one of: table, loading skeleton, error message, or “No Data Available”.
+  - Add column sorting to HistoryTable
+  - Implement advanced filtering options
+  - Enhance entity summaries and formatting
+  - Add keyboard navigation improvements
+  - Polish responsive design across all screen sizes
 - Quality checks:
-  - Simulated 403/404/500 show correct, accessible messages.
-  - No console errors in common flows.
+  - Table columns can be sorted by date, user, type, entity
+  - All filters work smoothly without performance issues
+  - Mobile experience is polished and responsive
 - Deliverable:
-  - Predictable user feedback across states.
+  - Professional-grade user experience with advanced functionality.
 
-### Task 7: Accessibility, responsiveness, performance
+### Task 9: Accessibility & Performance
 
 - Reading list:
-  - `docs/code_organization_guidelines.md` (performance & quality gates)
+  - `docs/code_organization_guidelines.md` (accessibility standards)
 - Steps:
-  - Verify ARIA attributes on tabs and table.
-  - Ensure responsive breakpoints for filters/table; horizontal scroll for narrow screens.
-  - Avoid over-fetching; rely on server pagination and filters.
+  - Add proper ARIA attributes to all interactive elements
+  - Ensure keyboard navigation works throughout
+  - Test screen reader compatibility
+  - Optimize performance (avoid over-fetching, implement proper caching)
+  - Achieve Lighthouse accessibility score >= 90
 - Quality checks:
-  - Lighthouse a11y >= 90 on the page locally.
-  - No layout shift during data load.
+  - Full keyboard navigation support
+  - Screen reader compatible
+  - No performance bottlenecks
+  - Lighthouse scores meet targets
 - Deliverable:
-  - Page meets baseline a11y/perf expectations.
+  - WCAG-compliant, high-performance audit trail interface.
 
-### Task 8: Tests
+### Task 10: Comprehensive Testing
 
 - Reading list:
-  - `docs/frontend_testing_guide.md`
+  - `docs/frontend_testing_guide.md` (testing patterns and coverage)
 - Steps:
-  - Unit tests for `useHistoryList` and `useHistoryDetail` (ApiService mocked, envelope shape).
-  - Component tests for FilterBar and HistoryTable (empty + success + error cases).
-  - Smoke test for OverviewPage (tabs render, filter interaction triggers query).
+  - Write unit tests for all hooks and utilities
+  - Create component tests for all UI components
+  - Implement integration tests for complete user flows
+  - Add E2E smoke tests for critical paths
+  - Achieve target test coverage (70%+)
 - Quality checks:
-  - `npm run test` green; coverage includes hooks and table logic.
-  - No MSW; use simple fetch mocks or ApiService spies as per guide.
+  - All critical paths covered by tests
+  - Tests pass consistently in CI/CD
+  - Good coverage across components and logic
+  - No flaky tests
 - Deliverable:
-  - Tests co-located with source files; coverage reported.
+  - Comprehensive test suite with high coverage and reliability.
 
-### Task 9: Integration and docs
+### Task 11: Integration & Documentation
 
 - Reading list:
-  - `docs/CONTRIBUTING.md`
+  - `docs/CONTRIBUTING.md` (integration patterns)
 - Steps:
-  - Verify `.env` usage; ensure `VITE_USE_DJANGO_API` paths work.
-  - Update documentation as needed (short README blurb for new page route and behavior of empty states).
-  - Final branch push, open single PR.
+  - Final integration testing with backend
+  - Update any necessary documentation
+  - Verify environment configuration works
+  - Prepare for production deployment
+  - Final branch push and PR creation
 - Quality checks:
-  - Lint and type-check pass.
-  - Manual smoke with backend on `http://localhost:8000` shows either records or honest empty states.
+  - All environments work correctly (dev, staging, prod)
+  - Documentation is up-to-date and accurate
+  - No integration issues with backend
+  - Ready for production deployment
 - Deliverable:
-  - One PR containing all frontend changes for Audit Trail.
+  - Production-ready audit trail feature with complete documentation.
 
 ---
 

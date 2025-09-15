@@ -112,9 +112,6 @@ export function getHistoryQueryKey(appDomain: AppDomain, model?: string, filters
   return key;
 }
 
-// TODO: In a future implementation, we should create proper method mappings for all app domains and models.
-// For now, we use a simplified approach that defaults to batch history for demonstration purposes.
-// This allows the UI to be built and tested while the backend integration is completed.
 
 // Main hook for fetching history lists
 export function useHistoryList(
@@ -126,14 +123,32 @@ export function useHistoryList(
     queryKey: getHistoryQueryKey(appDomain, model, filters),
     queryFn: async () => {
       try {
-        // For now, default to batch history to avoid complex method signature issues
-        // In a production implementation, we'd use the proper method mapping
-        // or use fetch directly with the correct endpoints
-        return await ApiService.listBatchBatchHistory(
-          undefined, undefined, // batchNumber, batchType
-          filters?.dateFrom, filters?.dateTo, filters?.historyType, filters?.historyUser,
-          undefined, undefined, filters?.page, undefined, undefined, undefined // lifecycleStage, ordering, search, species, status
-        );
+        // For now, focus on batch domain to get basic functionality working
+        // TODO: Expand to other domains once batch is stable
+        if (appDomain === APP_DOMAINS.BATCH && model === 'batch') {
+          return await ApiService.listBatchBatchHistory(
+            undefined, // batchNumber
+            undefined, // batchType
+            filters?.dateFrom,
+            filters?.dateTo,
+            filters?.historyType,
+            filters?.historyUser,
+            undefined, // lifecycleStage
+            undefined, // ordering
+            filters?.page,
+            undefined, // search
+            undefined, // species
+            undefined  // status
+          );
+        } else {
+          // Return empty result for unsupported domains/models for now
+          return {
+            count: 0,
+            next: null,
+            previous: null,
+            results: []
+          };
+        }
       } catch (error) {
         console.error(`Failed to fetch ${appDomain} ${model} history:`, error);
         throw error;
