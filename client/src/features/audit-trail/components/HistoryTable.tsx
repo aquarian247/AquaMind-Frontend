@@ -70,6 +70,19 @@ export function HistoryTable({
 
   const formatEntityName = (record: HistoryRecord): string => {
     // Try different field names that might contain the entity name
+    // For user profiles, prioritize username and user_full_name from User model
+    if ((record as any).username) {
+      return (record as any).username;
+    }
+    if ((record as any).user_full_name) {
+      return (record as any).user_full_name;
+    }
+
+    // For user profiles, if we don't have username, show a meaningful identifier
+    if (record.full_name) {
+      return record.full_name;
+    }
+
     return record.name ||
            record.title ||
            record.batch_number ||
@@ -77,7 +90,7 @@ export function HistoryTable({
            record.station_name ||
            record.container_name ||
            record.username ||
-           `Record #${record.id}`;
+           `Profile ${record.id}`;
   };
 
   const formatEntityType = (record: HistoryRecord): string => {
@@ -88,7 +101,10 @@ export function HistoryTable({
     if (record.area_name) return 'Area';
     if (record.station_name) return 'Station';
     if (record.container_name) return 'Container';
+    if ((record as any).username) return 'User';
     if (record.username) return 'User';
+    if (record.full_name) return 'User Profile';
+    if (record.job_title || record.department || record.geography || record.role) return 'User Profile';
     return 'Record';
   };
 
@@ -125,9 +141,33 @@ export function HistoryTable({
               <TableCell>
                 <div className="space-y-1">
                   <div className="font-medium">{formatEntityName(record)}</div>
-                  <Badge variant="outline" className="text-xs">
-                    {formatEntityType(record)}
-                  </Badge>
+                  <div className="flex flex-wrap gap-1">
+                    <Badge variant="outline" className="text-xs">
+                      {formatEntityType(record)}
+                    </Badge>
+                    {record.role && (
+                      <Badge variant="secondary" className="text-xs">
+                        {record.role}
+                      </Badge>
+                    )}
+                    {record.department && (
+                      <Badge variant="secondary" className="text-xs">
+                        {record.department}
+                      </Badge>
+                    )}
+                  </div>
+                  {/* Show additional user info for user profiles */}
+                  {(record as any).email && (
+                    <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                      {(record as any).email}
+                    </div>
+                  )}
+                  {!record.full_name && record.job_title && (
+                    <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                      {record.job_title}
+                      {record.department && ` • ${record.department}`}
+                    </div>
+                  )}
                 </div>
               </TableCell>
               <TableCell className="max-w-[200px]">

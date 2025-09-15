@@ -221,6 +221,422 @@ export function getHistoryQueryKey(appDomain: AppDomain, model?: string, filters
 }
 
 
+// Type definition for history method mapping
+type HistoryMethodMapping = {
+  list: (filters?: HistoryFilters) => Promise<any>;
+  detail: (id: number) => Promise<any>;
+};
+
+// Method mapping for each domain and model combination
+const HISTORY_METHODS: Record<AppDomain, Record<string, HistoryMethodMapping>> = {
+  [APP_DOMAINS.BATCH]: {
+    'batch': {
+      list: async (filters?: HistoryFilters) => await ApiService.listBatchBatchHistory(
+        undefined, // batchNumber
+        undefined, // batchType
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // lifecycleStage
+        undefined, // ordering
+        filters?.page,
+        undefined, // search
+        undefined, // species
+        undefined  // status
+      ),
+      detail: async (id: number) => await ApiService.retrieveBatchBatchHistoryDetail(id)
+    },
+    'container-assignment': {
+      list: async (filters?: HistoryFilters) => await ApiService.listBatchContainerAssignmentHistory(
+        undefined, // batch
+        undefined, // container
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // lifecycleStage
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveBatchContainerAssignmentHistoryDetail(id)
+    },
+    'growth-sample': {
+      list: async (filters?: HistoryFilters) => await ApiService.listBatchGrowthSampleHistory(
+        undefined, // assignmentBatch
+        undefined, // assignmentContainer
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveBatchGrowthSampleHistoryDetail(id)
+    },
+    'mortality-event': {
+      list: async (filters?: HistoryFilters) => await ApiService.listBatchMortalityEventHistory(
+        undefined, // batch
+        undefined, // cause
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveBatchMortalityEventHistoryDetail(id)
+    },
+    'batch-transfer': {
+      list: async (filters?: HistoryFilters) => await ApiService.listBatchBatchTransferHistory(
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // destinationBatch
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined, // search
+        undefined, // sourceBatch
+        undefined  // transferType
+      ),
+      detail: async (id: number) => await ApiService.retrieveBatchBatchTransferHistoryDetail(id)
+    }
+  },
+  [APP_DOMAINS.INFRASTRUCTURE]: {
+    'area': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureAreaHistory(
+        undefined, // active
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // geography
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveInfrastructureAreaHistoryDetail(id)
+    },
+    'container': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureContainerHistory(
+        undefined, // active
+        undefined, // area
+        undefined, // containerType
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // hall
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveInfrastructureContainerHistoryDetail(id)
+    },
+    'container-type': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureContainerTypeHistory(
+        undefined, // category
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveInfrastructureContainerTypeHistoryDetail(id)
+    },
+    'feed-container': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureFeedContainerHistory(
+        undefined, // active
+        undefined, // area
+        undefined, // containerType
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // hall
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveInfrastructureFeedContainerHistoryDetail(id)
+    },
+    'freshwater-station': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureFreshwaterStationHistory(
+        undefined, // active
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // geography
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined, // search
+        undefined  // stationType
+      ),
+      detail: async (id: number) => await ApiService.retrieveInfrastructureFreshwaterStationHistoryDetail(id)
+    },
+    'geography': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureGeographyHistory(
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // description
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveInfrastructureGeographyHistoryDetail(id)
+    },
+    'hall': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureHallHistory(
+        undefined, // active
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // freshwaterStation
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveInfrastructureHallHistoryDetail(id)
+    },
+    'sensor': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureSensorHistory(
+        undefined, // active
+        undefined, // container
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined, // search
+        undefined  // sensorType
+      ),
+      detail: async (id: number) => await ApiService.retrieveInfrastructureSensorHistoryDetail(id)
+    }
+  },
+  [APP_DOMAINS.INVENTORY]: {
+    'feed-stock': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInventoryFeedStockHistory(
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // feed
+        undefined, // feedContainer
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveInventoryFeedStockHistoryDetail(id)
+    },
+    'feeding-event': {
+      list: async (filters?: HistoryFilters) => await ApiService.listInventoryFeedingEventHistory(
+        undefined, // batch
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // feed
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // method
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveInventoryFeedingEventHistoryDetail(id)
+    }
+  },
+  [APP_DOMAINS.HEALTH]: {
+    'journal-entry': {
+      list: async (filters?: HistoryFilters) => await ApiService.listHealthJournalEntryHistory(
+        undefined, // batch
+        undefined, // category
+        undefined, // container
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined, // resolutionStatus
+        undefined, // search
+        undefined  // severity
+      ),
+      detail: async (id: number) => await ApiService.retrieveHealthJournalEntryHistoryDetail(id)
+    },
+    'health-lab-sample': {
+      list: async (filters?: HistoryFilters) => await ApiService.listHealthHealthLabSampleHistory(
+        undefined, // batchContainerAssignment
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined, // recordedBy
+        undefined, // sampleType
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveHealthHealthLabSampleHistoryDetail(id)
+    },
+    'lice-count': {
+      list: async (filters?: HistoryFilters) => await ApiService.listHealthLiceCountHistory(
+        undefined, // batch
+        undefined, // container
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveHealthLiceCountHistoryDetail(id)
+    },
+    'mortality-record': {
+      list: async (filters?: HistoryFilters) => await ApiService.listHealthMortalityRecordHistory(
+        undefined, // batch
+        undefined, // container
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined, // reason
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveHealthMortalityRecordHistoryDetail(id)
+    },
+    'treatment': {
+      list: async (filters?: HistoryFilters) => await ApiService.listHealthTreatmentHistory(
+        undefined, // batch
+        undefined, // container
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined, // search
+        undefined  // treatmentType
+      ),
+      detail: async (id: number) => await ApiService.retrieveHealthTreatmentHistoryDetail(id)
+    }
+  },
+  [APP_DOMAINS.SCENARIO]: {
+    'scenario': {
+      list: async (filters?: HistoryFilters) => await ApiService.listScenarioScenarioHistory(
+        undefined, // createdBy
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined, // search
+        undefined  // startDate
+      ),
+      detail: async (id: number) => await ApiService.retrieveScenarioScenarioHistoryDetail(id)
+    },
+    'fcr-model': {
+      list: async (filters?: HistoryFilters) => await ApiService.listScenarioFcrModelHistory(
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveScenarioFcrModelHistoryDetail(id)
+    },
+    'mortality-model': {
+      list: async (filters?: HistoryFilters) => await ApiService.listScenarioMortalityModelHistory(
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // frequency
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveScenarioMortalityModelHistoryDetail(id)
+    },
+    'scenario-model-change': {
+      list: async (filters?: HistoryFilters) => await ApiService.listScenarioScenarioModelChangeHistory(
+        undefined, // changeDay
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // newFcrModel
+        undefined, // newMortalityModel
+        undefined, // newTgcModel
+        undefined, // ordering
+        filters?.page,
+        undefined, // scenario
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveScenarioScenarioModelChangeHistoryDetail(id)
+    },
+    'tgc-model': {
+      list: async (filters?: HistoryFilters) => await ApiService.listScenarioTgcModelHistory(
+        filters?.dateFrom,
+        filters?.dateTo,
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // location
+        undefined, // name
+        undefined, // ordering
+        filters?.page,
+        undefined, // releasePeriod
+        undefined  // search
+      ),
+      detail: async (id: number) => await ApiService.retrieveScenarioTgcModelHistoryDetail(id)
+    }
+  },
+  [APP_DOMAINS.USERS]: {
+    'user-profile': {
+      list: async (filters?: HistoryFilters) => await ApiService.listUsersUserProfileHistory(
+        filters?.dateFrom,
+        filters?.dateTo,
+        undefined, // geography
+        filters?.historyType,
+        filters?.historyUser,
+        undefined, // ordering
+        filters?.page,
+        undefined, // role
+        undefined, // search
+        undefined, // subsidiary
+        undefined  // user
+      ),
+      detail: async (id: number) => await ApiService.retrieveUsersUserProfileHistoryDetail(id)
+    }
+  }
+} as const;
+
 // Main hook for fetching history lists
 export function useHistoryList(
   appDomain: AppDomain,
@@ -230,39 +646,17 @@ export function useHistoryList(
   return useQuery({
     queryKey: getHistoryQueryKey(appDomain, model, filters),
     queryFn: async () => {
-      try {
-        // For now, focus on batch domain to get basic functionality working
-        // TODO: Expand to other domains once batch is stable
-        if (appDomain === APP_DOMAINS.BATCH && model === 'batch') {
-          return await ApiService.listBatchBatchHistory(
-            undefined, // batchNumber
-            undefined, // batchType
-            filters?.dateFrom,
-            filters?.dateTo,
-            filters?.historyType,
-            filters?.historyUser,
-            undefined, // lifecycleStage
-            undefined, // ordering
-            filters?.page,
-            undefined, // search
-            undefined, // species
-            undefined  // status
-          );
-        } else {
-          // Return empty result for unsupported domains/models for now
-          return {
-            count: 0,
-            next: null,
-            previous: null,
-            results: []
-          };
-        }
-      } catch (error) {
-        console.error(`Failed to fetch ${appDomain} ${model} history:`, error);
-        // Categorize and re-throw the error for better error handling
-        const categorizedError = categorizeError(error);
-        throw categorizedError;
+      const domainMethods = HISTORY_METHODS[appDomain];
+      if (!domainMethods) {
+        throw new Error(`Unknown domain: ${appDomain}`);
       }
+
+      const modelMethod = domainMethods[model as keyof typeof domainMethods];
+      if (!modelMethod || !modelMethod.list) {
+        throw new Error(`Unknown model: ${model} for domain: ${appDomain}`);
+      }
+
+      return await modelMethod.list(filters);
     },
     enabled: !!(appDomain && model),
     ...HISTORY_QUERY_OPTIONS
@@ -278,16 +672,17 @@ export function useHistoryDetail(
   return useQuery({
     queryKey: getHistoryQueryKey(appDomain, model, undefined, historyId),
     queryFn: async () => {
-      try {
-        // For now, default to batch detail to avoid complex method signature issues
-        // In a production implementation, we'd use the proper method mapping
-        return await ApiService.retrieveBatchBatchHistoryDetail(historyId);
-      } catch (error) {
-        console.error(`Failed to fetch ${appDomain} ${model} history detail:`, error);
-        // Categorize and re-throw the error for better error handling
-        const categorizedError = categorizeError(error);
-        throw categorizedError;
+      const domainMethods = HISTORY_METHODS[appDomain];
+      if (!domainMethods) {
+        throw new Error(`Unknown domain: ${appDomain}`);
       }
+
+      const modelMethod = domainMethods[model as keyof typeof domainMethods];
+      if (!modelMethod || !modelMethod.detail) {
+        throw new Error(`Unknown model: ${model} for domain: ${appDomain}`);
+      }
+
+      return await modelMethod.detail(historyId);
     },
     enabled: !!(appDomain && model && historyId),
     ...HISTORY_QUERY_OPTIONS
