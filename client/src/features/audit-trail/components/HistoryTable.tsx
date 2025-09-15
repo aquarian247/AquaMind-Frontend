@@ -105,11 +105,11 @@ export function HistoryTable({
         <TableBody>
           {data.results.map((record) => (
             <TableRow key={record.history_id || record.id}>
-              <TableCell className="font-mono text-sm">
+              <TableCell className="text-sm">
                 {format(new Date(record.history_date), "MMM dd, yyyy HH:mm")}
               </TableCell>
               <TableCell>
-                <div className="font-medium">{record.history_user}</div>
+                <div className="font-medium">{record.history_user || "N/A"}</div>
               </TableCell>
               <TableCell>
                 <TypeBadge type={record.history_type} />
