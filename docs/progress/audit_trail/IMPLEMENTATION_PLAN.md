@@ -240,9 +240,10 @@ Each task includes: a minimal reading list, implementation steps, quality checks
   - ✅ Clean fallback text ("Profile X") instead of confusing generic labels
 - Deliverable:
   - ✅ Full audit trail coverage across all AquaMind domains with enhanced UX
-- Backend Enhancement Needed:
-  - 🔄 UserProfileHistory serializer needs to expose username, email, and user_full_name fields from User model
-  - 🔄 Issue created for backend team to improve UserProfileHistory API response
+- Backend Enhancement Completed:
+  - ✅ UserProfileHistory serializer now exposes username, email, and user_full_name fields from User model
+  - ✅ Frontend updated to leverage new API fields for enhanced user identification
+  - ✅ Users tab now displays actual usernames instead of "Record #X" entries
 
 ### Task 7: Detail Page Implementation
 

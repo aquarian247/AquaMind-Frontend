@@ -6,7 +6,6 @@
  * History serializer for UserProfile model.
  */
 export type UserProfileHistory = {
-    readonly history_id: number;
     /**
      * User who made the change
      */
@@ -74,5 +73,17 @@ export type UserProfileHistory = {
     readonly created_at: string;
     readonly updated_at: string;
     user?: number | null;
+    /**
+     * Username of the user
+     */
+    readonly username: string;
+    /**
+     * Email address of the user
+     */
+    readonly email: string;
+    /**
+     * Full name from User model
+     */
+    readonly user_full_name: string | null;
 };
 

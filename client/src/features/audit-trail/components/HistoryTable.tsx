@@ -16,6 +16,16 @@ import { TableLoadingState } from "./LoadingState";
 import { ErrorState } from "./ErrorState";
 import { HistoryRecord, ApiError } from "../api/api";
 
+/**
+ * Enhanced HistoryTable with support for UserProfileHistory fields:
+ * - username: User's login name (e.g., "john.doe")
+ * - email: User's email address (e.g., "john.doe@company.com")
+ * - user_full_name: Full name from User model (e.g., "John Doe")
+ *
+ * These fields are now properly included in UserProfileHistory API responses
+ * and provide meaningful user identification instead of generic "Record #X".
+ */
+
 interface HistoryTableProps {
   data?: {
     results: any[];
@@ -69,13 +79,13 @@ export function HistoryTable({
   }
 
   const formatEntityName = (record: HistoryRecord): string => {
-    // Try different field names that might contain the entity name
-    // For user profiles, prioritize username and user_full_name from User model
-    if ((record as any).username) {
-      return (record as any).username;
+    // Check if this is a UserProfileHistory record with the new fields
+    const userRecord = record as any;
+    if (userRecord.username) {
+      return userRecord.username;
     }
-    if ((record as any).user_full_name) {
-      return (record as any).user_full_name;
+    if (userRecord.user_full_name) {
+      return userRecord.user_full_name;
     }
 
     // For user profiles, if we don't have username, show a meaningful identifier
@@ -97,11 +107,17 @@ export function HistoryTable({
     // Extract model type from the record structure
     // This is a simplified approach - in a real implementation,
     // you might want to pass the model type as a prop
+
+    // Check for UserProfile records first (has username field from User model)
+    const userRecord = record as any;
+    if (userRecord.username || userRecord.email || userRecord.user_full_name) {
+      return 'User Profile';
+    }
+
     if (record.batch_number) return 'Batch';
     if (record.area_name) return 'Area';
     if (record.station_name) return 'Station';
     if (record.container_name) return 'Container';
-    if ((record as any).username) return 'User';
     if (record.username) return 'User';
     if (record.full_name) return 'User Profile';
     if (record.job_title || record.department || record.geography || record.role) return 'User Profile';
@@ -162,7 +178,13 @@ export function HistoryTable({
                       {(record as any).email}
                     </div>
                   )}
-                  {!record.full_name && record.job_title && (
+                  {/* Show full name if different from username */}
+                  {(record as any).user_full_name && (record as any).username !== (record as any).user_full_name && (
+                    <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                      {(record as any).user_full_name}
+                    </div>
+                  )}
+                  {!record.full_name && !(record as any).user_full_name && record.job_title && (
                     <div className="text-xs text-muted-foreground truncate max-w-[200px]">
                       {record.job_title}
                       {record.department && ` • ${record.department}`}
