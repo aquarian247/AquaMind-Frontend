@@ -42,6 +42,9 @@ import ScenarioPlanning from "@/pages/ScenarioPlanning";
 import { ScenarioDetailPage } from "@/pages/ScenarioDetailPage";
 import NotFound from "@/pages/not-found";
 
+const AuditTrailOverview = lazy(() => import("@/features/audit-trail").then(m => ({ default: m.OverviewPage })));
+const AuditTrailDetail = lazy(() => import("@/features/audit-trail").then(m => ({ default: m.RecordDetailPage })));
+
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 
@@ -333,7 +336,27 @@ function Router() {
           </AppLayout>
         </ProtectedRoute>
       </Route>
-      
+
+      <Route path="/audit-trail">
+        <ProtectedRoute>
+          <AppLayout>
+            <Suspense fallback={<div>Loading...</div>}>
+              <AuditTrailOverview />
+            </Suspense>
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/audit-trail/:id">
+        <ProtectedRoute>
+          <AppLayout>
+            <Suspense fallback={<div>Loading...</div>}>
+              <AuditTrailDetail />
+            </Suspense>
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
       <Route>
         <ProtectedRoute>
           <AppLayout>
