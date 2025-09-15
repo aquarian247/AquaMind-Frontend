@@ -20,7 +20,7 @@ export function RecordDetailPage({ params }: RecordDetailPageProps = {}) {
 
   // For now, we'll default to batch domain - in a real implementation,
   // you'd want to determine the domain from the route or context
-  const { data, isLoading, error } = useHistoryDetail("batch", historyId);
+  const { data, isLoading, error } = useHistoryDetail("batch", "batch", historyId);
 
   if (isLoading) {
     return (

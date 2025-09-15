@@ -13,7 +13,7 @@ export function OverviewPage() {
 
   const { data, isLoading, error } = useHistoryList(
     selectedTab,
-    filters.selectedModel,
+    filters.selectedModel || '',
     getApiFilters()
   );
 
