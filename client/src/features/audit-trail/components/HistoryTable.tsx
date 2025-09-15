@@ -12,7 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TypeBadge } from "./TypeBadge";
 import { EmptyState } from "./EmptyState";
-import { HistoryRecord } from "../api/api";
+import { TableLoadingState } from "./LoadingState";
+import { ErrorState } from "./ErrorState";
+import { HistoryRecord, ApiError } from "../api/api";
 
 interface HistoryTableProps {
   data?: {
@@ -22,6 +24,7 @@ interface HistoryTableProps {
     previous?: string | null;
   };
   isLoading?: boolean;
+  error?: ApiError | unknown;
   onViewDetail?: (record: any) => void;
   onNextPage?: () => void;
   onPrevPage?: () => void;
@@ -34,6 +37,7 @@ interface HistoryTableProps {
 export function HistoryTable({
   data,
   isLoading,
+  error,
   onViewDetail,
   onNextPage,
   onPrevPage,
@@ -42,18 +46,24 @@ export function HistoryTable({
   pageSize = 25,
   className
 }: HistoryTableProps) {
-  if (isLoading) {
+  // Show error state if there's an error
+  if (error) {
+    const apiError = error as ApiError;
     return (
-      <div className={`space-y-4 ${className || ''}`}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="h-12 bg-muted rounded"></div>
-          </div>
-        ))}
-      </div>
+      <ErrorState
+        error={apiError}
+        statusCode={apiError.statusCode}
+        className={className}
+      />
     );
   }
 
+  // Show loading state
+  if (isLoading) {
+    return <TableLoadingState className={className} />;
+  }
+
+  // Show empty state if no data
   if (!data || !data.results || data.results.length === 0) {
     return <EmptyState className={className} />;
   }

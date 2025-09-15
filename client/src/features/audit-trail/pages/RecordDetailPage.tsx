@@ -5,8 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { TypeBadge } from "../components/TypeBadge";
+import { ErrorBoundary } from "../components/ErrorBoundary";
+import { ErrorState, NotFoundErrorState } from "../components/ErrorState";
+import { PageLoadingState } from "../components/LoadingState";
 import { useHistoryDetail } from "../hooks/useHistory";
 import { HistoryType } from "../hooks/useHistoryFilters";
+import { ApiError } from "../api/api";
 import { format } from "date-fns";
 
 interface RecordDetailPageProps {
@@ -21,36 +25,46 @@ export function RecordDetailPage({ params }: RecordDetailPageProps = {}) {
 
   // For now, we'll default to batch domain - in a real implementation,
   // you'd want to determine the domain from the route or context
-  const { data, isLoading, error } = useHistoryDetail("batch", "batch", historyId);
+  const { data, isLoading, error, refetch } = useHistoryDetail("batch", "batch", historyId);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-pulse">
-          <div className="h-8 bg-muted rounded w-48 mb-4"></div>
-          <div className="h-32 bg-muted rounded"></div>
+  const handleRetry = () => {
+    refetch();
+  };
+
+  // Show loading state
+  if (isLoading && !data) {
+    return <PageLoadingState />;
+  }
+
+  // Show error state with appropriate messages
+  if (error) {
+    const apiError = error as ApiError;
+
+    // Special handling for 404 errors
+    if (apiError.statusCode === 404) {
+      return (
+        <div className="container mx-auto p-4">
+          <NotFoundErrorState />
         </div>
+      );
+    }
+
+    return (
+      <div className="container mx-auto p-4">
+        <ErrorState
+          error={apiError}
+          statusCode={apiError.statusCode}
+          onRetry={handleRetry}
+        />
       </div>
     );
   }
 
-  if (error || !data) {
+  // Show not found if no data but no error (shouldn't happen with proper error handling)
+  if (!data) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-destructive mb-2">
-            Record Not Found
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            The requested history record could not be found.
-          </p>
-          <Button asChild>
-            <Link href="/audit-trail">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Audit Trail
-            </Link>
-          </Button>
-        </div>
+      <div className="container mx-auto p-4">
+        <NotFoundErrorState />
       </div>
     );
   }
@@ -76,22 +90,23 @@ export function RecordDetailPage({ params }: RecordDetailPageProps = {}) {
   );
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      {/* Header with Back Button */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/audit-trail">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Audit Trail
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">History Record Details</h1>
-          <p className="text-muted-foreground">
-            Record #{data.history_id || (data as any).id || 'Unknown'}
-          </p>
+    <ErrorBoundary>
+      <div className="container mx-auto p-4 space-y-6">
+        {/* Header with Back Button */}
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/audit-trail">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Audit Trail
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">History Record Details</h1>
+            <p className="text-muted-foreground">
+              Record #{data.history_id || (data as any).id || 'Unknown'}
+            </p>
+          </div>
         </div>
-      </div>
 
       {/* Record Summary Card */}
       <Card>
@@ -173,6 +188,7 @@ export function RecordDetailPage({ params }: RecordDetailPageProps = {}) {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

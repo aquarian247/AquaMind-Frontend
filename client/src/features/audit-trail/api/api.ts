@@ -87,11 +87,119 @@ export const APP_MODELS = {
   ]
 } as const;
 
+// Error types for better error categorization
+export interface ApiError {
+  message: string;
+  statusCode?: number;
+  type: 'network' | 'auth' | 'permission' | 'not_found' | 'server' | 'validation' | 'unknown';
+  originalError?: unknown;
+}
+
+// Utility function to categorize errors
+export function categorizeError(error: unknown): ApiError {
+  if (!error) {
+    return {
+      message: 'An unknown error occurred',
+      type: 'unknown',
+      originalError: error
+    };
+  }
+
+  const errorString = String(error);
+
+  // Check for network errors
+  if (errorString.includes('fetch') || errorString.includes('network') || errorString.includes('Failed to fetch')) {
+    return {
+      message: 'Unable to connect to the server. Please check your internet connection.',
+      type: 'network',
+      originalError: error
+    };
+  }
+
+  // Extract status code from error message
+  const statusMatch = errorString.match(/(\d{3}):/);
+  const statusCode = statusMatch ? parseInt(statusMatch[1], 10) : undefined;
+
+  switch (statusCode) {
+    case 400:
+      return {
+        message: 'Invalid request parameters. Please check your filters.',
+        statusCode: 400,
+        type: 'validation',
+        originalError: error
+      };
+
+    case 401:
+      return {
+        message: 'Your session has expired. Please log in again.',
+        statusCode: 401,
+        type: 'auth',
+        originalError: error
+      };
+
+    case 403:
+      return {
+        message: 'You don\'t have permission to view this audit trail data.',
+        statusCode: 403,
+        type: 'permission',
+        originalError: error
+      };
+
+    case 404:
+      return {
+        message: 'The requested audit trail data could not be found.',
+        statusCode: 404,
+        type: 'not_found',
+        originalError: error
+      };
+
+    case 429:
+      return {
+        message: 'Too many requests. Please wait a moment before trying again.',
+        statusCode: 429,
+        type: 'server',
+        originalError: error
+      };
+
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return {
+        message: 'Server error. Please try again later.',
+        statusCode,
+        type: 'server',
+        originalError: error
+      };
+
+    default:
+      // Try to extract meaningful message from error
+      const messageMatch = errorString.match(/:\s*(.+)/);
+      const extractedMessage = messageMatch ? messageMatch[1] : errorString;
+
+      return {
+        message: extractedMessage || 'An unexpected error occurred while loading audit trail data.',
+        statusCode,
+        type: 'unknown',
+        originalError: error
+      };
+  }
+}
+
 // Centralized query options
 const HISTORY_QUERY_OPTIONS = {
   staleTime: 5 * 60 * 1000, // 5 minutes
   gcTime: 10 * 60 * 1000, // 10 minutes
-  retry: false, // No retry for predictability in tests
+  retry: (failureCount: number, error: unknown) => {
+    // Don't retry on auth errors (401) or permission errors (403)
+    const categorizedError = categorizeError(error);
+    if (categorizedError.type === 'auth' || categorizedError.type === 'permission') {
+      return false;
+    }
+    // Retry once for network/server errors
+    return failureCount < 1;
+  },
+  retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
 } as const;
 
 // Helper function to generate consistent query keys
@@ -151,7 +259,9 @@ export function useHistoryList(
         }
       } catch (error) {
         console.error(`Failed to fetch ${appDomain} ${model} history:`, error);
-        throw error;
+        // Categorize and re-throw the error for better error handling
+        const categorizedError = categorizeError(error);
+        throw categorizedError;
       }
     },
     enabled: !!(appDomain && model),
@@ -174,7 +284,9 @@ export function useHistoryDetail(
         return await ApiService.retrieveBatchBatchHistoryDetail(historyId);
       } catch (error) {
         console.error(`Failed to fetch ${appDomain} ${model} history detail:`, error);
-        throw error;
+        // Categorize and re-throw the error for better error handling
+        const categorizedError = categorizeError(error);
+        throw categorizedError;
       }
     },
     enabled: !!(appDomain && model && historyId),
