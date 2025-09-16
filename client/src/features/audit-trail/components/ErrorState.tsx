@@ -40,7 +40,7 @@ export function ErrorState({
       aria-atomic="true"
     >
       <div className="max-w-md w-full">
-        <Alert variant="destructive" role="alert">
+        <Alert variant="destructive">
           <Icon className="h-4 w-4" aria-hidden="true" />
           <AlertTitle>{displayTitle}</AlertTitle>
           <AlertDescription className="mt-2">

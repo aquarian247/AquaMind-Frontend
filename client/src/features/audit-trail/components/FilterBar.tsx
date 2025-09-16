@@ -299,6 +299,7 @@ export function FilterBar({
                 size="sm"
                 className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                 onClick={clearDateFrom}
+                aria-label={`Clear from date filter: ${format(new Date(filters.dateFrom), "MMM dd, yyyy")}`}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -313,6 +314,7 @@ export function FilterBar({
                 size="sm"
                 className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                 onClick={clearDateTo}
+                aria-label={`Clear to date filter: ${format(new Date(filters.dateTo), "MMM dd, yyyy")}`}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -326,6 +328,7 @@ export function FilterBar({
                 size="sm"
                 className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                 onClick={clearUserFilter}
+                aria-label={`Clear user filter: ${filters.historyUser}`}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -339,6 +342,7 @@ export function FilterBar({
                 size="sm"
                 className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
                 onClick={clearTypeFilter}
+                aria-label={`Clear type filter: ${filters.historyType === '+' ? 'Created' : filters.historyType === '~' ? 'Updated' : 'Deleted'}`}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -455,12 +459,12 @@ export function FilterBar({
 
           {/* Change Type Filter */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Change Type</Label>
+            <Label htmlFor="change-type-select" className="text-sm font-medium">Change Type</Label>
             <Select
               value={filters.historyType || "all"}
               onValueChange={handleTypeChange}
             >
-              <SelectTrigger>
+              <SelectTrigger id="change-type-select">
                 <SelectValue placeholder="All types" />
               </SelectTrigger>
               <SelectContent>
@@ -474,12 +478,12 @@ export function FilterBar({
 
           {/* Page Size Filter */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Page Size</Label>
+            <Label htmlFor="page-size-select" className="text-sm font-medium">Page Size</Label>
             <Select
               value={filters.pageSize?.toString() || "25"}
               onValueChange={(value) => onFiltersChange({ pageSize: parseInt(value) })}
             >
-              <SelectTrigger>
+              <SelectTrigger id="page-size-select">
                 <SelectValue placeholder="25" />
               </SelectTrigger>
               <SelectContent>

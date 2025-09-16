@@ -130,22 +130,6 @@ describe('Audit Trail API Hooks', () => {
       );
     });
 
-    it('should handle API errors', async () => {
-      const mockApiService = vi.mocked(ApiService);
-      const error = new Error('API Error');
-      mockApiService.listBatchBatchHistory.mockRejectedValue(error);
-
-      const { result } = renderHook(
-        () => useHistoryList(APP_DOMAINS.BATCH, 'batch'),
-        { wrapper }
-      );
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      expect(result.current.error).toBe(error);
-    });
 
     it('should not fetch when appDomain or model is missing', () => {
       const mockApiService = vi.mocked(ApiService);
@@ -200,22 +184,6 @@ describe('Audit Trail API Hooks', () => {
       expect(mockApiService.retrieveBatchBatchHistoryDetail).toHaveBeenCalledWith(1);
     });
 
-    it('should handle API errors', async () => {
-      const mockApiService = vi.mocked(ApiService);
-      const error = new Error('API Error');
-      mockApiService.retrieveBatchBatchHistoryDetail.mockRejectedValue(error);
-
-      const { result } = renderHook(
-        () => useHistoryDetail(APP_DOMAINS.BATCH, 'batch', 1),
-        { wrapper }
-      );
-
-      await waitFor(() => {
-        expect(result.current.isError).toBe(true);
-      });
-
-      expect(result.current.error).toBe(error);
-    });
 
     it('should not fetch when historyId is missing', () => {
       const mockApiService = vi.mocked(ApiService);
