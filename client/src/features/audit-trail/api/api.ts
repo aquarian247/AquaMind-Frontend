@@ -95,6 +95,18 @@ export interface ApiError {
   originalError?: unknown;
 }
 
+// Error status code mappings for reduced complexity
+const ERROR_STATUS_MAP = {
+  400: { message: 'Invalid request parameters. Please check your filters.', type: 'validation' as const },
+  401: { message: 'Your session has expired. Please log in again.', type: 'auth' as const },
+  403: { message: 'You don\'t have permission to view this audit trail data.', type: 'permission' as const },
+  404: { message: 'The requested audit trail data could not be found.', type: 'not_found' as const },
+  429: { message: 'Too many requests. Please wait a moment before trying again.', type: 'server' as const },
+} as const;
+
+// Server error status codes that share the same handling
+const SERVER_ERROR_CODES = [500, 502, 503, 504];
+
 // Utility function to categorize errors
 export function categorizeError(error: unknown): ApiError {
   if (!error) {
@@ -107,7 +119,7 @@ export function categorizeError(error: unknown): ApiError {
 
   const errorString = String(error);
 
-  // Check for network errors
+  // Check for network errors first
   if (errorString.includes('fetch') || errorString.includes('network') || errorString.includes('Failed to fetch')) {
     return {
       message: 'Unable to connect to the server. Please check your internet connection.',
@@ -120,70 +132,37 @@ export function categorizeError(error: unknown): ApiError {
   const statusMatch = errorString.match(/(\d{3}):/);
   const statusCode = statusMatch ? parseInt(statusMatch[1], 10) : undefined;
 
-  switch (statusCode) {
-    case 400:
-      return {
-        message: 'Invalid request parameters. Please check your filters.',
-        statusCode: 400,
-        type: 'validation',
-        originalError: error
-      };
-
-    case 401:
-      return {
-        message: 'Your session has expired. Please log in again.',
-        statusCode: 401,
-        type: 'auth',
-        originalError: error
-      };
-
-    case 403:
-      return {
-        message: 'You don\'t have permission to view this audit trail data.',
-        statusCode: 403,
-        type: 'permission',
-        originalError: error
-      };
-
-    case 404:
-      return {
-        message: 'The requested audit trail data could not be found.',
-        statusCode: 404,
-        type: 'not_found',
-        originalError: error
-      };
-
-    case 429:
-      return {
-        message: 'Too many requests. Please wait a moment before trying again.',
-        statusCode: 429,
-        type: 'server',
-        originalError: error
-      };
-
-    case 500:
-    case 502:
-    case 503:
-    case 504:
-      return {
-        message: 'Server error. Please try again later.',
-        statusCode,
-        type: 'server',
-        originalError: error
-      };
-
-    default:
-      // Try to extract meaningful message from error
-      const messageMatch = errorString.match(/:\s*(.+)/);
-      const extractedMessage = messageMatch ? messageMatch[1] : errorString;
-
-      return {
-        message: extractedMessage || 'An unexpected error occurred while loading audit trail data.',
-        statusCode,
-        type: 'unknown',
-        originalError: error
-      };
+  // Handle server errors
+  if (statusCode && SERVER_ERROR_CODES.includes(statusCode)) {
+    return {
+      message: 'Server error. Please try again later.',
+      statusCode,
+      type: 'server',
+      originalError: error
+    };
   }
+
+  // Handle mapped status codes
+  const mappedError = statusCode ? ERROR_STATUS_MAP[statusCode as keyof typeof ERROR_STATUS_MAP] : undefined;
+  if (mappedError) {
+    return {
+      message: mappedError.message,
+      statusCode,
+      type: mappedError.type,
+      originalError: error
+    };
+  }
+
+  // Default fallback with message extraction
+  const messageMatch = errorString.match(/:\s*(.+)/);
+  const extractedMessage = messageMatch ? messageMatch[1] : errorString;
+
+  return {
+    message: extractedMessage || 'An unexpected error occurred while loading audit trail data.',
+    statusCode,
+    type: 'unknown',
+    originalError: error
+  };
 }
 
 // Centralized query options
