@@ -347,7 +347,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
-      <Route path="/audit-trail/:id">
+      <Route path="/audit-trail/:domain/:model/:id">
         <ProtectedRoute>
           <AppLayout>
             <Suspense fallback={<div>Loading...</div>}>

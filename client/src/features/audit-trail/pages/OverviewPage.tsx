@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { History, BarChart3, Database, Stethoscope, Calculator, Users } from "lucide-react";
 import { FilterBar } from "../components/FilterBar";
@@ -15,6 +16,7 @@ import { useHistoryFilters } from "../hooks/useHistoryFilters";
 
 export function OverviewPage() {
   const [selectedTab, setSelectedTab] = useState<AppDomain>(APP_DOMAINS.BATCH);
+  const [, setLocation] = useLocation();
   const { filters, updateFilters, resetFilters, getApiFilters } = useHistoryFilters();
 
   // Initialize default model when component loads or tab changes
@@ -47,8 +49,8 @@ export function OverviewPage() {
   };
 
   const handleViewDetail = (record: any) => {
-    // TODO: Navigate to detail page
-    console.log('View detail for record:', record);
+    // Navigate to detail page with domain, model, and record ID
+    setLocation(`/audit-trail/${selectedTab}/${effectiveModel}/${record.history_id || record.id}`);
   };
 
   const handleRetry = () => {
