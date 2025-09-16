@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useMemo } from "react";
 import { format } from "date-fns";
 import { Eye, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TypeBadge } from "./TypeBadge";
+import { MemoizedTypeBadge as TypeBadge } from "./TypeBadge";
 import { EmptyState } from "./EmptyState";
 import { TableLoadingState } from "./LoadingState";
 import { ErrorState } from "./ErrorState";
@@ -45,6 +45,8 @@ interface HistoryTableProps {
   onGoToPage?: (page: number) => void;
   currentPage?: number;
   pageSize?: number;
+  domain?: string;
+  model?: string;
   className?: string;
 }
 
@@ -58,6 +60,8 @@ export function HistoryTable({
   onGoToPage,
   currentPage = 1,
   pageSize = 25,
+  domain,
+  model,
   className
 }: HistoryTableProps) {
   const [sortField, setSortField] = useState<SortField>(null);
@@ -127,38 +131,42 @@ export function HistoryTable({
     return <ArrowUpDown className="h-4 w-4 opacity-50" />;
   };
 
-  // Sort the data based on current sort settings
-  const sortedData = data?.results ? [...data.results].sort((a, b) => {
-    if (!sortField || !sortDirection) return 0;
+  // Memoize sorted data for performance
+  const sortedData = useMemo(() => {
+    if (!data?.results) return [];
 
-    let aValue: any;
-    let bValue: any;
+    if (!sortField || !sortDirection) return data.results;
 
-    switch (sortField) {
-      case 'date':
-        aValue = new Date(a.history_date).getTime();
-        bValue = new Date(b.history_date).getTime();
-        break;
-      case 'user':
-        aValue = (a.history_user || '').toLowerCase();
-        bValue = (b.history_user || '').toLowerCase();
-        break;
-      case 'type':
-        aValue = a.history_type || '';
-        bValue = b.history_type || '';
-        break;
-      case 'entity':
-        aValue = formatEntityName(a).toLowerCase();
-        bValue = formatEntityName(b).toLowerCase();
-        break;
-      default:
-        return 0;
-    }
+    return [...data.results].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
 
-    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-    return 0;
-  }) : [];
+      switch (sortField) {
+        case 'date':
+          aValue = new Date(a.history_date).getTime();
+          bValue = new Date(b.history_date).getTime();
+          break;
+        case 'user':
+          aValue = (a.history_user || '').toLowerCase();
+          bValue = (b.history_user || '').toLowerCase();
+          break;
+        case 'type':
+          aValue = a.history_type || '';
+          bValue = b.history_type || '';
+          break;
+        case 'entity':
+          aValue = formatEntityName(a).toLowerCase();
+          bValue = formatEntityName(b).toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [data?.results, sortField, sortDirection]);
   // Show error state if there's an error
   if (error) {
     const apiError = error as ApiError;
@@ -286,13 +294,35 @@ export function HistoryTable({
     return details.slice(0, 2); // Limit to 2 details for space
   };
 
+  const tableDescription = domain && model
+    ? `Audit trail records for ${domain} domain, ${model} model`
+    : 'Audit trail records table';
+
   return (
-    <div className={`rounded-md border overflow-hidden ${className || ''}`}>
+    <div
+      className={`rounded-md border overflow-hidden ${className || ''}`}
+      role="region"
+      aria-labelledby="table-heading"
+      aria-describedby="table-description"
+    >
+      <div className="sr-only" id="table-description">
+        {tableDescription}
+      </div>
+
       <div className="overflow-x-auto">
-        <Table>
+        <Table
+          role="table"
+          aria-label={`Audit trail records for ${domain || 'selected'} domain`}
+          aria-rowcount={data?.count || 0}
+          aria-colcount={5}
+        >
         <TableHeader>
-          <TableRow>
-            <TableHead className="w-[140px] sm:w-[180px] whitespace-nowrap">
+          <TableRow role="row">
+            <TableHead
+              className="w-[140px] sm:w-[180px] whitespace-nowrap"
+              role="columnheader"
+              aria-sort={sortField === 'date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -305,15 +335,23 @@ export function HistoryTable({
                   }
                 }}
                 aria-label={`Sort by date ${sortField === 'date' ? (sortDirection === 'asc' ? 'ascending' : sortDirection === 'desc' ? 'descending' : '') : ''}`}
+                aria-describedby="date-sort-desc"
               >
                 <div className="flex items-center gap-1 sm:gap-2">
                   <span className="hidden sm:inline">Date</span>
                   <span className="sm:hidden">Date</span>
                   {getSortIcon('date')}
                 </div>
+                <span className="sr-only" id="date-sort-desc">
+                  {sortField === 'date' ? `Currently sorted ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : 'Click to sort'}
+                </span>
               </Button>
             </TableHead>
-            <TableHead className="w-[100px] sm:w-auto whitespace-nowrap">
+            <TableHead
+              className="w-[100px] sm:w-auto whitespace-nowrap"
+              role="columnheader"
+              aria-sort={sortField === 'user' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -326,14 +364,22 @@ export function HistoryTable({
                   }
                 }}
                 aria-label={`Sort by user ${sortField === 'user' ? (sortDirection === 'asc' ? 'ascending' : sortDirection === 'desc' ? 'descending' : '') : ''}`}
+                aria-describedby="user-sort-desc"
               >
                 <div className="flex items-center gap-1 sm:gap-2">
                   User
                   {getSortIcon('user')}
                 </div>
+                <span className="sr-only" id="user-sort-desc">
+                  {sortField === 'user' ? `Currently sorted ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : 'Click to sort'}
+                </span>
               </Button>
             </TableHead>
-            <TableHead className="w-[80px] sm:w-[100px] whitespace-nowrap">
+            <TableHead
+              className="w-[80px] sm:w-[100px] whitespace-nowrap"
+              role="columnheader"
+              aria-sort={sortField === 'type' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -346,14 +392,22 @@ export function HistoryTable({
                   }
                 }}
                 aria-label={`Sort by type ${sortField === 'type' ? (sortDirection === 'asc' ? 'ascending' : sortDirection === 'desc' ? 'descending' : '') : ''}`}
+                aria-describedby="type-sort-desc"
               >
                 <div className="flex items-center gap-1 sm:gap-2">
                   Type
                   {getSortIcon('type')}
                 </div>
+                <span className="sr-only" id="type-sort-desc">
+                  {sortField === 'type' ? `Currently sorted ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : 'Click to sort'}
+                </span>
               </Button>
             </TableHead>
-            <TableHead className="min-w-[120px] whitespace-nowrap">
+            <TableHead
+              className="min-w-[120px] whitespace-nowrap"
+              role="columnheader"
+              aria-sort={sortField === 'entity' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -366,21 +420,45 @@ export function HistoryTable({
                   }
                 }}
                 aria-label={`Sort by entity ${sortField === 'entity' ? (sortDirection === 'asc' ? 'ascending' : sortDirection === 'desc' ? 'descending' : '') : ''}`}
+                aria-describedby="entity-sort-desc"
               >
                 <div className="flex items-center gap-1 sm:gap-2">
                   Entity
                   {getSortIcon('entity')}
                 </div>
+                <span className="sr-only" id="entity-sort-desc">
+                  {sortField === 'entity' ? `Currently sorted ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : 'Click to sort'}
+                </span>
               </Button>
             </TableHead>
-            <TableHead className="hidden md:table-cell max-w-[200px] whitespace-nowrap">Reason</TableHead>
-            <TableHead className="w-[80px] sm:w-[100px] whitespace-nowrap">Actions</TableHead>
+            <TableHead
+              className="hidden md:table-cell max-w-[200px] whitespace-nowrap"
+              role="columnheader"
+              aria-label="Change reason"
+            >
+              Reason
+            </TableHead>
+            <TableHead
+              className="w-[80px] sm:w-[100px] whitespace-nowrap"
+              role="columnheader"
+              aria-label="Available actions"
+            >
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          {sortedData.map((record) => (
-            <TableRow key={record.history_id || record.id}>
-              <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+        <TableBody role="rowgroup">
+          {sortedData.map((record, index) => (
+            <TableRow
+              key={record.history_id || record.id}
+              role="row"
+              aria-rowindex={index + 1}
+            >
+              <TableCell
+                className="text-xs sm:text-sm whitespace-nowrap"
+                role="cell"
+                aria-label={`Change date: ${format(new Date(record.history_date), "MMM dd, yyyy HH:mm")}`}
+              >
                 <div className="hidden sm:block">
                   {format(new Date(record.history_date), "MMM dd, yyyy HH:mm")}
                 </div>
@@ -388,15 +466,27 @@ export function HistoryTable({
                   {format(new Date(record.history_date), "MM/dd HH:mm")}
                 </div>
               </TableCell>
-              <TableCell className="whitespace-nowrap">
+              <TableCell
+                className="whitespace-nowrap"
+                role="cell"
+                aria-label={`User: ${record.history_user || "N/A"}`}
+              >
                 <div className="font-medium text-sm truncate max-w-[100px] sm:max-w-none" title={record.history_user || "N/A"}>
                   {record.history_user || "N/A"}
                 </div>
               </TableCell>
-              <TableCell className="whitespace-nowrap">
+              <TableCell
+                className="whitespace-nowrap"
+                role="cell"
+                aria-label={`Change type: ${record.history_type}`}
+              >
                 <TypeBadge type={record.history_type} />
               </TableCell>
-              <TableCell className="min-w-[120px]">
+              <TableCell
+                className="min-w-[120px]"
+                role="cell"
+                aria-label={`Entity: ${formatEntityName(record)}`}
+              >
                 <div className="space-y-1">
                   <div className="font-medium truncate max-w-[200px]" title={formatEntityName(record)}>
                     {formatEntityName(record)}
@@ -434,12 +524,16 @@ export function HistoryTable({
                   )}
                 </div>
               </TableCell>
-              <TableCell className="hidden md:table-cell max-w-[200px]">
+              <TableCell
+                className="hidden md:table-cell max-w-[200px]"
+                role="cell"
+                aria-label={`Change reason: ${record.history_change_reason || "N/A"}`}
+              >
                 <div className="truncate text-sm text-muted-foreground" title={record.history_change_reason || "N/A"}>
                   {record.history_change_reason || "N/A"}
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell role="cell">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -453,7 +547,7 @@ export function HistoryTable({
                   className="h-8 w-8 p-0"
                   aria-label={`View details for ${formatEntityName(record)}`}
                 >
-                  <Eye className="h-4 w-4" />
+                  <Eye className="h-4 w-4" aria-hidden="true" />
                   <span className="sr-only">View details for {formatEntityName(record)}</span>
                 </Button>
               </TableCell>
@@ -464,11 +558,19 @@ export function HistoryTable({
       </div>
 
       {/* Pagination controls */}
-      <div className="flex items-center justify-between px-4 py-3 border-t bg-muted/50">
-        <div className="text-sm text-muted-foreground">
+      <nav
+        className="flex items-center justify-between px-4 py-3 border-t bg-muted/50"
+        role="navigation"
+        aria-label="Table pagination"
+      >
+        <div
+          className="text-sm text-muted-foreground"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, data.count)} of {data.count} records
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" role="group" aria-label="Pagination controls">
           <Button
             variant="outline"
             size="sm"
@@ -482,11 +584,17 @@ export function HistoryTable({
             disabled={!data.previous || currentPage <= 1}
             className="h-8"
             aria-label={`Go to previous page (${currentPage - 1})`}
+            aria-disabled={!data.previous || currentPage <= 1}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             Previous
           </Button>
-          <div className="text-sm text-muted-foreground px-2" aria-live="polite">
+          <div
+            className="text-sm text-muted-foreground px-2"
+            aria-live="polite"
+            aria-atomic="true"
+            role="status"
+          >
             Page {currentPage} of {Math.ceil(data.count / pageSize)}
           </div>
           <Button
@@ -502,12 +610,15 @@ export function HistoryTable({
             disabled={!data.next}
             className="h-8"
             aria-label={`Go to next page (${currentPage + 1})`}
+            aria-disabled={!data.next}
           >
             Next
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
-      </div>
+      </nav>
     </div>
   );
 }
+
+export const MemoizedHistoryTable = memo(HistoryTable);

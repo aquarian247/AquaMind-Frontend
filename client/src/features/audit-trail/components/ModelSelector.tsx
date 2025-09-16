@@ -1,3 +1,4 @@
+import { memo } from "react";
 import {
   Select,
   SelectContent,
@@ -29,21 +30,42 @@ export function ModelSelector({
 
   return (
     <div className={`space-y-2 ${className || ''}`}>
-      <label className="text-sm font-medium text-muted-foreground">
+      <label
+        className="text-sm font-medium text-muted-foreground"
+        id="model-selector-label"
+      >
         Model Type
       </label>
-      <Select value={selectedModel || models[0]?.value} onValueChange={onModelChange}>
-        <SelectTrigger className="w-full">
+      <Select
+        value={selectedModel || models[0]?.value}
+        onValueChange={onModelChange}
+        aria-labelledby="model-selector-label"
+        aria-describedby="model-selector-description"
+      >
+        <SelectTrigger
+          className="w-full"
+          aria-label={`Select model type, currently ${selectedModel || models[0]?.label || 'none selected'}`}
+        >
           <SelectValue placeholder="Select model type" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent role="listbox" aria-label="Available model types">
           {models.map((model) => (
-            <SelectItem key={model.value} value={model.value}>
+            <SelectItem
+              key={model.value}
+              value={model.value}
+              role="option"
+              aria-label={`${model.label} model`}
+            >
               {model.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
+      <div id="model-selector-description" className="sr-only">
+        Choose which model type to filter audit records by
+      </div>
     </div>
   );
 }
+
+export const MemoizedModelSelector = memo(ModelSelector);

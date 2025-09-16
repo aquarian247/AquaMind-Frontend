@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { getHistoryTypeLabel, getHistoryTypeColor } from "../hooks/useHistory";
 import { HistoryType } from "../hooks/useHistoryFilters";
@@ -15,8 +16,12 @@ export function TypeBadge({ type, className }: TypeBadgeProps) {
     <Badge
       variant="outline"
       className={`${colorClass} font-medium ${className || ''}`}
+      aria-label={`Change type: ${label}`}
+      role="status"
     >
       {label}
     </Badge>
   );
 }
+
+export const MemoizedTypeBadge = memo(TypeBadge);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,10 +133,25 @@ export function FilterBar({
   };
 
   return (
-    <div className={`border rounded-lg p-4 bg-card ${className || ''}`}>
+    <div
+      className={`border rounded-lg p-4 bg-card ${className || ''}`}
+      role="region"
+      aria-labelledby="filter-section-heading"
+      aria-describedby="filter-status"
+    >
+      <h3 id="filter-section-heading" className="sr-only">Audit Trail Filters</h3>
+      <div
+        id="filter-status"
+        className="sr-only"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {hasActiveFilters ? 'Filters are currently active' : 'No filters are currently active'}
+      </div>
+
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4" />
+          <Filter className="h-4 w-4" aria-hidden="true" />
           <span className="font-medium">Filters</span>
           {hasActiveFilters && (
             <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
@@ -480,3 +495,5 @@ export function FilterBar({
     </div>
   );
 }
+
+export const MemoizedFilterBar = memo(FilterBar);

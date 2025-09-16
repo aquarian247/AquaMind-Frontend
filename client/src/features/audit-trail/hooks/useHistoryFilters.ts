@@ -1,5 +1,20 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { HistoryFilters } from '../api/api';
+
+// Simple debounce utility
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): T & { cancel: () => void } {
+  let timeout: NodeJS.Timeout;
+  const debounced = ((...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T & { cancel: () => void };
+
+  debounced.cancel = () => clearTimeout(timeout);
+  return debounced;
+}
 
 // History type for change types
 export type HistoryType = '+' | '~' | '-';
@@ -20,6 +35,20 @@ const INITIAL_FILTERS: HistoryFilterState = {
 export function useHistoryFilters() {
   const [filters, setFilters] = useState<HistoryFilterState>(INITIAL_FILTERS);
 
+  // Debounced search for better performance
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
+  const debouncedSearch = useMemo(
+    () => debounce((term: string) => setDebouncedSearchTerm(term), 300),
+    []
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel?.();
+    };
+  }, [debouncedSearch]);
+
   const updateFilters = useCallback((updates: Partial<HistoryFilterState>) => {
     setFilters(prev => ({
       ...prev,
@@ -39,7 +68,11 @@ export function useHistoryFilters() {
 
   const setUserFilter = useCallback((historyUser?: string) => {
     updateFilters({ historyUser });
-  }, [updateFilters]);
+    // Trigger debounced search for user filter
+    if (historyUser) {
+      debouncedSearch(historyUser);
+    }
+  }, [updateFilters, debouncedSearch]);
 
   const setTypeFilter = useCallback((historyType?: HistoryType) => {
     updateFilters({ historyType });
@@ -79,5 +112,7 @@ export function useHistoryFilters() {
     nextPage,
     prevPage,
     getApiFilters,
+    debouncedSearchTerm,
+    debouncedSearch,
   };
 }

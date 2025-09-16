@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { TypeBadge } from "../components/TypeBadge";
+import { MemoizedTypeBadge as TypeBadge } from "../components/TypeBadge";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { ErrorState, NotFoundErrorState } from "../components/ErrorState";
 import { PageLoadingState } from "../components/LoadingState";
@@ -249,82 +249,120 @@ export function RecordDetailPage({ params }: RecordDetailPageProps = {}) {
     <ErrorBoundary>
       <div className="container mx-auto p-4 space-y-6">
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
+        <nav
+          className="flex items-center space-x-2 text-sm text-muted-foreground"
+          role="navigation"
+          aria-label="Breadcrumb navigation"
+        >
           {breadcrumbItems.map((item, index) => (
             <div key={index} className="flex items-center">
-              {index > 0 && <ChevronRight className="h-4 w-4 mx-2" />}
+              {index > 0 && <ChevronRight className="h-4 w-4 mx-2" aria-hidden="true" />}
               {item.href !== '#' ? (
-                <Link href={item.href} className="hover:text-foreground transition-colors">
+                <Link
+                  href={item.href}
+                  className="hover:text-foreground transition-colors"
+                  aria-label={`Navigate to ${item.label}`}
+                >
                   {item.label}
                 </Link>
               ) : (
-                <span className="text-foreground font-medium">{item.label}</span>
+                <span
+                  className="text-foreground font-medium"
+                  aria-current="page"
+                >
+                  {item.label}
+                </span>
               )}
             </div>
           ))}
         </nav>
 
         {/* Header with Back Button */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <header className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/audit-trail">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+            <Link
+              href="/audit-trail"
+              aria-label="Return to audit trail overview page"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
               Back to Audit Trail
             </Link>
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold">History Record Details</h1>
+            <h1
+              className="text-2xl font-bold"
+              id="record-detail-heading"
+            >
+              History Record Details
+            </h1>
             <p className="text-muted-foreground">
               {getModelDisplayName(model || '')} • Record #{data.history_id || data.id}
             </p>
           </div>
-        </div>
+        </header>
 
         {/* Record Summary Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Record Summary
-            </CardTitle>
-          </CardHeader>
+        <section
+          aria-labelledby="record-summary-heading"
+          aria-describedby="record-summary-description"
+        >
+          <Card role="region">
+            <CardHeader>
+              <CardTitle
+                className="flex items-center gap-2"
+                id="record-summary-heading"
+              >
+                <FileText className="h-5 w-5" aria-hidden="true" />
+                Record Summary
+              </CardTitle>
+              <p
+                id="record-summary-description"
+                className="sr-only"
+              >
+                Summary information for the audit record including timestamp, user, change type, and reason
+              </p>
+            </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" role="list">
+              <div className="flex items-center gap-3" role="listitem">
+                <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                 <div className="min-w-0">
                   <div className="text-sm text-muted-foreground">Date & Time</div>
-                  <div className="font-medium truncate">
+                  <div className="font-medium truncate" aria-label={`Date: ${format(new Date(data.history_date), "MMM dd, yyyy")}`}>
                     {format(new Date(data.history_date), "MMM dd, yyyy")}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground" aria-label={`Time: ${format(new Date(data.history_date), "HH:mm:ss")}`}>
                     {format(new Date(data.history_date), "HH:mm:ss")}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-3" role="listitem">
+                <User className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                 <div className="min-w-0">
                   <div className="text-sm text-muted-foreground">User</div>
-                  <div className="font-medium truncate">{data.history_user || 'N/A'}</div>
+                  <div className="font-medium truncate" aria-label={`User: ${data.history_user || 'N/A'}`}>
+                    {data.history_user || 'N/A'}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-3" role="listitem">
+                <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                 <div className="min-w-0">
                   <div className="text-sm text-muted-foreground">Change Type</div>
                   <TypeBadge type={data.history_type as HistoryType} />
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Database className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <div className="flex items-center gap-3" role="listitem">
+                <Database className="h-4 w-4 text-muted-foreground flex-shrink-0" aria-hidden="true" />
                 <div className="min-w-0">
                   <div className="text-sm text-muted-foreground">Domain</div>
-                  <div className="font-medium truncate">{getDomainDisplayName(domain)}</div>
-                  <div className="text-xs text-muted-foreground truncate">
+                  <div className="font-medium truncate" aria-label={`Domain: ${getDomainDisplayName(domain)}`}>
+                    {getDomainDisplayName(domain)}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate" aria-label={`Model: ${getModelDisplayName(model || '')}`}>
                     {getModelDisplayName(model || '')}
                   </div>
                 </div>
@@ -342,6 +380,7 @@ export function RecordDetailPage({ params }: RecordDetailPageProps = {}) {
             )}
           </CardContent>
         </Card>
+        </section>
 
         {/* Record Data Card */}
         <Card>
