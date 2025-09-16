@@ -78,14 +78,16 @@ export function OverviewPage() {
     <ErrorBoundary>
       <div className="container mx-auto p-4 space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <History className="h-8 w-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold">Audit Trail</h1>
-              <p className="text-muted-foreground mt-1">
-                Track and review all changes across the AquaMind platform
-              </p>
+        <div className="flex flex-col space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <History className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold">Audit Trail</h1>
+                <p className="text-muted-foreground text-sm sm:text-base mt-1">
+                  Track and review all changes across the AquaMind platform
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -99,30 +101,36 @@ export function OverviewPage() {
 
         {/* Tabs for App Domains */}
         <Tabs value={selectedTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value={APP_DOMAINS.BATCH}>
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Batch
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto p-1">
+            <TabsTrigger value={APP_DOMAINS.BATCH} className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Batch</span>
+              <span className="sm:hidden">Batch</span>
             </TabsTrigger>
-            <TabsTrigger value={APP_DOMAINS.INFRASTRUCTURE}>
-              <Database className="w-4 h-4 mr-2" />
-              Infrastructure
+            <TabsTrigger value={APP_DOMAINS.INFRASTRUCTURE} className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+              <Database className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Infrastructure</span>
+              <span className="sm:hidden">Infra</span>
             </TabsTrigger>
-            <TabsTrigger value={APP_DOMAINS.INVENTORY}>
-              <Database className="w-4 h-4 mr-2" />
-              Inventory
+            <TabsTrigger value={APP_DOMAINS.INVENTORY} className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+              <Database className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Inventory</span>
+              <span className="sm:hidden">Inv</span>
             </TabsTrigger>
-            <TabsTrigger value={APP_DOMAINS.HEALTH}>
-              <Stethoscope className="w-4 h-4 mr-2" />
-              Health
+            <TabsTrigger value={APP_DOMAINS.HEALTH} className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+              <Stethoscope className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Health</span>
+              <span className="sm:hidden">Health</span>
             </TabsTrigger>
-            <TabsTrigger value={APP_DOMAINS.SCENARIO}>
-              <Calculator className="w-4 h-4 mr-2" />
-              Scenario
+            <TabsTrigger value={APP_DOMAINS.SCENARIO} className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+              <Calculator className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Scenario</span>
+              <span className="sm:hidden">Scen</span>
             </TabsTrigger>
-            <TabsTrigger value={APP_DOMAINS.USERS}>
-              <Users className="w-4 h-4 mr-2" />
-              Users
+            <TabsTrigger value={APP_DOMAINS.USERS} className="text-xs sm:text-sm py-2 px-1 sm:px-3">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Users</span>
+              <span className="sm:hidden">Users</span>
             </TabsTrigger>
           </TabsList>
 

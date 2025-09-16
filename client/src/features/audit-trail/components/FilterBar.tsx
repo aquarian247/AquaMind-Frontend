@@ -15,8 +15,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, X, Filter } from "lucide-react";
-import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { CalendarIcon, X, Filter, Clock, Zap } from "lucide-react";
+import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { HistoryFilterState, HistoryType } from "../hooks/useHistoryFilters";
 
@@ -72,6 +73,65 @@ export function FilterBar({
     onFiltersChange({ dateTo: undefined });
   };
 
+  // Quick filter presets
+  const applyQuickFilter = (preset: string) => {
+    const now = new Date();
+    switch (preset) {
+      case 'today':
+        onFiltersChange({
+          dateFrom: format(startOfDay(now), "yyyy-MM-dd"),
+          dateTo: format(endOfDay(now), "yyyy-MM-dd")
+        });
+        break;
+      case 'yesterday':
+        const yesterday = subDays(now, 1);
+        onFiltersChange({
+          dateFrom: format(startOfDay(yesterday), "yyyy-MM-dd"),
+          dateTo: format(endOfDay(yesterday), "yyyy-MM-dd")
+        });
+        break;
+      case 'last7days':
+        onFiltersChange({
+          dateFrom: format(subDays(now, 7), "yyyy-MM-dd"),
+          dateTo: format(now, "yyyy-MM-dd")
+        });
+        break;
+      case 'last30days':
+        onFiltersChange({
+          dateFrom: format(subDays(now, 30), "yyyy-MM-dd"),
+          dateTo: format(now, "yyyy-MM-dd")
+        });
+        break;
+      case 'thisWeek':
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        onFiltersChange({
+          dateFrom: format(startOfWeek, "yyyy-MM-dd"),
+          dateTo: format(now, "yyyy-MM-dd")
+        });
+        break;
+      case 'thisMonth':
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        onFiltersChange({
+          dateFrom: format(startOfMonth, "yyyy-MM-dd"),
+          dateTo: format(now, "yyyy-MM-dd")
+        });
+        break;
+    }
+  };
+
+  const clearDateRange = () => {
+    onFiltersChange({ dateFrom: undefined, dateTo: undefined });
+  };
+
+  const clearUserFilter = () => {
+    onFiltersChange({ historyUser: undefined });
+  };
+
+  const clearTypeFilter = () => {
+    onFiltersChange({ historyType: undefined });
+  };
+
   return (
     <div className={`border rounded-lg p-4 bg-card ${className || ''}`}>
       <div className="flex items-center justify-between mb-4">
@@ -104,6 +164,181 @@ export function FilterBar({
           )}
         </div>
       </div>
+
+      {/* Quick Filter Presets */}
+      <div className="mb-4">
+        <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
+          <Zap className="h-3 w-3" />
+          <span>Quick filters:</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs flex-shrink-0"
+            onClick={() => applyQuickFilter('today')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                applyQuickFilter('today');
+              }
+            }}
+            aria-label="Filter to show records from today"
+          >
+            Today
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs flex-shrink-0"
+            onClick={() => applyQuickFilter('yesterday')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                applyQuickFilter('yesterday');
+              }
+            }}
+            aria-label="Filter to show records from yesterday"
+          >
+            Yesterday
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs flex-shrink-0"
+            onClick={() => applyQuickFilter('last7days')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                applyQuickFilter('last7days');
+              }
+            }}
+            aria-label="Filter to show records from the last 7 days"
+          >
+            Last 7 days
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs flex-shrink-0 sm:inline-flex"
+            onClick={() => applyQuickFilter('last30days')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                applyQuickFilter('last30days');
+              }
+            }}
+            aria-label="Filter to show records from the last 30 days"
+          >
+            <span className="hidden sm:inline">Last 30 days</span>
+            <span className="sm:hidden">30d</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs flex-shrink-0 sm:inline-flex"
+            onClick={() => applyQuickFilter('thisWeek')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                applyQuickFilter('thisWeek');
+              }
+            }}
+            aria-label="Filter to show records from this week"
+          >
+            <span className="hidden sm:inline">This week</span>
+            <span className="sm:hidden">Week</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 px-2 text-xs flex-shrink-0 sm:inline-flex"
+            onClick={() => applyQuickFilter('thisMonth')}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                applyQuickFilter('thisMonth');
+              }
+            }}
+            aria-label="Filter to show records from this month"
+          >
+            <span className="hidden sm:inline">This month</span>
+            <span className="sm:hidden">Month</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Active Filters Display */}
+      {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Filter className="h-3 w-3" />
+            <span>Active filters:</span>
+          </div>
+          {filters.dateFrom && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              From: {format(new Date(filters.dateFrom), "MMM dd, yyyy")}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                onClick={clearDateFrom}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          {filters.dateTo && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              To: {format(new Date(filters.dateTo), "MMM dd, yyyy")}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                onClick={clearDateTo}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          {filters.historyUser && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              User: {filters.historyUser}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                onClick={clearUserFilter}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          {filters.historyType && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Type: {filters.historyType === '+' ? 'Created' : filters.historyType === '~' ? 'Updated' : 'Deleted'}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                onClick={clearTypeFilter}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs hover:bg-destructive hover:text-destructive-foreground"
+            onClick={clearDateRange}
+          >
+            Clear dates
+          </Button>
+        </div>
+      )}
 
       {isExpanded && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
