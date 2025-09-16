@@ -69,18 +69,24 @@ const navigationItems = [
   },
   {
     id: 11,
+    label: "Audit Trail",
+    icon: "fas fa-history",
+    path: "/audit-trail",
+  },
+  {
+    id: 12,
     label: "Reports",
     icon: "fas fa-file-alt",
     path: "/reports",
   },
   {
-    id: 12,
+    id: 13,
     label: "Mortality Report",
     icon: "fas fa-clipboard-list",
     path: "/mortality-reporting",
   },
   {
-    id: 13,
+    id: 14,
     label: "Settings",
     icon: "fas fa-cog",
     path: "/settings",
