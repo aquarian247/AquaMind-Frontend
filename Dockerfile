@@ -33,11 +33,9 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Create non-root user and adjust permissions
-RUN adduser -D -H -u 101 nginxuser \
-    && chown -R 101:101 /usr/share/nginx/html /var/cache/nginx /var/run /etc/nginx
+# Ensure proper permissions for nginx user (master runs as root; workers drop to nginx)
+RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/run /etc/nginx
 
-USER 101
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 # Workflow trigger test - Wed Sep 17 12:42:20 WEST 2025
