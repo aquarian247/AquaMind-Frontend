@@ -16,8 +16,21 @@ AquaMind Frontend is a modern, responsive web application that provides real-tim
 - **Environmental Monitoring**: Real-time sensor data and environmental parameters
 - **Broodstock Management**: Breeding programs and genetic tracking
 - **Scenario Planning**: Predictive analytics with TGC, FCR, and mortality modeling
-- **Audit Trail**: Complete change history tracking across all modules (62+ history endpoints)
+- **Audit Trail**: Enterprise-grade change history tracking with 62+ history endpoints across all modules
 - **Multi-theme Support**: Ocean Depths, Warm Earth, Solarized themes with light/dark modes
+
+#### Audit Trail Features
+
+The comprehensive audit trail system provides:
+
+- **6 App Domains**: Full coverage of Batch, Infrastructure, Health, Inventory, Scenario, and Users modules
+- **Advanced Filtering**: Date range, change type, username, and entity-specific filters
+- **Interactive Sorting**: Column sorting with visual indicators for all data tables
+- **Rich Entity Context**: Smart entity name resolution with role, department, and location information
+- **Before/After Comparison**: Visual comparison for update operations with intelligent fallbacks
+- **Mobile Responsive**: Adaptive design that works seamlessly across all device sizes
+- **WCAG Accessibility**: Full keyboard navigation and screen reader support
+- **Enterprise UX**: Professional-grade interface with robust error handling and loading states
 
 ## 🏗️ Architecture
 
