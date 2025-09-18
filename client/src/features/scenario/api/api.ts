@@ -1,0 +1,223 @@
+/**
+ * Scenario API Wrappers
+ * Server-side aggregation endpoints for scenario KPIs and summaries
+ */
+
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { ApiService } from "@/api/generated";
+import { FcrService, TrendsService } from "@/api/generated";
+import type { 
+  FCRModel,
+  PaginatedScenarioList,
+  Scenario,
+  PaginatedFCRTrendsList,
+} from "@/api/generated";
+
+// Common query options for scenario operations
+const SCENARIO_QUERY_OPTIONS = {
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  gcTime: 10 * 60 * 1000, // 10 minutes
+  retry: 1,
+  retryDelay: 1000,
+} as const;
+
+/**
+ * Hook to fetch FCR model stage summary
+ * @param modelId - The FCR model ID
+ * @returns Query result with FCR model stage summary
+ */
+export function useFCRModelStageSummary(
+  modelId: number | undefined
+): UseQueryResult<FCRModel, Error> {
+  return useQuery({
+    queryKey: ["scenario", "fcr-model-stage-summary", modelId],
+    queryFn: async () => {
+      if (!modelId) throw new Error("Model ID is required");
+      return await ApiService.apiV1ScenarioFcrModelsStageSummaryRetrieve(modelId);
+    },
+    enabled: !!modelId,
+    ...SCENARIO_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to fetch all scenarios with pagination
+ * @param page - Page number
+ * @param pageSize - Number of items per page
+ * @returns Query result with paginated scenarios
+ */
+export function useScenarios(
+  page: number = 1,
+  pageSize: number = 20
+): UseQueryResult<PaginatedScenarioList, Error> {
+  return useQuery({
+    queryKey: ["scenario", "scenarios", { page, pageSize }],
+    queryFn: async () => {
+      return await ApiService.apiV1ScenarioScenariosList(
+        undefined, // createdBy
+        undefined, // ordering
+        page,
+        undefined, // search
+        undefined, // startDate
+        undefined  // tgcModelLocation
+      );
+    },
+    ...SCENARIO_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to fetch a single scenario by ID
+ * @param scenarioId - The scenario ID
+ * @returns Query result with the scenario details
+ */
+export function useScenario(
+  scenarioId: number | undefined
+): UseQueryResult<Scenario, Error> {
+  return useQuery({
+    queryKey: ["scenario", "scenario", scenarioId],
+    queryFn: async () => {
+      if (!scenarioId) throw new Error("Scenario ID is required");
+      return await ApiService.apiV1ScenarioScenariosRetrieve(scenarioId);
+    },
+    enabled: !!scenarioId,
+    ...SCENARIO_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to fetch scenario FCR trends using the FcrService
+ * This can be used to get predicted FCR values for scenarios
+ * @param options - Options for FCR trends query with scenario context
+ * @returns Query result with FCR trends
+ */
+export function useScenarioFCRTrends(options?: {
+  batchId?: number;
+  geographyId?: number;
+  interval?: "DAILY" | "WEEKLY" | "MONTHLY";
+  startDate?: string;
+  endDate?: string;
+  includePredicted?: boolean;
+  page?: number;
+}): UseQueryResult<PaginatedFCRTrendsList, Error> {
+  return useQuery({
+    queryKey: ["scenario", "fcr-trends", options],
+    queryFn: async () => {
+      return await FcrService.apiV1OperationalFcrTrendsList(
+        undefined, // assignmentId
+        options?.batchId,
+        options?.endDate,
+        options?.geographyId,
+        options?.includePredicted ?? true, // Default to including predicted values for scenarios
+        options?.interval ?? "DAILY",
+        undefined, // ordering
+        options?.page,
+        undefined, // search
+        options?.startDate
+      );
+    },
+    ...SCENARIO_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to fetch scenarios filtered by batch
+ * @param batchIds - Array of batch IDs to filter by
+ * @param page - Page number
+ * @returns Query result with filtered scenarios
+ */
+export function useScenariosByBatch(
+  batchIds: number[],
+  page: number = 1
+): UseQueryResult<PaginatedScenarioList, Error> {
+  return useQuery({
+    queryKey: ["scenario", "scenarios-by-batch", { batchIds, page }],
+    queryFn: async () => {
+      // Note: The new API doesn't support batch filtering directly
+      // This would need a different endpoint or backend support
+      return await ApiService.apiV1ScenarioScenariosList(
+        undefined, // createdBy
+        undefined, // ordering
+        page,
+        undefined, // search
+        undefined, // startDate
+        undefined  // tgcModelLocation
+      );
+    },
+    enabled: batchIds.length > 0,
+    ...SCENARIO_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to fetch scenarios within a date range
+ * @param startDate - Start date (ISO format)
+ * @param endDate - End date (ISO format)
+ * @param page - Page number
+ * @returns Query result with filtered scenarios
+ */
+export function useScenariosByDateRange(
+  startDate: string | undefined,
+  endDate: string | undefined,
+  page: number = 1
+): UseQueryResult<PaginatedScenarioList, Error> {
+  return useQuery({
+    queryKey: ["scenario", "scenarios-by-date", { startDate, endDate, page }],
+    queryFn: async () => {
+      return await ApiService.apiV1ScenarioScenariosList(
+        undefined, // createdBy
+        undefined, // ordering
+        page,
+        undefined, // search
+        startDate, // Only startDate is supported now
+        undefined  // tgcModelLocation
+      );
+    },
+    enabled: !!startDate && !!endDate,
+    ...SCENARIO_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to fetch active scenarios (those currently in progress)
+ * Active scenarios are those where current date is between start and end date
+ * @param page - Page number
+ * @returns Query result with active scenarios
+ */
+export function useActiveScenarios(
+  page: number = 1
+): UseQueryResult<PaginatedScenarioList, Error> {
+  const today = new Date().toISOString().split("T")[0];
+  
+  return useQuery({
+    queryKey: ["scenario", "active-scenarios", { page }],
+    queryFn: async () => {
+      // Get scenarios where today is between start and end date
+      // This might need backend support for proper filtering
+      return await ApiService.apiV1ScenarioScenariosList(
+        undefined, // createdBy
+        undefined, // ordering
+        page,
+        undefined, // search
+        today,     // startDate - scenarios that have started
+        undefined  // tgcModelLocation
+      );
+    },
+    ...SCENARIO_QUERY_OPTIONS,
+  });
+}
+
+// Export utility to invalidate scenario queries
+export function getScenarioQueryKeys() {
+  return {
+    all: ["scenario"] as const,
+    scenarios: ["scenario", "scenarios"] as const,
+    scenario: (id: number) => ["scenario", "scenario", id] as const,
+    fcrModelStageSummary: (modelId: number) => ["scenario", "fcr-model-stage-summary", modelId] as const,
+    scenariosByBatch: (batchIds: number[]) => ["scenario", "scenarios-by-batch", { batchIds }] as const,
+    scenariosByDate: (startDate: string, endDate: string) => 
+      ["scenario", "scenarios-by-date", { startDate, endDate }] as const,
+    activeScenarios: ["scenario", "active-scenarios"] as const,
+    fcrTrends: ["scenario", "fcr-trends"] as const,
+  };
+}
