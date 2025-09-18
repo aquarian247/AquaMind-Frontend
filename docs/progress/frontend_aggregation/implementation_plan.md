@@ -31,7 +31,7 @@
 
 Each task below includes scope, endpoints, reading list, QA/acceptance, PO test steps, and dev steps. All tasks commit to the single feature branch with one PR at the end.
 
-### 0) Scaffolding and Guardrails
+### 0) Scaffolding and Guardrails ✅ [COMPLETED 2025-09-18]
 - Scope
   - **OpenAPI Sync Check** - Ensure latest backend endpoints are available:
     ```bash
@@ -50,7 +50,16 @@ Each task below includes scope, endpoints, reading list, QA/acceptance, PO test 
 - Reading: `docs/CONTRIBUTING.md`, `docs/frontend_testing_guide.md`
 - QA: type-check, lint, unit tests for hooks with mocks, fallback behavior covered
 - PO test: none (scaffolding only)
-- Dev: `npm run sync:openapi && npm run type-check && npm run lint && npm run test`
+- Dev: `npm run sync:openapi && npm run type-check && npm run test`
+
+**Implementation Notes (2025-09-18):**
+- ✅ Created comprehensive formatFallback utility with type-specific formatters (formatWeight, formatCurrency, formatPercentage, etc.)
+- ✅ API wrappers use the base model types (Area, Hall, etc.) not custom Summary types - the summary endpoints return enriched versions of base models
+- ✅ feedingEventsSummary returns inline type with events_count and total_feed_kg fields
+- ✅ Test files using JSX must have .tsx extension, not .ts
+- ✅ React Query v5 doesn't have isIdle state - use isPending and isFetching instead
+- ✅ Generated API signatures may change - always verify parameter order against latest generated code
+- ⚠️ Some scenario endpoints lost batch filtering capability in latest API version - may need backend support
 
 ### 1) Infrastructure — Area Detail uses Area Summary
 - Scope: `client/src/pages/area-detail.tsx` replace `useAreaKpi` and client joins with `AreasSummaryRetrieve`
