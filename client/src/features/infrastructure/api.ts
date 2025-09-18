@@ -5,12 +5,44 @@
 
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { ApiService } from "@/api/generated";
-import type { 
+import type {
   Area,
   FreshwaterStation,
   Hall,
   Geography,
 } from "@/api/generated";
+
+// Extended types for summary endpoints that include aggregated data
+export type AreaSummary = Area & {
+  container_count?: number;
+  ring_count?: number;
+  active_biomass_kg?: number;
+  population_count?: number;
+  avg_weight_kg?: number;
+};
+
+export type FreshwaterStationSummary = FreshwaterStation & {
+  hall_count?: number;
+  container_count?: number;
+  active_biomass_kg?: number;
+  population_count?: number;
+  avg_weight_kg?: number;
+};
+
+export type HallSummary = Hall & {
+  container_count?: number;
+  active_biomass_kg?: number;
+  population_count?: number;
+  avg_weight_kg?: number;
+};
+
+export type GeographySummary = Geography & {
+  container_count?: number;
+  ring_count?: number;
+  active_biomass_kg?: number;
+  population_count?: number;
+  avg_weight_kg?: number;
+};
 
 // Common query options for infrastructure
 const INFRASTRUCTURE_QUERY_OPTIONS = {
@@ -25,7 +57,7 @@ const INFRASTRUCTURE_QUERY_OPTIONS = {
  * @param areaId - The area ID to fetch summary for
  * @returns Query result with area summary data
  */
-export function useAreaSummary(areaId: number | undefined): UseQueryResult<Area, Error> {
+export function useAreaSummary(areaId: number | undefined): UseQueryResult<AreaSummary, Error> {
   return useQuery({
     queryKey: ["infrastructure", "area-summary", areaId],
     queryFn: async () => {
@@ -42,7 +74,7 @@ export function useAreaSummary(areaId: number | undefined): UseQueryResult<Area,
  * @param stationId - The station ID to fetch summary for
  * @returns Query result with station summary data
  */
-export function useStationSummary(stationId: number | undefined): UseQueryResult<FreshwaterStation, Error> {
+export function useStationSummary(stationId: number | undefined): UseQueryResult<FreshwaterStationSummary, Error> {
   return useQuery({
     queryKey: ["infrastructure", "station-summary", stationId],
     queryFn: async () => {
@@ -94,7 +126,7 @@ export function useGeographySummary(geographyId: number | undefined): UseQueryRe
  * @param areaIds - Array of area IDs to fetch summaries for
  * @returns Array of query results
  */
-export function useAreaSummaries(areaIds: number[]): UseQueryResult<Area[], Error> {
+export function useAreaSummaries(areaIds: number[]): UseQueryResult<AreaSummary[], Error> {
   return useQuery({
     queryKey: ["infrastructure", "area-summaries", areaIds],
     queryFn: async () => {
@@ -114,7 +146,7 @@ export function useAreaSummaries(areaIds: number[]): UseQueryResult<Area[], Erro
  * @param stationIds - Array of station IDs to fetch summaries for
  * @returns Array of query results
  */
-export function useStationSummaries(stationIds: number[]): UseQueryResult<FreshwaterStation[], Error> {
+export function useStationSummaries(stationIds: number[]): UseQueryResult<FreshwaterStationSummary[], Error> {
   return useQuery({
     queryKey: ["infrastructure", "station-summaries", stationIds],
     queryFn: async () => {

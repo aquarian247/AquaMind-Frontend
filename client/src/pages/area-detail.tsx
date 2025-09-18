@@ -7,11 +7,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useAreaKpi } from "@/hooks/aggregations/useAreaKpi";
+import { useAreaSummary, type AreaSummary } from "@/features/infrastructure/api";
 import { ApiService } from "@/api/generated";
 import { api } from "@/lib/api";
 import { AuthService, authenticatedFetch } from "@/services/auth.service";
 import { apiConfig } from "@/config/api.config";
+import { formatWeight, formatCount } from "@/lib/formatFallback";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -129,47 +130,22 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
 
         const containersData = await containersResponse.json();
         const containers = containersData.results || [];
-        const containerIds = containers.map((c: any) => c.id);
 
-        // Fetch batch assignments for biomass calculations using AuthService
-        const assignmentsResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=500`
-        );
+        // Note: Biomass and population data is now provided by server-side aggregation
+        // Individual container details are still fetched for the detailed ring view
 
-        const assignmentsData = await assignmentsResponse.json();
-        const assignments = assignmentsData.results || [];
-
-        // Create biomass map per container
-        const biomassMap = new Map();
-        const populationMap = new Map();
-
-        assignments.forEach((assignment: any) => {
-          const containerId = assignment.container?.id || assignment.container_id;
-          if (containerId && containerIds.includes(containerId)) {
-            const currentBiomass = biomassMap.get(containerId) || 0;
-            const currentPopulation = populationMap.get(containerId) || 0;
-
-            biomassMap.set(containerId, currentBiomass + parseFloat(assignment.biomass_kg || '0'));
-            populationMap.set(containerId, currentPopulation + parseInt(assignment.population_count || '0'));
-          }
-        });
-
-        // Transform containers to ring format with calculated biomass
+        // Transform containers to ring format (detailed view only - summary data handled separately)
         const rings = containers.map((container: any) => {
-          const containerBiomass = biomassMap.get(container.id) || 0;
-          const containerPopulation = populationMap.get(container.id) || 0;
-          const averageWeight = containerPopulation > 0 ? containerBiomass / containerPopulation : 0;
-
           return {
             id: container.id,
             name: container.name || `Ring ${container.id}`,
             areaId: container.area,
             areaName: container.area_name || 'Unknown Area',
             status: container.active ? 'active' : 'inactive',
-            biomass: containerBiomass / 1000, // Convert kg to tons
+            biomass: 0, // Individual biomass not calculated client-side anymore
             capacity: 50, // Default capacity in tons
-            fishCount: containerPopulation,
-            averageWeight: averageWeight, // kg per fish
+            fishCount: 0, // Individual population not calculated client-side anymore
+            averageWeight: 0, // Individual average weight not calculated client-side anymore
             waterDepth: container.water_depth || 20,
             netCondition: 'good', // Default
             lastInspection: container.updated_at || new Date().toISOString(),
@@ -181,12 +157,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           };
         });
 
-        const totalBiomass = rings.reduce((sum: number, ring: Ring) => sum + ring.biomass, 0);
-        console.log(`Calculated ring biomass for area ${params.id}:`, {
-          rings: rings.map((r: Ring) => ({ id: r.id, biomass: r.biomass, fishCount: r.fishCount })),
-          totalBiomass: totalBiomass,
-          expectedTotal: 3.5 // 20 rings × 0.175 tons each
-        });
+        // Note: Total biomass is now provided by server-side aggregation via areaSummary.active_biomass_kg
 
         return { results: rings };
       } catch (error) {
@@ -198,9 +169,10 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
 
   const rings: Ring[] = ringsData?.results || [];
 
-  // Aggregated KPI data for this area
+  // Aggregated KPI data for this area using server-side aggregation
   const areaId = Number(params.id);
-  const { data: kpi } = useAreaKpi(areaId);
+  const { data: areaSummary, isPending: isAreaSummaryLoading, error: areaSummaryError } = useAreaSummary(areaId) as { data: AreaSummary | undefined; isPending: boolean; error: Error | null };
+
 
   // Environmental data for this area
   const { data: environmentalData } = useQuery({
@@ -243,98 +215,10 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
     },
   });
 
-  // FCR data for this area - simplified approach using feeding events
-  const { data: fcrData } = useQuery({
-    queryKey: ["area", params.id, "fcr-simple"],
-    queryFn: async () => {
-      try {
-        // Check if user is authenticated
-        if (!AuthService.isAuthenticated()) {
-          console.warn("No auth token found for FCR data");
-          return {
-            fcr: null,
-            hasData: false
-          };
-        }
+  // Note: FCR calculation removed as it's now handled by server-side aggregation endpoints
+  // This will be available through the batch/scenario summary endpoints when implemented
 
-        // First, get containers for this area using AuthService
-        const containersResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${params.id}&page_size=100`
-        );
-
-        const containersData = await containersResponse.json();
-        const containers = containersData.results || [];
-        const containerIds = containers.map((c: any) => c.id);
-
-        if (containers.length === 0) {
-          return {
-            fcr: null,
-            hasData: false
-          };
-        }
-
-        // Get feeding events for these containers (last 30 days)
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        const feedingResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.feedingEvents}?container_id__in=${containerIds.join(',')}&feeding_date__gte=${thirtyDaysAgo.toISOString().split('T')[0]}&page_size=500`
-        );
-
-        const feedingData = await feedingResponse.json();
-        const feedingEvents = feedingData.results || [];
-
-        // Get batch assignments to calculate biomass using AuthService
-        const assignmentsResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=500`
-        );
-
-        const assignmentsData = await assignmentsResponse.json();
-        const assignments = assignmentsData.results || [];
-
-        // Create biomass map from assignments
-        const biomassMap = new Map();
-        assignments.forEach((assignment: any) => {
-          const containerId = assignment.container?.id || assignment.container_id;
-          if (containerId && containerIds.includes(containerId)) {
-            const current = biomassMap.get(containerId) || 0;
-            biomassMap.set(containerId, current + parseFloat(assignment.biomass_kg || '0'));
-          }
-        });
-
-        // Calculate total feed and biomass
-        const totalFeedKg = feedingEvents.reduce((sum: number, event: any) =>
-          sum + parseFloat(event.amount_kg || '0'), 0
-        );
-
-        const totalBiomassKg = Array.from(biomassMap.values()).reduce((sum, biomass) => sum + biomass, 0);
-
-        // Calculate FCR
-        const fcr = totalBiomassKg > 0 ? totalFeedKg / totalBiomassKg : null;
-
-        console.log(`Calculated FCR for area ${params.id}:`, {
-          totalFeedKg,
-          totalBiomassKg,
-          fcr,
-          feedingEvents: feedingEvents.length,
-          containers: containers.length
-        });
-
-        return {
-          fcr: fcr,
-          hasData: fcr !== null && fcr > 0
-        };
-      } catch (error) {
-        console.warn("Failed to fetch FCR data:", error);
-        return {
-          fcr: null,
-          hasData: false
-        };
-      }
-    },
-  });
-
-  if (isLoading) {
+  if (isLoading || isAreaSummaryLoading) {
     return (
       <div className="container mx-auto p-4 space-y-6">
         <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
@@ -352,7 +236,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
     );
   }
 
-  if (error || !area) {
+  if (error || areaSummaryError || !area) {
     return (
       <div className="container mx-auto p-4">
         <div className="text-center py-12">
@@ -439,13 +323,13 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {kpi?.hasData ? ((kpi.totalBiomassKg / 1000).toFixed(1)) : 'N/A'}
+              {isAreaSummaryLoading ? '...' : areaSummary ? formatWeight(areaSummary.active_biomass_kg ? areaSummary.active_biomass_kg / 1000 : null, 1) : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {kpi?.hasData ? 'tonnes' : 'No data available'}
+              {isAreaSummaryLoading ? 'Loading...' : areaSummary?.active_biomass_kg ? 'tonnes' : 'No data available'}
             </p>
             <div className="mt-2">
-              <Progress value={kpi?.hasData ? (((kpi.totalBiomassKg / 1000) / (area.capacity || 1)) * 100) : 0} />
+              <Progress value={areaSummary?.active_biomass_kg && area.capacity ? (((areaSummary.active_biomass_kg / 1000) / area.capacity) * 100) : 0} />
             </div>
           </CardContent>
         </Card>
@@ -457,45 +341,49 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {kpi?.hasData ? (kpi.averageWeightKg).toFixed(2) : 'N/A'}
+              {isAreaSummaryLoading ? '...' : areaSummary ? formatWeight(areaSummary.avg_weight_kg, 2) : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {kpi?.hasData ? 'kg per fish' : 'No data available'}
+              {isAreaSummaryLoading ? 'Loading...' : areaSummary?.avg_weight_kg ? 'kg per fish' : 'No data available'}
             </p>
             <div className="mt-2">
-              <Progress value={kpi?.hasData ? ((kpi.averageWeightKg / 6) * 100) : 0} />
+              <Progress value={areaSummary?.avg_weight_kg ? ((areaSummary.avg_weight_kg / 6) * 100) : 0} />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mortality Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-red-600" />
+            <CardTitle className="text-sm font-medium">Container Count</CardTitle>
+            <Waves className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">N/A</div>
-            <p className="text-xs text-muted-foreground">No data available</p>
+            <div className="text-2xl font-bold text-orange-600">
+              {isAreaSummaryLoading ? '...' : areaSummary ? formatCount(areaSummary.container_count, 'containers') : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {isAreaSummaryLoading ? 'Loading...' : areaSummary?.container_count ? 'total containers' : 'No data available'}
+            </p>
             <div className="mt-2">
-              <Progress value={0} />
+              <Progress value={areaSummary?.container_count ? Math.min((areaSummary.container_count / 50) * 100, 100) : 0} />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Feed Conversion</CardTitle>
-            <Activity className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium">Population Count</CardTitle>
+            <Users className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {fcrData?.hasData ? fcrData.fcr?.toFixed(2) : 'N/A'}
+              {isAreaSummaryLoading ? '...' : areaSummary ? formatCount(areaSummary.population_count, 'fish') : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {fcrData?.hasData ? 'FCR ratio' : 'No data available'}
+              {isAreaSummaryLoading ? 'Loading...' : areaSummary?.population_count ? 'total fish' : 'No data available'}
             </p>
             <div className="mt-2">
-              <Progress value={fcrData?.hasData ? Math.max(0, Math.min(100, 100 - ((fcrData.fcr || 0) - 1) * 25)) : 0} />
+              <Progress value={areaSummary?.population_count ? Math.min((areaSummary.population_count / 10000) * 100, 100) : 0} />
             </div>
           </CardContent>
         </Card>
@@ -652,7 +540,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                     <div>
                       <span className="text-muted-foreground">Current Stock:</span>
                       <div className="font-medium">
-                        {kpi?.hasData ? (kpi.populationCount).toLocaleString() + ' fish' : 'No data available'}
+                        {areaSummary ? formatCount(areaSummary.population_count, 'fish') : 'No data available'}
                       </div>
                     </div>
                     <div>
@@ -664,7 +552,7 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
                     <div>
                       <span className="text-muted-foreground">Utilization:</span>
                       <div className="font-medium">
-                        {kpi?.hasData && area.capacity ? Math.round(((kpi.totalBiomassKg / 1000) / area.capacity) * 100) + '%' : 'No data available'}
+                        {areaSummary?.active_biomass_kg && area.capacity ? Math.round(((areaSummary.active_biomass_kg / 1000) / area.capacity) * 100) + '%' : 'No data available'}
                       </div>
                     </div>
                     <div>
@@ -829,8 +717,12 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
               <Waves className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{filteredRings.length}</div>
-              <p className="text-xs text-muted-foreground">Production units</p>
+              <div className="text-2xl font-bold text-blue-600">
+                {isAreaSummaryLoading ? '...' : areaSummary ? formatCount(areaSummary.ring_count, 'rings') : formatCount(filteredRings.length, 'rings')}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {isAreaSummaryLoading ? 'Loading...' : areaSummary?.ring_count ? 'Production units (from server)' : 'Production units (from containers)'}
+              </p>
             </CardContent>
           </Card>
 
@@ -841,9 +733,11 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {filteredRings.length > 0 ? filteredRings.reduce((sum, ring) => sum + ring.biomass, 0).toFixed(1) + ' tons' : 'No data available'}
+                {isAreaSummaryLoading ? '...' : areaSummary ? formatWeight(areaSummary.active_biomass_kg ? areaSummary.active_biomass_kg / 1000 : null, 1) : 'No data available'}
               </div>
-              <p className="text-xs text-muted-foreground">Current stock</p>
+              <p className="text-xs text-muted-foreground">
+                {isAreaSummaryLoading ? 'Loading...' : areaSummary?.active_biomass_kg ? 'Current stock (from server)' : 'No data available'}
+              </p>
             </CardContent>
           </Card>
 

@@ -6,7 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
-import { useStationKpi } from "@/hooks/aggregations/useStationKpi";
+import { useStationSummary } from "@/features/infrastructure/api";
+import { formatWeight, formatCount } from "@/lib/formatFallback";
 import { ApiService } from "@/api/generated";
 import { 
   ArrowLeft, 
@@ -114,7 +115,7 @@ export default function StationDetail({ params }: { params: { id: string } }) {
     },
   });
 
-  const { data: kpi } = useStationKpi(Number(stationId));
+  const { data: stationSummary, isPending: isSummaryLoading } = useStationSummary(Number(stationId));
 
   if (isLoading) {
     return (
@@ -182,8 +183,7 @@ export default function StationDetail({ params }: { params: { id: string } }) {
     );
   }
 
-  const capacityUtilization = Math.round((((kpi?.totalBiomassKg ?? 0) / 1000) / (station.capacity || 1)) * 100);
-  const efficiencyScore = Math.round((2.0 - station.feedConversion) * 100); // Higher FCR = lower efficiency
+  const capacityUtilization = Math.round((((stationSummary?.active_biomass_kg ?? 0) / 1000) / (station.capacity || 1)) * 100);
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -238,8 +238,18 @@ export default function StationDetail({ params }: { params: { id: string } }) {
             <Fish className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{((kpi?.totalBiomassKg ?? 0) / 1000).toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">tons • {(kpi?.populationCount ?? 0).toLocaleString()} fish</p>
+            <div className="text-2xl font-bold text-blue-600">
+              {isSummaryLoading
+                ? "..."
+                : ((stationSummary?.active_biomass_kg ?? 0) / 1000).toLocaleString()
+              }
+            </div>
+            <p className="text-xs text-muted-foreground">
+              tons • {isSummaryLoading
+                ? "..."
+                : formatCount(stationSummary?.population_count, "fish")
+              }
+            </p>
             <Progress value={capacityUtilization} className="mt-2" />
             <p className="text-xs text-muted-foreground mt-1">{capacityUtilization}% of capacity</p>
           </CardContent>
@@ -251,11 +261,26 @@ export default function StationDetail({ params }: { params: { id: string } }) {
             <Container className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{station.halls}</div>
-            <p className="text-xs text-muted-foreground">{station.totalContainers} containers • Click to view</p>
+            <div className="text-2xl font-bold text-green-600">
+              {isSummaryLoading
+                ? "..."
+                : formatCount(stationSummary?.hall_count, "halls")
+              }
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {isSummaryLoading
+                ? "... containers • Click to view"
+                : `${formatCount(stationSummary?.container_count, "containers")} • Click to view`
+              }
+            </p>
             <div className="flex items-center space-x-2 mt-2">
               <span className="text-xs">Avg weight:</span>
-              <span className="text-sm font-medium">{((kpi?.averageWeightKg ?? 0) * 1000).toFixed(0)}g</span>
+              <span className="text-sm font-medium">
+                {isSummaryLoading
+                  ? "..."
+                  : formatWeight(stationSummary?.avg_weight_kg)
+                }
+              </span>
             </div>
             <div className="mt-2 text-xs text-blue-600 flex items-center">
               <Factory className="h-3 w-3 mr-1" />
@@ -270,11 +295,11 @@ export default function StationDetail({ params }: { params: { id: string } }) {
             <TrendingUp className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{efficiencyScore}%</div>
-            <p className="text-xs text-muted-foreground">FCR: {station.feedConversion}</p>
+            <div className="text-2xl font-bold text-purple-600">N/A</div>
+            <p className="text-xs text-muted-foreground">Efficiency metrics not available</p>
             <div className="flex items-center space-x-2 mt-2">
-              <span className="text-xs">Mortality:</span>
-              <span className="text-sm font-medium">{station.mortalityRate}%</span>
+              <span className="text-xs">Status:</span>
+              <span className="text-sm font-medium text-muted-foreground">Data collection in progress</span>
             </div>
           </CardContent>
         </Card>
@@ -285,10 +310,10 @@ export default function StationDetail({ params }: { params: { id: string } }) {
             <Users className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{station.staffCount}</div>
-            <p className="text-xs text-muted-foreground">staff members</p>
-            <Badge className={`mt-2 ${getCertificationBadge(station.certificationStatus)}`}>
-              {station.certificationStatus.replace('_', ' ')}
+            <div className="text-2xl font-bold text-orange-600">N/A</div>
+            <p className="text-xs text-muted-foreground">Staff data not available</p>
+            <Badge className="mt-2 bg-gray-100 text-gray-800">
+              Certification status pending
             </Badge>
           </CardContent>
         </Card>
@@ -402,7 +427,12 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Coordinates:</span>
-                    <div className="font-medium">{station.coordinates.lat.toFixed(4)}, {station.coordinates.lng.toFixed(4)}</div>
+                    <div className="font-medium">
+                      {station.coordinates && typeof station.coordinates.lat === 'number' && typeof station.coordinates.lng === 'number'
+                        ? `${station.coordinates.lat.toFixed(4)}, ${station.coordinates.lng.toFixed(4)}`
+                        : "N/A"
+                      }
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Last Reading:</span>
@@ -439,11 +469,21 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Current Stock:</span>
-                    <div className="text-lg font-semibold">{(kpi?.populationCount ?? 0).toLocaleString()}</div>
+                    <div className="text-lg font-semibold">
+                      {isSummaryLoading
+                        ? "..."
+                        : formatCount(stationSummary?.population_count, "fish")
+                      }
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Average Weight:</span>
-                    <div className="text-lg font-semibold">{((kpi?.averageWeightKg ?? 0) * 1000).toFixed(0)}g</div>
+                    <div className="text-lg font-semibold">
+                      {isSummaryLoading
+                        ? "..."
+                        : formatWeight(stationSummary?.avg_weight_kg)
+                      }
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Mortality Rate:</span>
@@ -487,7 +527,12 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Containers/Hall:</span>
-                    <div className="text-lg font-semibold">{Math.round(station.totalContainers / station.halls)}</div>
+                    <div className="text-lg font-semibold">
+                      {station.halls && typeof station.halls === 'number' && station.halls > 0
+                        ? Math.round(station.totalContainers / station.halls)
+                        : "N/A"
+                      }
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Capacity:</span>
@@ -536,19 +581,38 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                   </div>
                   <div>
                     <span className="text-muted-foreground">kW per ton:</span>
-                    <div className="text-lg font-semibold">{(station.powerConsumption / station.totalBiomass).toFixed(1)}</div>
+                    <div className="text-lg font-semibold">
+                      {station.totalBiomass && typeof station.totalBiomass === 'number' && station.totalBiomass > 0
+                        ? (station.powerConsumption / station.totalBiomass).toFixed(1)
+                        : "N/A"
+                      }
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Water per ton:</span>
-                    <div className="text-lg font-semibold">{(station.waterUsage / station.totalBiomass).toFixed(1)} m³</div>
+                    <div className="text-lg font-semibold">
+                      {station.totalBiomass && typeof station.totalBiomass === 'number' && station.totalBiomass > 0
+                        ? `${(station.waterUsage / station.totalBiomass).toFixed(1)} m³`
+                        : "N/A"
+                      }
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Energy Efficiency</span>
-                    <span>{100 - Math.round((station.powerConsumption / 300) * 100)}%</span>
+                    <span>
+                      {typeof station.powerConsumption === 'number' && station.powerConsumption >= 0
+                        ? `${100 - Math.round((station.powerConsumption / 300) * 100)}%`
+                        : "N/A"
+                      }
+                    </span>
                   </div>
-                  <Progress value={100 - (station.powerConsumption / 300) * 100} />
+                  <Progress value={
+                    typeof station.powerConsumption === 'number' && station.powerConsumption >= 0
+                      ? 100 - (station.powerConsumption / 300) * 100
+                      : 0
+                  } />
                 </div>
               </CardContent>
             </Card>
@@ -607,7 +671,12 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Staff per Hall:</span>
-                    <div className="text-lg font-semibold">{Math.round(station.staffCount / station.halls * 10) / 10}</div>
+                    <div className="text-lg font-semibold">
+                      {station.halls && typeof station.halls === 'number' && station.halls > 0
+                        ? Math.round(station.staffCount / station.halls * 10) / 10
+                        : "N/A"
+                      }
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">

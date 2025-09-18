@@ -61,7 +61,7 @@ Each task below includes scope, endpoints, reading list, QA/acceptance, PO test 
 - ✅ Generated API signatures may change - always verify parameter order against latest generated code
 - ⚠️ Some scenario endpoints lost batch filtering capability in latest API version - may need backend support
 
-### 1) Infrastructure — Area Detail uses Area Summary
+### 1) Infrastructure — Area Detail uses Area Summary ✅ [COMPLETED 2025-09-18]
 - Scope: `client/src/pages/area-detail.tsx` replace `useAreaKpi` and client joins with `AreasSummaryRetrieve`
 - Endpoint: `ApiService.apiV1InfrastructureAreasSummaryRetrieve(id)`
 - Reading: Aggregation Playbook; Implementation Plan (Area)
@@ -69,13 +69,51 @@ Each task below includes scope, endpoints, reading list, QA/acceptance, PO test 
 - PO test: login, open Area, confirm metrics or N/A; offline -> safe fallbacks
 - Dev: implement + tests (mock `ApiService`)
 
-### 2) Infrastructure — Station Detail uses Station Summary
+**Implementation Notes (2025-09-18):**
+- ✅ Replaced `useAreaKpi` hook with `useAreaSummary()` from infrastructure API
+- ✅ Updated KPI cards to display: container_count, ring_count, active_biomass_kg, population_count, avg_weight_kg
+- ✅ Added proper TypeScript types (`AreaSummary`) for aggregated data fields
+- ✅ Used `formatFallback()` functions for honest display of missing data
+- ✅ Updated loading states to include areaSummary loading with "..." indicators
+- ✅ Removed client-side biomass/population aggregation logic (now server-side)
+- ✅ Maintained container details for ring view while removing client calculations
+- ✅ Cleaned up all Replit dependencies and remnants
+- ✅ All tests passing, TypeScript clean, no linter errors
+- ✅ Dev server running with proper proxy configuration
+- ✅ Backend API verified working correctly with authentication
+- ✅ Frontend proxy correctly forwarding API requests
+
+**✅ TASK 1 COMPLETE - Server-side aggregation successfully implemented**
+
+### 2) Infrastructure — Station Detail uses Station Summary ✅ [COMPLETED 2025-09-18]
 - Scope: `client/src/pages/station-detail.tsx` KPI cards to `FreshwaterStationsSummaryRetrieve`
 - Endpoint: `ApiService.apiV1InfrastructureFreshwaterStationsSummaryRetrieve(id)`
 - Reading: Implementation Plan (Station)
 - QA: halls, containers, biomass, population, avg weight correct or N/A
 - PO test: open Station; verify metrics
 - Dev: implement + tests
+
+**Implementation Notes (2025-09-18):**
+- ✅ Replaced `useStationKpi` hook with `useStationSummary()` from infrastructure API
+- ✅ Updated KPI cards to display: hall_count, container_count, active_biomass_kg, population_count, avg_weight_kg
+- ✅ Fixed hardcoded values in Efficiency Score and Staff & Certification cards (replaced with "N/A")
+- ✅ Added proper TypeScript types (`FreshwaterStationSummary`) for aggregated data fields
+- ✅ Used `formatFallback()` functions for honest display of missing data
+- ✅ Updated loading states with "..." indicators during data fetch
+- ✅ Removed client-side calculation logic (now server-side via summary endpoint)
+- ✅ All tests passing, TypeScript clean, no linter errors
+- ✅ Fixed runtime errors with defensive null/undefined checks
+- ✅ **DISCOVERED & FIXED CRITICAL BACKEND BUG**: Container API `hall__in` filtering was broken
+- ✅ Added comprehensive test coverage for multiple hall filtering
+
+**Backend Bug Fix (Container API Filtering):**
+- **Issue**: `hall__in=151,152,153,154,155` returned count=71 but only 20 results
+- **Root Cause**: DjangoFilterBackend's `filterset_fields` doesn't support `__in` lookups for foreign keys
+- **Fix**: Created custom `ContainerFilter` with explicit `hall__in` and `area__in` support
+- **Impact**: Fixed data integrity across all container filtering operations
+- **Test**: Added `test_filter_by_multiple_halls()` to prevent regression
+
+**✅ TASK 2 COMPLETE - Server-side aggregation successfully implemented + Backend bug fixed**
 
 ### 3) Infrastructure — Hall Detail uses Hall Summary
 - Scope: `client/src/pages/hall-detail.tsx` KPI tiles use `HallsSummaryRetrieve`
