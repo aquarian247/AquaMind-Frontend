@@ -315,53 +315,73 @@ AquaMind is designed to be deployed in various environments with different confi
 
 ## Architecture Decision Records
 
-### **ADR: API Aggregation Strategy - Frontend vs Backend Responsibility**
+### **ADR: API Aggregation Strategy - Backend-First with Minimal Frontend Processing**
 
 **Context:**
-The frontend requires aggregated data (e.g., "total halls per station", "total biomass per area") but the backend lacks dedicated aggregation endpoints. This creates tension between:
-- Using generated ApiService for perfect frontend-backend alignment (contract-first principle)
-- Using authenticatedFetch for client-side aggregation when backend endpoints don't exist
+The frontend requires aggregated data for KPI cards and dashboards. Following the completion of the backend aggregation implementation plan (Issues #44-53), comprehensive server-side aggregation endpoints are now available, eliminating the need for most client-side aggregation.
 
 **Decision:**
-Implement a **hybrid approach** with clear guidelines:
+Implement a **backend-first approach** with server-side aggregation as the default:
 
-1. **Use Generated ApiService** for all standard CRUD operations and simple queries
-2. **Use authenticatedFetch** for complex aggregations where backend endpoints don't exist
-3. **Document missing aggregation endpoints** as backend feature requests
-4. **Prefer backend aggregation** over client-side processing when possible
+1. **Use Generated ApiService** for all operations, including aggregations
+2. **Server-side aggregation** handles all KPI calculations and summaries
+3. **Minimal client-side processing** only for:
+   - Real-time UI interactions (sliders, dynamic filters)
+   - Combining already-loaded data for visualization
+   - Temporary calculations before persisting
+4. **No client-side aggregation** for KPI cards or dashboard metrics
 
 **Implementation Pattern:**
 ```typescript
-// ✅ Simple operations - use ApiService
-const stations = await ApiService.apiV1InfrastructureFreshwaterStationsList();
-
-// ✅ Complex aggregations - use authenticatedFetch with client-side processing
-const { data: stationSummary } = useQuery({
-  queryFn: async () => {
-    // Client-side aggregation when backend endpoint doesn't exist
-    const [halls, containers, assignments] = await Promise.all([
-      authenticatedFetch(`${apiConfig.baseUrl}${apiConfig.endpoints.halls}?page_size=500`),
-      authenticatedFetch(`${apiConfig.baseUrl}${apiConfig.endpoints.containers}?page_size=500`),
-      authenticatedFetch(`${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=1000`)
-    ]);
-    // Aggregate client-side...
-  }
+// ✅ PREFERRED: Use generated ApiService for server-side aggregations
+const { data: areaKpis } = useQuery({
+  queryKey: ['area-summary', areaId],
+  queryFn: () => ApiService.apiV1InfrastructureAreasSummaryRetrieve(areaId)
 });
+
+// ✅ PREFERRED: Use server-side filtering and date ranges
+const { data: feedingSummary } = useQuery({
+  queryKey: ['feeding-summary', { startDate, endDate, batchId }],
+  queryFn: () => ApiService.apiV1InventoryFeedingEventsSummaryList({
+    start_date: startDate,
+    end_date: endDate,
+    batch: batchId
+  })
+});
+
+// ⚠️ RARE: Client-side processing only for real-time UI interactions
+const calculateProjection = (baseValue: number, sliderValue: number) => {
+  // Simple calculation for immediate UI feedback
+  return baseValue * (1 + sliderValue / 100);
+};
 ```
 
+**Available Server-Side Aggregations:**
+- **Infrastructure KPIs**: `/api/v1/infrastructure/{entity}/{id}/summary/`
+  - Geography, Area, Station, Hall summaries with counts and biomass
+- **Container Assignments**: `/api/v1/batch/container-assignments/summary/`
+  - With location filters (geography, area, station, hall, container_type)
+- **Feeding Events**: `/api/v1/inventory/feeding-events/summary/`
+  - With date range support (start_date, end_date)
+- **FCR Trends**: `/api/v1/inventory/fcr-trends/`
+  - With weighted averaging and interval bucketization
+
 **Rationale:**
-- Maintains contract-first principle for 80% of operations
-- Allows complex aggregations when backend maturity lags
-- Clear migration path as backend adds aggregation endpoints
-- Prevents blocking frontend development on backend feature gaps
+- **Performance**: DB-level aggregates with 30-60s caching
+- **Consistency**: Single source of truth for business logic
+- **Scalability**: Reduced data transfer and client memory usage
+- **Maintainability**: Centralized business logic in backend
+- **Contract-first**: All aggregations in OpenAPI spec
 
 **Consequences:**
-- ✅ Frontend can proceed with client-side aggregation for missing endpoints
-- ✅ Clear upgrade path when backend adds proper aggregation endpoints
-- ✅ Maintains API contract alignment for standard operations
-- ⚠️ Client-side aggregation increases frontend complexity and data transfer
-- ⚠️ Requires careful monitoring of performance impact
+- ✅ Optimal performance with database-level aggregation
+- ✅ Consistent KPI calculations across all clients
+- ✅ Reduced frontend complexity and bundle size
+- ✅ Better caching and CDN optimization
+- ✅ Full OpenAPI documentation for all aggregations
+- ⚠️ Frontend must wait for backend deployment for new aggregations
+- ⚠️ Additional backend endpoints to maintain
 
-**Status:** Accepted | **Date:** Current | **Owner:** Frontend Team
+**Status:** Accepted | **Date:** 2025-09-18 | **Owner:** Full Stack Team
 
 For additional architectural decisions, refer to the Architecture Decision Records (ADRs) in the `/docs/adr` directory.

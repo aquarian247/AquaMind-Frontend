@@ -33,6 +33,14 @@ Each task below includes scope, endpoints, reading list, QA/acceptance, PO test 
 
 ### 0) Scaffolding and Guardrails
 - Scope
+  - **OpenAPI Sync Check** - Ensure latest backend endpoints are available:
+    ```bash
+    # Before starting, ensure latest endpoints are available
+    npm run sync:openapi
+    npm run generate:api
+    # Verify summary endpoints exist in generated code
+    grep -r "summaryRetrieve" client/src/api/generated/services/
+    ```
   - Add feature-level wrappers for generated client:
     - `features/infrastructure/api.ts`: areaSummary, stationSummary, hallSummary, geographySummary
     - `features/inventory/api.ts`: feedingEventsSummaryRange, batchFeedingSummaries

@@ -19,8 +19,8 @@ npm run dev
 
 * **Contract-first** — `api/openapi.yaml` is the single source of truth.
   Run `npm run sync:openapi` to sync with backend and regenerate client.
-* **Hybrid API Strategy** — Use generated ApiService for standard operations; use `authenticatedFetch` only when backend lacks aggregation endpoints (see ADR: API Aggregation Strategy)
-* **Prefer Generated ApiService** — Always prefer `client/src/api/generated` for contract-first alignment; reserve `authenticatedFetch` for complex aggregations where backend endpoints don't exist
+* **Backend-first API Strategy** — Use generated ApiService for ALL operations including aggregations (see ADR: API Aggregation Strategy)
+* **Always Use Generated ApiService** — Use `client/src/api/generated` exclusively for contract-first alignment; server-side aggregation endpoints are now available for all KPI needs
 * **Canonical auth endpoints** —
   `POST /api/token/` and `POST /api/token/refresh/` (optional: `GET /api/v1/users/auth/profile/`).
   _Avoid_ legacy `/api/v1/auth/token/*` or `/api/auth/jwt/*` routes.
@@ -202,55 +202,52 @@ client/src/
 When encountering "N/A" values or authentication issues:
 
 1. **Check Browser Console First** - JavaScript errors (like `Map constructor` errors) can mask auth issues
-2. **Compare with Working Pages** - Look at `area-detail.tsx` - it works because it uses `authenticatedFetch`
-3. **Test API Method Choice**:
-   - ✅ **Use `authenticatedFetch`** for complex queries with data processing/auth requirements
-   - ✅ **Use Generated ApiService** for simple CRUD operations
+2. **Verify API endpoint exists** - Check that the server-side aggregation endpoint is available in the OpenAPI spec
+3. **Test with Generated ApiService**:
+   - ✅ **Always use Generated ApiService** for all operations including aggregations
+   - ✅ **Server-side endpoints** handle all KPI calculations
 4. **Verify Authentication Flow**:
    ```typescript
-   // ✅ Correct pattern (matches area-detail.tsx)
-   if (!AuthService.isAuthenticated()) {
-     console.warn("No auth token found");
-     return { results: [] };
-   }
-   const response = await authenticatedFetch(`${apiConfig.baseUrl}${apiConfig.endpoints.endpoint}`);
+   // ✅ Correct pattern - using generated ApiService
+   const { data: summary } = useQuery({
+     queryKey: ['area-summary', areaId],
+     queryFn: () => ApiService.apiV1InfrastructureAreasSummaryRetrieve(areaId),
+     enabled: !!areaId
+   });
    ```
 
 ### **🚨 Common Pitfalls to Avoid**
 
-- **❌ Don't default to authenticatedFetch** - Generated ApiService should be your first choice
-- **❌ Don't create client-side aggregation** without documenting it as a backend feature request
+- **❌ Don't use authenticatedFetch** - Generated ApiService with server-side aggregation is now available
+- **❌ Don't create client-side aggregation** - Server endpoints handle all KPI calculations
 - **❌ Don't ignore JavaScript errors** in console - they can mask auth issues
 - **❌ Don't assume auth issues** without checking for JS runtime errors first
 - **❌ Don't use Map constructors** in production code - use plain objects instead
 
-### **✅ When authenticatedFetch is Appropriate**
+### **✅ Server-Side Aggregation is Now Standard**
 
-**Only use authenticatedFetch when:**
-1. Backend lacks aggregation endpoints (document as feature request)
-2. Complex client-side data processing is required
-3. Generated ApiService doesn't support the required query pattern
+**All KPI aggregations are handled server-side:**
+1. Infrastructure summaries (Geography, Area, Station, Hall)
+2. Container assignment summaries with location filters
+3. Feeding event summaries with date ranges
+4. FCR trends with weighted averaging
 
-**Example from area-detail.tsx (LEGACY - should be backend endpoint):**
+**Example using server-side aggregation:**
 ```typescript
-// ⚠️ LEGACY: This client-side aggregation should ideally be a backend endpoint
-const { data: ringsData } = useQuery({
-  queryFn: async () => {
-    if (!AuthService.isAuthenticated()) {
-      return { results: [] };
-    }
+// ✅ CURRENT: Server-side aggregation via generated ApiService
+const { data: areaKpis } = useQuery({
+  queryKey: ['area-summary', areaId],
+  queryFn: () => ApiService.apiV1InfrastructureAreasSummaryRetrieve(areaId)
+});
 
-    // Client-side aggregation - document as backend feature request
-    const containersResponse = await authenticatedFetch(
-      `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${params.id}&page_size=100`
-    );
-
-    const assignmentsResponse = await authenticatedFetch(
-      `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=1000`
-    );
-
-    // Process data client-side...
-  }
+// ✅ CURRENT: Server-side filtering and date ranges
+const { data: feedingSummary } = useQuery({
+  queryKey: ['feeding-summary', { startDate, endDate }],
+  queryFn: () => ApiService.apiV1InventoryFeedingEventsSummaryList({
+    start_date: startDate,
+    end_date: endDate,
+    batch: batchId
+  })
 });
 ```
 
