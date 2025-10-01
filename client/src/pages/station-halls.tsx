@@ -81,11 +81,12 @@ export default function StationHalls({ params }: { params: { id: string } }) {
   const hallIds = useMemo(() => halls.map(h => h.id), [halls]);
   const { data: hallSummaries, isLoading: summariesLoading } = useHallSummaries(hallIds);
 
-  // Create lookup map for summaries
+  // Create lookup map for summaries (correlate by position since backend doesn't return id)
   const summaryMap = useMemo(() => {
-    if (!hallSummaries) return new Map<number, HallSummary>();
-    return new Map(hallSummaries.map(s => [s.id!, s]));
-  }, [hallSummaries]);
+    if (!hallSummaries || hallSummaries.length === 0) return new Map<number, HallSummary>();
+    // Map summaries back to hall IDs by position (Promise.all maintains order)
+    return new Map(hallIds.map((id, index) => [id, hallSummaries[index]]));
+  }, [hallSummaries, hallIds]);
 
   // Filter halls based on search and status
   const filteredHalls = halls.filter(hall => {
