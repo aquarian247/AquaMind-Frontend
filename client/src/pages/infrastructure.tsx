@@ -29,7 +29,6 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "wouter";
 import { ApiService } from "@/api/generated";
-import { useGeographySummary } from "@/features/infrastructure/api";
 import { formatCount, formatWeight, formatPercentage } from "@/lib/formatFallback";
 
 // Infrastructure data interfaces
@@ -84,33 +83,17 @@ export default function Infrastructure() {
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
 
-  // Fetch geographies list
+  // ✅ Use GLOBAL infrastructure overview endpoint for all-geography aggregation
+  const { data: globalOverview, isLoading: summaryLoading } = useQuery({
+    queryKey: ["infrastructure", "overview", "global"],
+    queryFn: async () => ApiService.infrastructureOverview(),
+  });
+
+  // Fetch geographies list for geography selector
   const { data: geographiesData, isLoading: geographiesLoading } = useQuery({
     queryKey: ["infrastructure", "geographies"],
     queryFn: async () => ApiService.apiV1InfrastructureGeographiesList(),
   });
-
-  // Get geography IDs for summary fetching
-  const geographyIds = useMemo(
-    () => geographiesData?.results?.map(g => g.id!).filter(Boolean) || [],
-    [geographiesData]
-  );
-
-  // Fetch server-side aggregated summary for selected geography
-  // Use geography filter or default to Faroe Islands (ID=3) which has real data
-  const selectedGeographyId = useMemo(() => {
-    if (selectedGeography === "all") {
-      // Find Faroe Islands (has data) or fall back to first geography
-      return geographyIds.find(id => id === 3) || geographyIds[0];
-    }
-    // Find geography by name
-    const geo = geographiesData?.results?.find(g => 
-      g.name?.toLowerCase() === selectedGeography.toLowerCase()
-    );
-    return geo?.id || geographyIds[0];
-  }, [selectedGeography, geographyIds, geographiesData]);
-
-  const { data: geographySummary, isLoading: summaryLoading } = useGeographySummary(selectedGeographyId);
 
   // Fetch sample containers for display
   const { data: containersData } = useQuery({
@@ -128,24 +111,18 @@ export default function Infrastructure() {
     ),
   });
 
-  const geographies = geographiesData?.results?.map((geo: any) => {
-    // Use server-side aggregated data
-    const isSelected = geo.id === selectedGeographyId;
-    const summary = isSelected ? geographySummary : null;
-
-    return {
-      id: geo.id,
-      name: geo.name,
-      totalContainers: summary?.container_count ?? 0,
-      activeBiomass: summary?.active_biomass_kg ?? 0,
-      capacity: 0, // Not in summary yet
-      utilizationPercent: 0, // Calculate when capacity available
-      seaAreas: summary?.ring_count ?? 0,
-      freshwaterStations: 0, // Could add to backend summary
-      status: geo.active ? 'active' as const : 'inactive' as const,
-      lastUpdate: geo.updated_at || new Date().toISOString()
-    };
-  }) || [];
+  const geographies = geographiesData?.results?.map((geo: any) => ({
+    id: geo.id,
+    name: geo.name,
+    totalContainers: 0, // Individual geography metrics not needed for overview page
+    activeBiomass: 0,
+    capacity: 0,
+    utilizationPercent: 0,
+    seaAreas: 0,
+    freshwaterStations: 0,
+    status: (geo.active ?? true) ? 'active' as const : 'inactive' as const,
+    lastUpdate: geo.updated_at || new Date().toISOString()
+  })) || [];
 
   // No alerts endpoint yet - empty array
   const alerts: Alert[] = [];
@@ -159,10 +136,10 @@ export default function Infrastructure() {
     geography: geographies.length > 0 ? geographies[0].name : "Unknown", // Use first available geography
     area: container.area_name || container.hall_name || "Unknown",
     biomass: 0, // Would need to be calculated from batch assignments
-    // Capacity calculation: volume_m3 × 1000 = capacity in kg
-    // Example: 10.0 m³ × 1000 = 10,000 kg (assuming water density ≈ 1 kg/L)
-    // This is displayed as "10.0k kg" in the UI
-    capacity: parseFloat(container.volume_m3 || '0') * 1000,
+    // ✅ Use max_biomass_kg from container model (aquaculture capacity, not just water volume)
+    // Example: Container with 10m³ volume has max_biomass_kg = 500 kg
+    // This represents safe stocking density for fish welfare
+    capacity: parseFloat(container.max_biomass_kg || '0'),
     currentBatch: "Unknown", // Would need to be determined from batch assignments
     lastFeed: "Unknown", // Would need to be determined from feeding events
     sensorReadings: {}, // Would need sensor data integration
@@ -270,7 +247,7 @@ export default function Infrastructure() {
       )}
 
       {/* Infrastructure Summary KPIs - 4 Status Boxes */}
-      {/* KPI Cards - Server-Side Aggregation */}
+      {/* KPI Cards - Global Infrastructure Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -279,10 +256,10 @@ export default function Infrastructure() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {summaryLoading ? "..." : formatCount(geographySummary?.container_count)}
+              {summaryLoading ? "..." : formatCount(globalOverview?.total_containers)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summaryLoading ? "Loading..." : "Across all infrastructure"}
+              {summaryLoading ? "Loading..." : "Across all geographies"}
             </p>
           </CardContent>
         </Card>
@@ -294,40 +271,45 @@ export default function Infrastructure() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {summaryLoading ? "..." : formatWeight(geographySummary?.active_biomass_kg)}
+              {summaryLoading ? "..." : formatWeight(globalOverview?.active_biomass_kg)}
             </div>
             <p className="text-xs text-muted-foreground">
               {summaryLoading ? "Loading..." : "Current stock"}
             </p>
+            {globalOverview?.capacity_kg && globalOverview.active_biomass_kg && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {formatPercentage((globalOverview.active_biomass_kg / globalOverview.capacity_kg) * 100, 1)} of capacity
+              </p>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Population</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Capacity</CardTitle>
             <Gauge className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {summaryLoading ? "..." : formatCount(geographySummary?.population_count)}
+              {summaryLoading ? "..." : formatWeight(globalOverview?.capacity_kg)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summaryLoading ? "Loading..." : "Total fish"}
+              {summaryLoading ? "Loading..." : "Maximum biomass"}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Weight</CardTitle>
+            <CardTitle className="text-sm font-medium">Feeding Events Today</CardTitle>
             <Activity className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {summaryLoading ? "..." : formatWeight(geographySummary?.avg_weight_kg)}
+              {summaryLoading ? "..." : formatCount(globalOverview?.feeding_events_today)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summaryLoading ? "Loading..." : "Per fish"}
+              {summaryLoading ? "Loading..." : "Last 24 hours"}
             </p>
           </CardContent>
         </Card>
