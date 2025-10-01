@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,8 @@ import {
   Calendar
 } from "lucide-react";
 import { useLocation } from "wouter";
-import { api } from "@/lib/api";
+import { ApiService, InfrastructureService } from "@/api/generated";
+import { formatCount, formatWeight, formatPercentage } from "@/lib/formatFallback";
 
 interface ContainerOverview {
   id: number;
@@ -54,57 +55,41 @@ export default function InfrastructureContainers() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Fetch dynamic filter options
-  const { data: filterOptions, isLoading: filtersLoading, error: filtersError } = useQuery({
-    queryKey: ["infrastructure/containers/filter-options"],
-    queryFn: () => {
-      console.log('Fetching filter options...');
-      return api.infrastructure.getContainerFilterOptions();
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+  // ✅ Use global overview for KPI cards
+  const { data: globalOverview, isLoading: overviewLoading } = useQuery({
+    queryKey: ["infrastructure", "overview", "global"],
+    queryFn: async () => InfrastructureService.infrastructureOverview(),
   });
 
+  // ✅ Fetch containers using generated API client
   const { data: containersData, isLoading: containersLoading } = useQuery({
-    // Non-URL key signals client-computed aggregation to the endpoint validator
-    queryKey: [
-      "infrastructure/containers/overview",
-      geographyFilter,
-      stationFilter,
-      typeFilter,
-      statusFilter,
-    ],
-    queryFn: () =>
-      api.infrastructure.getContainersOverview({
-        geography: geographyFilter,
-        station: stationFilter,
-        type: typeFilter,
-        status: statusFilter,
-      }),
+    queryKey: ["infrastructure", "containers", "list"],
+    queryFn: async () => ApiService.apiV1InfrastructureContainersList(),
   });
 
-  const isLoading = containersLoading || filtersLoading;
+  const isLoading = containersLoading || overviewLoading;
 
-  // Fallback filter options in case dynamic loading fails
-  const fallbackFilterOptions = {
-    geographies: [],
-    stations: [],
-    containerTypes: [],
-    statuses: ['active', 'inactive']
-  };
-
-  // Use dynamic options if available, otherwise fallback
-  const currentFilterOptions = filterOptions || fallbackFilterOptions;
-
-  // Debug logging
-  console.log('Filter options status:', {
-    hasData: !!filterOptions,
-    isLoading: filtersLoading,
-    hasError: !!filtersError,
-    currentOptions: currentFilterOptions
-  });
-
-  // Cast result array to ContainerOverview[] to satisfy strict typing
-  const containers = (containersData?.results as ContainerOverview[]) || [];
+  // Map API containers to UI format
+  const containers = containersData?.results?.map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    type: c.container_type_name || "Unknown",
+    stage: c.hall ? "Smolt" : "Sea", // Simple heuristic: halls = freshwater, no hall = sea
+    status: c.active ? "active" : "inactive",
+    location: {
+      geography: c.geography_name || "Unknown",
+      station: c.station_name || c.freshwater_station_name || "",
+      hall: c.hall_name || undefined,
+      area: c.area_name || undefined,
+    },
+    biomass: 0, // Would need batch assignment data
+    capacity: parseFloat(c.max_biomass_kg || '0'),
+    fishCount: 0, // Would need batch assignment data
+    temperature: 0, // Would need sensor data
+    oxygenLevel: 0, // Would need sensor data
+    lastMaintenance: new Date().toISOString(),
+    utilizationPercent: 0 // Would need batch assignment data
+  })) || [];
 
   // Further filter by search query
   const filteredContainers = containers.filter(container => 
@@ -312,6 +297,7 @@ export default function InfrastructureContainers() {
       </Card>
 
       {/* Summary Stats */}
+      {/* KPI Cards - Server-Side Aggregation */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -319,7 +305,9 @@ export default function InfrastructureContainers() {
             <Factory className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{filteredContainers.length}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {overviewLoading ? "..." : formatCount(globalOverview?.total_containers)}
+            </div>
             <p className="text-xs text-muted-foreground">Production units</p>
           </CardContent>
         </Card>
@@ -331,7 +319,7 @@ export default function InfrastructureContainers() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatNumber(Math.round(filteredContainers.reduce((sum, c) => sum + c.biomass, 0)))} kg
+              {overviewLoading ? "..." : formatWeight(globalOverview?.active_biomass_kg)}
             </div>
             <p className="text-xs text-muted-foreground">Current stock</p>
           </CardContent>
@@ -339,25 +327,27 @@ export default function InfrastructureContainers() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Capacity</CardTitle>
             <div className="h-4 w-4 bg-green-500 rounded-full" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {filteredContainers.filter(c => c.status === 'active').length}
+              {overviewLoading ? "..." : formatWeight(globalOverview?.capacity_kg)}
             </div>
-            <p className="text-xs text-muted-foreground">Currently operational</p>
+            <p className="text-xs text-muted-foreground">Maximum biomass</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Utilization</CardTitle>
+            <CardTitle className="text-sm font-medium">Utilization</CardTitle>
             <div className="h-4 w-4 bg-orange-500 rounded-full" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {Math.round(filteredContainers.reduce((sum, c) => sum + c.utilizationPercent, 0) / filteredContainers.length)}%
+              {overviewLoading || !globalOverview?.capacity_kg || !globalOverview?.active_biomass_kg
+                ? "..."
+                : formatPercentage((globalOverview.active_biomass_kg / globalOverview.capacity_kg) * 100, 2)}
             </div>
             <p className="text-xs text-muted-foreground">Capacity usage</p>
           </CardContent>
