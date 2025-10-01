@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "wouter";
-import { ApiService } from "@/api/generated";
+import { ApiService, InfrastructureService } from "@/api/generated";
 import { formatCount, formatWeight, formatPercentage } from "@/lib/formatFallback";
 
 // Infrastructure data interfaces
@@ -86,7 +86,7 @@ export default function Infrastructure() {
   // ✅ Use GLOBAL infrastructure overview endpoint for all-geography aggregation
   const { data: globalOverview, isLoading: summaryLoading } = useQuery({
     queryKey: ["infrastructure", "overview", "global"],
-    queryFn: async () => ApiService.infrastructureOverview(),
+    queryFn: async () => InfrastructureService.infrastructureOverview(),
   });
 
   // Fetch geographies list for geography selector
@@ -435,11 +435,12 @@ export default function Infrastructure() {
                           <CardContent className="space-y-3">
                             <div>
                               <div className="flex justify-between text-sm">
-                                <span>Capacity</span>
+                                <span>Max Capacity</span>
                                 <span>{(container.capacity / 1000).toFixed(1)}k kg</span>
                               </div>
-                              <Progress value={0} className="mt-1" />
-                              <p className="text-xs text-muted-foreground mt-1">Biomass data not yet integrated</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Safe stocking density for fish welfare
+                              </p>
                             </div>
 
                             <div className="text-center text-sm text-muted-foreground py-4">
