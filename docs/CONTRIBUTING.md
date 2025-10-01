@@ -521,6 +521,7 @@ Update relevant documentation:
 > - [Code Organization Guidelines](../code_organization_guidelines.md) - Architecture patterns and file structure
 > - [Refactoring Large Pages Guide](../refactor_large_pages.md) - Step-by-step refactoring instructions
 > - [Complexity Thresholds Guide](../complexity-thresholds-and-remediation.md) - Code quality metrics and analysis
+> - [Multi-Entity Filtering Guide](../multi-entity-filtering-guide.md) - Complete guide to `__in` filtering with examples
 
 ## Questions?
 

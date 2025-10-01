@@ -183,7 +183,7 @@ This task establishes the reliable filtering foundation that all subsequent aggr
 - `client/src/hooks/useMultiEntityFilter.ts` - State management hook (23 tests)
 - `client/src/components/filters/MultiSelectFilter.tsx` - Reusable UI component
 - `client/src/components/filters/index.ts` - Barrel export
-- `client/src/components/filters/README.md` - Comprehensive documentation (600+ lines)
+- `docs/multi-entity-filtering-guide.md` - Comprehensive documentation (600+ lines)
 - `client/src/pages/examples/multi-entity-filtering-demo.tsx` - Integration demo
 
 **Backend Dependencies Met:**
