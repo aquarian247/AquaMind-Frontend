@@ -69,9 +69,13 @@ export default function HallDetail({ params }: { params: { id: string } }) {
   const { data: containersData, isLoading } = useQuery({
     queryKey: ["hall", hallId, "containers"],
     queryFn: async () => {
-      const res = await ApiService.apiV1InfrastructureContainersList({
-        hall: Number(hallId),
-      } as any);
+      // ✅ Use correct camelCase parameter name from generated API
+      const res = await ApiService.apiV1InfrastructureContainersList(
+        undefined, // active filter
+        undefined, // areaIn
+        undefined, // containerType
+        Number(hallId) // hall parameter
+      );
 
       /* Map API result to UI shape expected by page */
       const mapped = (res.results || []).map((c: any) => {

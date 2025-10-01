@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { ApiService } from "@/api/generated";
+import { useHallSummaries, type HallSummary } from "@/features/infrastructure/api";
+import { formatCount, formatWeight } from "@/lib/formatFallback";
 
 interface Hall {
   id: number;
@@ -46,9 +48,11 @@ export default function StationHalls({ params }: { params: { id: string } }) {
   const { data: hallsData, isLoading } = useQuery({
     queryKey: ["station", stationId, "halls"],
     queryFn: async () => {
-      const res = await ApiService.apiV1InfrastructureHallsList({
-        freshwater_station: Number(stationId),
-      } as any);
+      // ✅ Use correct camelCase parameter name from generated API
+      const res = await ApiService.apiV1InfrastructureHallsList(
+        undefined, // active filter
+        Number(stationId) // freshwaterStation parameter
+      );
 
       const mapped = (res.results || []).map((raw: any): Hall => ({
         id: raw.id,
@@ -72,6 +76,16 @@ export default function StationHalls({ params }: { params: { id: string } }) {
   });
 
   const halls: Hall[] = hallsData?.results || [];
+
+  // Fetch server-side aggregations for all halls
+  const hallIds = useMemo(() => halls.map(h => h.id), [halls]);
+  const { data: hallSummaries, isLoading: summariesLoading } = useHallSummaries(hallIds);
+
+  // Create lookup map for summaries
+  const summaryMap = useMemo(() => {
+    if (!hallSummaries) return new Map<number, HallSummary>();
+    return new Map(hallSummaries.map(s => [s.id!, s]));
+  }, [hallSummaries]);
 
   // Filter halls based on search and status
   const filteredHalls = halls.filter(hall => {
@@ -226,14 +240,18 @@ export default function StationHalls({ params }: { params: { id: string } }) {
 
       {/* Halls Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredHalls.map((hall) => (
+        {filteredHalls.map((hall) => {
+          // Get server-side aggregated summary for this hall
+          const summary = summaryMap.get(hall.id);
+          
+          return (
           <Card key={hall.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
                   <CardTitle className="text-lg">{hall.name}</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    {hall.containers} containers
+                    {summariesLoading ? "..." : formatCount(summary?.container_count, "containers")}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -250,52 +268,35 @@ export default function StationHalls({ params }: { params: { id: string } }) {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Biomass</span>
-                  <div className="font-semibold text-lg">{hall.totalBiomass} tons</div>
+                  <div className="font-semibold text-lg">
+                    {summariesLoading ? "..." : formatWeight(summary?.active_biomass_kg)}
+                  </div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Capacity</span>
-                  <div className="font-semibold text-lg">{hall.capacity} tons</div>
+                  <span className="text-muted-foreground">Population</span>
+                  <div className="font-semibold text-lg">
+                    {summariesLoading ? "..." : formatCount(summary?.population_count)}
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Thermometer className="h-3 w-3 text-blue-500" />
-                  <span className="text-muted-foreground">Temp</span>
-                  <div className="font-medium">{hall.temperature}°C</div>
+                <div>
+                  <span className="text-muted-foreground">Avg Weight</span>
+                  <div className="font-semibold text-lg">
+                    {summariesLoading ? "..." : formatWeight(summary?.avg_weight_kg)}
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Droplet className="h-3 w-3 text-cyan-500" />
-                  <span className="text-muted-foreground">O₂</span>
-                  <div className="font-medium">{hall.oxygenLevel} mg/L</div>
+                <div>
+                  <span className="text-muted-foreground">Utilization</span>
+                  <div className="font-semibold text-lg">
+                    {summariesLoading || !summary?.container_count 
+                      ? "N/A" 
+                      : `${Math.round((summary.population_count || 0) / (summary.container_count * 1000)) * 10}%`}
+                  </div>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Capacity Utilization</span>
-                  <span>{Math.round((hall.totalBiomass / hall.capacity) * 100)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all" 
-                    style={{ width: `${Math.min((hall.totalBiomass / hall.capacity) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Flow Rate:</span>
-                  <span>{hall.flowRate} L/min</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Power Usage:</span>
-                  <span>{hall.powerUsage} kW</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center text-muted-foreground">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    Last Maintenance:
-                  </span>
-                  <span>{new Date(hall.lastMaintenance).toLocaleDateString()}</span>
+              <div className="pt-2 border-t">
+                <div className="text-xs text-muted-foreground">
+                  Server-side aggregation • {summariesLoading ? "Loading..." : "Live data"}
                 </div>
               </div>
               
@@ -315,7 +316,8 @@ export default function StationHalls({ params }: { params: { id: string } }) {
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       {filteredHalls.length === 0 && (
