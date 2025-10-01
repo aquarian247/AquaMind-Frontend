@@ -91,7 +91,7 @@ export function useStationSummary(stationId: number | undefined): UseQueryResult
  * @param hallId - The hall ID to fetch summary for
  * @returns Query result with hall summary data
  */
-export function useHallSummary(hallId: number | undefined): UseQueryResult<Hall, Error> {
+export function useHallSummary(hallId: number | undefined): UseQueryResult<HallSummary, Error> {
   return useQuery({
     queryKey: ["infrastructure", "hall-summary", hallId],
     queryFn: async () => {
@@ -166,7 +166,7 @@ export function useStationSummaries(stationIds: number[]): UseQueryResult<Freshw
  * @param hallIds - Array of hall IDs to fetch summaries for
  * @returns Array of query results
  */
-export function useHallSummaries(hallIds: number[]): UseQueryResult<Hall[], Error> {
+export function useHallSummaries(hallIds: number[]): UseQueryResult<HallSummary[], Error> {
   return useQuery({
     queryKey: ["infrastructure", "hall-summaries", hallIds],
     queryFn: async () => {
