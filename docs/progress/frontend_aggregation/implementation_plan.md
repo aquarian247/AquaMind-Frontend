@@ -484,24 +484,52 @@ capacityUtilization = (totalFeedStock / totalFeedCapacity) * 100
   - `batchesRequiringAttention`: Returns `0` with comment explaining health scoring system not implemented
   - `avgGrowthRate`: Returns `0` with comment explaining growth aggregation endpoint needed
 
-**OpenAPI Spec Gap Identified & RESOLVED:**
-- ✅ **Container Assignments Summary Endpoint - FIXED (Backend Issue #76)**: 
-  - **Original Issue**: OpenAPI spec description mentioned filters but `parameters` section was missing
-  - **Root Cause**: Decorator order issue - `@extend_schema` must be above `@action` for drf-spectacular to extract parameters
-  - **Fix Applied**: Backend team reordered decorators and regenerated spec (commit `12a6c84`)
-  - **Resolution**: Generated method now has all 6 parameters:
-    ```typescript
-    ApiService.batchContainerAssignmentsSummary(
-      area?: number,
-      containerType?: string,
-      geography?: number,
-      hall?: number,
-      isActive: boolean = true,
-      station?: number
-    ): CancelablePromise<{ active_biomass_kg: number; count: number }>
-    ```
-  - **Frontend Updated**: Batch API wrapper now uses correct method signature with all filter support
-  - **Status**: ✅ Complete - Multi-location batch analytics now fully enabled!
+**OpenAPI Spec Gaps Identified:**
+
+1. ✅ **Container Assignments Summary Endpoint - FIXED (Backend Issue #76)**: 
+   - **Original Issue**: OpenAPI spec description mentioned filters but `parameters` section was missing
+   - **Root Cause**: Decorator order issue - `@extend_schema` must be above `@action` for drf-spectacular to extract parameters
+   - **Fix Applied**: Backend team reordered decorators and regenerated spec (commit `12a6c84`)
+   - **Resolution**: Generated method now has all 6 parameters:
+     ```typescript
+     ApiService.batchContainerAssignmentsSummary(
+       area?: number,
+       containerType?: string,
+       geography?: number,
+       hall?: number,
+       isActive: boolean = true,
+       station?: number
+     ): CancelablePromise<{ active_biomass_kg: number; count: number }>
+     ```
+   - **Frontend Updated**: Batch API wrapper now uses correct method signature with all filter support
+   - **Status**: ✅ Complete - Multi-location batch analytics now fully enabled!
+
+2. ⚠️ **Batch Feeding Summaries by_batch Endpoint - NEEDS FIX**:
+   - **Issue**: `/api/v1/inventory/batch-feeding-summaries/by_batch/` missing `batch_id` parameter in OpenAPI spec
+   - **Backend Code** (`apps/inventory/api/viewsets/summary.py:52-66`):
+     ```python
+     @action(detail=False, methods=['get'])
+     def by_batch(self, request):
+         batch_id = request.query_params.get('batch_id')  # ← REQUIRES batch_id
+         if not batch_id:
+             return Response({"error": "batch_id parameter is required"}, status=400)
+     ```
+   - **OpenAPI Spec** (line 17982): Has NO `parameters:` section (missing `@extend_schema` decorator)
+   - **Impact**: Frontend gets 400 Bad Request when calling endpoint without parameter
+   - **Workaround**: Frontend uses list endpoint (`apiV1InventoryBatchFeedingSummariesList()`) instead
+   - **Backend Fix Needed**: Add `@extend_schema` with `batch_id` parameter above `@action` decorator:
+     ```python
+     @extend_schema(
+         parameters=[
+             OpenApiParameter(name="batch_id", type=OpenApiTypes.INT, required=True, 
+                            description="Batch ID to get summaries for")
+         ]
+     )
+     @action(detail=False, methods=['get'])
+     def by_batch(self, request):
+         ...
+     ```
+   - **Status**: ⚠️ Workaround in place, backend fix recommended for completeness
 
 **FCR Analytics Verification:**
 ```typescript

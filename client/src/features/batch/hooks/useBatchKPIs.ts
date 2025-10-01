@@ -21,9 +21,11 @@ export function useBatchKPIs(batches: ExtendedBatch[]) {
     queryKey: ["batch", "recent-fcr-for-kpi"],
     queryFn: async () => {
       try {
-        // Get recent feeding summaries aggregated by batch for average FCR
-        const summaries = await ApiService.apiV1InventoryBatchFeedingSummariesByBatchRetrieve();
-        return summaries || [];
+        // WORKAROUND: by_batch endpoint has OpenAPI spec gap (missing batch_id parameter)
+        // Use the list endpoint instead which has proper filtering
+        // Get all feeding summaries (will be filtered client-side for now)
+        const response = await ApiService.apiV1InventoryBatchFeedingSummariesList();
+        return response.results || [];
       } catch (error) {
         console.error("Failed to fetch FCR data for KPIs:", error);
         return [];
