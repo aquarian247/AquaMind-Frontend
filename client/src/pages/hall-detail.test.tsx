@@ -85,16 +85,16 @@ describe('HallDetail', () => {
         expect(screen.getByText('Hall Alpha')).toBeInTheDocument();
       });
 
-      // Verify KPI cards display aggregated data
+      // Verify KPI cards display aggregated data (with thousand separators)
       await waitFor(() => {
         // Container count
         expect(screen.getByText('12')).toBeInTheDocument();
 
-        // Biomass
-        expect(screen.getByText('5432.50 kg')).toBeInTheDocument();
+        // Biomass (with thousand separator)
+        expect(screen.getByText('5,432.50 kg')).toBeInTheDocument();
 
-        // Population
-        expect(screen.getByText('25000')).toBeInTheDocument();
+        // Population (with thousand separator)
+        expect(screen.getByText('25,000')).toBeInTheDocument();
 
         // Average weight
         expect(screen.getByText('0.22 kg')).toBeInTheDocument();

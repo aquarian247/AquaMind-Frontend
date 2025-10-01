@@ -47,10 +47,11 @@ export function formatFallback(
       return fallbackText;
     }
     
-    // Format number with precision
-    const formatted = Number.isInteger(value) 
-      ? value.toString() 
-      : value.toFixed(precision);
+    // Format number with thousand separators and precision
+    const formatted = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: Number.isInteger(value) ? 0 : precision,
+      maximumFractionDigits: precision
+    }).format(value);
     
     // Append unit if provided
     return unit ? `${formatted} ${unit}` : formatted;
@@ -60,9 +61,10 @@ export function formatFallback(
   if (typeof value === "string") {
     const numValue = Number(value);
     if (!isNaN(numValue) && value !== "") {
-      const formatted = Number.isInteger(numValue) 
-        ? numValue.toString() 
-        : numValue.toFixed(precision);
+      const formatted = new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: Number.isInteger(numValue) ? 0 : precision,
+        maximumFractionDigits: precision
+      }).format(numValue);
       return unit ? `${formatted} ${unit}` : formatted;
     }
     // Return non-numeric string as-is if not empty
