@@ -601,7 +601,9 @@ export default function Infrastructure() {
               </div>
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-sm">
                 <div className="p-3 bg-blue-50 rounded-lg">
-                  <div className="font-medium text-blue-900">{summary.totalContainers} Containers</div>
+                  <div className="font-medium text-blue-900">
+                    {formatCount(globalOverview?.total_containers)} Containers
+                  </div>
                   <div className="text-blue-700">Across all facilities</div>
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg">
