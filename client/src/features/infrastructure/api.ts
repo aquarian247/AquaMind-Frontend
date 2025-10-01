@@ -180,6 +180,26 @@ export function useHallSummaries(hallIds: number[]): UseQueryResult<HallSummary[
   });
 }
 
+/**
+ * Hook to fetch multiple geography summaries
+ * Useful for overview pages that need summaries for multiple geographies
+ * @param geographyIds - Array of geography IDs to fetch summaries for
+ * @returns Array of query results
+ */
+export function useGeographySummaries(geographyIds: number[]): UseQueryResult<GeographySummary[], Error> {
+  return useQuery({
+    queryKey: ["infrastructure", "geography-summaries", geographyIds],
+    queryFn: async () => {
+      const summaries = await Promise.all(
+        geographyIds.map(id => ApiService.apiV1InfrastructureGeographiesSummaryRetrieve(id))
+      );
+      return summaries;
+    },
+    enabled: geographyIds.length > 0,
+    ...INFRASTRUCTURE_QUERY_OPTIONS,
+  });
+}
+
 // Export utility to invalidate infrastructure queries
 export function getInfrastructureQueryKeys() {
   return {

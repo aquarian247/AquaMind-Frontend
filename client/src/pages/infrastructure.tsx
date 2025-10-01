@@ -29,6 +29,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "wouter";
 import { ApiService, InfrastructureService } from "@/api/generated";
+import { useGeographySummaries } from "@/features/infrastructure/api";
 import { formatCount, formatWeight, formatPercentage } from "@/lib/formatFallback";
 
 // Infrastructure data interfaces
@@ -95,6 +96,20 @@ export default function Infrastructure() {
     queryFn: async () => ApiService.apiV1InfrastructureGeographiesList(),
   });
 
+  // Get geography IDs and fetch summaries for all geographies
+  const geographyIds = useMemo(
+    () => geographiesData?.results?.map(g => g.id!).filter(Boolean) || [],
+    [geographiesData]
+  );
+  
+  const { data: geographySummaries, isLoading: geoSummariesLoading } = useGeographySummaries(geographyIds);
+
+  // Create lookup map for geography summaries
+  const geoSummaryMap = useMemo(() => {
+    if (!geographySummaries || geographySummaries.length === 0) return new Map();
+    return new Map(geographyIds.map((id, index) => [id, geographySummaries[index]]));
+  }, [geographySummaries, geographyIds]);
+
   // Fetch sample containers for display
   const { data: containersData } = useQuery({
     queryKey: ["infrastructure", "containers", "sample"],
@@ -111,18 +126,23 @@ export default function Infrastructure() {
     ),
   });
 
-  const geographies = geographiesData?.results?.map((geo: any) => ({
-    id: geo.id,
-    name: geo.name,
-    totalContainers: 0, // Individual geography metrics not needed for overview page
-    activeBiomass: 0,
-    capacity: 0,
-    utilizationPercent: 0,
-    seaAreas: 0,
-    freshwaterStations: 0,
-    status: (geo.active ?? true) ? 'active' as const : 'inactive' as const,
-    lastUpdate: geo.updated_at || new Date().toISOString()
-  })) || [];
+  const geographies = geographiesData?.results?.map((geo: any) => {
+    const summary = geoSummaryMap.get(geo.id);
+    return {
+      id: geo.id,
+      name: geo.name,
+      totalContainers: summary?.container_count ?? 0,
+      activeBiomass: summary?.active_biomass_kg ?? 0,
+      capacity: summary?.capacity_kg ?? 0,
+      utilizationPercent: summary?.capacity_kg && summary?.active_biomass_kg
+        ? (summary.active_biomass_kg / summary.capacity_kg) * 100
+        : 0,
+      seaAreas: summary?.ring_count ?? 0,
+      freshwaterStations: summary?.station_count ?? 0,
+      status: (geo.active ?? true) ? 'active' as const : 'inactive' as const,
+      lastUpdate: geo.updated_at || new Date().toISOString()
+    };
+  }) || [];
 
   // No alerts endpoint yet - empty array
   const alerts: Alert[] = [];

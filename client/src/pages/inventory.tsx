@@ -36,6 +36,8 @@ import {
 } from "lucide-react";
 import { ApiService } from "@/api/generated/services/ApiService";
 import HierarchicalFilter, { OperationsOverview } from "@/components/layout/hierarchical-filter";
+import { useFeedingEventsSummaryLastDays } from "@/features/inventory/api";
+import { formatCount, formatWeight } from "@/lib/formatFallback";
 
 // Types based on Django data model section 3.3
 interface Feed {
@@ -235,7 +237,7 @@ const api = {
         name: c.name ?? "Container",
         capacity: String(c.capacity_kg ?? c.capacity ?? "0"),
         location: c.location ?? c.hall_name ?? undefined,
-        containerType: c.container_type_name ?? c.type ?? "Barge",
+        containerType: c.container_type ?? "BARGE", // Backend returns 'SILO' | 'BARGE' | 'TANK' | 'OTHER' (uppercase)
         isActive: Boolean(c.active ?? c.is_active ?? true),
         createdAt: c.created_at ?? new Date().toISOString(),
         updatedAt: c.updated_at ?? new Date().toISOString(),
@@ -342,20 +344,6 @@ const api = {
     }
   },
 
-  async getFeedingEventsSummary(params?: any): Promise<{ events_count: number; total_feed_kg: number }> {
-    try {
-      const response = await (ApiService as any).apiV1InventoryFeedingEventsSummaryRetrieve(params) as any; // Type override - OpenAPI spec is incorrect
-      return {
-        events_count: response.events_count ?? 0,
-        total_feed_kg: response.total_feed_kg ?? 0,
-      };
-    } catch (error) {
-      console.error("Failed to fetch feeding events summary:", error);
-      // Return zero values instead of throwing to prevent the entire summary from failing
-      return { events_count: 0, total_feed_kg: 0 };
-    }
-  },
-
 };
 
 export default function Inventory() {
@@ -392,35 +380,12 @@ export default function Inventory() {
     queryFn: api.getFeedingEvents,
   });
 
-  // Get feeding events summary for the last 7 days (query each day individually and sum)
-  const getLast7DaysSummaries = async () => {
-    const summaries = [];
-
-    for (let i = 0; i < 7; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateString = date.toISOString().split('T')[0];
-
-      try {
-        const response = await api.getFeedingEventsSummary({ date: dateString });
-        summaries.push(response);
-      } catch (error) {
-        console.warn(`Failed to fetch summary for ${dateString}:`, error);
-      }
-    }
-
-    // Sum up all events
-    const totalEvents = summaries.reduce((sum, summary) => sum + (summary.events_count || 0), 0);
-    const totalFeedKg = summaries.reduce((sum, summary) => sum + (summary.total_feed_kg || 0), 0);
-
-    console.log(`Last 7 days summary: ${totalEvents} events, ${totalFeedKg}kg feed`);
-    return { events_count: totalEvents, total_feed_kg: totalFeedKg };
-  };
-
-  const { data: feedingEventsSummaryData, isLoading: feedingEventsSummaryLoading } = useQuery({
-    queryKey: ['feeding-events-summary-last-7-days'],
-    queryFn: getLast7DaysSummaries,
-  });
+  // ✅ SERVER-SIDE AGGREGATION: Get feeding events summary for the last 7 days
+  // Replaces client-side daily queries + summation with single backend call
+  const { 
+    data: feedingEventsSummaryData, 
+    isLoading: feedingEventsSummaryLoading 
+  } = useFeedingEventsSummaryLastDays(7);
 
   const { data: containerStockData, isLoading: containerStockLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feed-container-stock/"],
@@ -437,6 +402,8 @@ export default function Inventory() {
     queryKey: ["infrastructure"],
     queryFn: () => Promise.all([
       ApiService.apiV1InfrastructureGeographiesList(),
+      ApiService.apiV1InfrastructureAreasList(),
+      ApiService.apiV1InfrastructureFreshwaterStationsList(),
       ApiService.apiV1InfrastructureContainersList(),
       ApiService.apiV1BatchBatchesList()
     ]),
@@ -455,16 +422,34 @@ export default function Inventory() {
 
   // Extract real data from API responses
   const geographies = infrastructureData?.[0]?.results || [];
-  const allContainers = infrastructureData?.[1]?.results || [];
-  const batches = infrastructureData?.[2]?.results || [];
+  const areas = infrastructureData?.[1]?.results || [];
+  const freshwaterStations = infrastructureData?.[2]?.results || [];
+  const allContainers = infrastructureData?.[3]?.results || [];
+  const batches = infrastructureData?.[4]?.results || [];
 
-  // Calculate real metrics for OperationsOverview
-  const totalSites = geographies.length;
+  // Calculate real metrics for OperationsOverview (inventory-specific)
+  // Total Sites = Areas + Freshwater Stations (not geographies, as there are only 2 in production)
+  const totalSites = areas.length + freshwaterStations.length;
+  
+  // Active infrastructure containers (for context)
   const activePensTanks = allContainers.filter((c: any) => c.active).length;
-  const activeBatches = batches.filter((b: any) => b.status === 'active' || !b.status).length;
-  const totalCapacity = allContainers.reduce((sum: number, c: any) => sum + parseFloat(c.volume_m3 || '0'), 0);
-  const totalBiomass = batches.reduce((sum: number, b: any) => sum + parseFloat(b.current_biomass_kg || '0'), 0);
-  const capacityUtilization = totalCapacity > 0 ? Math.round((totalBiomass / (totalCapacity * 1000)) * 100) : 0;
+  
+  // Active batches (check for ACTIVE status, case-insensitive)
+  const activeBatches = batches.filter((b: any) => 
+    b.status?.toUpperCase() === 'ACTIVE' || !b.status
+  ).length;
+  
+  // Feed container capacity utilization (inventory focus, not infrastructure containers)
+  // Calculates: (total feed currently in stock) / (total feed container capacity) * 100
+  // - totalFeedCapacity: Sum of all infrastructure_feedcontainer.capacity_kg
+  // - totalFeedStock: Sum of all inventory_feedstock.current_quantity_kg
+  // - Result: Percentage showing how full feed containers are across all locations
+  // - If no feed test data exists, feedStock.length === 0, so utilization = 0%
+  const totalFeedCapacity = containers.reduce((sum, c) => sum + parseFloat(c.capacity), 0);
+  const totalFeedStock = feedStock.reduce((sum, s) => sum + parseFloat(s.currentQuantityKg), 0);
+  const capacityUtilization = totalFeedCapacity > 0 
+    ? Math.round((totalFeedStock / totalFeedCapacity) * 100) 
+    : 0;
 
   // Calculate dashboard metrics
   const totalInventoryValue = containerStock.reduce((sum, item) => 
@@ -610,6 +595,9 @@ export default function Inventory() {
         activePensTanks={activePensTanks}
         activeBatches={activeBatches}
         capacityUtilization={capacityUtilization}
+        totalSitesSubtext={`${areas.length} Areas, ${freshwaterStations.length} Stations`}
+        activePensTanksLabel="Active Containers"
+        capacityUtilizationSubtext="Feed stock vs capacity"
       />
 
       {/* Feed Inventory Summary KPIs - 4 Status Boxes */}
@@ -639,14 +627,14 @@ export default function Inventory() {
               {(totalQuantity / 1000).toFixed(1)}k kg
             </div>
             <p className="text-xs text-muted-foreground">
-              Across {containers.filter(c => c.isActive).length} containers
+              Across {containers.filter(c => c.isActive).length} feed containers
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
+            <CardTitle className="text-sm font-medium">Active Feed Containers</CardTitle>
             <Factory className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
@@ -654,7 +642,7 @@ export default function Inventory() {
               {containers.filter(c => c.isActive).length}
             </div>
             <p className="text-xs text-muted-foreground">
-              Storage locations
+              {containers.filter(c => c.isActive && c.containerType === 'SILO').length} Silo, {containers.filter(c => c.isActive && c.containerType === 'BARGE').length} Barge
             </p>
           </CardContent>
         </Card>
@@ -666,10 +654,12 @@ export default function Inventory() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {feedingEventsSummaryData?.events_count ?? 'Loading...'}
+              {feedingEventsSummaryLoading 
+                ? "..." 
+                : formatCount(feedingEventsSummaryData?.events_count)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Last 7 days
+              Last 7 days ({formatWeight(feedingEventsSummaryData?.total_feed_kg)})
             </p>
           </CardContent>
         </Card>

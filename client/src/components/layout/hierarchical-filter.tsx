@@ -294,13 +294,29 @@ interface OperationsOverviewProps {
   activePensTanks?: number;
   activeBatches?: number;
   capacityUtilization?: number;
+  totalSitesLabel?: string;
+  activePensTanksLabel?: string;
+  activeBatchesLabel?: string;
+  capacityUtilizationLabel?: string;
+  totalSitesSubtext?: string;
+  activePensTanksSubtext?: string;
+  activeBatchesSubtext?: string;
+  capacityUtilizationSubtext?: string;
 }
 
 export function OperationsOverview({
   totalSites,
   activePensTanks,
   activeBatches,
-  capacityUtilization
+  capacityUtilization,
+  totalSitesLabel = "Total Sites",
+  activePensTanksLabel = "Active Pens/Tanks",
+  activeBatchesLabel = "Active Batches",
+  capacityUtilizationLabel = "Capacity Utilization",
+  totalSitesSubtext = "Geographies & areas",
+  activePensTanksSubtext = "Containers in use",
+  activeBatchesSubtext = "Current production",
+  capacityUtilizationSubtext = "Biomass vs capacity"
 }: OperationsOverviewProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -309,11 +325,11 @@ export function OperationsOverview({
           <div className="flex items-center space-x-2">
             <MapPin className="h-5 w-5 text-blue-600" />
             <div>
-              <p className="text-sm font-medium">Total Sites</p>
+              <p className="text-sm font-medium">{totalSitesLabel}</p>
               <p className="text-2xl font-bold">
                 {totalSites ?? <span className="text-gray-400">Loading...</span>}
               </p>
-              <p className="text-xs text-gray-600">Geographies & areas</p>
+              <p className="text-xs text-gray-600">{totalSitesSubtext}</p>
             </div>
           </div>
         </CardContent>
@@ -324,11 +340,11 @@ export function OperationsOverview({
           <div className="flex items-center space-x-2">
             <Package className="h-5 w-5 text-green-600" />
             <div>
-              <p className="text-sm font-medium">Active Pens/Tanks</p>
+              <p className="text-sm font-medium">{activePensTanksLabel}</p>
               <p className="text-2xl font-bold">
                 {activePensTanks?.toLocaleString() ?? <span className="text-gray-400">Loading...</span>}
               </p>
-              <p className="text-xs text-gray-600">Containers in use</p>
+              <p className="text-xs text-gray-600">{activePensTanksSubtext}</p>
             </div>
           </div>
         </CardContent>
@@ -339,11 +355,11 @@ export function OperationsOverview({
           <div className="flex items-center space-x-2">
             <Fish className="h-5 w-5 text-orange-600" />
             <div>
-              <p className="text-sm font-medium">Active Batches</p>
+              <p className="text-sm font-medium">{activeBatchesLabel}</p>
               <p className="text-2xl font-bold">
                 {activeBatches ?? <span className="text-gray-400">Loading...</span>}
               </p>
-              <p className="text-xs text-gray-600">Current production</p>
+              <p className="text-xs text-gray-600">{activeBatchesSubtext}</p>
             </div>
           </div>
         </CardContent>
@@ -354,11 +370,11 @@ export function OperationsOverview({
           <div className="flex items-center space-x-2">
             <Building className="h-5 w-5 text-purple-600" />
             <div>
-              <p className="text-sm font-medium">Capacity Utilization</p>
+              <p className="text-sm font-medium">{capacityUtilizationLabel}</p>
               <p className="text-2xl font-bold">
                 {capacityUtilization !== undefined ? `${capacityUtilization}%` : <span className="text-gray-400">Loading...</span>}
               </p>
-              <p className="text-xs text-gray-600">Biomass vs capacity</p>
+              <p className="text-xs text-gray-600">{capacityUtilizationSubtext}</p>
             </div>
           </div>
         </CardContent>
