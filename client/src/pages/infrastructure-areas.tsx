@@ -19,7 +19,7 @@ import {
   Gauge
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
-import { ApiService } from "@/api/generated";
+import { ApiService, InfrastructureService } from "@/api/generated";
 import { useAreaSummaries } from "@/features/infrastructure/api";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
 
@@ -167,8 +167,11 @@ export default function InfrastructureAreas() {
     return new Map(areaIds.map((id, index) => [id, areaSummaries[index]]));
   }, [areaSummaries, areaIds]);
 
-  // ✅ Removed 150+ lines of client-side pagination and aggregation
-  // Now using server-side area summaries instead (useAreaSummaries hook)
+  // ✅ Fetch global overview for KPI cards
+  const { data: globalOverview, isLoading: overviewLoading } = useQuery({
+    queryKey: ["infrastructure", "overview", "global"],
+    queryFn: async () => InfrastructureService.infrastructureOverview(),
+  });
 
   // ✅ Use server-side aggregated summaries instead of client-side calculation
   const processedAreasData = useMemo(() => {
@@ -344,10 +347,10 @@ export default function InfrastructureAreas() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {formatNumber(Math.round(overviewData?.activeBiomass || 0))}
+              {overviewLoading ? "..." : formatWeight(globalOverview?.active_biomass_kg)}
             </div>
             <p className="text-xs text-muted-foreground">
-              kg total biomass
+              Total biomass
             </p>
           </CardContent>
         </Card>
