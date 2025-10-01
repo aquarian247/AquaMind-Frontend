@@ -36,13 +36,20 @@ export function useContainerAssignmentsSummary(filters?: {
   station?: number;
   hall?: number;
   containerType?: string;
-}): UseQueryResult<BatchContainerAssignment, Error> {
+  isActive?: boolean;
+}): UseQueryResult<{ active_biomass_kg: number; count: number }, Error> {
   return useQuery({
     queryKey: ["batch", "container-assignments-summary", filters],
     queryFn: async () => {
-      // The summary endpoint doesn't seem to take filters based on the signature
-      // This might need to be updated once the API supports filters
-      return await ApiService.apiV1BatchContainerAssignmentsSummaryRetrieve();
+      // ✅ FIXED: Backend Issue #76 resolved - parameters now available!
+      return await ApiService.batchContainerAssignmentsSummary(
+        filters?.area,
+        filters?.containerType,
+        filters?.geography,
+        filters?.hall,
+        filters?.isActive ?? true, // Default to active assignments
+        filters?.station
+      );
     },
     ...BATCH_QUERY_OPTIONS,
   });

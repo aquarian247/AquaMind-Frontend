@@ -484,13 +484,24 @@ capacityUtilization = (totalFeedStock / totalFeedCapacity) * 100
   - `batchesRequiringAttention`: Returns `0` with comment explaining health scoring system not implemented
   - `avgGrowthRate`: Returns `0` with comment explaining growth aggregation endpoint needed
 
-**OpenAPI Spec Gap Identified:**
-- 🔍 **Container Assignments Summary Endpoint**: 
-  - **Issue**: OpenAPI spec description mentions filters (geography, area, station, hall, container_type) but `parameters` section is missing
-  - **Impact**: Generated ApiService method has no filter parameters
-  - **Workaround**: Batch API wrapper (`useContainerAssignmentsSummary`) created with filter interface, ready for when OpenAPI spec is updated
-  - **Backend Verified**: Endpoint supports filters per backend implementation and OpenAPI description
-  - **Action Required**: Backend team needs to add `parameters` section to OpenAPI spec for generator to create proper method signature
+**OpenAPI Spec Gap Identified & RESOLVED:**
+- ✅ **Container Assignments Summary Endpoint - FIXED (Backend Issue #76)**: 
+  - **Original Issue**: OpenAPI spec description mentioned filters but `parameters` section was missing
+  - **Root Cause**: Decorator order issue - `@extend_schema` must be above `@action` for drf-spectacular to extract parameters
+  - **Fix Applied**: Backend team reordered decorators and regenerated spec (commit `12a6c84`)
+  - **Resolution**: Generated method now has all 6 parameters:
+    ```typescript
+    ApiService.batchContainerAssignmentsSummary(
+      area?: number,
+      containerType?: string,
+      geography?: number,
+      hall?: number,
+      isActive: boolean = true,
+      station?: number
+    ): CancelablePromise<{ active_biomass_kg: number; count: number }>
+    ```
+  - **Frontend Updated**: Batch API wrapper now uses correct method signature with all filter support
+  - **Status**: ✅ Complete - Multi-location batch analytics now fully enabled!
 
 **FCR Analytics Verification:**
 ```typescript
