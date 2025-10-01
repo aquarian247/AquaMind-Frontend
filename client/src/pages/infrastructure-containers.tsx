@@ -50,10 +50,6 @@ const formatNumber = (num: number): string => {
 export default function InfrastructureContainers() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [geographyFilter, setGeographyFilter] = useState("all");
-  const [stationFilter, setStationFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
 
   // ✅ Use global overview for KPI cards
   const { data: globalOverview, isLoading: overviewLoading } = useQuery({
@@ -181,13 +177,6 @@ export default function InfrastructureContainers() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 md:p-6">
-          {filtersError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">
-                Warning: Using fallback filter options. Dynamic options failed to load.
-              </p>
-            </div>
-          )}
           <div className="space-y-4">
             {/* Search - Full width on mobile */}
             <div className="space-y-2">
@@ -203,95 +192,10 @@ export default function InfrastructureContainers() {
               </div>
             </div>
 
-            {/* Filter dropdowns - responsive grid */}
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Geography</label>
-                <Select value={geographyFilter} onValueChange={setGeographyFilter}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="All Regions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Regions</SelectItem>
-                    {currentFilterOptions.geographies.map(geo => (
-                      <SelectItem key={geo} value={geo}>{geo}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Station/Area</label>
-                <Select value={stationFilter} onValueChange={setStationFilter}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="All Facilities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Facilities</SelectItem>
-                    {currentFilterOptions.stations.map(station => {
-                      // Map detailed station names to filter values
-                      const isFreshwater = station.toLowerCase().includes('freshwater');
-                      const filterValue = isFreshwater ? 'stations' : 'areas';
-                      return (
-                        <SelectItem key={station} value={filterValue}>
-                          {station}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Container Type</label>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="All Types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    {currentFilterOptions.containerTypes.map(containerType => {
-                      // Map full type names to filter values
-                      const typeMap: { [key: string]: string } = {
-                        "Egg & Alevin Trays (Tray)": "Tray",
-                        "Fry Tanks (Tank)": "Fry Tank",
-                        "Parr Tanks (Tank)": "Parr Tank",
-                        "Smolt Tanks (Tank)": "Smolt Tank",
-                        "Post-Smolt Tanks (Tank)": "Post-Smolt Tank",
-                        "Sea Rings (Pen)": "Ring"
-                      };
-                      const filterValue = typeMap[containerType] || containerType;
-                      const displayName = containerType
-                        .replace(' (Tray)', '')
-                        .replace(' (Tank)', '')
-                        .replace(' (Pen)', '');
-                      return (
-                        <SelectItem key={containerType} value={filterValue}>
-                          {displayName}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    {currentFilterOptions.statuses.map(status => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            {/* Advanced filters can be added here using MultiSelectFilter from Task 2.5 */}
+            <p className="text-xs text-muted-foreground">
+              Advanced filtering (by geography, station, type) coming soon via multi-entity filters
+            </p>
           </div>
         </CardContent>
       </Card>
