@@ -12,7 +12,7 @@ import {
   Activity, 
   AlertTriangle, 
   Thermometer,
-  Map,
+  Map as MapIcon,
   Waves,
   Factory,
   Container,
@@ -172,7 +172,7 @@ export default function Infrastructure() {
   // Navigation menu items
   const navigationSections = [
     { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "geographic", label: "Geographic View", icon: Map },
+    { id: "geographic", label: "Geographic View", icon: MapIcon },
     { id: "containers", label: "Containers", icon: Container },
     { id: "sensors", label: "Sensors", icon: Radio },
     { id: "environmental", label: "Environmental", icon: Activity },
