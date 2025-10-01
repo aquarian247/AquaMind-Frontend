@@ -96,9 +96,20 @@ export default function Infrastructure() {
     [geographiesData]
   );
 
-  // Fetch server-side aggregated summary for the first/selected geography
-  // Note: Using first geography for now; multi-geography selection would use geography filter
-  const selectedGeographyId = geographyIds[0];
+  // Fetch server-side aggregated summary for selected geography
+  // Use geography filter or default to Faroe Islands (ID=3) which has real data
+  const selectedGeographyId = useMemo(() => {
+    if (selectedGeography === "all") {
+      // Find Faroe Islands (has data) or fall back to first geography
+      return geographyIds.find(id => id === 3) || geographyIds[0];
+    }
+    // Find geography by name
+    const geo = geographiesData?.results?.find(g => 
+      g.name?.toLowerCase() === selectedGeography.toLowerCase()
+    );
+    return geo?.id || geographyIds[0];
+  }, [selectedGeography, geographyIds, geographiesData]);
+
   const { data: geographySummary, isLoading: summaryLoading } = useGeographySummary(selectedGeographyId);
 
   // Fetch sample containers for display
@@ -139,7 +150,7 @@ export default function Infrastructure() {
   // No alerts endpoint yet - empty array
   const alerts: Alert[] = [];
 
-  // Process real containers data
+  // Process real containers data for Overview tab display
   const realContainers = containersData?.results?.slice(0, 3).map((container: any) => ({
     id: container.id,
     name: container.name,
@@ -148,7 +159,10 @@ export default function Infrastructure() {
     geography: geographies.length > 0 ? geographies[0].name : "Unknown", // Use first available geography
     area: container.area_name || container.hall_name || "Unknown",
     biomass: 0, // Would need to be calculated from batch assignments
-    capacity: parseFloat(container.volume_m3 || '0') * 1000, // Convert m³ to kg assuming density ~1
+    // Capacity calculation: volume_m3 × 1000 = capacity in kg
+    // Example: 10.0 m³ × 1000 = 10,000 kg (assuming water density ≈ 1 kg/L)
+    // This is displayed as "10.0k kg" in the UI
+    capacity: parseFloat(container.volume_m3 || '0') * 1000,
     currentBatch: "Unknown", // Would need to be determined from batch assignments
     lastFeed: "Unknown", // Would need to be determined from feeding events
     sensorReadings: {}, // Would need sensor data integration
