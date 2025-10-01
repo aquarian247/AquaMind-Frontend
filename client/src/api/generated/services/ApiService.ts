@@ -616,6 +616,7 @@ export class ApiService {
      * Supports searching across `batch_number`, `species__name`, `lifecycle_stage__name`, `notes`, and `batch_type`.
      * Supports ordering by `batch_number`, `start_date`, `species__name`, `lifecycle_stage__name`, and `created_at`.
      * @param batchNumber
+     * @param batchNumberIcontains
      * @param batchType * `STANDARD` - Standard
      * * `MIXED` - Mixed Population
      * @param batchTypeIn * `STANDARD` - Standard
@@ -625,12 +626,14 @@ export class ApiService {
      * @param endDateAfter
      * @param endDateBefore
      * @param lifecycleStage
+     * @param lifecycleStageIn Multiple values may be separated by commas.
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
      * @param populationMax
      * @param populationMin
      * @param search A search term.
      * @param species
+     * @param speciesIn Multiple values may be separated by commas.
      * @param startDateAfter
      * @param startDateBefore
      * @param status * `ACTIVE` - Active
@@ -644,6 +647,7 @@ export class ApiService {
      */
     public static apiV1BatchBatchesList(
         batchNumber?: string,
+        batchNumberIcontains?: string,
         batchType?: 'MIXED' | 'STANDARD',
         batchTypeIn?: Array<'MIXED' | 'STANDARD'>,
         biomassMax?: number,
@@ -651,12 +655,14 @@ export class ApiService {
         endDateAfter?: string,
         endDateBefore?: string,
         lifecycleStage?: number,
+        lifecycleStageIn?: Array<number>,
         ordering?: string,
         page?: number,
         populationMax?: number,
         populationMin?: number,
         search?: string,
         species?: number,
+        speciesIn?: Array<number>,
         startDateAfter?: string,
         startDateBefore?: string,
         status?: 'ACTIVE' | 'COMPLETED' | 'TERMINATED',
@@ -667,6 +673,7 @@ export class ApiService {
             url: '/api/v1/batch/batches/',
             query: {
                 'batch_number': batchNumber,
+                'batch_number__icontains': batchNumberIcontains,
                 'batch_type': batchType,
                 'batch_type_in': batchTypeIn,
                 'biomass_max': biomassMax,
@@ -674,12 +681,14 @@ export class ApiService {
                 'end_date_after': endDateAfter,
                 'end_date_before': endDateBefore,
                 'lifecycle_stage': lifecycleStage,
+                'lifecycle_stage__in': lifecycleStageIn,
                 'ordering': ordering,
                 'page': page,
                 'population_max': populationMax,
                 'population_min': populationMin,
                 'search': search,
                 'species': species,
+                'species__in': speciesIn,
                 'start_date_after': startDateAfter,
                 'start_date_before': startDateBefore,
                 'status': status,
@@ -728,7 +737,9 @@ export class ApiService {
      * **Filtering:**
      * - `batch_number`: Exact match.
      * - `species`: Exact match by Species ID.
+     * - `species__in`: Filter by multiple Species IDs (comma-separated).
      * - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+     * - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
      * - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
      * - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
      *
@@ -776,7 +787,9 @@ export class ApiService {
      * **Filtering:**
      * - `batch_number`: Exact match.
      * - `species`: Exact match by Species ID.
+     * - `species__in`: Filter by multiple Species IDs (comma-separated).
      * - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+     * - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
      * - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
      * - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
      *
@@ -829,7 +842,9 @@ export class ApiService {
      * **Filtering:**
      * - `batch_number`: Exact match.
      * - `species`: Exact match by Species ID.
+     * - `species__in`: Filter by multiple Species IDs (comma-separated).
      * - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+     * - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
      * - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
      * - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
      *
@@ -882,7 +897,9 @@ export class ApiService {
      * **Filtering:**
      * - `batch_number`: Exact match.
      * - `species`: Exact match by Species ID.
+     * - `species__in`: Filter by multiple Species IDs (comma-separated).
      * - `lifecycle_stage`: Exact match by LifeCycleStage ID.
+     * - `lifecycle_stage__in`: Filter by multiple LifeCycleStage IDs (comma-separated).
      * - `status`: Exact match by status string (e.g., 'ACTIVE', 'PLANNED').
      * - `batch_type`: Exact match by type string (e.g., 'PRODUCTION', 'EXPERIMENTAL').
      *
@@ -1017,7 +1034,9 @@ export class ApiService {
      *
      * **Filtering:**
      * - `batch`: ID of the assigned batch.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
      * - `container`: ID of the assigned container.
+     * - `container__in`: Filter by multiple Container IDs (comma-separated).
      * - `is_active`: Boolean indicating if the assignment is currently active.
      * - `assignment_date`: Exact date of the assignment.
      *
@@ -1035,10 +1054,12 @@ export class ApiService {
      * @param assignmentDateAfter
      * @param assignmentDateBefore
      * @param batch
+     * @param batchIn Multiple values may be separated by commas.
      * @param batchNumber
      * @param biomassMax
      * @param biomassMin
      * @param container
+     * @param containerIn Multiple values may be separated by commas.
      * @param containerName
      * @param containerType
      * @param isActive
@@ -1057,10 +1078,12 @@ export class ApiService {
         assignmentDateAfter?: string,
         assignmentDateBefore?: string,
         batch?: number,
+        batchIn?: Array<number>,
         batchNumber?: string,
         biomassMax?: number,
         biomassMin?: number,
         container?: number,
+        containerIn?: Array<number>,
         containerName?: string,
         containerType?: string,
         isActive?: boolean,
@@ -1080,10 +1103,12 @@ export class ApiService {
                 'assignment_date_after': assignmentDateAfter,
                 'assignment_date_before': assignmentDateBefore,
                 'batch': batch,
+                'batch__in': batchIn,
                 'batch_number': batchNumber,
                 'biomass_max': biomassMax,
                 'biomass_min': biomassMin,
                 'container': container,
+                'container__in': containerIn,
                 'container_name': containerName,
                 'container_type': containerType,
                 'is_active': isActive,
@@ -1115,7 +1140,9 @@ export class ApiService {
      *
      * **Filtering:**
      * - `batch`: ID of the assigned batch.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
      * - `container`: ID of the assigned container.
+     * - `container__in`: Filter by multiple Container IDs (comma-separated).
      * - `is_active`: Boolean indicating if the assignment is currently active.
      * - `assignment_date`: Exact date of the assignment.
      *
@@ -1161,7 +1188,9 @@ export class ApiService {
      *
      * **Filtering:**
      * - `batch`: ID of the assigned batch.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
      * - `container`: ID of the assigned container.
+     * - `container__in`: Filter by multiple Container IDs (comma-separated).
      * - `is_active`: Boolean indicating if the assignment is currently active.
      * - `assignment_date`: Exact date of the assignment.
      *
@@ -1208,7 +1237,9 @@ export class ApiService {
      *
      * **Filtering:**
      * - `batch`: ID of the assigned batch.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
      * - `container`: ID of the assigned container.
+     * - `container__in`: Filter by multiple Container IDs (comma-separated).
      * - `is_active`: Boolean indicating if the assignment is currently active.
      * - `assignment_date`: Exact date of the assignment.
      *
@@ -1260,7 +1291,9 @@ export class ApiService {
      *
      * **Filtering:**
      * - `batch`: ID of the assigned batch.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
      * - `container`: ID of the assigned container.
+     * - `container__in`: Filter by multiple Container IDs (comma-separated).
      * - `is_active`: Boolean indicating if the assignment is currently active.
      * - `assignment_date`: Exact date of the assignment.
      *
@@ -1312,7 +1345,9 @@ export class ApiService {
      *
      * **Filtering:**
      * - `batch`: ID of the assigned batch.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
      * - `container`: ID of the assigned container.
+     * - `container__in`: Filter by multiple Container IDs (comma-separated).
      * - `is_active`: Boolean indicating if the assignment is currently active.
      * - `assignment_date`: Exact date of the assignment.
      *
@@ -1396,18 +1431,20 @@ export class ApiService {
          *
          * **Filtering:**
          * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+         * - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `sample_date`: Exact date of the sample.
          *
          * **Searching:**
-         * - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `notes`: Notes associated with the growth sample.
          *
          * **Ordering:**
          * - `sample_date` (default: descending)
-         * - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `avg_weight_g`: Average weight in grams.
          * - `created_at`
          * @param assignmentBatch
+         * @param assignmentBatchIn Multiple values may be separated by commas.
          * @param avgLengthMax
          * @param avgLengthMin
          * @param avgWeightMax
@@ -1429,6 +1466,7 @@ export class ApiService {
          */
         public static apiV1BatchGrowthSamplesList(
             assignmentBatch?: number,
+            assignmentBatchIn?: Array<number>,
             avgLengthMax?: number,
             avgLengthMin?: number,
             avgWeightMax?: number,
@@ -1451,6 +1489,7 @@ export class ApiService {
                 url: '/api/v1/batch/growth-samples/',
                 query: {
                     'assignment__batch': assignmentBatch,
+                    'assignment__batch__in': assignmentBatchIn,
                     'avg_length_max': avgLengthMax,
                     'avg_length_min': avgLengthMin,
                     'avg_weight_max': avgWeightMax,
@@ -1486,15 +1525,16 @@ export class ApiService {
          *
          * **Filtering:**
          * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+         * - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `sample_date`: Exact date of the sample.
          *
          * **Searching:**
-         * - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `notes`: Notes associated with the growth sample.
          *
          * **Ordering:**
          * - `sample_date` (default: descending)
-         * - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `avg_weight_g`: Average weight in grams.
          * - `created_at`
          * @param requestBody
@@ -1527,15 +1567,16 @@ export class ApiService {
          *
          * **Filtering:**
          * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+         * - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `sample_date`: Exact date of the sample.
          *
          * **Searching:**
-         * - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `notes`: Notes associated with the growth sample.
          *
          * **Ordering:**
          * - `sample_date` (default: descending)
-         * - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `avg_weight_g`: Average weight in grams.
          * - `created_at`
          * @param id A unique integer value identifying this growth sample.
@@ -1569,15 +1610,16 @@ export class ApiService {
          *
          * **Filtering:**
          * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+         * - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `sample_date`: Exact date of the sample.
          *
          * **Searching:**
-         * - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `notes`: Notes associated with the growth sample.
          *
          * **Ordering:**
          * - `sample_date` (default: descending)
-         * - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `avg_weight_g`: Average weight in grams.
          * - `created_at`
          * @param id A unique integer value identifying this growth sample.
@@ -1616,15 +1658,16 @@ export class ApiService {
          *
          * **Filtering:**
          * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+         * - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `sample_date`: Exact date of the sample.
          *
          * **Searching:**
-         * - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `notes`: Notes associated with the growth sample.
          *
          * **Ordering:**
          * - `sample_date` (default: descending)
-         * - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `avg_weight_g`: Average weight in grams.
          * - `created_at`
          * @param id A unique integer value identifying this growth sample.
@@ -1663,15 +1706,16 @@ export class ApiService {
          *
          * **Filtering:**
          * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+         * - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `sample_date`: Exact date of the sample.
          *
          * **Searching:**
-         * - `batch__batch_number`: Batch number of the associated batch. (Searches through the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `notes`: Notes associated with the growth sample.
          *
          * **Ordering:**
          * - `sample_date` (default: descending)
-         * - `batch__batch_number`: Batch number of the associated batch. (Orders based on the related Batch model via the assignment)
+         * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
          * - `avg_weight_g`: Average weight in grams.
          * - `created_at`
          * @param id A unique integer value identifying this growth sample.
@@ -2305,6 +2349,7 @@ export class ApiService {
          *
          * **Filtering:**
          * - `batch`: ID of the batch associated with the mortality event.
+         * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `event_date`: Exact date of the mortality event.
          * - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
          *
@@ -2318,6 +2363,7 @@ export class ApiService {
          * - `count` (number of mortalities)
          * - `created_at`
          * @param batch
+         * @param batchIn Multiple values may be separated by commas.
          * @param batchNumber
          * @param biomassMax
          * @param biomassMin
@@ -2346,6 +2392,7 @@ export class ApiService {
          */
         public static apiV1BatchMortalityEventsList(
             batch?: number,
+            batchIn?: Array<number>,
             batchNumber?: string,
             biomassMax?: number,
             biomassMin?: number,
@@ -2365,6 +2412,7 @@ export class ApiService {
                 url: '/api/v1/batch/mortality-events/',
                 query: {
                     'batch': batch,
+                    'batch__in': batchIn,
                     'batch_number': batchNumber,
                     'biomass_max': biomassMax,
                     'biomass_min': biomassMin,
@@ -2396,6 +2444,7 @@ export class ApiService {
          *
          * **Filtering:**
          * - `batch`: ID of the batch associated with the mortality event.
+         * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `event_date`: Exact date of the mortality event.
          * - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
          *
@@ -2437,6 +2486,7 @@ export class ApiService {
          *
          * **Filtering:**
          * - `batch`: ID of the batch associated with the mortality event.
+         * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `event_date`: Exact date of the mortality event.
          * - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
          *
@@ -2479,6 +2529,7 @@ export class ApiService {
          *
          * **Filtering:**
          * - `batch`: ID of the batch associated with the mortality event.
+         * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `event_date`: Exact date of the mortality event.
          * - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
          *
@@ -2526,6 +2577,7 @@ export class ApiService {
          *
          * **Filtering:**
          * - `batch`: ID of the batch associated with the mortality event.
+         * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `event_date`: Exact date of the mortality event.
          * - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
          *
@@ -2573,6 +2625,7 @@ export class ApiService {
          *
          * **Filtering:**
          * - `batch`: ID of the batch associated with the mortality event.
+         * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
          * - `event_date`: Exact date of the mortality event.
          * - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
          *
@@ -5366,6 +5419,7 @@ export class ApiService {
         /**
          * ViewSet for viewing and editing EnvironmentalParameter instances.
          * @param name
+         * @param nameIcontains
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -5375,6 +5429,7 @@ export class ApiService {
          */
         public static apiV1EnvironmentalParametersList(
             name?: string,
+            nameIcontains?: string,
             ordering?: string,
             page?: number,
             search?: string,
@@ -5385,6 +5440,7 @@ export class ApiService {
                 url: '/api/v1/environmental/parameters/',
                 query: {
                     'name': name,
+                    'name__icontains': nameIcontains,
                     'ordering': ordering,
                     'page': page,
                     'search': search,
@@ -5525,6 +5581,7 @@ export class ApiService {
         /**
          * ViewSet for viewing and editing PhotoperiodData instances.
          * @param area
+         * @param areaIn Multiple values may be separated by commas.
          * @param date
          * @param isInterpolated
          * @param ordering Which field to use when ordering the results.
@@ -5535,6 +5592,7 @@ export class ApiService {
          */
         public static apiV1EnvironmentalPhotoperiodList(
             area?: number,
+            areaIn?: Array<number>,
             date?: string,
             isInterpolated?: boolean,
             ordering?: string,
@@ -5546,6 +5604,7 @@ export class ApiService {
                 url: '/api/v1/environmental/photoperiod/',
                 query: {
                     'area': area,
+                    'area__in': areaIn,
                     'date': date,
                     'is_interpolated': isInterpolated,
                     'ordering': ordering,
@@ -5689,38 +5748,50 @@ export class ApiService {
          *
          * Includes special filtering and aggregation methods for time-series data.
          * @param batch
+         * @param batchIn Multiple values may be separated by commas.
          * @param container
+         * @param containerIn Multiple values may be separated by commas.
          * @param isManual
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param parameter
+         * @param parameterIn Multiple values may be separated by commas.
          * @param search A search term.
          * @param sensor
+         * @param sensorIn Multiple values may be separated by commas.
          * @returns PaginatedEnvironmentalReadingList
          * @throws ApiError
          */
         public static apiV1EnvironmentalReadingsList(
             batch?: number,
+            batchIn?: Array<number>,
             container?: number,
+            containerIn?: Array<number>,
             isManual?: boolean,
             ordering?: string,
             page?: number,
             parameter?: number,
+            parameterIn?: Array<number>,
             search?: string,
             sensor?: number,
+            sensorIn?: Array<number>,
         ): CancelablePromise<PaginatedEnvironmentalReadingList> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/environmental/readings/',
                 query: {
                     'batch': batch,
+                    'batch__in': batchIn,
                     'container': container,
+                    'container__in': containerIn,
                     'is_manual': isManual,
                     'ordering': ordering,
                     'page': page,
                     'parameter': parameter,
+                    'parameter__in': parameterIn,
                     'search': search,
                     'sensor': sensor,
+                    'sensor__in': sensorIn,
                 },
                 errors: {
                     400: `Bad request (validation error)`,
@@ -6057,6 +6128,7 @@ export class ApiService {
          *
          * Includes special filtering and aggregation methods for time-series data.
          * @param area
+         * @param areaIn Multiple values may be separated by commas.
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -6065,6 +6137,7 @@ export class ApiService {
          */
         public static apiV1EnvironmentalWeatherList(
             area?: number,
+            areaIn?: Array<number>,
             ordering?: string,
             page?: number,
             search?: string,
@@ -6074,6 +6147,7 @@ export class ApiService {
                 url: '/api/v1/environmental/weather/',
                 query: {
                     'area': area,
+                    'area__in': areaIn,
                     'ordering': ordering,
                     'page': page,
                     'search': search,
@@ -8873,6 +8947,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the area.
          * - `geography`: Filter by the ID of the parent Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -8885,7 +8960,9 @@ export class ApiService {
          * - `created_at`
          * @param active
          * @param geography
+         * @param geographyIn Multiple values may be separated by commas.
          * @param name
+         * @param nameIcontains
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -8895,7 +8972,9 @@ export class ApiService {
         public static apiV1InfrastructureAreasList(
             active?: boolean,
             geography?: number,
+            geographyIn?: Array<number>,
             name?: string,
+            nameIcontains?: string,
             ordering?: string,
             page?: number,
             search?: string,
@@ -8906,7 +8985,9 @@ export class ApiService {
                 query: {
                     'active': active,
                     'geography': geography,
+                    'geography__in': geographyIn,
                     'name': name,
+                    'name__icontains': nameIcontains,
                     'ordering': ordering,
                     'page': page,
                     'search': search,
@@ -8929,6 +9010,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the area.
          * - `geography`: Filter by the ID of the parent Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -8969,6 +9051,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the area.
          * - `geography`: Filter by the ID of the parent Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9010,6 +9093,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the area.
          * - `geography`: Filter by the ID of the parent Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9056,6 +9140,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the area.
          * - `geography`: Filter by the ID of the parent Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9102,6 +9187,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the area.
          * - `geography`: Filter by the ID of the parent Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9445,7 +9531,9 @@ export class ApiService {
          * - `name`: Filter by the exact name of the container.
          * - `container_type`: Filter by the ID of the ContainerType.
          * - `hall`: Filter by the ID of the parent Hall.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9460,8 +9548,10 @@ export class ApiService {
          * - `created_at`
          * @param active
          * @param area
+         * @param areaIn Multiple values may be separated by commas.
          * @param containerType
          * @param hall
+         * @param hallIn Multiple values may be separated by commas.
          * @param name
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -9472,8 +9562,10 @@ export class ApiService {
         public static apiV1InfrastructureContainersList(
             active?: boolean,
             area?: number,
+            areaIn?: Array<number>,
             containerType?: number,
             hall?: number,
+            hallIn?: Array<number>,
             name?: string,
             ordering?: string,
             page?: number,
@@ -9485,8 +9577,10 @@ export class ApiService {
                 query: {
                     'active': active,
                     'area': area,
+                    'area__in': areaIn,
                     'container_type': containerType,
                     'hall': hall,
+                    'hall__in': hallIn,
                     'name': name,
                     'ordering': ordering,
                     'page': page,
@@ -9512,7 +9606,9 @@ export class ApiService {
          * - `name`: Filter by the exact name of the container.
          * - `container_type`: Filter by the ID of the ContainerType.
          * - `hall`: Filter by the ID of the parent Hall.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9557,7 +9653,9 @@ export class ApiService {
          * - `name`: Filter by the exact name of the container.
          * - `container_type`: Filter by the ID of the ContainerType.
          * - `hall`: Filter by the ID of the parent Hall.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9603,7 +9701,9 @@ export class ApiService {
          * - `name`: Filter by the exact name of the container.
          * - `container_type`: Filter by the ID of the ContainerType.
          * - `hall`: Filter by the ID of the parent Hall.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9654,7 +9754,9 @@ export class ApiService {
          * - `name`: Filter by the exact name of the container.
          * - `container_type`: Filter by the ID of the ContainerType.
          * - `hall`: Filter by the ID of the parent Hall.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9705,7 +9807,9 @@ export class ApiService {
          * - `name`: Filter by the exact name of the container.
          * - `container_type`: Filter by the ID of the ContainerType.
          * - `hall`: Filter by the ID of the parent Hall.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9750,8 +9854,11 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the feed container.
          * - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+         * - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
          * - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area where the feed container is located.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9765,11 +9872,14 @@ export class ApiService {
          * - `created_at`
          * @param active
          * @param area
+         * @param areaIn Multiple values may be separated by commas.
          * @param containerType * `SILO` - Silo
          * * `BARGE` - Barge
          * * `TANK` - Tank
          * * `OTHER` - Other
+         * @param containerTypeIn Multiple values may be separated by commas.
          * @param hall
+         * @param hallIn Multiple values may be separated by commas.
          * @param name
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -9780,8 +9890,11 @@ export class ApiService {
         public static apiV1InfrastructureFeedContainersList(
             active?: boolean,
             area?: number,
+            areaIn?: Array<number>,
             containerType?: 'BARGE' | 'OTHER' | 'SILO' | 'TANK',
+            containerTypeIn?: Array<string>,
             hall?: number,
+            hallIn?: Array<number>,
             name?: string,
             ordering?: string,
             page?: number,
@@ -9793,8 +9906,11 @@ export class ApiService {
                 query: {
                     'active': active,
                     'area': area,
+                    'area__in': areaIn,
                     'container_type': containerType,
+                    'container_type__in': containerTypeIn,
                     'hall': hall,
+                    'hall__in': hallIn,
                     'name': name,
                     'ordering': ordering,
                     'page': page,
@@ -9819,8 +9935,11 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the feed container.
          * - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+         * - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
          * - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area where the feed container is located.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9863,8 +9982,11 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the feed container.
          * - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+         * - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
          * - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area where the feed container is located.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9908,8 +10030,11 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the feed container.
          * - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+         * - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
          * - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area where the feed container is located.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -9958,8 +10083,11 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the feed container.
          * - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+         * - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
          * - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area where the feed container is located.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10008,8 +10136,11 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the feed container.
          * - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+         * - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
          * - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
          * - `area`: Filter by the ID of the parent Area where the feed container is located.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10054,6 +10185,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the freshwater station.
          * - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
          * - `geography`: Filter by the ID of the associated Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10068,7 +10200,9 @@ export class ApiService {
          * - `created_at`
          * @param active
          * @param geography
+         * @param geographyIn Multiple values may be separated by commas.
          * @param name
+         * @param nameIcontains
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -10080,7 +10214,9 @@ export class ApiService {
         public static apiV1InfrastructureFreshwaterStationsList(
             active?: boolean,
             geography?: number,
+            geographyIn?: Array<number>,
             name?: string,
+            nameIcontains?: string,
             ordering?: string,
             page?: number,
             search?: string,
@@ -10092,7 +10228,9 @@ export class ApiService {
                 query: {
                     'active': active,
                     'geography': geography,
+                    'geography__in': geographyIn,
                     'name': name,
+                    'name__icontains': nameIcontains,
                     'ordering': ordering,
                     'page': page,
                     'search': search,
@@ -10118,6 +10256,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the freshwater station.
          * - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
          * - `geography`: Filter by the ID of the associated Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10162,6 +10301,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the freshwater station.
          * - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
          * - `geography`: Filter by the ID of the associated Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10207,6 +10347,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the freshwater station.
          * - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
          * - `geography`: Filter by the ID of the associated Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10257,6 +10398,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the freshwater station.
          * - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
          * - `geography`: Filter by the ID of the associated Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10307,6 +10449,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the freshwater station.
          * - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
          * - `geography`: Filter by the ID of the associated Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10667,6 +10810,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the hall.
          * - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+         * - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10680,6 +10824,7 @@ export class ApiService {
          * - `created_at`
          * @param active
          * @param freshwaterStation
+         * @param freshwaterStationIn Multiple values may be separated by commas.
          * @param name
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -10690,6 +10835,7 @@ export class ApiService {
         public static apiV1InfrastructureHallsList(
             active?: boolean,
             freshwaterStation?: number,
+            freshwaterStationIn?: Array<number>,
             name?: string,
             ordering?: string,
             page?: number,
@@ -10701,6 +10847,7 @@ export class ApiService {
                 query: {
                     'active': active,
                     'freshwater_station': freshwaterStation,
+                    'freshwater_station__in': freshwaterStationIn,
                     'name': name,
                     'ordering': ordering,
                     'page': page,
@@ -10725,6 +10872,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the hall.
          * - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+         * - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10767,6 +10915,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the hall.
          * - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+         * - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10810,6 +10959,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the hall.
          * - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+         * - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10858,6 +11008,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the hall.
          * - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+         * - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -10906,6 +11057,7 @@ export class ApiService {
          * **Filtering:**
          * - `name`: Filter by the exact name of the hall.
          * - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+         * - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -11625,6 +11777,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the sensor.
          * - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
          * - `container`: Filter by the ID of the Container where the sensor is installed.
+         * - `container__in`: Filter by multiple Container IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -11640,7 +11793,9 @@ export class ApiService {
          * - `created_at`
          * @param active
          * @param container
+         * @param containerIn Multiple values may be separated by commas.
          * @param name
+         * @param nameIcontains
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -11656,7 +11811,9 @@ export class ApiService {
         public static apiV1InfrastructureSensorsList(
             active?: boolean,
             container?: number,
+            containerIn?: Array<number>,
             name?: string,
+            nameIcontains?: string,
             ordering?: string,
             page?: number,
             search?: string,
@@ -11668,7 +11825,9 @@ export class ApiService {
                 query: {
                     'active': active,
                     'container': container,
+                    'container__in': containerIn,
                     'name': name,
+                    'name__icontains': nameIcontains,
                     'ordering': ordering,
                     'page': page,
                     'search': search,
@@ -11694,6 +11853,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the sensor.
          * - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
          * - `container`: Filter by the ID of the Container where the sensor is installed.
+         * - `container__in`: Filter by multiple Container IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -11739,6 +11899,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the sensor.
          * - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
          * - `container`: Filter by the ID of the Container where the sensor is installed.
+         * - `container__in`: Filter by multiple Container IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -11785,6 +11946,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the sensor.
          * - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
          * - `container`: Filter by the ID of the Container where the sensor is installed.
+         * - `container__in`: Filter by multiple Container IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -11836,6 +11998,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the sensor.
          * - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
          * - `container`: Filter by the ID of the Container where the sensor is installed.
+         * - `container__in`: Filter by multiple Container IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -11887,6 +12050,7 @@ export class ApiService {
          * - `name`: Filter by the exact name of the sensor.
          * - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
          * - `container`: Filter by the ID of the Container where the sensor is installed.
+         * - `container__in`: Filter by multiple Container IDs (comma-separated).
          * - `active`: Filter by active status (boolean).
          *
          * **Searching:**
@@ -12644,15 +12808,46 @@ export class ApiService {
                 });
             }
             /**
-             * ViewSet for FeedingEvent model.
+             * API endpoint for managing Feeding Events in aquaculture operations.
              *
-             * Provides CRUD operations for feeding events with additional filtering
-             * capabilities.
+             * Feeding events record the amount of feed given to batches in specific containers
+             * on particular dates. This endpoint provides full CRUD operations for feeding events.
+             *
+             * **Filtering:**
+             * - `batch`: ID of the batch being fed.
+             * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+             * - `feed`: ID of the feed type used.
+             * - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+             * - `container`: ID of the container where feeding occurred.
+             * - `container__in`: Filter by multiple Container IDs (comma-separated).
+             * - `feeding_date`: Exact date of feeding.
+             * - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+             *
+             * **Searching:**
+             * - `notes`: Notes associated with the feeding event.
+             *
+             * **Ordering:**
+             * - `feeding_date` (default: descending)
+             * - `feeding_time`
+             * - `amount_kg`
+             * @param amountMax
+             * @param amountMin
              * @param batch
+             * @param batchIn Multiple values may be separated by commas.
+             * @param batchNumber
              * @param container
+             * @param containerIn Multiple values may be separated by commas.
+             * @param containerName
              * @param feed
+             * @param feedIn Multiple values may be separated by commas.
+             * @param feedName
              * @param feedingDate
+             * @param feedingDateAfter
+             * @param feedingDateBefore
              * @param method * `MANUAL` - Manual
+             * * `AUTOMATIC` - Automatic Feeder
+             * * `BROADCAST` - Broadcast
+             * @param methodIn * `MANUAL` - Manual
              * * `AUTOMATIC` - Automatic Feeder
              * * `BROADCAST` - Broadcast
              * @param ordering Which field to use when ordering the results.
@@ -12662,11 +12857,22 @@ export class ApiService {
              * @throws ApiError
              */
             public static apiV1InventoryFeedingEventsList(
+                amountMax?: number,
+                amountMin?: number,
                 batch?: number,
+                batchIn?: Array<number>,
+                batchNumber?: string,
                 container?: number,
+                containerIn?: Array<number>,
+                containerName?: string,
                 feed?: number,
+                feedIn?: Array<number>,
+                feedName?: string,
                 feedingDate?: string,
+                feedingDateAfter?: string,
+                feedingDateBefore?: string,
                 method?: 'AUTOMATIC' | 'BROADCAST' | 'MANUAL',
+                methodIn?: Array<'AUTOMATIC' | 'BROADCAST' | 'MANUAL'>,
                 ordering?: string,
                 page?: number,
                 search?: string,
@@ -12675,11 +12881,22 @@ export class ApiService {
                     method: 'GET',
                     url: '/api/v1/inventory/feeding-events/',
                     query: {
+                        'amount_max': amountMax,
+                        'amount_min': amountMin,
                         'batch': batch,
+                        'batch__in': batchIn,
+                        'batch_number': batchNumber,
                         'container': container,
+                        'container__in': containerIn,
+                        'container_name': containerName,
                         'feed': feed,
+                        'feed__in': feedIn,
+                        'feed_name': feedName,
                         'feeding_date': feedingDate,
+                        'feeding_date_after': feedingDateAfter,
+                        'feeding_date_before': feedingDateBefore,
                         'method': method,
+                        'method_in': methodIn,
                         'ordering': ordering,
                         'page': page,
                         'search': search,
@@ -12693,10 +12910,28 @@ export class ApiService {
                 });
             }
             /**
-             * ViewSet for FeedingEvent model.
+             * API endpoint for managing Feeding Events in aquaculture operations.
              *
-             * Provides CRUD operations for feeding events with additional filtering
-             * capabilities.
+             * Feeding events record the amount of feed given to batches in specific containers
+             * on particular dates. This endpoint provides full CRUD operations for feeding events.
+             *
+             * **Filtering:**
+             * - `batch`: ID of the batch being fed.
+             * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+             * - `feed`: ID of the feed type used.
+             * - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+             * - `container`: ID of the container where feeding occurred.
+             * - `container__in`: Filter by multiple Container IDs (comma-separated).
+             * - `feeding_date`: Exact date of feeding.
+             * - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+             *
+             * **Searching:**
+             * - `notes`: Notes associated with the feeding event.
+             *
+             * **Ordering:**
+             * - `feeding_date` (default: descending)
+             * - `feeding_time`
+             * - `amount_kg`
              * @param requestBody
              * @returns FeedingEvent
              * @throws ApiError
@@ -12718,10 +12953,28 @@ export class ApiService {
                 });
             }
             /**
-             * ViewSet for FeedingEvent model.
+             * API endpoint for managing Feeding Events in aquaculture operations.
              *
-             * Provides CRUD operations for feeding events with additional filtering
-             * capabilities.
+             * Feeding events record the amount of feed given to batches in specific containers
+             * on particular dates. This endpoint provides full CRUD operations for feeding events.
+             *
+             * **Filtering:**
+             * - `batch`: ID of the batch being fed.
+             * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+             * - `feed`: ID of the feed type used.
+             * - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+             * - `container`: ID of the container where feeding occurred.
+             * - `container__in`: Filter by multiple Container IDs (comma-separated).
+             * - `feeding_date`: Exact date of feeding.
+             * - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+             *
+             * **Searching:**
+             * - `notes`: Notes associated with the feeding event.
+             *
+             * **Ordering:**
+             * - `feeding_date` (default: descending)
+             * - `feeding_time`
+             * - `amount_kg`
              * @param id A unique integer value identifying this feeding event.
              * @returns FeedingEvent
              * @throws ApiError
@@ -12744,10 +12997,28 @@ export class ApiService {
                 });
             }
             /**
-             * ViewSet for FeedingEvent model.
+             * API endpoint for managing Feeding Events in aquaculture operations.
              *
-             * Provides CRUD operations for feeding events with additional filtering
-             * capabilities.
+             * Feeding events record the amount of feed given to batches in specific containers
+             * on particular dates. This endpoint provides full CRUD operations for feeding events.
+             *
+             * **Filtering:**
+             * - `batch`: ID of the batch being fed.
+             * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+             * - `feed`: ID of the feed type used.
+             * - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+             * - `container`: ID of the container where feeding occurred.
+             * - `container__in`: Filter by multiple Container IDs (comma-separated).
+             * - `feeding_date`: Exact date of feeding.
+             * - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+             *
+             * **Searching:**
+             * - `notes`: Notes associated with the feeding event.
+             *
+             * **Ordering:**
+             * - `feeding_date` (default: descending)
+             * - `feeding_time`
+             * - `amount_kg`
              * @param id A unique integer value identifying this feeding event.
              * @param requestBody
              * @returns FeedingEvent
@@ -12775,10 +13046,28 @@ export class ApiService {
                 });
             }
             /**
-             * ViewSet for FeedingEvent model.
+             * API endpoint for managing Feeding Events in aquaculture operations.
              *
-             * Provides CRUD operations for feeding events with additional filtering
-             * capabilities.
+             * Feeding events record the amount of feed given to batches in specific containers
+             * on particular dates. This endpoint provides full CRUD operations for feeding events.
+             *
+             * **Filtering:**
+             * - `batch`: ID of the batch being fed.
+             * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+             * - `feed`: ID of the feed type used.
+             * - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+             * - `container`: ID of the container where feeding occurred.
+             * - `container__in`: Filter by multiple Container IDs (comma-separated).
+             * - `feeding_date`: Exact date of feeding.
+             * - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+             *
+             * **Searching:**
+             * - `notes`: Notes associated with the feeding event.
+             *
+             * **Ordering:**
+             * - `feeding_date` (default: descending)
+             * - `feeding_time`
+             * - `amount_kg`
              * @param id A unique integer value identifying this feeding event.
              * @param requestBody
              * @returns FeedingEvent
@@ -12806,10 +13095,28 @@ export class ApiService {
                 });
             }
             /**
-             * ViewSet for FeedingEvent model.
+             * API endpoint for managing Feeding Events in aquaculture operations.
              *
-             * Provides CRUD operations for feeding events with additional filtering
-             * capabilities.
+             * Feeding events record the amount of feed given to batches in specific containers
+             * on particular dates. This endpoint provides full CRUD operations for feeding events.
+             *
+             * **Filtering:**
+             * - `batch`: ID of the batch being fed.
+             * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+             * - `feed`: ID of the feed type used.
+             * - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+             * - `container`: ID of the container where feeding occurred.
+             * - `container__in`: Filter by multiple Container IDs (comma-separated).
+             * - `feeding_date`: Exact date of feeding.
+             * - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+             *
+             * **Searching:**
+             * - `notes`: Notes associated with the feeding event.
+             *
+             * **Ordering:**
+             * - `feeding_date` (default: descending)
+             * - `feeding_time`
+             * - `amount_kg`
              * @param id A unique integer value identifying this feeding event.
              * @returns void
              * @throws ApiError

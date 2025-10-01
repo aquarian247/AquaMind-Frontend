@@ -84,6 +84,6 @@ export type UserProfileHistory = {
     /**
      * Full name from User model
      */
-    readonly user_full_name: string;
+    readonly user_full_name: string | null;
 };
 
