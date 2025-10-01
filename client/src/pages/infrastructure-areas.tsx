@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { 
-  Map, 
+  Map as MapIcon, 
   Waves, 
   Search,
   Filter,
@@ -238,7 +238,7 @@ export default function InfrastructureAreas() {
     return (
       <div className="container mx-auto p-4 space-y-6">
         <div className="flex items-center space-x-2">
-          <Map className="h-8 w-8 text-blue-600" />
+          <MapIcon className="h-8 w-8 text-blue-600" />
           <h1 className="text-2xl font-bold">Sea Areas</h1>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -357,7 +357,7 @@ export default function InfrastructureAreas() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Map className="h-5 w-5" />
+            <MapIcon className="h-5 w-5" />
             <span>Geographic Distribution</span>
           </CardTitle>
         </CardHeader>
@@ -433,7 +433,7 @@ export default function InfrastructureAreas() {
       {filteredAreas.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Map className="h-12 w-12 text-muted-foreground mb-4" />
+            <MapIcon className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No areas found</h3>
             <p className="text-muted-foreground text-center mb-4">
               {areas.length === 0

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { 
-  Map, 
+  Map as MapIcon, 
   Factory, 
   Search,
   Filter,
@@ -376,7 +376,7 @@ export default function InfrastructureStations() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Map className="h-5 w-5" />
+            <MapIcon className="h-5 w-5" />
             <span>Geographic Distribution</span>
           </CardTitle>
         </CardHeader>
