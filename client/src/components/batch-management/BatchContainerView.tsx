@@ -17,12 +17,46 @@ interface BatchContainerViewProps {
 export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   // Simplified: Just show containers for the selected batch - no filters needed
 
+  // Fetch containers - need to handle pagination or filter by assignment container IDs
   const { data: containersData } = useQuery({
-    queryKey: ["infrastructure/containers"],
+    queryKey: ["infrastructure/containers", selectedBatch?.id],
     queryFn: async () => {
-      const response = await ApiService.apiV1InfrastructureContainersList();
-      return response.results || [];
+      if (!selectedBatch?.id) return [];
+      
+      // First get assignments to know which containers we need
+      const assignmentsResponse = await ApiService.apiV1BatchContainerAssignmentsList(
+        undefined, undefined, undefined,
+        selectedBatch.id,
+        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+        true // isActive
+      );
+      
+      const containerIds = (assignmentsResponse.results || []).map(a => 
+        typeof a.container === 'number' ? a.container : a.container?.id
+      ).filter((id): id is number => id !== undefined);
+      
+      if (containerIds.length === 0) return [];
+      
+      // Fetch ALL containers (handle pagination) since container__in filter not available
+      let allContainers: any[] = [];
+      let page = 1;
+      let hasMore = true;
+      
+      while (hasMore && page < 100) { // Safety limit
+        const containersResponse = await ApiService.apiV1InfrastructureContainersList(
+          undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+          page // page number
+        );
+        
+        allContainers = allContainers.concat(containersResponse.results || []);
+        hasMore = !!containersResponse.next;
+        page++;
+      }
+      
+      // Filter to only containers assigned to this batch
+      return allContainers.filter(c => containerIds.includes(c.id));
     },
+    enabled: !!selectedBatch?.id,
   });
 
   const { data: environmentalData } = useQuery({
@@ -62,6 +96,15 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   const environmentalReadings = environmentalData || [];
   const assignments = assignmentsData || [];
 
+  // DEBUG: Log what we have
+  console.log('BatchContainerView Debug:', {
+    selectedBatchId: selectedBatch?.id,
+    assignmentsCount: assignments.length,
+    containersCount: containers.length,
+    firstAssignment: assignments[0],
+    assignmentSample: assignments.slice(0, 2)
+  });
+
   // Get current environmental conditions for containers
   const getContainerEnvironmentalData = (containerId: number) => {
     const containerReadings = environmentalReadings.filter((reading: EnvironmentalReading) => 
@@ -75,7 +118,13 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   const assignedContainerIds = assignments.map(a => 
     typeof a.container === 'number' ? a.container : a.container?.id
   ).filter((id): id is number => id !== undefined);
+  
+  console.log('Container IDs from assignments:', assignedContainerIds);
+  console.log('Container IDs in containers list:', containers.map(c => c.id).slice(0, 20));
+  
   const batchContainers = containers.filter(c => assignedContainerIds.includes(c.id));
+  
+  console.log('Batch containers found:', batchContainers.length, batchContainers.slice(0, 2));
 
   if (!selectedBatch) {
     return (
