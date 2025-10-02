@@ -94,21 +94,16 @@ export default function BatchManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
-  const [selectedGeography, setSelectedGeography] = useState("all");
   const [selectedEggSource, setSelectedEggSource] = useState<"internal" | "external">("internal");
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Custom hooks for data management
-  const { batches, species, stages, containers, broodstockPairs, eggSuppliers, isLoading, batchesLoading } = useBatchData(selectedGeography);
+  // Note: Geography filtering removed - batches don't have direct geography relationship
+  // Geography is determined by container assignments (complex join, better done server-side)
+  const { batches, species, stages, containers, broodstockPairs, eggSuppliers, isLoading, batchesLoading } = useBatchData("all");
   const { kpis } = useBatchKPIs(batches);
-
-  // Geography data
-  const { data: geographiesData } = useQuery({
-    queryKey: ["infrastructure/geographies"],
-    queryFn: () => api.infrastructure.getGeographies(),
-  });
 
   // Create batch mutation
   const createBatchMutation = useMutation({
@@ -311,20 +306,6 @@ export default function BatchManagement() {
         </div>
 
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Geography" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Geographies</SelectItem>
-              {geographiesData?.results?.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
-                  {geo.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           {/* Batch Selector - Visible on all tabs for easy batch switching */}
           <Select 
             value={selectedBatch?.id.toString() || ""} 
