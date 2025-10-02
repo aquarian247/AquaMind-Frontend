@@ -3,20 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Activity, Fish, Thermometer } from "lucide-react";
-// Use the Batch type generated from the OpenAPI spec to stay in sync with the v1 API
+import { MapPin, Fish, Thermometer } from "lucide-react";
+import { api } from "@/lib/api";
+import { ApiService } from "@/api/generated";
 import type { Batch } from "@/api/generated/models/Batch";
 import type { Container } from "@/api/generated/models/Container";
-import type { Area } from "@/api/generated/models/Area";
 import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
-// Paginated list models for proper typing of query responses
-import type { PaginatedAreaList } from "@/api/generated/models/PaginatedAreaList";
-import type { PaginatedBatchList } from "@/api/generated/models/PaginatedBatchList";
-import type { PaginatedContainerList } from "@/api/generated/models/PaginatedContainerList";
-import type { PaginatedEnvironmentalReadingList } from "@/api/generated/models/PaginatedEnvironmentalReadingList";
-// (No direct ApiService calls here; we rely on react-query's `select` to unwrap paginated results)
-// (No direct ApiService calls here; we rely on react-query's `select` to unwrap paginated results)
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
@@ -25,27 +17,28 @@ interface BatchContainerViewProps {
 export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   // Simplified: Just show containers for the selected batch - no filters needed
 
-  const { data: containers = [] } = useQuery<
-    PaginatedContainerList,
-    Error,
-    Container[]
-  >({
-    queryKey: ["/api/v1/infrastructure/containers/"],
-    select: (res) => res.results ?? [],
+  const { data: containersData } = useQuery({
+    queryKey: ["infrastructure/containers"],
+    queryFn: async () => {
+      const response = await ApiService.apiV1InfrastructureContainersList();
+      return response.results || [];
+    },
   });
 
-  const { data: environmentalReadings = [] } = useQuery<
-    PaginatedEnvironmentalReadingList,
-    Error,
-    EnvironmentalReading[]
-  >({
-    queryKey: ["/api/v1/environmental/readings/"],
-    select: (res) => res.results ?? [],
+  const { data: environmentalData } = useQuery({
+    queryKey: ["environmental/readings"],
+    queryFn: async () => {
+      const response = await ApiService.apiV1EnvironmentalReadingsList();
+      return response.results || [];
+    },
   });
+
+  const containers = containersData || [];
+  const environmentalReadings = environmentalData || [];
 
   // Get current environmental conditions for containers
   const getContainerEnvironmentalData = (containerId: number) => {
-    const containerReadings = environmentalReadings.filter(reading => 
+    const containerReadings = environmentalReadings.filter((reading: EnvironmentalReading) => 
       reading.container === containerId
     ).slice(0, 3);
     
@@ -136,7 +129,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                   </div>
                   <div className="pl-6 space-y-1">
                     {environmentalData.length > 0 ? (
-                      environmentalData.map((reading, index) => (
+                      environmentalData.map((reading: EnvironmentalReading, index: number) => (
                         <p key={index} className="text-xs">
                           {reading.value} {reading.parameter === 1 ? "°C" : reading.parameter === 2 ? "mg/L" : "pH"}
                         </p>
