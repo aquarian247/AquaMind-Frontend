@@ -350,20 +350,7 @@ export default function BatchManagement() {
                 ) : (
                   batches.map((batch) => (
                     <SelectItem key={batch.id} value={batch.id.toString()}>
-                      <div className="flex items-center justify-between w-full gap-4">
-                        <span className="font-medium">{batch.batch_number}</span>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {batch.current_lifecycle_stage_name || batch.lifecycle_stage_name || 'Unknown'}
-                          </Badge>
-                          <Badge 
-                            variant={batch.status === 'ACTIVE' ? 'default' : 'secondary'}
-                            className="text-xs"
-                          >
-                            {batch.status}
-                          </Badge>
-                        </div>
-                      </div>
+                      {batch.batch_number} • {batch.current_lifecycle_stage_name || batch.lifecycle_stage_name || 'Unknown'} • {batch.status}
                     </SelectItem>
                   ))
                 )}
