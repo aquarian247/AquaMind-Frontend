@@ -350,7 +350,7 @@ export default function BatchManagement() {
                 ) : (
                   batches.map((batch) => (
                     <SelectItem key={batch.id} value={batch.id.toString()}>
-                      {batch.batch_number} • {batch.current_lifecycle_stage_name || batch.lifecycle_stage_name || 'Unknown'} • {batch.status}
+                      {batch.batch_number} • {batch.current_lifecycle_stage?.name || batch.stageName || 'Unknown'} • {batch.status}
                     </SelectItem>
                   ))
                 )}
