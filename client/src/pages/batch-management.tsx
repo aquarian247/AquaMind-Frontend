@@ -325,38 +325,36 @@ export default function BatchManagement() {
             </SelectContent>
           </Select>
 
-          {/* Batch Selector - Visible on detail tabs */}
-          {activeTab !== "overview" && (
-            <Select 
-              value={selectedBatch?.id.toString() || ""} 
-              onValueChange={(value) => {
-                const batch = batches.find(b => b.id.toString() === value);
-                if (batch) setSelectedBatch(batch);
-              }}
-            >
-              <SelectTrigger className="w-[240px]">
-                <SelectValue placeholder="Select a batch">
-                  {selectedBatch ? (
-                    <span className="flex items-center gap-2">
-                      <Fish className="h-4 w-4" />
-                      <span className="truncate">{selectedBatch.batch_number}</span>
-                    </span>
-                  ) : "Select a batch"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {batches.length === 0 ? (
-                  <div className="p-2 text-sm text-muted-foreground">No batches available</div>
-                ) : (
-                  batches.map((batch) => (
-                    <SelectItem key={batch.id} value={batch.id.toString()}>
-                      {batch.batch_number} • {batch.current_lifecycle_stage?.name || batch.stageName || 'Unknown'} • {batch.status}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          )}
+          {/* Batch Selector - Visible on all tabs for easy batch switching */}
+          <Select 
+            value={selectedBatch?.id.toString() || ""} 
+            onValueChange={(value) => {
+              const batch = batches.find(b => b.id.toString() === value);
+              if (batch) setSelectedBatch(batch);
+            }}
+          >
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Select a batch">
+                {selectedBatch ? (
+                  <span className="flex items-center gap-2">
+                    <Fish className="h-4 w-4" />
+                    <span className="truncate">{selectedBatch.batch_number}</span>
+                  </span>
+                ) : "Select a batch"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {batches.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground">No batches available</div>
+              ) : (
+                batches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id.toString()}>
+                    {batch.batch_number} • {batch.current_lifecycle_stage?.name || batch.stageName || 'Unknown'} • {batch.status}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
 
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
