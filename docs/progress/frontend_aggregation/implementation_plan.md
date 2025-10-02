@@ -778,19 +778,202 @@ const waterParams = {
 
 **✅ TASK 8 COMPLETE - Environmental components audited, demo components disclosed, honest fallbacks implemented**
 
-### 9) Health — Audit and Honest Fallbacks
-- Same as Environmental
+### 9) Health — Audit and Honest Fallbacks **[READY FOR IMPLEMENTATION]**
+- Scope: Audit health monitoring components for client-side aggregation and ensure honest fallbacks
+  - **Primary Pages to Audit**:
+    - `client/src/pages/health.tsx` - Main health monitoring page with KPI cards
+    - `client/src/pages/mortality-reporting.tsx` - Mortality analysis and reporting
+    - `client/src/components/batch-management/BatchHealthView.tsx` - Batch-specific health tracking
+  - **Component Categories**:
+    - **KPI Cards**: Verify no hardcoded mock values, use formatFallback() utilities
+    - **Charts**: Ensure empty state handling with "No data available" messaging
+    - **Tables**: Proper pagination and empty state UI
+    - **Demo Components**: Add honest disclosure banners if simulated data is used
+  - **Aggregation Review**:
+    - ✅ **Acceptable**: Processing single API response for display (avg health scores from loaded data)
+    - ❌ **Not Acceptable**: Fetching multiple endpoints and aggregating client-side (should use backend summary endpoints)
+  - **Fallback Requirements**:
+    - Health scores: "N/A" when no assessments exist (not "0" or hardcoded values)
+    - Mortality rates: "N/A" when no events recorded (not "0%")
+    - Trend indicators: Hide or show "No trend data" when insufficient history
+    - Lab results: "No results available" for empty datasets
+  - **Backend Integration Check**:
+    - Verify using generated ApiService (not authenticatedFetch or custom fetch)
+    - Check for any legacy endpoints that should use new v1 API paths
+    - Document any missing aggregation endpoints for future backend work
+  
+- **Audit Checklist**:
+  1. [ ] Search for hardcoded health scores or mock data
+  2. [ ] Verify all KPI cards use formatFallback() or equivalent
+  3. [ ] Check charts have empty state handling (not just broken chart)
+  4. [ ] Review mortality calculations for client-side aggregation
+  5. [ ] Test with zero data - should show N/A, not zeros
+  6. [ ] Add disclosure banners to any demo/prototype components
+  7. [ ] Update inline documentation explaining data sources
+  8. [ ] Run tests - ensure no regressions
 
-### 10) Broodstock — Audit and Honest Fallbacks
-- Same as Environmental
+- **Expected Findings** (based on Environmental audit pattern):
+  - Some components may be production-ready with backend integration
+  - Some components may use demo/simulated data for UI prototyping
+  - Acceptable client-side processing: stats from already-loaded data
+  - May need empty state enhancements for better UX
 
-### 11) Cleanup, Docs, PR
-- Scope
-  - Remove client-side aggregation code paths now replaced
-  - Update `docs/CONTRIBUTING.md` and `README.md` to reflect server-side aggregation standard
-  - Update progress document in backend repo per implementation progress rule
-- QA: lint/type/test pass; no lingering references to removed hooks
-- PO test: sanity pass across pages; N/A where data missing
+- Endpoints: Verify usage of health API endpoints
+  - `ApiService.apiV1HealthJournalEntriesList()` - Health journal entries
+  - `ApiService.apiV1BatchMortalityEventsList()` - Mortality events  
+  - `ApiService.apiV1HealthHealthSamplingEventsList()` - Health assessments
+  - `ApiService.apiV1HealthHealthLabSamplesList()` - Lab sample results
+  - Note: Backend Issue #77 (JournalEntry DateField mismatch) has been resolved
+
+- QA/PO test: 
+  - Charts render without errors with empty datasets
+  - KPIs show N/A (not zeros) when no health data available
+  - No misleading hardcoded values
+  - Demo components clearly labeled if present
+  - All health monitoring features functional
+
+- Reading: Task 8 implementation notes (Environmental audit pattern)
+
+### 10) Broodstock — Audit and Honest Fallbacks **[READY FOR IMPLEMENTATION]**
+- Scope: Audit broodstock management components for client-side aggregation and ensure honest fallbacks
+  - **Primary Pages to Audit**:
+    - `client/src/pages/broodstock.tsx` - Main broodstock overview with KPIs
+    - `client/src/pages/broodstock-programs.tsx` - Breeding program management
+    - `client/src/pages/broodstock-genetic.tsx` - Genetic analysis and trait tracking
+    - `client/src/pages/broodstock-population.tsx` - Population management
+    - `client/src/pages/breeding-program-details.tsx` - Individual program details
+    - `client/src/pages/broodstock-container-details.tsx` - Container-level broodstock view
+  - **Component Categories**:
+    - **Breeding Program KPIs**: Active programs, genetic diversity metrics, success rates
+    - **Population Metrics**: Fish counts, health status distribution, breeding readiness
+    - **Genetic Analysis**: Trait distributions, parentage tracking, genetic diversity
+    - **Production Metrics**: Egg production counts, fertilization rates, survival rates
+  - **Aggregation Review**:
+    - ✅ **Acceptable**: Calculating percentages from loaded breeding pair data
+    - ✅ **Acceptable**: Counting fish by health status from fetched population
+    - ❌ **Not Acceptable**: Multi-endpoint aggregation for genetic diversity calculations
+  - **Fallback Requirements**:
+    - Breeding program counts: "N/A" when no programs exist
+    - Genetic diversity metrics: "N/A" when insufficient data for calculation
+    - Production metrics: "0" for zero eggs (valid data) vs "N/A" for no tracking
+    - Success rates: "N/A" when denominator is zero (not "0%" or "Infinity")
+    - Parentage tracking: "No lineage data" when traceability unavailable
+  - **Backend Integration Check**:
+    - Verify using generated ApiService for broodstock endpoints
+    - Check for legacy endpoints or custom aggregation logic
+    - Document any complex calculations that should be server-side
+  
+- **Audit Checklist**:
+  1. [ ] Search for hardcoded breeding metrics or mock genetic data
+  2. [ ] Verify genetic diversity calculations are from loaded data (not multi-endpoint)
+  3. [ ] Check production metrics use formatFallback() or formatPercentage()
+  4. [ ] Review breeding success rate calculations for division-by-zero safety
+  5. [ ] Test with empty breeding programs - should show appropriate N/A values
+  6. [ ] Verify parentage/lineage displays handle missing data gracefully
+  7. [ ] Add documentation for complex genetic calculations
+  8. [ ] Run tests - ensure no regressions
+
+- **Expected Findings**:
+  - Broodstock is a specialized domain with potential for complex calculations
+  - May find genetic diversity or trait distribution calculations
+  - Breeding success rates may need division-by-zero protection
+  - Egg production tracking should handle zero vs missing data distinction
+
+- Endpoints: Verify usage of broodstock API endpoints
+  - `ApiService.apiV1BroodstockFishList()` - Broodstock fish population
+  - `ApiService.apiV1BroodstockBreedingPairsList()` - Active breeding pairs
+  - `ApiService.apiV1BroodstockBreedingPlansList()` - Breeding programs
+  - `ApiService.apiV1BroodstockEggProductionsList()` - Egg production records
+  - `ApiService.apiV1BroodstockFishMovementsList()` - Fish transfer history
+
+- QA/PO test:
+  - Breeding program KPIs display with honest fallbacks
+  - Genetic metrics show N/A when data insufficient
+  - Production charts handle zero vs missing data correctly
+  - Success rate calculations handle division by zero gracefully
+  - No misleading genetic diversity percentages
+  - All broodstock features functional without errors
+
+- Reading: Task 8 implementation notes (Environmental audit pattern), broodstock domain documentation
+
+### 11) Cleanup, Docs, PR **[READY FOR IMPLEMENTATION]**
+- Scope: Final cleanup, documentation updates, and pull request preparation
+  - **Code Cleanup**:
+    - [ ] Remove unused client-side aggregation hooks/functions (if any were replaced)
+    - [ ] Remove commented-out code from refactoring process
+    - [ ] Verify no console.log statements left in production code
+    - [ ] Check for any TODO comments that should be addressed
+    - [ ] Remove any temporary test utilities or mock data
+  - **Documentation Updates**:
+    - [ ] Update `docs/CONTRIBUTING.md`:
+      * Add server-side aggregation as standard practice
+      * Document backend-first API strategy from architecture.md ADR
+      * Update examples to use formatFallback() utilities
+      * Add reference to multi-entity filtering guide
+    - [ ] Update `README.md`:
+      * Reflect current architecture (server-side aggregation)
+      * Update development workflow with OpenAPI sync
+      * Add testing strategy notes
+    - [ ] Create session summary document:
+      * List all tasks completed (0-10)
+      * Document API gaps found for backend team
+      * Performance improvements achieved
+      * Test coverage added
+  - **Backend Repo Progress Update**:
+    - [ ] Update backend implementation_plan.md with frontend completion status
+    - [ ] Document frontend dependencies met
+    - [ ] List any backend enhancements needed (from API gap notes)
+  - **Pull Request Preparation**:
+    - [ ] Squash/organize commits if needed (or keep detailed history)
+    - [ ] Write comprehensive PR description with:
+      * Summary of changes (Tasks 0-10)
+      * Performance improvements (API call reductions)
+      * Breaking changes (if any)
+      * Testing notes (369 tests passing)
+      * UAT readiness checklist
+    - [ ] Add screenshots/videos of key improvements
+    - [ ] Link related backend issues (#73, #76, #77, etc.)
+    - [ ] Tag reviewers and stakeholders
+  
+- **QA Checklist**:
+  - [ ] `npm run type-check` - Zero TypeScript errors
+  - [ ] `npm run lint` or equivalent - Zero linter errors (if script exists)
+  - [ ] `npm run test:ci` - 100% test pass rate
+  - [ ] `npm run build` - Clean production build
+  - [ ] No lingering references to removed hooks or functions
+  - [ ] All imports resolved correctly
+  - [ ] No unused dependencies in package.json
+
+- **PO Test / Final Smoke Test**:
+  - [ ] Auth via `/api/token/` works; login succeeds
+  - [ ] **Infrastructure**: Area/Station/Hall details show server-aggregated metrics or N/A
+  - [ ] **Inventory**: Feeding events summary uses date-range endpoint; N/A when empty
+  - [ ] **Batch**: Container assignments summary with location filters; FCR trends load
+  - [ ] **Scenario**: KPIs attempt server aggregation; environmental hooks ready
+  - [ ] **Environmental**: Demo components clearly labeled; temp profiles handle empty data
+  - [ ] **Health**: No misleading numbers; honest fallbacks everywhere
+  - [ ] **Broodstock**: No misleading genetic metrics; honest fallbacks everywhere
+  - [ ] Navigation works across all pages
+  - [ ] No console errors in browser dev tools
+  - [ ] Performance acceptable (page loads <2-3 seconds)
+
+- **PR Checklist Items**:
+  - [ ] Branch up to date with main
+  - [ ] All commits have meaningful messages
+  - [ ] No merge conflicts
+  - [ ] CI passing (tests, linting, type-check)
+  - [ ] Documentation updated
+  - [ ] Reviewers assigned
+  - [ ] Labels added (feature, aggregation, UAT-ready)
+
+- **Success Metrics to Highlight in PR**:
+  - API call reduction: ~95% fewer calls across infrastructure pages
+  - Test coverage: 369 tests passing, 14 new tests added
+  - Code quality: Zero linter errors, full TypeScript coverage
+  - Production ready: No hardcoded values, honest fallbacks throughout
+  - Multi-entity filtering: Foundation in place for advanced analytics
+
+- Reading: All task completion notes (0-10), CI/CD best practices, PR templates
 
 ## Product Owner Test Checklist
 - Auth via `/api/token/` works; login succeeds
