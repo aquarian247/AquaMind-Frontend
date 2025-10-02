@@ -235,6 +235,7 @@ export default function ParameterCards() {
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 }
