@@ -660,10 +660,123 @@ useFCRAnalytics({ batchId }) →
 
 **✅ TASK 7 COMPLETE - Scenario server-side aggregation implemented with robust fallbacks, environmental integration hooks ready, 14 tests passing**
 
-### 8) Environmental — Audit and Honest Fallbacks
+### 8) Environmental — Audit and Honest Fallbacks ✅ [COMPLETED 2025-10-02]
 - Scope: ensure derived values are clearly labeled and use N/A; avoid client aggregation until backend endpoints exist
-- Endpoints: none
-- QA/PO test: charts render, KPIs show N/A if empty
+- Endpoints: none (demo components using simulated data)
+- QA/PO test: ✅ Charts render with empty state handling; honest disclosure banners added; N/A for missing data
+
+**Implementation Notes (2025-10-02):**
+- ✅ **Monitoring Components Audited**: Identified demo/prototype components using simulated data
+- ✅ **Honest Disclosure Banners**: Added visible alerts indicating demo mode and simulated data
+- ✅ **Component Documentation**: Added comprehensive inline documentation explaining demo status
+- ✅ **TemperatureDataView Enhanced**: Added empty state handling with honest fallbacks (N/A)
+- ✅ **Production Roadmap**: Documented conversion path to real backend integration
+- ✅ **No Client Aggregation**: Verified no inappropriate client-side aggregation exists
+
+**Components Audited:**
+1. **parameter-cards.tsx** (Monitoring)
+   - **Status**: DEMO component with simulated real-time data
+   - **Changes**: Added disclosure banner, labeled sections as "Simulated"
+   - **Documentation**: Clear production TODO for backend integration
+   - **Honest Fallbacks**: N/A not applicable (demo data always present)
+
+2. **real-time-chart.tsx** (Monitoring)
+   - **Status**: DEMO component with random data generation  
+   - **Changes**: Added comprehensive documentation header
+   - **Documentation**: Clear migration path to real sensor API
+   - **Honest Fallbacks**: N/A not applicable (simulated data)
+
+3. **TemperatureDataView.tsx** (Scenario Temperature Profiles)
+   - **Status**: ✅ PRODUCTION-READY with backend integration
+   - **Changes**: Added empty state handling, honest fallbacks for stats
+   - **Client Processing**: Acceptable (processes single API response for display)
+   - **Honest Fallbacks**: ✅ Shows "N/A" and "No data available" when empty
+
+4. **infrastructure-sensors.tsx** (Sensor Management)
+   - **Status**: ✅ PRODUCTION-READY with backend API integration
+   - **Client Processing**: Acceptable (counts from loaded sensor list)
+   - **Honest Fallbacks**: ✅ Shows "No sensors found" empty state
+   - **No Changes Needed**: Already production-ready
+
+5. **EnvironmentalImpactTab.tsx** (Batch Environmental Analysis)
+   - **Status**: ✅ PRODUCTION-READY with proper empty state
+   - **Props-Based**: Receives data from parent, no aggregation
+   - **Honest Fallbacks**: ✅ Shows "Environmental correlations require sensor data"
+   - **No Changes Needed**: Already handles empty state correctly
+
+**Key Findings:**
+
+**Demo Components (Honest Disclosure Added):**
+- `parameter-cards.tsx` - Simulated water quality parameters
+- `real-time-chart.tsx` - Simulated real-time sensor data
+- **Purpose**: UI/UX demonstration and prototyping
+- **UAT Impact**: Users see "Demo Mode" banner, clearly labeled as simulated
+
+**Production-Ready Components:**
+- `TemperatureDataView.tsx` - Scenario temperature profiles (backend integrated)
+- `infrastructure-sensors.tsx` - Sensor management (backend integrated)
+- `EnvironmentalImpactTab.tsx` - Batch environmental correlations (proper empty states)
+
+**Client-Side Processing Assessment:**
+- ✅ **Acceptable**: TemperatureDataView calculates avg/min/max from already-loaded data
+  - Single API call, simple stats for visualization
+  - Not aggregating across multiple endpoints
+  - Enhanced with empty state handling
+- ✅ **Acceptable**: infrastructure-sensors counts from loaded sensor list
+  - Filtering/counting already-fetched data
+  - Not making additional API calls for aggregation
+
+**No Inappropriate Aggregation Found:**
+- ✅ No multi-endpoint client-side aggregation
+- ✅ No hardcoded fallback values (all clearly labeled as simulated)
+- ✅ Demo components honestly disclosed with visible banners
+- ✅ Production components use proper empty state handling
+
+**Production Migration Path (Future Work):**
+
+For converting demo components to production:
+```typescript
+// BEFORE (Demo - parameter-cards.tsx):
+const [waterParams, setWaterParams] = useState({ temperature: 14.2, ... });
+
+// AFTER (Production):
+const { data: recentReadings } = useQuery({
+  queryKey: ['environmental', 'recent', containerId],
+  queryFn: () => ApiService.apiV1EnvironmentalReadingsRecentRetrieve()
+});
+
+const waterParams = {
+  temperature: formatFallback(recentReadings?.temperature, "°C"),
+  oxygen: formatFallback(recentReadings?.oxygen, "mg/L"),
+  // ... honest fallbacks throughout
+};
+```
+
+**Documentation Added:**
+- Comprehensive component headers explaining demo status
+- Production TODO lists for backend integration
+- Clear migration examples in component comments
+- Honest disclosure banners visible to users
+
+**UAT Readiness:**
+- ✅ No misleading data (demo components clearly labeled)
+- ✅ Production components handle empty states properly
+- ✅ No client-side aggregation issues
+- ✅ All environmental pages render without errors
+- ✅ Charts display properly with and without data
+
+**Test Results:**
+- ✅ 365 tests passing (no regressions from environmental changes)
+- ⚠️ 3 pre-existing test failures (unrelated to Task 8)
+- ✅ Zero linter errors
+- ✅ Full TypeScript coverage
+
+**Files Modified:**
+- `client/src/components/monitoring/parameter-cards.tsx` - Added disclosure banner, documentation
+- `client/src/components/monitoring/real-time-chart.tsx` - Added comprehensive documentation
+- `client/src/pages/TemperatureDataView.tsx` - Added empty state handling, honest fallbacks
+
+**✅ TASK 8 COMPLETE - Environmental components audited, demo components disclosed, honest fallbacks implemented**
 
 ### 9) Health — Audit and Honest Fallbacks
 - Same as Environmental

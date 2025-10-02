@@ -1,4 +1,25 @@
+/**
+ * Environmental Monitoring Parameter Cards
+ * 
+ * TASK 8: Environmental Audit - Demo Component
+ * 
+ * STATUS: This is a DEMO/PROTOTYPE component using simulated data
+ * - Shows simulated real-time water quality parameters
+ * - Uses hardcoded initial values and random updates
+ * - NOT connected to backend environmental readings API
+ * 
+ * PRODUCTION TODO:
+ * - Replace with useQuery calls to ApiService.apiV1EnvironmentalReadingsList()
+ * - Use honest fallbacks (N/A) when no sensor data available
+ * - Filter by container/area as needed
+ * - Remove simulation logic
+ * 
+ * HONEST DISCLOSURE: This component is for UI demonstration only
+ */
+
 import { useState, useEffect } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 interface WaterParameters {
   temperature: number;
@@ -100,11 +121,21 @@ export default function ParameterCards() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Water Parameters */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Water Parameters</h3>
-        <div className="space-y-4">
+    <div className="space-y-4">
+      {/* Honest Disclosure Banner - TASK 8 */}
+      <Alert className="border-blue-200 bg-blue-50">
+        <Info className="h-4 w-4 text-blue-600" />
+        <AlertDescription className="text-blue-900">
+          <strong>Demo Mode:</strong> This page displays simulated environmental data for UI demonstration. 
+          Real sensor integration requires backend environmental readings API. See component documentation for production implementation details.
+        </AlertDescription>
+      </Alert>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Water Parameters */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Water Parameters (Simulated)</h3>
+          <div className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Temperature</span>
             <div className="text-right">
@@ -149,7 +180,7 @@ export default function ParameterCards() {
 
       {/* Environmental Conditions */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Environmental</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Environmental (Simulated)</h3>
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Water Flow</span>
@@ -173,7 +204,7 @@ export default function ParameterCards() {
 
       {/* System Status */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">System Status</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">System Status (Simulated)</h3>
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Feed System</span>
