@@ -33,8 +33,34 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
     },
   });
 
+  // Fetch container assignments for this batch to get actual container IDs
+  const { data: assignmentsData } = useQuery({
+    queryKey: ["batch/container-assignments", selectedBatch?.id],
+    queryFn: async () => {
+      if (!selectedBatch?.id) return [];
+      const response = await ApiService.apiV1BatchContainerAssignmentsList(
+        undefined, // assignmentDate
+        undefined, // assignmentDateAfter
+        undefined, // assignmentDateBefore
+        selectedBatch.id, // batch - CORRECT position!
+        undefined, // batchIn
+        undefined, // batchNumber
+        undefined, // biomassMax
+        undefined, // biomassMin
+        undefined, // container
+        undefined, // containerIn
+        undefined, // containerName
+        undefined, // containerType
+        true       // isActive - only active assignments
+      );
+      return response.results || [];
+    },
+    enabled: !!selectedBatch?.id,
+  });
+
   const containers = containersData || [];
   const environmentalReadings = environmentalData || [];
+  const assignments = assignmentsData || [];
 
   // Get current environmental conditions for containers
   const getContainerEnvironmentalData = (containerId: number) => {
@@ -45,10 +71,11 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
     return containerReadings;
   };
 
-  // Get containers for the selected batch
-  const batchContainers = selectedBatch?.active_containers 
-    ? containers.filter(c => selectedBatch.active_containers?.includes(c.id))
-    : [];
+  // Get containers from active assignments (not from batch.active_containers which might be stale)
+  const assignedContainerIds = assignments.map(a => 
+    typeof a.container === 'number' ? a.container : a.container?.id
+  ).filter((id): id is number => id !== undefined);
+  const batchContainers = containers.filter(c => assignedContainerIds.includes(c.id));
 
   if (!selectedBatch) {
     return (
