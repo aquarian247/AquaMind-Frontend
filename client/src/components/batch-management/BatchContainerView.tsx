@@ -17,66 +17,17 @@ interface BatchContainerViewProps {
 export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   // Simplified: Just show containers for the selected batch - no filters needed
 
-  // Fetch containers - need to handle pagination or filter by assignment container IDs
-  const { data: containersData } = useQuery({
-    queryKey: ["infrastructure/containers", selectedBatch?.id],
-    queryFn: async () => {
-      if (!selectedBatch?.id) return [];
-      
-      // First get assignments to know which containers we need
-      const assignmentsResponse = await ApiService.apiV1BatchContainerAssignmentsList(
-        undefined, undefined, undefined,
-        selectedBatch.id,
-        undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-        true // isActive
-      );
-      
-      const containerIds = (assignmentsResponse.results || []).map(a => 
-        typeof a.container === 'number' ? a.container : a.container?.id
-      ).filter((id): id is number => id !== undefined);
-      
-      if (containerIds.length === 0) return [];
-      
-      // Fetch ALL containers (handle pagination) since container__in filter not available
-      let allContainers: any[] = [];
-      let page = 1;
-      let hasMore = true;
-      
-      while (hasMore && page < 100) { // Safety limit
-        const containersResponse = await ApiService.apiV1InfrastructureContainersList(
-          undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
-          page // page number
-        );
-        
-        allContainers = allContainers.concat(containersResponse.results || []);
-        hasMore = !!containersResponse.next;
-        page++;
-      }
-      
-      // Filter to only containers assigned to this batch
-      return allContainers.filter(c => containerIds.includes(c.id));
-    },
-    enabled: !!selectedBatch?.id,
-  });
-
-  const { data: environmentalData } = useQuery({
-    queryKey: ["environmental/readings"],
-    queryFn: async () => {
-      const response = await ApiService.apiV1EnvironmentalReadingsList();
-      return response.results || [];
-    },
-  });
-
-  // Fetch container assignments for this batch to get actual container IDs
+  // Fetch ACTIVE container assignments for this batch (has all the data we need!)
   const { data: assignmentsData } = useQuery({
-    queryKey: ["batch/container-assignments", selectedBatch?.id],
+    queryKey: ["batch/container-assignments", selectedBatch?.id, "active"],
     queryFn: async () => {
       if (!selectedBatch?.id) return [];
+      
       const response = await ApiService.apiV1BatchContainerAssignmentsList(
         undefined, // assignmentDate
         undefined, // assignmentDateAfter
         undefined, // assignmentDateBefore
-        selectedBatch.id, // batch - CORRECT position!
+        selectedBatch.id, // batch filter
         undefined, // batchIn
         undefined, // batchNumber
         undefined, // biomassMax
@@ -85,46 +36,22 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
         undefined, // containerIn
         undefined, // containerName
         undefined, // containerType
-        true       // isActive - only active assignments
+        true,      // isActive - ONLY active assignments!
+        undefined, // lifecycleStage
+        undefined, // ordering
+        undefined, // page
+        undefined, // populationMax
+        undefined, // populationMin
+        undefined, // search
+        undefined  // species
       );
+      
       return response.results || [];
     },
     enabled: !!selectedBatch?.id,
   });
 
-  const containers = containersData || [];
-  const environmentalReadings = environmentalData || [];
   const assignments = assignmentsData || [];
-
-  // DEBUG: Log what we have
-  console.log('BatchContainerView Debug:', {
-    selectedBatchId: selectedBatch?.id,
-    assignmentsCount: assignments.length,
-    containersCount: containers.length,
-    firstAssignment: assignments[0],
-    assignmentSample: assignments.slice(0, 2)
-  });
-
-  // Get current environmental conditions for containers
-  const getContainerEnvironmentalData = (containerId: number) => {
-    const containerReadings = environmentalReadings.filter((reading: EnvironmentalReading) => 
-      reading.container === containerId
-    ).slice(0, 3);
-    
-    return containerReadings;
-  };
-
-  // Get containers from active assignments (not from batch.active_containers which might be stale)
-  const assignedContainerIds = assignments.map(a => 
-    typeof a.container === 'number' ? a.container : a.container?.id
-  ).filter((id): id is number => id !== undefined);
-  
-  console.log('Container IDs from assignments:', assignedContainerIds);
-  console.log('Container IDs in containers list:', containers.map(c => c.id).slice(0, 20));
-  
-  const batchContainers = containers.filter(c => assignedContainerIds.includes(c.id));
-  
-  console.log('Batch containers found:', batchContainers.length, batchContainers.slice(0, 2));
 
   if (!selectedBatch) {
     return (
@@ -143,76 +70,69 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Container Assignments</h3>
+          <h3 className="text-lg font-semibold">Active Container Assignments</h3>
           <p className="text-sm text-muted-foreground">
-            Containers currently assigned to {selectedBatch.batch_number}
+            Current locations for {selectedBatch.batch_number}
           </p>
         </div>
         <Badge variant="outline">
-          {batchContainers.length} container{batchContainers.length !== 1 ? 's' : ''}
+          {assignments.length} assignment{assignments.length !== 1 ? 's' : ''}
         </Badge>
       </div>
 
-      {/* Container Grid */}
+      {/* Assignment Grid - Shows active assignments directly */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {batchContainers.length === 0 ? (
+        {assignments.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="p-8 text-center">
               <MapPin className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                No containers assigned to this batch yet.
+                No active container assignments for this batch.
               </p>
             </CardContent>
           </Card>
         ) : (
-          batchContainers.map((container) => {
-          const environmentalData = getContainerEnvironmentalData(container.id);
+          assignments.map((assignment) => {
+          // assignment.container is nested object with container details
+          const containerName = typeof assignment.container === 'object' && assignment.container 
+            ? (assignment.container as any).name || `Container ${assignment.container}`
+            : `Container ${assignment.container}`;
+          const containerType = typeof assignment.container === 'object' && assignment.container
+            ? (assignment.container as any).container_type_name || 'Unknown'
+            : 'Unknown';
 
           return (
-            <Card key={container.id} className="relative">
+            <Card key={assignment.id} className="relative">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{container.name}</CardTitle>
+                  <CardTitle className="text-lg">{containerName}</CardTitle>
                   <Badge variant="default">Active</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {container.container_type_name} • Capacity: {container.max_biomass_kg} kg
+                  {containerType} • Assigned {assignment.assignment_date ? new Date(assignment.assignment_date).toLocaleDateString() : 'Unknown'}
                 </p>
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {/* Batch Info */}
+                {/* Assignment Data - The real metrics for this batch in this container */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Fish className="h-4 w-4 text-blue-500" />
-                    <span className="font-medium">Batch: {selectedBatch.batch_number}</span>
+                    <span className="font-medium">Assignment Metrics</span>
                   </div>
                   <div className="pl-6 space-y-1">
                     <p className="text-xs text-muted-foreground">
-                      Population: {selectedBatch.calculated_population_count?.toLocaleString() || 'N/A'}
+                      Population: {assignment.population_count?.toLocaleString() || 'N/A'}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Biomass: {selectedBatch.calculated_biomass_kg ? `${Number(selectedBatch.calculated_biomass_kg).toFixed(1)} kg` : 'N/A'}
+                      Biomass: {assignment.biomass_kg ? `${Number(assignment.biomass_kg).toFixed(1)} kg` : 'N/A'}
                     </p>
-                  </div>
-                </div>
-
-                {/* Environmental Conditions */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Thermometer className="h-4 w-4 text-orange-500" />
-                    <span className="font-medium">Environmental</span>
-                  </div>
-                  <div className="pl-6 space-y-1">
-                    {environmentalData.length > 0 ? (
-                      environmentalData.map((reading: EnvironmentalReading, index: number) => (
-                        <p key={index} className="text-xs">
-                          {reading.value} {reading.parameter === 1 ? "°C" : reading.parameter === 2 ? "mg/L" : "pH"}
-                        </p>
-                      ))
-                    ) : (
-                      <p className="text-xs text-muted-foreground">No recent readings</p>
-                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Avg Weight: {assignment.avg_weight_g ? `${Number(assignment.avg_weight_g).toFixed(1)} g` : 'N/A'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Stage: {(assignment as any).lifecycle_stage_name || 'Unknown'}
+                    </p>
                   </div>
                 </div>
 
@@ -222,11 +142,10 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                   size="sm" 
                   className="w-full"
                   onClick={() => {
-                    // TODO: Implement container details modal
-                    console.log('View container details for:', container.id);
+                    console.log('View assignment details:', assignment.id);
                   }}
                 >
-                  View Details
+                  View Assignment Details
                 </Button>
               </CardContent>
             </Card>
@@ -236,28 +155,28 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
       </div>
 
       {/* Summary Stats */}
-      {batchContainers.length > 0 && (
+      {assignments.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Container Summary</CardTitle>
+            <CardTitle>Assignment Summary</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold">{batchContainers.length}</div>
-                <div className="text-sm text-muted-foreground">Total Containers</div>
+                <div className="text-2xl font-bold">{assignments.length}</div>
+                <div className="text-sm text-muted-foreground">Active Assignments</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {batchContainers.filter(c => c.name.toLowerCase().includes("pen") || c.name.toLowerCase().includes("cage")).length}
+                  {assignments.reduce((sum, a) => sum + (a.population_count || 0), 0).toLocaleString()}
                 </div>
-                <div className="text-sm text-muted-foreground">Sea Pens/Cages</div>
+                <div className="text-sm text-muted-foreground">Total Population</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold">
-                  {batchContainers.filter(c => c.name.toLowerCase().includes("tank")).length}
+                  {assignments.reduce((sum, a) => sum + (Number(a.biomass_kg) || 0), 0).toFixed(1)} kg
                 </div>
-                <div className="text-sm text-muted-foreground">Tanks</div>
+                <div className="text-sm text-muted-foreground">Total Biomass</div>
               </div>
             </div>
           </CardContent>
