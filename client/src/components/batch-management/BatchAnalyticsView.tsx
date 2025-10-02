@@ -115,12 +115,14 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
     queryKey: ["scenario/scenarios", batchId],
     queryFn: async () => {
       try {
+        // Note: Scenarios endpoint doesn't have batch filter, so get all scenarios
+        // In the future, could add batch__id filter to scenario endpoint
         const response = await ApiService.apiV1ScenarioScenariosList(
-          batchId,
-          undefined,
-          undefined,
-          undefined,
-          undefined
+          undefined, // createdBy (not batchId!)
+          undefined, // ordering
+          undefined, // page
+          undefined, // search
+          undefined  // startDate
         );
         return response.results || [];
       } catch (error) {
@@ -136,13 +138,13 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
     queryFn: async () => {
       try {
         const response = await ApiService.apiV1BatchContainerAssignmentsList(
-          String(batchId),
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined
+          undefined, // assignmentDate (not batchId!)
+          undefined, // assignmentDateAfter
+          undefined, // assignmentDateBefore
+          batchId,   // ✅ batch parameter (4th position)
+          undefined, // batchIn
+          undefined, // batchNumber
+          undefined  // biomassMax
         );
         return response.results || [];
       } catch (error) {
