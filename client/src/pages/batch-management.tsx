@@ -325,6 +325,52 @@ export default function BatchManagement() {
             </SelectContent>
           </Select>
 
+          {/* Batch Selector - Visible on detail tabs */}
+          {activeTab !== "overview" && (
+            <Select 
+              value={selectedBatch?.id.toString() || ""} 
+              onValueChange={(value) => {
+                const batch = batches.find(b => b.id.toString() === value);
+                if (batch) setSelectedBatch(batch);
+              }}
+            >
+              <SelectTrigger className="w-[240px]">
+                <SelectValue placeholder="Select a batch">
+                  {selectedBatch ? (
+                    <span className="flex items-center gap-2">
+                      <Fish className="h-4 w-4" />
+                      <span className="truncate">{selectedBatch.batch_number}</span>
+                    </span>
+                  ) : "Select a batch"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {batches.length === 0 ? (
+                  <div className="p-2 text-sm text-muted-foreground">No batches available</div>
+                ) : (
+                  batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id.toString()}>
+                      <div className="flex items-center justify-between w-full gap-4">
+                        <span className="font-medium">{batch.batch_number}</span>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {batch.current_lifecycle_stage_name || batch.lifecycle_stage_name || 'Unknown'}
+                          </Badge>
+                          <Badge 
+                            variant={batch.status === 'ACTIVE' ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {batch.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          )}
+
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button>
