@@ -94,21 +94,16 @@ export default function BatchManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
-  const [selectedGeography, setSelectedGeography] = useState("all");
   const [selectedEggSource, setSelectedEggSource] = useState<"internal" | "external">("internal");
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Custom hooks for data management
-  const { batches, species, stages, containers, broodstockPairs, eggSuppliers, isLoading, batchesLoading } = useBatchData(selectedGeography);
+  // Note: Geography filtering removed - batches don't have direct geography relationship
+  // Geography is determined by container assignments (complex join, better done server-side)
+  const { batches, species, stages, containers, broodstockPairs, eggSuppliers, isLoading, batchesLoading } = useBatchData("all");
   const { kpis } = useBatchKPIs(batches);
-
-  // Geography data
-  const { data: geographiesData } = useQuery({
-    queryKey: ["infrastructure/geographies"],
-    queryFn: () => api.infrastructure.getGeographies(),
-  });
 
   // Create batch mutation
   const createBatchMutation = useMutation({
@@ -311,17 +306,34 @@ export default function BatchManagement() {
         </div>
 
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Geography" />
+          {/* Batch Selector - Visible on all tabs for easy batch switching */}
+          <Select 
+            value={selectedBatch?.id.toString() || ""} 
+            onValueChange={(value) => {
+              const batch = batches.find(b => b.id.toString() === value);
+              if (batch) setSelectedBatch(batch);
+            }}
+          >
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Select a batch">
+                {selectedBatch ? (
+                  <span className="flex items-center gap-2">
+                    <Fish className="h-4 w-4" />
+                    <span className="truncate">{selectedBatch.batch_number}</span>
+                  </span>
+                ) : "Select a batch"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Geographies</SelectItem>
-              {geographiesData?.results?.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
-                  {geo.name}
-                </SelectItem>
-              ))}
+              {batches.length === 0 ? (
+                <div className="p-2 text-sm text-muted-foreground">No batches available</div>
+              ) : (
+                batches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id.toString()}>
+                    {batch.batch_number} • {batch.current_lifecycle_stage?.name || batch.stageName || 'Unknown'} • {batch.status}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
 

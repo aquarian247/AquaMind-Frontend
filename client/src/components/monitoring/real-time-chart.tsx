@@ -1,3 +1,22 @@
+/**
+ * Real-Time Environmental Monitoring Chart
+ * 
+ * TASK 8: Environmental Audit - Demo Component
+ * 
+ * STATUS: This is a DEMO/PROTOTYPE component using simulated data
+ * - Shows simulated real-time temperature and oxygen readings
+ * - Uses random data generation for visualization purposes
+ * - NOT connected to backend environmental readings API
+ * 
+ * PRODUCTION TODO:
+ * - Replace with streaming data from ApiService.apiV1EnvironmentalReadingsRecentRetrieve()
+ * - Use honest fallbacks (N/A or empty chart) when no data available
+ * - Add real-time updates via WebSocket or polling
+ * - Remove simulation logic
+ * 
+ * HONEST DISCLOSURE: This component is for UI demonstration only
+ */
+
 import { useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Chart from "chart.js/auto";
@@ -14,7 +33,7 @@ export default function RealTimeChart() {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
 
-  // Simulate real-time data
+  // Simulate real-time data (DEMO ONLY - TASK 8)
   useEffect(() => {
     const generateInitialData = () => {
       const initialData: RealTimeData[] = [];

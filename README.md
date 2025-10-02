@@ -191,6 +191,7 @@ _For contributors: see `docs/CONTRIBUTING.md` and `docs/code_organization_guidel
 - `docs/CONTRIBUTING.md` - Development best practices
 - `docs/DJANGO_INTEGRATION_GUIDE.md` - Backend integration details
 - `docs/LOCAL_VLAN_SETUP.md` - Local testing with virtualization
+- `docs/multi-entity-filtering-guide.md` - Complete guide to multi-entity filtering with `__in` support
 
 ## 🤝 Contributing
 *(section unchanged)*

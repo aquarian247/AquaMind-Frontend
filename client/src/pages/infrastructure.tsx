@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import {
   Activity, 
   AlertTriangle, 
   Thermometer,
-  Map,
+  Map as MapIcon,
   Waves,
   Factory,
   Container,
@@ -28,7 +28,9 @@ import {
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "wouter";
-import { api } from "@/lib/api";
+import { ApiService, InfrastructureService } from "@/api/generated";
+import { useGeographySummaries } from "@/features/infrastructure/api";
+import { formatCount, formatWeight, formatPercentage } from "@/lib/formatFallback";
 
 // Infrastructure data interfaces
 interface GeographySummary {
@@ -82,68 +84,70 @@ export default function Infrastructure() {
   const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
 
-  // Data queries
-  const { data: summaryData, isLoading: summaryLoading } = useQuery({
-    queryKey: ["infrastructure/overview"],
-    queryFn: api.infrastructure.getOverview,
+  // ✅ Use GLOBAL infrastructure overview endpoint for all-geography aggregation
+  const { data: globalOverview, isLoading: summaryLoading } = useQuery({
+    queryKey: ["infrastructure", "overview", "global"],
+    queryFn: async () => InfrastructureService.infrastructureOverview(),
   });
 
-  const { data: geographiesData } = useQuery({
-    queryKey: ["infrastructure/geographies"],
-    queryFn: api.infrastructure.getGeographies,
+  // Fetch geographies list for geography selector
+  const { data: geographiesData, isLoading: geographiesLoading } = useQuery({
+    queryKey: ["infrastructure", "geographies"],
+    queryFn: async () => ApiService.apiV1InfrastructureGeographiesList(),
   });
 
-  const { data: alertsData } = useQuery({
-    queryKey: ["infrastructure/alerts"],
-    queryFn: api.infrastructure.getActiveAlerts,
-  });
+  // Get geography IDs and fetch summaries for all geographies
+  const geographyIds = useMemo(
+    () => geographiesData?.results?.map(g => g.id!).filter(Boolean) || [],
+    [geographiesData]
+  );
+  
+  const { data: geographySummaries, isLoading: geoSummariesLoading } = useGeographySummaries(geographyIds);
 
+  // Create lookup map for geography summaries
+  const geoSummaryMap = useMemo(() => {
+    if (!geographySummaries || geographySummaries.length === 0) return new Map();
+    return new Map(geographyIds.map((id, index) => [id, geographySummaries[index]]));
+  }, [geographySummaries, geographyIds]);
+
+  // Fetch sample containers for display
   const { data: containersData } = useQuery({
-    queryKey: ["infrastructure/containers"],
-    queryFn: () => api.infrastructure.getContainers(),
+    queryKey: ["infrastructure", "containers", "sample"],
+    queryFn: async () => ApiService.apiV1InfrastructureContainersList(
+      undefined, // active
+      undefined, // area
+      undefined, // areaIn
+      undefined, // containerType
+      undefined, // hall
+      undefined, // hallIn
+      undefined, // name
+      undefined, // ordering
+      1          // page (first page only for sample)
+    ),
   });
-
-  // Process data - use real API data with proper fallbacks
-  const summary = summaryData ? {
-    totalContainers: (summaryData as any).totalContainers || (summaryData as any).total_containers || 0,
-    activeBiomass: (summaryData as any).activeBiomass || (summaryData as any).active_biomass_kg || 0,
-    capacity: (summaryData as any).capacity || (summaryData as any).capacity_kg || 0,
-    sensorAlerts: (summaryData as any).sensorAlerts || (summaryData as any).sensor_alerts || 0,
-    feedingEventsToday: (summaryData as any).feedingEventsToday || (summaryData as any).feeding_events_today || 0
-  } : {
-    totalContainers: 0,
-    activeBiomass: 0,
-    capacity: 0,
-    sensorAlerts: 0,
-    feedingEventsToday: 0
-  };
 
   const geographies = geographiesData?.results?.map((geo: any) => {
-    // Since we only have one geography (Faroe Islands), assign all infrastructure metrics to it
-    // In a multi-geography setup, these would need to be calculated per geography
-    const totalContainers = summary.totalContainers;
-    const activeBiomass = summary.activeBiomass;
-    const capacity = summary.capacity;
-    const utilizationPercent = capacity > 0 ? Math.round(((activeBiomass / capacity) * 100) * 10) / 10 : 0;
-
+    const summary = geoSummaryMap.get(geo.id);
     return {
       id: geo.id,
       name: geo.name,
-      totalContainers: totalContainers,
-      activeBiomass: activeBiomass,
-      capacity: capacity,
-      utilizationPercent: utilizationPercent,
-      seaAreas: 1,        // We have areas in Faroe Islands
-      freshwaterStations: 1, // We have freshwater stations
-      status: 'active' as const,
+      totalContainers: summary?.container_count ?? 0,
+      activeBiomass: summary?.active_biomass_kg ?? 0,
+      capacity: summary?.capacity_kg ?? 0,
+      utilizationPercent: summary?.capacity_kg && summary?.active_biomass_kg
+        ? (summary.active_biomass_kg / summary.capacity_kg) * 100
+        : 0,
+      seaAreas: summary?.ring_count ?? 0,
+      freshwaterStations: summary?.station_count ?? 0,
+      status: (geo.active ?? true) ? 'active' as const : 'inactive' as const,
       lastUpdate: geo.updated_at || new Date().toISOString()
     };
   }) || [];
 
-  // Alerts list - handle gracefully when endpoint doesn't exist
-  const alerts = alertsData?.results || [];
+  // No alerts endpoint yet - empty array
+  const alerts: Alert[] = [];
 
-  // Process real containers data
+  // Process real containers data for Overview tab display
   const realContainers = containersData?.results?.slice(0, 3).map((container: any) => ({
     id: container.id,
     name: container.name,
@@ -152,7 +156,10 @@ export default function Infrastructure() {
     geography: geographies.length > 0 ? geographies[0].name : "Unknown", // Use first available geography
     area: container.area_name || container.hall_name || "Unknown",
     biomass: 0, // Would need to be calculated from batch assignments
-    capacity: parseFloat(container.volume_m3 || '0') * 1000, // Convert m³ to kg assuming density ~1
+    // ✅ Use max_biomass_kg from container model (aquaculture capacity, not just water volume)
+    // Example: Container with 10m³ volume has max_biomass_kg = 500 kg
+    // This represents safe stocking density for fish welfare
+    capacity: parseFloat(container.max_biomass_kg || '0'),
     currentBatch: "Unknown", // Would need to be determined from batch assignments
     lastFeed: "Unknown", // Would need to be determined from feeding events
     sensorReadings: {}, // Would need sensor data integration
@@ -165,7 +172,7 @@ export default function Infrastructure() {
   // Navigation menu items
   const navigationSections = [
     { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "geographic", label: "Geographic View", icon: Map },
+    { id: "geographic", label: "Geographic View", icon: MapIcon },
     { id: "containers", label: "Containers", icon: Container },
     { id: "sensors", label: "Sensors", icon: Radio },
     { id: "environmental", label: "Environmental", icon: Activity },
@@ -260,6 +267,7 @@ export default function Infrastructure() {
       )}
 
       {/* Infrastructure Summary KPIs - 4 Status Boxes */}
+      {/* KPI Cards - Global Infrastructure Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -268,10 +276,10 @@ export default function Infrastructure() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {summary.totalContainers}
+              {summaryLoading ? "..." : formatCount(globalOverview?.total_containers)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Total active containers
+              {summaryLoading ? "Loading..." : "Across all geographies"}
             </p>
           </CardContent>
         </Card>
@@ -283,31 +291,30 @@ export default function Infrastructure() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {new Intl.NumberFormat('en-US').format(Math.round(summary.activeBiomass))}
+              {summaryLoading ? "..." : formatWeight(globalOverview?.active_biomass_kg)}
             </div>
             <p className="text-xs text-muted-foreground">
-              kg active biomass
+              {summaryLoading ? "Loading..." : "Current stock"}
             </p>
-            <div className="flex items-center space-x-2 mt-2">
-              <Progress value={summary.capacity > 0 ? Math.round(((summary.activeBiomass / summary.capacity) * 100) * 10) / 10 : 0} className="flex-1" />
-              <span className="text-xs text-muted-foreground">
-                {summary.capacity > 0 ? (Math.round(((summary.activeBiomass / summary.capacity) * 100) * 10) / 10).toFixed(1) : 0}% of {new Intl.NumberFormat('en-US').format(Math.round(summary.capacity / 1000))} tons capacity
-              </span>
-            </div>
+            {globalOverview?.capacity_kg && globalOverview.active_biomass_kg && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {formatPercentage((globalOverview.active_biomass_kg / globalOverview.capacity_kg) * 100, 1)} of capacity
+              </p>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sensor Alerts</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium">Total Capacity</CardTitle>
+            <Gauge className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {summary.sensorAlerts}
+            <div className="text-2xl font-bold text-purple-600">
+              {summaryLoading ? "..." : formatWeight(globalOverview?.capacity_kg)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Active sensor alerts
+              {summaryLoading ? "Loading..." : "Maximum biomass"}
             </p>
           </CardContent>
         </Card>
@@ -315,14 +322,14 @@ export default function Infrastructure() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Feeding Events Today</CardTitle>
-            <Clock className="h-4 w-4 text-purple-600" />
+            <Activity className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {summary.feedingEventsToday}
+            <div className="text-2xl font-bold text-orange-600">
+              {summaryLoading ? "..." : formatCount(globalOverview?.feeding_events_today)}
             </div>
             <p className="text-xs text-muted-foreground">
-              On schedule
+              {summaryLoading ? "Loading..." : "Last 24 hours"}
             </p>
           </CardContent>
         </Card>
@@ -448,11 +455,12 @@ export default function Infrastructure() {
                           <CardContent className="space-y-3">
                             <div>
                               <div className="flex justify-between text-sm">
-                                <span>Capacity</span>
+                                <span>Max Capacity</span>
                                 <span>{(container.capacity / 1000).toFixed(1)}k kg</span>
                               </div>
-                              <Progress value={0} className="mt-1" />
-                              <p className="text-xs text-muted-foreground mt-1">Biomass data not yet integrated</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Safe stocking density for fish welfare
+                              </p>
                             </div>
 
                             <div className="text-center text-sm text-muted-foreground py-4">
@@ -593,7 +601,9 @@ export default function Infrastructure() {
               </div>
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-sm">
                 <div className="p-3 bg-blue-50 rounded-lg">
-                  <div className="font-medium text-blue-900">{summary.totalContainers} Containers</div>
+                  <div className="font-medium text-blue-900">
+                    {formatCount(globalOverview?.total_containers)} Containers
+                  </div>
                   <div className="text-blue-700">Across all facilities</div>
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg">

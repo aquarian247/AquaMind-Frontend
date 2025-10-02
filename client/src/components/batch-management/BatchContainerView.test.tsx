@@ -128,53 +128,89 @@ describe('BatchContainerView', () => {
     });
   });
 
-  it('renders filter header and a container card', async () => {
-    // Render the component
-    renderWithQueryClient(<BatchContainerView />);
+  it('renders header and container assignments', async () => {
+    // Create a mock batch to pass as selectedBatch
+    const mockBatch = {
+      id: 1,
+      batch_number: 'BATCH-001',
+      species: 1,
+      species_name: 'Atlantic Salmon',
+      lifecycle_stage: 1,
+      status: 'ACTIVE' as const,
+      batch_type: 'STANDARD' as const,
+      start_date: '2025-01-01',
+      expected_end_date: '2025-12-31',
+      notes: '',
+      created_at: '2025-01-01T00:00:00Z',
+      updated_at: '2025-01-01T00:00:00Z',
+      calculated_population_count: 20000,
+      calculated_biomass_kg: 3500,
+      calculated_avg_weight_g: 175,
+      current_lifecycle_stage: { id: 1, name: 'Smolt' },
+      days_in_production: 120,
+      active_containers: [10]
+    };
 
-    // Verify filter header is rendered
-    const filterHeader = await screen.findByText(/Region, Site & Batch Filters/i);
-    expect(filterHeader).toBeInTheDocument();
+    // Render the component with a selected batch
+    renderWithQueryClient(<BatchContainerView selectedBatch={mockBatch} />);
 
-    // Verify container card with view details button is rendered
-    const viewDetailsButton = await screen.findByRole('button', { name: /View Details/i });
-    expect(viewDetailsButton).toBeInTheDocument();
+    // Verify header is rendered using role query to avoid duplicate text issue
+    const header = await screen.findByRole('heading', { name: /Active Container Assignments/i });
+    expect(header).toBeInTheDocument();
 
-    // Verify container name is displayed
-    const containerName = await screen.findByText(/North Bay Farm - Cage 1/i);
-    expect(containerName).toBeInTheDocument();
+    // Verify batch number is displayed in description
+    const batchDescription = await screen.findByText(/Current locations for BATCH-001/i);
+    expect(batchDescription).toBeInTheDocument();
+
+    // Verify assignment count badge is displayed
+    const assignmentBadge = await screen.findByText(/0 assignments/i);
+    expect(assignmentBadge).toBeInTheDocument();
   });
 
-  it('handles API error gracefully', async () => {
-    // Override fetch mock for batches to return error
+  it('shows empty state when no batch is selected', async () => {
+    // Render without a selected batch
+    renderWithQueryClient(<BatchContainerView selectedBatch={undefined} />);
+
+    // Verify empty state message is displayed
+    const emptyMessage = await screen.findByText(/Select a batch to view its container assignments/i);
+    expect(emptyMessage).toBeInTheDocument();
+  });
+
+  it('shows empty state when batch has no active assignments', async () => {
+    // Override fetch mock to return empty assignments
     vi.spyOn(globalThis, 'fetch').mockImplementation((url: string) => {
-      if (typeof url === 'string' && url.includes('/api/v1/batch/batches/')) {
-        return Promise.resolve(new Response(null, { status: 500 }));
-      }
-
-      // Return empty arrays for other endpoints
-      if (url.includes('/api/v1/infrastructure/areas/')) {
+      if (typeof url === 'string' && url.includes('/api/v1/batch/container-assignments/')) {
         return Promise.resolve(json({ results: [] }));
       }
-      if (url.includes('/api/v1/infrastructure/containers/')) {
-        return Promise.resolve(json({ results: [] }));
-      }
-      if (url.includes('/api/v1/environmental/readings/')) {
-        return Promise.resolve(json({ results: [] }));
-      }
-
       return Promise.resolve(json({}));
     });
 
-    // Render the component
-    renderWithQueryClient(<BatchContainerView />);
+    const mockBatch = {
+      id: 1,
+      batch_number: 'BATCH-001',
+      species: 1,
+      species_name: 'Atlantic Salmon',
+      lifecycle_stage: 1,
+      status: 'ACTIVE' as const,
+      batch_type: 'STANDARD' as const,
+      start_date: '2025-01-01',
+      expected_end_date: '2025-12-31',
+      notes: '',
+      created_at: '2025-01-01T00:00:00Z',
+      updated_at: '2025-01-01T00:00:00Z',
+      calculated_population_count: 20000,
+      calculated_biomass_kg: 3500,
+      calculated_avg_weight_g: 175,
+      current_lifecycle_stage: { id: 1, name: 'Smolt' },
+      days_in_production: 120,
+      active_containers: [10]
+    };
 
-    // Verify filter header is still rendered despite the API error
-    const filterHeader = await screen.findByText(/Region, Site & Batch Filters/i);
-    expect(filterHeader).toBeInTheDocument();
+    // Render the component with selected batch but no assignments
+    renderWithQueryClient(<BatchContainerView selectedBatch={mockBatch} />);
 
-    // Verify the component doesn't crash and shows empty state message
-    const emptyMessage = await screen.findByText(/No containers match the selected filters/i);
+    // Verify empty state message for no assignments
+    const emptyMessage = await screen.findByText(/No active container assignments for this batch/i);
     expect(emptyMessage).toBeInTheDocument();
   });
 });

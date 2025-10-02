@@ -1,6 +1,5 @@
 ---
-description: When developing new files
-alwaysApply: false
+alwaysApply: true
 ---
 ## 0  API Contract-First Workflow
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { 
-  Map, 
+  Map as MapIcon, 
   Factory, 
   Search,
   Filter,
@@ -23,6 +23,8 @@ import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
 import { AuthService, authenticatedFetch } from "@/services/auth.service";
 import { apiConfig } from "@/config/api.config";
+import { useStationSummaries } from "@/features/infrastructure/api";
+import { formatCount, formatWeight } from "@/lib/formatFallback";
 
 interface Station {
   id: number;
@@ -208,191 +210,31 @@ export default function InfrastructureStations() {
 
   const stations: Station[] = stationsData?.results || [];
 
-  // Fetch containers and batch assignments for real data calculations
-  const { data: stationDetailsData, isLoading: isLoadingDetails } = useQuery({
-    queryKey: ["station-details", selectedGeography, stations.length],
-    queryFn: async () => {
-      if (stations.length === 0) return { halls: 0, containers: 0, biomass: 0, hasData: false };
+  // ✅ Use server-side aggregation for station summaries
+  const stationIds = useMemo(() => stations.map(s => s.id), [stations]);
+  const { data: stationSummaries, isLoading: isLoadingDetails } = useStationSummaries(stationIds);
 
-      try {
-        // Check if user is authenticated
-        if (!AuthService.isAuthenticated()) {
-          console.warn("No auth token found for station details data");
-          return { halls: 0, containers: 0, biomass: 0, hasData: false };
-        }
+  // Calculate aggregated totals across all stations using server-side summaries
+  const stationDetailsData = useMemo(() => {
+    if (!stationSummaries || stationSummaries.length === 0) {
+      return { halls: 0, containers: 0, biomass: 0, hasData: false };
+    }
 
-        // Get all station IDs
-        const stationIds = stations.map(s => s.id);
+    const totals = stationSummaries.reduce((acc, summary) => ({
+      halls: acc.halls + (summary.hall_count || 0),
+      containers: acc.containers + (summary.container_count || 0),
+      biomass: acc.biomass + (summary.active_biomass_kg || 0),
+    }), { halls: 0, containers: 0, biomass: 0 });
 
-        // 🚨 TEMPORARY WORKAROUND: Using authenticatedFetch for client-side aggregation
-        // BACKEND FEATURE REQUEST: Add /api/v1/stations/summary endpoint for pre-aggregated data
-        // This reduces client-side processing and improves performance
-        // Current: Fetch all halls/containers/assignments, aggregate client-side
-        // Future: Backend provides /api/v1/stations/summary with pre-calculated totals
-        const allHallsResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.halls}?page_size=500`
-        );
-        const allHallsData = await allHallsResponse.json();
-        const allHalls = allHallsData.results || [];
+    return { ...totals, biomass: totals.biomass / 1000, hasData: true }; // Convert kg to tons
+  }, [stationSummaries]);
 
-        // Filter halls by station
-        const stationHalls = allHalls.filter((hall: any) =>
-          stationIds.includes(hall.freshwater_station)
-        );
-        const hallIds = stationHalls.map((h: any) => h.id);
-
-        // Fetch all containers and filter by hall (following useStationKpi pattern)
-        const allContainersResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?page_size=500`
-        );
-        const allContainersData = await allContainersResponse.json();
-        const allContainers = allContainersData.results || [];
-
-        // Filter containers to only those in halls belonging to our stations
-        const stationContainers = allContainers.filter((container: any) =>
-          container.hall && hallIds.includes(container.hall)
-        );
-        const containerIds = stationContainers.map((c: any) => c.id);
-
-        // Fetch ALL batch assignments (following area details pattern)
-        const assignmentsResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=1000`
-        );
-        const assignmentsData = await assignmentsResponse.json();
-        const assignments = assignmentsData.results || [];
-
-        // Create biomass map per container
-        const biomassMap: Record<number, number> = {};
-        const populationMap: Record<number, number> = {};
-
-        assignments.forEach((assignment: any) => {
-          const containerId = assignment.container?.id || assignment.container_id;
-          if (containerId && containerIds.includes(containerId)) {
-            const currentBiomass = biomassMap[containerId] || 0;
-            const currentPopulation = populationMap[containerId] || 0;
-
-            biomassMap[containerId] = currentBiomass + parseFloat(assignment.biomass_kg || '0');
-            populationMap[containerId] = currentPopulation + parseInt(assignment.population_count || '0');
-          }
-        });
-
-        // Calculate total biomass and population across all containers
-        const totalBiomass = Object.values(biomassMap).reduce((sum: number, biomass: number) => sum + biomass, 0);
-        const totalPopulation = Object.values(populationMap).reduce((sum: number, population: number) => sum + population, 0);
-
-        console.log(`Calculated station details:`, {
-          stations: stationIds.length,
-          stationHalls: stationHalls.length,
-          stationContainers: stationContainers.length,
-          totalBiomass: totalBiomass,
-          totalPopulation: totalPopulation,
-          containerBiomassMap: biomassMap
-        });
-
-        return {
-          halls: stationHalls.length,
-          containers: stationContainers.length,
-          biomass: totalBiomass / 1000, // Convert kg to tons
-          hasData: true,
-        };
-      } catch (error) {
-        console.warn("Failed to fetch station details data:", error);
-        return { halls: 0, containers: 0, biomass: 0, hasData: false };
-      }
-    },
-    enabled: stations.length > 0,
-  });
-
-  // Fetch per-station details for individual cards
-  const { data: perStationData, isLoading: isLoadingPerStation } = useQuery({
-    queryKey: ["per-station-details", stations.length],
-    queryFn: async () => {
-      if (stations.length === 0) return {};
-
-      try {
-        // Check if user is authenticated
-        if (!AuthService.isAuthenticated()) {
-          console.warn("No auth token found for per-station data");
-          return {};
-        }
-
-        const stationDetailsMap: Record<number, { halls: number; containers: number; biomass: number; hasData: boolean }> = {};
-
-        // Fetch details for each station
-        for (const station of stations) {
-          try {
-            // 🚨 TEMPORARY WORKAROUND: authenticatedFetch for per-station aggregation
-            // BACKEND FEATURE REQUEST: Add /api/v1/stations/{id}/details endpoint
-            // Should return: halls_count, containers_count, biomass_total, population_total
-            const stationHallsResponse = await authenticatedFetch(
-              `${apiConfig.baseUrl}${apiConfig.endpoints.halls}?freshwater_station=${station.id}&page_size=500`
-            );
-
-            const stationHallsData = await stationHallsResponse.json();
-            const stationHalls = stationHallsData.results || [];
-            const hallIds = stationHalls.map((h: any) => h.id);
-
-            // Fetch all containers and filter by hall
-            const allContainersResponse = await authenticatedFetch(
-              `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?page_size=500`
-            );
-
-            const allContainersData = await allContainersResponse.json();
-            const allContainers = allContainersData.results || [];
-
-            // Filter containers to only those in halls belonging to this station
-            const stationContainers = allContainers.filter((container: any) =>
-              container.hall && hallIds.includes(container.hall)
-            );
-            const containerIds = stationContainers.map((c: any) => c.id);
-
-            // Fetch ALL batch assignments (following area details pattern)
-            const assignmentsResponse = await authenticatedFetch(
-              `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page_size=1000`
-            );
-
-            const assignmentsData = await assignmentsResponse.json();
-            const assignments = assignmentsData.results || [];
-
-            // Calculate biomass for this station
-            const biomassMap: Record<number, number> = {};
-            const populationMap: Record<number, number> = {};
-
-            assignments.forEach((assignment: any) => {
-              const containerId = assignment.container?.id || assignment.container_id;
-              if (containerId && containerIds.includes(containerId)) {
-                const currentBiomass = biomassMap[containerId] || 0;
-                const currentPopulation = populationMap[containerId] || 0;
-
-                biomassMap[containerId] = currentBiomass + parseFloat(assignment.biomass_kg || '0');
-                populationMap[containerId] = currentPopulation + parseInt(assignment.population_count || '0');
-              }
-            });
-
-            const totalBiomass = Object.values(biomassMap).reduce((sum: number, biomass: number) => sum + biomass, 0);
-            const totalPopulation = Object.values(populationMap).reduce((sum: number, population: number) => sum + population, 0);
-
-            stationDetailsMap[station.id] = {
-              halls: stationHalls.length,
-              containers: stationContainers.length,
-              biomass: totalBiomass / 1000, // Convert kg to tons
-              hasData: true,
-            };
-          } catch (error) {
-            console.warn(`Failed to fetch details for station ${station.id}:`, error);
-            stationDetailsMap[station.id] = { halls: 0, containers: 0, biomass: 0, hasData: false };
-          }
-        }
-
-        console.log(`Calculated per-station details:`, stationDetailsMap);
-        return stationDetailsMap;
-      } catch (error) {
-        console.warn("Failed to fetch per-station details:", error);
-        return {};
-      }
-    },
-    enabled: stations.length > 0,
-  });
+  // Create lookup map for station summaries
+  const stationSummaryMap = useMemo(() => {
+    if (!stationSummaries || stationSummaries.length === 0) return new Map();
+    // Map summaries back to station IDs by position (Promise.all maintains order)
+    return new Map(stationIds.map((id, index) => [id, stationSummaries[index]]));
+  }, [stationSummaries, stationIds]);
 
   // Filter stations based on search and status
   const filteredStations = stations.filter(station => {
@@ -536,7 +378,7 @@ export default function InfrastructureStations() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Map className="h-5 w-5" />
+            <MapIcon className="h-5 w-5" />
             <span>Geographic Distribution</span>
           </CardTitle>
         </CardHeader>
@@ -553,19 +395,19 @@ export default function InfrastructureStations() {
                 <div>
                   <span className="text-muted-foreground">Halls:</span>
                   <div className="font-medium">
-                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[selectedStation.id]?.hasData ? perStationData[selectedStation.id].halls : 'N/A')}
+                    {isLoadingDetails ? '...' : formatCount(stationSummaryMap.get(selectedStation.id)?.hall_count)}
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Containers:</span>
                   <div className="font-medium">
-                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[selectedStation.id]?.hasData ? perStationData[selectedStation.id].containers : 'N/A')}
+                    {isLoadingDetails ? '...' : formatCount(stationSummaryMap.get(selectedStation.id)?.container_count)}
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Biomass:</span>
                   <div className="font-medium">
-                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[selectedStation.id]?.hasData && perStationData[selectedStation.id].biomass ? perStationData[selectedStation.id].biomass.toFixed(1) + ' tons' : 'N/A')}
+                    {isLoadingDetails ? '...' : formatWeight(stationSummaryMap.get(selectedStation.id)?.active_biomass_kg)}
                   </div>
                 </div>
                 <div>
@@ -629,19 +471,19 @@ export default function InfrastructureStations() {
                 <div>
                   <span className="text-muted-foreground">Halls</span>
                   <div className="font-semibold text-lg">
-                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[station.id]?.hasData ? perStationData[station.id].halls : 'N/A')}
+                    {isLoadingDetails ? '...' : formatCount(stationSummaryMap.get(station.id)?.hall_count)}
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Containers</span>
                   <div className="font-semibold text-lg">
-                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[station.id]?.hasData ? perStationData[station.id].containers : 'N/A')}
+                    {isLoadingDetails ? '...' : formatCount(stationSummaryMap.get(station.id)?.container_count)}
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Biomass</span>
                   <div className="font-medium">
-                    {isLoadingPerStation ? 'Loading...' : (perStationData?.[station.id]?.hasData && perStationData[station.id].biomass ? perStationData[station.id].biomass.toFixed(1) + ' tons' : 'N/A')}
+                    {isLoadingDetails ? '...' : formatWeight(stationSummaryMap.get(station.id)?.active_biomass_kg)}
                   </div>
                 </div>
                 <div>

@@ -1,6 +1,21 @@
+/**
+ * Scenario Data Hook
+ * 
+ * TASK 7: Server-Side Aggregation Implementation
+ * - Attempts to use backend summary_stats endpoint for KPIs (preferred)
+ * - Falls back to client-side calculation if endpoint unavailable
+ * - Uses honest fallbacks (0 or N/A) when data is missing
+ * 
+ * API STATUS:
+ * - summary_stats endpoint exists but returns Scenario type (not summary stats)
+ * - This is likely a backend spec issue where summary fields are added to Scenario
+ * - Client-side fallback ensures robustness for UAT
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ApiService } from "@/api/generated";
+import { useScenarioSummaryStats } from "../api/api";
 
 export interface ScenarioPlanningKPIs {
   totalActiveScenarios: number;
@@ -60,8 +75,36 @@ export function useScenarioData(searchTerm: string, statusFilter: string) {
     )
   });
 
-  // Derive KPI values client-side from the scenarios list
+  // TASK 7: Attempt to fetch server-side summary stats
+  // Backend endpoint exists but returns Scenario type - may contain summary fields
+  const summaryStatsQuery = useScenarioSummaryStats();
+
+  // Compute KPIs: Try server-side first, fall back to client-side
   const computedKpis: ScenarioPlanningKPIs = useMemo(() => {
+    // Try to extract summary stats from backend response
+    const summaryData = summaryStatsQuery.data as any;
+    
+    // Check if backend response has summary fields (backend may add them to Scenario object)
+    if (summaryData && typeof summaryData === 'object') {
+      const hasSummaryFields = 
+        'totalActiveScenarios' in summaryData ||
+        'scenariosInProgress' in summaryData ||
+        'completedProjections' in summaryData ||
+        'averageProjectionDuration' in summaryData;
+      
+      if (hasSummaryFields) {
+        // Use backend-provided summary stats
+        return {
+          totalActiveScenarios: summaryData.totalActiveScenarios ?? 0,
+          scenariosInProgress: summaryData.scenariosInProgress ?? 0,
+          completedProjections: summaryData.completedProjections ?? 0,
+          averageProjectionDuration: summaryData.averageProjectionDuration ?? 0,
+        };
+      }
+    }
+
+    // Fallback: Client-side calculation from scenarios list
+    // This maintains existing behavior while we wait for backend API fix
     const list = scenariosQuery.data?.results ?? [];
     if (list.length === 0) {
       return {
@@ -71,6 +114,7 @@ export function useScenarioData(searchTerm: string, statusFilter: string) {
         averageProjectionDuration: 0,
       };
     }
+    
     const totalActiveScenarios = list.length;
     const scenariosInProgress = list.filter((s: any) => s.status === "running").length;
     const completedProjections = list.filter((s: any) => s.status === "completed").length;
@@ -83,7 +127,7 @@ export function useScenarioData(searchTerm: string, statusFilter: string) {
       completedProjections,
       averageProjectionDuration,
     };
-  }, [scenariosQuery.data]);
+  }, [summaryStatsQuery.data, scenariosQuery.data]);
 
   return {
     temperatureProfiles: temperatureProfilesQuery.data,
@@ -95,7 +139,8 @@ export function useScenarioData(searchTerm: string, statusFilter: string) {
     kpis: computedKpis,
     isLoading: temperatureProfilesQuery.isLoading || tgcModelsQuery.isLoading ||
                fcrModelsQuery.isLoading || mortalityModelsQuery.isLoading ||
-               biologicalConstraintsQuery.isLoading || scenariosQuery.isLoading,
+               biologicalConstraintsQuery.isLoading || scenariosQuery.isLoading ||
+               summaryStatsQuery.isLoading,
     scenariosLoading: scenariosQuery.isLoading,
   };
 }

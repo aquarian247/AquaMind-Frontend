@@ -13,6 +13,8 @@ import { BatchHealthView } from "../components/batch-management/BatchHealthView"
 import { BatchFeedHistoryView } from "../components/batch-management/BatchFeedHistoryView";
 import { BatchAnalyticsView } from "../components/batch-management/BatchAnalyticsView";
 import { api } from "../lib/api";
+import { ApiService } from "@/api/generated";
+import { formatFallback, formatCount } from "@/lib/formatFallback";
 
 interface BatchDetails {
   id: number;
@@ -77,6 +79,80 @@ export default function BatchDetails() {
     queryKey: ["batch/transfers", batchId],
     queryFn: async () => (await api.batch.getTransfers(batchId)).results,
   });
+
+  // ✅ SERVER-SIDE: Fetch growth samples for growth rate calculation
+  const { data: growthSamples } = useQuery({
+    queryKey: ["batch/growth-samples", batchId],
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1BatchGrowthSamplesList(
+          batchId,
+          undefined, // assignmentBatchIn
+          undefined, // ordering
+          undefined, // page
+          undefined, // sampleDate
+          undefined  // search
+        );
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch growth samples:", error);
+        return [];
+      }
+    },
+  });
+
+  // ✅ SERVER-SIDE: Fetch feeding summaries for FCR
+  const { data: feedingSummaries } = useQuery({
+    queryKey: ["batch/feeding-summaries", batchId],
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1InventoryBatchFeedingSummariesList(
+          batchId,
+          undefined, // ordering
+          undefined, // page
+          undefined, // periodEnd
+          undefined  // periodStart
+        );
+        return response.results || [];
+      } catch (error) {
+        console.error("Failed to fetch feeding summaries:", error);
+        return [];
+      }
+    },
+  });
+
+  // Calculate growth rate from growth samples
+  const growthRate = growthSamples && growthSamples.length >= 2
+    ? (() => {
+        const sorted = [...growthSamples].sort((a, b) => 
+          new Date(a.sample_date || 0).getTime() - new Date(b.sample_date || 0).getTime()
+        );
+        const latest = sorted[sorted.length - 1];
+        const previous = sorted[sorted.length - 2];
+        
+        const latestWeight = latest.avg_weight_g ? parseFloat(latest.avg_weight_g) : 0;
+        const prevWeight = previous.avg_weight_g ? parseFloat(previous.avg_weight_g) : 0;
+        
+        if (prevWeight > 0 && latest.sample_date && previous.sample_date) {
+          const daysDiff = Math.floor(
+            (new Date(latest.sample_date).getTime() - new Date(previous.sample_date).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (daysDiff > 0) {
+            const weightGain = latestWeight - prevWeight;
+            return (weightGain / prevWeight) * (7 / daysDiff) * 100; // Weekly growth rate
+          }
+        }
+        return null;
+      })()
+    : null;
+
+  // Get latest FCR from feeding summaries
+  const latestFCR = feedingSummaries && feedingSummaries.length > 0
+    ? (() => {
+        const latest = feedingSummaries[feedingSummaries.length - 1];
+        return latest.weighted_avg_fcr ? parseFloat(latest.weighted_avg_fcr) : null;
+      })()
+    : null;
 
   if (isLoading) {
     return <div>Loading batch details...</div>;
@@ -283,20 +359,38 @@ export default function BatchDetails() {
 
                       <div className="space-y-1">
                         <label className="text-sm font-medium text-muted-foreground">Growth Rate</label>
-                        <p className="text-lg lg:text-xl font-bold text-green-600">+15.2% /week</p>
-                        <p className="text-xs text-muted-foreground">Based on recent samples</p>
+                        <p className="text-lg lg:text-xl font-bold text-green-600">
+                          {growthRate !== null 
+                            ? `${growthRate > 0 ? '+' : ''}${growthRate.toFixed(1)}% /week`
+                            : formatFallback(null)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {growthSamples && growthSamples.length >= 2 
+                            ? `Based on ${growthSamples.length} samples` 
+                            : 'Insufficient growth samples'}
+                        </p>
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-sm font-medium text-muted-foreground">Feed Conversion</label>
-                        <p className="text-lg lg:text-xl font-bold">1.23 FCR</p>
-                        <p className="text-xs text-muted-foreground">Feed conversion ratio</p>
+                        <p className="text-lg lg:text-xl font-bold">
+                          {latestFCR !== null 
+                            ? `${latestFCR.toFixed(2)} FCR`
+                            : formatFallback(null)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {feedingSummaries && feedingSummaries.length > 0
+                            ? `From ${feedingSummaries.length} period${feedingSummaries.length > 1 ? 's' : ''}`
+                            : 'No feeding summaries'}
+                        </p>
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-sm font-medium text-muted-foreground">Health Score</label>
-                        <p className="text-lg lg:text-xl font-bold text-blue-600">92/100</p>
-                        <p className="text-xs text-muted-foreground">Overall health assessment</p>
+                        <p className="text-lg lg:text-xl font-bold text-blue-600">
+                          {formatFallback(null)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Health scoring not implemented</p>
                       </div>
                   </CardContent>
                 </Card>

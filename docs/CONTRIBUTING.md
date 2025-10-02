@@ -21,6 +21,7 @@ npm run dev
   Run `npm run sync:openapi` to sync with backend and regenerate client.
 * **Backend-first API Strategy** — Use generated ApiService for ALL operations including aggregations (see ADR: API Aggregation Strategy)
 * **Always Use Generated ApiService** — Use `client/src/api/generated` exclusively for contract-first alignment; server-side aggregation endpoints are now available for all KPI needs
+* **Honest Fallbacks** — Use `formatFallback()`, `formatCount()`, `formatPercentage()` from `@/lib/formatFallback` to display "N/A" when data unavailable (never hardcode zeros or "No data")
 * **Canonical auth endpoints** —
   `POST /api/token/` and `POST /api/token/refresh/` (optional: `GET /api/v1/users/auth/profile/`).
   _Avoid_ legacy `/api/v1/auth/token/*` or `/api/auth/jwt/*` routes.
@@ -521,6 +522,7 @@ Update relevant documentation:
 > - [Code Organization Guidelines](../code_organization_guidelines.md) - Architecture patterns and file structure
 > - [Refactoring Large Pages Guide](../refactor_large_pages.md) - Step-by-step refactoring instructions
 > - [Complexity Thresholds Guide](../complexity-thresholds-and-remediation.md) - Code quality metrics and analysis
+> - [Multi-Entity Filtering Guide](../multi-entity-filtering-guide.md) - Complete guide to `__in` filtering with examples
 
 ## Questions?
 

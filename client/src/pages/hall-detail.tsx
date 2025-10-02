@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { ApiService } from "@/api/generated";
+import { useHallSummary } from "@/features/infrastructure/api";
+import { formatCount, formatWeight } from "@/lib/formatFallback";
 
 interface Container {
   id: number;
@@ -53,7 +55,7 @@ export default function HallDetail({ params }: { params: { id: string } }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   /* -------------------------------------------------
-   * Hall metadata (for names / station linkage)
+   * Hall metadata and server-side aggregation summary
    * ------------------------------------------------- */
   const { data: hall } = useQuery({
     queryKey: ["hall", hallId],
@@ -61,12 +63,21 @@ export default function HallDetail({ params }: { params: { id: string } }) {
       ApiService.apiV1InfrastructureHallsRetrieve(Number(hallId)),
   });
 
+  // Use server-side aggregation for KPIs
+  const { data: hallSummary, isLoading: hallSummaryLoading } = useHallSummary(Number(hallId));
+
   const { data: containersData, isLoading } = useQuery({
     queryKey: ["hall", hallId, "containers"],
     queryFn: async () => {
-      const res = await ApiService.apiV1InfrastructureContainersList({
-        hall: Number(hallId),
-      } as any);
+      // ✅ Use correct camelCase parameter name from generated API
+      // Signature: (active?, area?, areaIn?, containerType?, hall?, hallIn?, name?, ordering?, page?, search?)
+      const res = await ApiService.apiV1InfrastructureContainersList(
+        undefined,        // active filter
+        undefined,        // area
+        undefined,        // areaIn
+        undefined,        // containerType
+        Number(hallId)    // hall (5th parameter)
+      );
 
       /* Map API result to UI shape expected by page */
       const mapped = (res.results || []).map((c: any) => {
@@ -155,7 +166,7 @@ export default function HallDetail({ params }: { params: { id: string } }) {
     return icons[stage as keyof typeof icons] || "🐟";
   };
 
-  if (isLoading) {
+  if (isLoading || hallSummaryLoading) {
     return (
       <div className="container mx-auto p-4 space-y-6">
         <div className="flex items-center space-x-2">
@@ -164,16 +175,17 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           </Button>
           <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
               <CardHeader className="animate-pulse">
                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2 mt-2"></div>
               </CardHeader>
             </Card>
           ))}
         </div>
+        <div className="h-64 bg-gray-100 rounded animate-pulse"></div>
       </div>
     );
   }
@@ -215,7 +227,7 @@ export default function HallDetail({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      {/* Summary Stats */}
+      {/* Summary Stats - Server-Side Aggregation */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -223,7 +235,9 @@ export default function HallDetail({ params }: { params: { id: string } }) {
             <Factory className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{filteredContainers.length}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {formatCount(hallSummary?.container_count)}
+            </div>
             <p className="text-xs text-muted-foreground">Production units</p>
           </CardContent>
         </Card>
@@ -235,7 +249,7 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {filteredContainers.reduce((sum, container) => sum + container.biomass, 0).toFixed(1)} kg
+              {formatWeight(hallSummary?.active_biomass_kg)}
             </div>
             <p className="text-xs text-muted-foreground">Current stock</p>
           </CardContent>
@@ -243,27 +257,27 @@ export default function HallDetail({ params }: { params: { id: string } }) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
+            <CardTitle className="text-sm font-medium">Population</CardTitle>
             <Activity className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {filteredContainers.filter(container => container.status === 'active').length}
+              {formatCount(hallSummary?.population_count)}
             </div>
-            <p className="text-xs text-muted-foreground">Currently operational</p>
+            <p className="text-xs text-muted-foreground">Total fish count</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Temperature</CardTitle>
-            <Thermometer className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium">Avg Weight</CardTitle>
+            <Gauge className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {(filteredContainers.reduce((sum, container) => sum + container.temperature, 0) / filteredContainers.length).toFixed(1)}°C
+              {formatWeight(hallSummary?.avg_weight_kg)}
             </div>
-            <p className="text-xs text-muted-foreground">Hall average</p>
+            <p className="text-xs text-muted-foreground">Per fish</p>
           </CardContent>
         </Card>
       </div>

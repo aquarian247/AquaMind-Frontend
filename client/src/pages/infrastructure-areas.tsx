@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { 
-  Map, 
+  Map as MapIcon, 
   Waves, 
   Search,
   Filter,
@@ -19,10 +19,9 @@ import {
   Gauge
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
-import { ApiService } from "@/api/generated";
-import { api } from "@/lib/api";
-import { AuthService, authenticatedFetch } from "@/services/auth.service";
-import { apiConfig } from "@/config/api.config";
+import { ApiService, InfrastructureService } from "@/api/generated";
+import { useAreaSummaries } from "@/features/infrastructure/api";
+import { formatCount, formatWeight } from "@/lib/formatFallback";
 
 interface Area {
   id: number;
@@ -143,290 +142,75 @@ export default function InfrastructureAreas() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Get aggregated overview data for total biomass using the AuthService
-  const { data: overviewData } = useQuery({
-    queryKey: ["infrastructure/overview"],
-    queryFn: async () => {
-      try {
-        // Check if user is authenticated
-        if (!AuthService.isAuthenticated()) {
-          console.warn("No auth token found for overview data");
-          return {
-            totalContainers: 70,
-            activeBiomass: 3500,
-            capacity: 21805000,
-            sensorAlerts: 0,
-            feedingEventsToday: 40,
-          };
-        }
+  // ✅ No longer needed - we'll use geography summary instead
+  // Removed hardcoded fallback values (70 containers, 3500 biomass)
 
-        const response = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.overview}`
-        );
-
-        const data = await response.json();
-        return {
-          totalContainers: data.total_containers,
-          capacity: data.capacity_kg,
-          activeBiomass: data.active_biomass_kg,
-          sensorAlerts: data.sensor_alerts,
-          feedingEventsToday: data.feeding_events_today,
-        };
-      } catch (error) {
-        console.warn("Failed to fetch infrastructure overview for areas:", error);
-        return {
-          totalContainers: 70,
-          activeBiomass: 3500,
-          capacity: 21805000,
-          sensorAlerts: 0,
-          feedingEventsToday: 40,
-        };
-      }
-    },
+  // Fetch areas using generated API client
+  const { data: rawAreasData, isLoading: areasLoading } = useQuery({
+    queryKey: ["infrastructure", "areas", selectedGeography],
+    queryFn: async () => ApiService.apiV1InfrastructureAreasList(),
   });
 
-  const { data: rawAreasData } = useQuery({
-    queryKey: ["areas", selectedGeography],
-    queryFn: async () => {
-      try {
-        // Check if user is authenticated
-        if (!AuthService.isAuthenticated()) {
-          console.warn("No auth token found for areas data");
-          return { results: [] };
-        }
+  // Get area IDs for summary fetching
+  const areaIds = useMemo(
+    () => rawAreasData?.results?.map(a => a.id!).filter(Boolean) || [],
+    [rawAreasData]
+  );
 
-        // Retrieve all areas using AuthService
-        const response = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.areas}`
-        );
+  // Fetch server-side aggregated summaries for all areas
+  const { data: areaSummaries, isLoading: summariesLoading } = useAreaSummaries(areaIds);
 
-        const areasRes = await response.json();
-        return areasRes;
-      } catch (error) {
-        console.warn("Failed to fetch areas data:", error);
-        return { results: [] };
-      }
-    },
+  // Create lookup map for area summaries
+  const areaSummaryMap = useMemo(() => {
+    if (!areaSummaries || areaSummaries.length === 0) return new Map();
+    // Map summaries back to area IDs by position (Promise.all maintains order)
+    return new Map(areaIds.map((id, index) => [id, areaSummaries[index]]));
+  }, [areaSummaries, areaIds]);
+
+  // ✅ Fetch global overview for KPI cards
+  const { data: globalOverview, isLoading: overviewLoading } = useQuery({
+    queryKey: ["infrastructure", "overview", "global"],
+    queryFn: async () => InfrastructureService.infrastructureOverview(),
   });
 
-  const { data: containersData, isLoading: containersLoading } = useQuery({
-    queryKey: ["infrastructure/containers"],
-    queryFn: async () => {
-      try {
-        // Check if user is authenticated
-        if (!AuthService.isAuthenticated()) {
-          console.warn("No auth token found for containers data");
-          return { results: [] };
-        }
-
-        // Fetch all containers using AuthService (handle pagination)
-        const allContainers: any[] = [];
-        let page = 1;
-        let hasNextPage = true;
-
-        while (hasNextPage) {
-          const response = await authenticatedFetch(
-            `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?page=${page}&page_size=100`
-          );
-
-          const pageData = await response.json();
-          allContainers.push(...(pageData.results || []));
-          hasNextPage = pageData.next !== null;
-          page++;
-
-          // Safety check
-          if (page > 10) break;
-        }
-
-        // Remove duplicates
-        const uniqueContainers = allContainers.filter((container, index, self) =>
-          index === self.findIndex(c => c.id === container.id)
-        );
-
-        return { results: uniqueContainers };
-      } catch (error) {
-        console.warn("Failed to fetch containers data:", error);
-        return { results: [] };
-      }
-    },
-  });
-
-  const { data: assignmentsData, isLoading: assignmentsLoading } = useQuery({
-    queryKey: ["infrastructure/assignments"],
-    queryFn: async () => {
-      try {
-        // Check if user is authenticated
-        if (!AuthService.isAuthenticated()) {
-          console.warn("No auth token found for assignments data");
-          return { results: [] };
-        }
-
-        // Fetch batch assignments using AuthService (handle pagination)
-        let assignments: any[] = [];
-        let page = 1;
-        let hasMoreAssignments = true;
-
-        while (hasMoreAssignments) {
-          const response = await authenticatedFetch(
-            `${apiConfig.baseUrl}${apiConfig.endpoints.containerAssignments}?page=${page}&page_size=100`
-          );
-
-          const pageData = await response.json();
-          assignments.push(...(pageData.results || []));
-          hasMoreAssignments = pageData.next !== null;
-          page++;
-
-          // Safety check
-          if (page > 5) break;
-        }
-
-        // Remove duplicates
-        const uniqueAssignments = assignments.filter((assignment, index, self) =>
-          index === self.findIndex(a => a.id === assignment.id)
-        );
-
-        return { results: uniqueAssignments };
-      } catch (error) {
-        console.warn("Failed to fetch assignments data:", error);
-        return { results: [] };
-      }
-    },
-  });
-
-  const uniqueContainers = containersData?.results || [];
-  const assignments = assignmentsData?.results || [];
-
-  // Debug: Check data availability
-  console.log(`Data status - Containers: ${uniqueContainers.length}, Assignments: ${assignments.length}, Areas: ${rawAreasData?.results?.length || 0}`);
-
-  // Calculate rings and biomass for each area using pre-fetched data
+  // ✅ Use server-side aggregated summaries instead of client-side calculation
   const processedAreasData = useMemo(() => {
-    if (!rawAreasData?.results || !uniqueContainers.length) {
+    if (!rawAreasData?.results) {
       return { results: [] };
     }
 
     const mapped = rawAreasData.results.map((raw: any): Area => {
-        // Count containers in this area using the same logic as containers page
-        const areaName = raw.name;
-        // Use definitive business rules to identify area/sea containers
-        const areaContainers = uniqueContainers.filter((container: any) => {
-          // Rule 1: Container has area_id assigned (direct relationship)
-          if (container.area === raw.id) {
-            return true;
-          }
+      const summary = areaSummaryMap.get(raw.id);
 
-          // Rule 2: Container has no hall_id (must be in area if not in hall)
-          if (container.hall == null && container.area_name && container.area_name.toLowerCase().includes(areaName.toLowerCase())) {
-            return true;
-          }
+      return {
+        id: raw.id,
+        name: raw.name,
+        geography: raw.geography_details?.name ?? raw.geography_name ?? raw.geography ?? "Unknown",
+        type: raw.area_type_name ?? raw.type ?? "Sea",
+        rings: summary?.ring_count ?? summary?.container_count ?? 0,
+        totalBiomass: summary?.active_biomass_kg ?? 0,
+        biomassStatus: summary?.active_biomass_kg ? 'calculated' as const : 'unavailable' as const,
+        coordinates: {
+          lat: parseFloat(raw.latitude) || 0,
+          lng: parseFloat(raw.longitude) || 0,
+        },
+        status: raw.active ? "active" : "inactive",
+        waterDepth: 0,
+        lastInspection: new Date().toISOString(),
+      };
+    });
 
-          // Rule 3: Container type category is PEN (pens are by definition sea containers)
-          if (container.container_type_name && container.container_type_name.toLowerCase().includes('pen') &&
-              container.area_name && container.area_name.toLowerCase().includes(areaName.toLowerCase())) {
-            return true;
-          }
+    const filtered =
+      selectedGeography === "all"
+        ? mapped
+        : mapped.filter((a: Area) =>
+            a.geography.toLowerCase().includes(selectedGeography.toLowerCase()),
+          );
 
-          return false;
-        });
-        const rings = areaContainers.length;
+    return { results: filtered };
+  }, [rawAreasData, areaSummaryMap, selectedGeography]);
 
-        // Calculate biomass from batch assignments (use actual biomass_kg, not population_count)
-        let areaBiomass = 0;
-        let biomassStatus: 'calculated' | 'estimated' | 'unavailable' = 'unavailable';
-
-        if (assignments.length > 0 && areaContainers.length > 0) {
-          const areaAssignments = assignments.filter((assignment: any) => {
-            const containerMatch = areaContainers.find((container: any) =>
-              container.id === assignment.container?.id || container.id === assignment.container_info?.id
-            );
-            return containerMatch != null;
-          });
-
-          areaBiomass = areaAssignments.reduce((sum: number, assignment: any) => {
-            const biomassKg = parseFloat(assignment.biomass_kg || '0');
-            return sum + biomassKg;
-          }, 0);
-
-          biomassStatus = areaAssignments.length > 0 ? 'calculated' : 'estimated';
-          console.log(`Found ${areaAssignments.length} assignments for ${areaContainers.length} containers, biomass: ${areaBiomass}kg (${biomassStatus})`);
-
-          // If no assignments found but we have containers, use estimation
-          if (areaAssignments.length === 0 && areaContainers.length > 0) {
-            areaBiomass = areaContainers.length * 175; // Average biomass per container
-            biomassStatus = 'estimated';
-            console.warn(`No assignments found for area ${raw.id}, using estimated biomass: ${areaBiomass}kg`);
-          }
-        } else if (areaContainers.length > 0) {
-          // No assignment data available, use estimation
-          areaBiomass = areaContainers.length * 175; // Average biomass per container
-          biomassStatus = 'estimated';
-          console.warn(`No assignment data available for area ${raw.id}, using estimated biomass: ${areaBiomass}kg`);
-        } else {
-          // No containers found
-          biomassStatus = 'unavailable';
-          console.warn(`No containers found for area ${raw.id}`);
-        }
-
-        // Debug: Check for potential issues
-        const debugInfo = {
-          containers: areaContainers.length,
-          assignments: assignments.length > 0 ? (assignments.filter((assignment: any) =>
-            areaContainers.find((container: any) =>
-              container.id === assignment.container?.id || container.id === assignment.container_info?.id
-            ) != null
-          )).length : 0,
-          totalBiomass: areaBiomass,
-          expectedBiomass: areaContainers.length * 175, // 20 containers * 175kg each = 3500kg total
-          hasAssignmentData: assignments.length > 0
-        };
-
-        console.log(`Area ${raw.id} biomass breakdown:`, debugInfo);
-
-        if (assignments.length === 0) {
-          console.warn(`Area ${raw.id}: No assignment data available - using estimated biomass`);
-        }
-
-        // Debug logging for troubleshooting with business rule breakdown
-        const rule1Matches = areaContainers.filter(c => c.area === raw.id).length;
-        const rule2Matches = areaContainers.filter(c => c.hall == null && c.area_name && c.area_name.toLowerCase().includes(areaName.toLowerCase())).length;
-        const rule3Matches = areaContainers.filter(c => c.container_type_name && c.container_type_name.toLowerCase().includes('pen') && c.area_name && c.area_name.toLowerCase().includes(areaName.toLowerCase())).length;
-        const areaAssignmentsCount = assignments.filter((assignment: any) =>
-          areaContainers.some((container: any) => container.id === assignment.container?.id || container.id === assignment.container_info?.id)
-        ).length;
-        console.log(`Area ${raw.id} (${raw.name}): Found ${rings} containers (Rule1: ${rule1Matches}, Rule2: ${rule2Matches}, Rule3: ${rule3Matches}), ${areaAssignmentsCount} assignments, biomass: ${areaBiomass}kg (${biomassStatus})`);
-        if (rings === 0) {
-          console.log(`Area name: "${areaName}" - no containers found using business rules`);
-        }
-
-        return {
-          id: raw.id,
-          name: raw.name,
-          geography: raw.geography_details?.name ?? raw.geography_name ?? raw.geography ?? "Unknown",
-          type: raw.area_type_name ?? raw.type ?? "Sea",
-          rings: rings,
-          totalBiomass: areaBiomass,
-          biomassStatus: biomassStatus,
-          coordinates: {
-            lat: parseFloat(raw.latitude) || 0,
-            lng: parseFloat(raw.longitude) || 0,
-          },
-          status: raw.active ? "active" : "inactive",
-          waterDepth: 0,
-          lastInspection: new Date().toISOString(),
-        };
-      });
-
-      const filtered =
-        selectedGeography === "all"
-          ? mapped
-          : mapped.filter((a: Area) =>
-              a.geography.toLowerCase().includes(selectedGeography.toLowerCase()),
-            );
-
-      return { results: filtered };
-    }, [rawAreasData, uniqueContainers, assignments, selectedGeography]);
-
-  const isLoading = containersLoading || assignmentsLoading;
+  const isLoading = areasLoading || summariesLoading;
 
   // Fetch geographies for dynamic filter options
   const { data: geographiesData } = useQuery({
@@ -457,7 +241,7 @@ export default function InfrastructureAreas() {
     return (
       <div className="container mx-auto p-4 space-y-6">
         <div className="flex items-center space-x-2">
-          <Map className="h-8 w-8 text-blue-600" />
+          <MapIcon className="h-8 w-8 text-blue-600" />
           <h1 className="text-2xl font-bold">Sea Areas</h1>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -563,10 +347,10 @@ export default function InfrastructureAreas() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {formatNumber(Math.round(overviewData?.activeBiomass || 0))}
+              {overviewLoading ? "..." : formatWeight(globalOverview?.active_biomass_kg)}
             </div>
             <p className="text-xs text-muted-foreground">
-              kg total biomass
+              Total biomass
             </p>
           </CardContent>
         </Card>
@@ -576,7 +360,7 @@ export default function InfrastructureAreas() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Map className="h-5 w-5" />
+            <MapIcon className="h-5 w-5" />
             <span>Geographic Distribution</span>
           </CardTitle>
         </CardHeader>
@@ -652,7 +436,7 @@ export default function InfrastructureAreas() {
       {filteredAreas.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Map className="h-12 w-12 text-muted-foreground mb-4" />
+            <MapIcon className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No areas found</h3>
             <p className="text-muted-foreground text-center mb-4">
               {areas.length === 0

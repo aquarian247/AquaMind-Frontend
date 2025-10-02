@@ -137,11 +137,22 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
 
         // Only fetch the current page (not all pages like before)
         const response = await ApiService.apiV1InventoryFeedingEventsList(
+          undefined,  // amountMax
+          undefined,  // amountMin
           batchId,    // batch - filter by specific batch
+          undefined,  // batchIn
+          undefined,  // batchNumber
           undefined,  // container
+          undefined,  // containerIn
+          undefined,  // containerName
           undefined,  // feed
+          undefined,  // feedIn
+          undefined,  // feedName
           undefined,  // feedingDate
+          undefined,  // feedingDateAfter
+          undefined,  // feedingDateBefore
           undefined,  // method
+          undefined,  // methodIn
           undefined,  // ordering
           currentPage, // page - current page only
           undefined   // search
@@ -293,14 +304,25 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
 
         // Get first page only for dropdown population (sufficient for most use cases)
         const response = await ApiService.apiV1InventoryFeedingEventsList(
+          undefined, // amountMax
+          undefined, // amountMin
           undefined, // batch - get ALL batches
+          undefined, // batchIn
+          undefined, // batchNumber
           undefined, // container
+          undefined, // containerIn
+          undefined, // containerName
           undefined, // feed
+          undefined, // feedIn
+          undefined, // feedName
           undefined, // feedingDate
+          undefined, // feedingDateAfter
+          undefined, // feedingDateBefore
           undefined, // method
+          undefined, // methodIn
           undefined, // ordering
-          1,        // page - first page only
-          undefined // search
+          1,         // page - first page only
+          undefined  // search
         );
 
         const types = [...new Set((response.results || []).map((e: any) => e.feed_name))];
@@ -328,11 +350,13 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
         const response = await ApiService.apiV1InfrastructureContainersList(
           undefined, // active
           undefined, // area
+          undefined, // areaIn
           undefined, // containerType
           undefined, // hall
+          undefined, // hallIn
           undefined, // name
           undefined, // ordering
-          1,        // page - first page only
+          1,         // page - first page only
           undefined  // search
         );
 

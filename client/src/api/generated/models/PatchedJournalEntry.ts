@@ -19,7 +19,7 @@ export type PatchedJournalEntry = {
      */
     container?: number | null;
     /**
-     * Date when the observation or incident occurred. Defaults to current date if not provided.
+     * Date and time when the observation or incident occurred. Defaults to the current datetime if not provided.
      */
     entry_date?: string;
     /**
