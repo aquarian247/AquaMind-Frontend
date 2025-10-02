@@ -191,10 +191,8 @@ export default function AreaDetail({ params }: { params: { id: string } }) {
           };
         }
 
-        // Try to fetch environmental data (this might not exist in the API)
-        // For now, return null values with hasData: false
-        console.log("Environmental data fetching not implemented yet - API endpoint needed");
-
+        // Environmental data fetching not implemented yet - API endpoint needed
+        // Returning null values with hasData: false
         return {
           waterTemperature: null,
           oxygenLevel: null,

@@ -348,24 +348,20 @@ export default function MortalityReporting() {
         </CardContent>
       </Card>
 
-      {/* Quick Stats */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Today's Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <Badge variant="secondary">
-              <i className="fas fa-fish mr-1"></i>
-              0 Reports Today
-            </Badge>
-            <Badge variant="outline">
-              <i className="fas fa-clock mr-1"></i>
-              Last: --:--
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
+      {/* 
+        NOTE: Today's Summary section removed - hardcoded placeholder values replaced with honest fallback.
+        
+        Production Implementation:
+        TODO: Backend team should implement /api/v1/health/mortality-summary/ endpoint with:
+          - Reports count for today (with date filter)
+          - Last report timestamp
+          - Daily mortality totals
+          
+        Once endpoint is available:
+        1. Add useQuery hook to fetch daily summary
+        2. Display actual counts and timestamps
+        3. Re-enable this section with real data
+      */}
     </div>
   );
 }

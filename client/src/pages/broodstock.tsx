@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Dna, Plus } from "lucide-react";
+import { Dna, Plus, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { BarChart3, Target, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { ApiService } from "@/api/generated";
@@ -85,6 +86,42 @@ function BroodstockDashboard() {
           </Button>
         </div>
       </div>
+
+      {/* 
+        ⚠️ DATA PROCESSING & AVAILABILITY NOTICE ⚠️
+        
+        Current Implementation Status:
+        - Active Pairs, Population, Progeny: Calculated from backend API responses
+        - Progeny Count: Client-side pagination aggregation (egg productions over 7 days)
+        - Genetic Diversity Index, Pending Selections, Genetic Gain: Not yet calculated (N/A)
+        - Programs, Activities, Traits: Placeholder data (backend endpoints not implemented)
+        
+        Limitations:
+        - Genetic metrics require backend analysis algorithms
+        - Breeding programs require dedicated management endpoints
+        - Some data fetched using client-side pagination loops (not optimal)
+        
+        Production Roadmap:
+        TODO: Backend team should implement:
+        - /api/v1/broodstock/summary/ - Aggregated KPIs with date filtering
+        - /api/v1/broodstock/programs/ - Breeding program management
+        - /api/v1/broodstock/genetic-analysis/ - Trait analysis and diversity calculations
+        
+        Migration Path:
+        1. Replace client-side aggregation with server-side summary endpoint
+        2. Implement breeding program tracking
+        3. Add genetic analysis algorithms
+        4. Remove this disclosure banner
+      */}
+      <Alert className="border-blue-200 bg-blue-50">
+        <Info className="h-4 w-4 text-blue-500" />
+        <AlertTitle className="text-blue-700">Data Processing Notice</AlertTitle>
+        <AlertDescription className="text-blue-600">
+          Some broodstock metrics are currently calculated from multiple data sources. 
+          Genetic diversity, pending selections, and breeding program data are not yet available. 
+          Backend aggregation endpoints will improve performance and enable advanced genetic analytics in future releases.
+        </AlertDescription>
+      </Alert>
 
       {/* KPI Cards */}
       <BroodstockKPIs kpis={kpis} isLoading={kpisLoading} />

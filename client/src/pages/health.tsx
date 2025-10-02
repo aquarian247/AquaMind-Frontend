@@ -30,6 +30,7 @@ import { ApiService } from "@/api/generated/services/ApiService";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // Unified client-computed API
 import { api } from "@/lib/api";
+import { formatCount, formatFallback, formatPercentage } from "@/lib/formatFallback";
 
 // Health data interfaces based on the comprehensive data model
 interface HealthJournalEntry {
@@ -255,6 +256,38 @@ export default function Health() {
         </Alert>
       )}
 
+      {/* 
+        ⚠️ TEMPORARY CLIENT-SIDE AGGREGATION NOTICE ⚠️
+        
+        Current Implementation Status:
+        - Health metrics are calculated client-side from individual API endpoints
+        - No backend health summary aggregation endpoint exists yet
+        - This approach works but is not optimal for large datasets
+        
+        Production Roadmap:
+        TODO: Backend team should implement /api/v1/health/summary/ endpoint with:
+          - Overall health score aggregation
+          - Active treatments count
+          - Mortality rate calculations (7-day, 30-day windows)
+          - Average lice count aggregations
+          - Pending review counts
+          
+        Migration Path:
+        Once backend summary endpoint is available:
+        1. Replace `api.health.getSummary()` with `ApiService.apiV1HealthSummaryRetrieve()`
+        2. Remove client-side aggregation logic from lib/api.ts
+        3. Update KPI cards to use server-aggregated data
+        4. Remove this disclosure banner
+      */}
+      <Alert className="border-blue-200 bg-blue-50">
+        <Activity className="h-4 w-4 text-blue-500" />
+        <AlertTitle className="text-blue-700">Data Processing Notice</AlertTitle>
+        <AlertDescription className="text-blue-600">
+          Health metrics are currently calculated from multiple data sources. Backend aggregation endpoints 
+          will improve performance in future releases.
+        </AlertDescription>
+      </Alert>
+
       {/* Health Summary KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -264,12 +297,16 @@ export default function Health() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {healthSummary?.averageHealthScore ? `${healthSummary.averageHealthScore.toFixed(1)}/5.0` : "No data"}
+              {healthSummary?.averageHealthScore 
+                ? `${healthSummary.averageHealthScore.toFixed(1)}/5.0` 
+                : formatFallback(null, undefined, { fallbackText: "N/A" })}
             </div>
             <div className="flex items-center space-x-2 mt-2">
               <Progress value={(healthSummary?.averageHealthScore ?? 0) * 20} className="flex-1" />
               <span className="text-xs text-muted-foreground">
-                {healthSummary?.healthyBatches ? `${healthSummary.healthyBatches}% healthy` : "No data"}
+                {healthSummary?.healthyBatches 
+                  ? formatPercentage(healthSummary.healthyBatches) + " healthy"
+                  : "No health data"}
               </span>
             </div>
           </CardContent>
@@ -282,10 +319,12 @@ export default function Health() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {healthSummary?.activeTreatments ?? 'No data'}
+              {formatCount(healthSummary?.activeTreatments)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {healthSummary?.batchesUnderTreatment ? `${healthSummary.batchesUnderTreatment} batches under treatment` : "No data"}
+              {healthSummary?.batchesUnderTreatment 
+                ? `${formatCount(healthSummary.batchesUnderTreatment, "batches")} under treatment`
+                : "No treatment data"}
             </p>
           </CardContent>
         </Card>
@@ -297,10 +336,14 @@ export default function Health() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {healthSummary?.recentMortality ?? 'No data'}%
+              {healthSummary?.recentMortality !== undefined && healthSummary?.recentMortality !== null
+                ? formatPercentage(healthSummary.recentMortality)
+                : formatFallback(null)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Last 7 days (within normal range)
+              {healthSummary?.recentMortality !== undefined && healthSummary?.recentMortality !== null
+                ? "Last 7 days"
+                : "No mortality data"}
             </p>
           </CardContent>
         </Card>
@@ -312,10 +355,12 @@ export default function Health() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {healthSummary?.avgLiceCount ?? 'No data'}
+              {formatFallback(healthSummary?.avgLiceCount, undefined, { precision: 1 })}
             </div>
             <p className="text-xs text-muted-foreground">
-              Per fish (below treatment threshold)
+              {healthSummary?.avgLiceCount !== undefined && healthSummary?.avgLiceCount !== null
+                ? "Per fish"
+                : "No lice data"}
             </p>
           </CardContent>
         </Card>
@@ -368,27 +413,35 @@ export default function Health() {
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-48 md:h-64">
-                  <div className="space-y-3">
-                    {recentJournalEntries.map((entry) => (
-                      <div key={entry.id} className="flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-3 p-3 border rounded-lg">
-                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${getHealthStatusColor(entry.healthStatus)}`} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 space-y-1 sm:space-y-0">
-                            <p className="font-medium text-sm">Batch {entry.batch}</p>
-                            <Badge variant="outline" className="text-xs w-fit">
-                              {getHealthStatusText(entry.healthStatus)}
-                            </Badge>
+                  {recentJournalEntries.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                      <FileText className="h-12 w-12 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">No recent journal entries</p>
+                      <p className="text-xs text-muted-foreground mt-1">Create a new entry to get started</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentJournalEntries.map((entry) => (
+                        <div key={entry.id} className="flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-3 p-3 border rounded-lg">
+                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${getHealthStatusColor(entry.healthStatus)}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 space-y-1 sm:space-y-0">
+                              <p className="font-medium text-sm">Batch {entry.batch}</p>
+                              <Badge variant="outline" className="text-xs w-fit">
+                                {getHealthStatusText(entry.healthStatus)}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground break-words">
+                              {entry.observations}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {entry.veterinarian} • {new Date(entry.entryDate).toLocaleDateString()}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground break-words">
-                            {entry.observations}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {entry.veterinarian} • {new Date(entry.entryDate).toLocaleDateString()}
-                          </p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </ScrollArea>
               </CardContent>
             </Card>
@@ -404,25 +457,33 @@ export default function Health() {
               </CardHeader>
               <CardContent>
                 <ScrollArea className="h-48 md:h-64">
-                  <div className="space-y-3">
-                    {activeTreatments.map((treatment) => (
-                      <div key={treatment.id} className="p-3 border rounded-lg">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-1 sm:space-y-0">
-                          <p className="font-medium text-sm">Batch {treatment.batch}</p>
-                          <Badge className="bg-blue-100 text-blue-800 text-xs w-fit">
-                            {treatment.treatmentType}
-                          </Badge>
+                  {activeTreatments.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-6">
+                      <Syringe className="h-12 w-12 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">No active treatments</p>
+                      <p className="text-xs text-muted-foreground mt-1">All batches are in good health</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {activeTreatments.map((treatment) => (
+                        <div key={treatment.id} className="p-3 border rounded-lg">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-1 sm:space-y-0">
+                            <p className="font-medium text-sm">Batch {treatment.batch}</p>
+                            <Badge className="bg-blue-100 text-blue-800 text-xs w-fit">
+                              {treatment.treatmentType}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1 break-words">
+                            {treatment.medication} - {treatment.dosage}
+                          </p>
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground space-y-1 sm:space-y-0">
+                            <span>Started: {new Date(treatment.startDate).toLocaleDateString()}</span>
+                            <span>{treatment.veterinarian}</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-1 break-words">
-                          {treatment.medication} - {treatment.dosage}
-                        </p>
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground space-y-1 sm:space-y-0">
-                          <span>Started: {new Date(treatment.startDate).toLocaleDateString()}</span>
-                          <span>{treatment.veterinarian}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </ScrollArea>
               </CardContent>
             </Card>
@@ -438,28 +499,36 @@ export default function Health() {
               <CardDescription>Mortality tracking and trend analysis</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {recentMortality.map((mortality) => (
-                  <div key={mortality.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg space-y-2 sm:space-y-0">
-                    <div className="flex-1">
-                      <p className="font-medium text-sm break-words">
-                        Batch {mortality.batch} - Container {mortality.container}
-                      </p>
-                      <p className="text-sm text-muted-foreground break-words">
-                        {mortality.count} fish • {mortality.reason || "Unknown cause"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(mortality.date).toLocaleDateString()} • {mortality.reportedBy}
-                      </p>
+              {recentMortality.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center p-8">
+                  <AlertTriangle className="h-12 w-12 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">No recent mortality events</p>
+                  <p className="text-xs text-muted-foreground mt-1">All batches showing healthy survival rates</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentMortality.map((mortality) => (
+                    <div key={mortality.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg space-y-2 sm:space-y-0">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm break-words">
+                          Batch {mortality.batch} - Container {mortality.container}
+                        </p>
+                        <p className="text-sm text-muted-foreground break-words">
+                          {mortality.count} fish • {mortality.reason || "Unknown cause"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(mortality.date).toLocaleDateString()} • {mortality.reportedBy}
+                        </p>
+                      </div>
+                      <div className="sm:text-right">
+                        <Badge variant={mortality.veterinarianReview ? "default" : "destructive"} className="w-fit">
+                          {mortality.veterinarianReview ? "Reviewed" : "Pending Review"}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="sm:text-right">
-                      <Badge variant={mortality.veterinarianReview ? "default" : "destructive"} className="w-fit">
-                        {mortality.veterinarianReview ? "Reviewed" : "Pending Review"}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

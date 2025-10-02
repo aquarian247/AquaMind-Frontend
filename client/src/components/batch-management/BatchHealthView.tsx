@@ -31,6 +31,31 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ApiService } from "@/api/generated/services/ApiService";
 
+/*
+ * BatchHealthView - Production-ready batch-specific health tracking component
+ * 
+ * Status: ✅ PRODUCTION-READY
+ * 
+ * Backend Integration:
+ * - Uses generated ApiService for all data fetching
+ * - Journal entries: apiV1HealthJournalEntriesList
+ * - Mortality events: apiV1BatchMortalityEventsList
+ * - Health sampling: apiV1HealthHealthSamplingEventsList
+ * - Lab samples: apiV1HealthHealthLabSamplesList
+ * 
+ * Client-Side Processing:
+ * ✅ ACCEPTABLE: Calculates health scores from already-loaded single API responses
+ * - Maps severity (0-5) to health score (100-0) for journal entries
+ * - Calculates health score from K-factor in sampling events
+ * - Aggregates mortality counts from loaded events
+ * - NOT doing multi-endpoint aggregation (each calculation from one query result)
+ * 
+ * Empty State Handling:
+ * ✅ Proper loading states with spinner
+ * ✅ Error states with helpful messages
+ * ✅ Graceful handling of empty datasets
+ */
+
 interface BatchHealthViewProps {
   batchId: number;
   batchName: string;

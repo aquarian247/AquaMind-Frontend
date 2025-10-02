@@ -1107,7 +1107,40 @@ export const api = {
     },
 
     /**
-     * Client-computed health summary replacing deprecated aggregation endpoint.
+     * ⚠️ TEMPORARY CLIENT-SIDE AGGREGATION ⚠️
+     * 
+     * Client-computed health summary - fetches multiple endpoints and aggregates data client-side.
+     * 
+     * Current Implementation:
+     * - Fetches batches, treatments, journal entries, and lice counts separately
+     * - Performs client-side filtering, calculation, and aggregation
+     * - Returns hardcoded 0 for metrics without available data (averageHealthScore, recentMortality)
+     * 
+     * ❌ NOT OPTIMAL: This approach has several limitations:
+     * - Multiple API calls increase latency and network overhead
+     * - Client-side calculation logic should be centralized in backend
+     * - Pagination not handled (may miss data in large datasets)
+     * - No caching optimization at database level
+     * 
+     * Production Roadmap:
+     * TODO: Backend team should implement /api/v1/health/summary/ endpoint with:
+     * - Overall health score aggregation across batches
+     * - Active treatments count with date filtering
+     * - Mortality rate calculations (7-day, 30-day windows)
+     * - Average lice count aggregations with proper weighting
+     * - Pending review counts from journal entries
+     * - Geography-based filtering support
+     * - Proper pagination and caching (30-60s TTL)
+     * 
+     * Migration Path (Once Backend Endpoint Available):
+     * 1. Create `useHealthSummary(geography?: number)` hook in features/health/api.ts
+     * 2. Replace this method with ApiService.apiV1HealthSummaryRetrieve(geography)
+     * 3. Update health.tsx to use new hook
+     * 4. Remove this client-side aggregation method
+     * 5. Update tests to mock server-side endpoint
+     * 
+     * @param geographySlug - Optional geography filter (currently unused - needs backend support)
+     * @returns Health summary with metrics (some may be 0 when data unavailable)
      */
     async getSummary(geographySlug?: string) {
       /* eslint-disable @typescript-eslint/no-magic-numbers */
@@ -1172,7 +1205,34 @@ export const api = {
     },
 
     /**
+     * ⚠️ TEMPORARY CLIENT-SIDE FILTERING ⚠️
+     * 
      * Very lightweight heuristic to surface critical alerts for Health page.
+     * 
+     * Current Implementation:
+     * - Fetches all mortality events and journal entries
+     * - Filters client-side for recent (last 7 days) critical events
+     * - Maps to MortalityRecord-like objects expected by UI
+     * 
+     * ❌ NOT OPTIMAL: This approach has limitations:
+     * - Fetches all data then filters (inefficient for large datasets)
+     * - Date filtering should be handled by backend with indexes
+     * - No pagination support (may hit API limits)
+     * 
+     * Production Roadmap:
+     * TODO: Backend team should implement /api/v1/health/critical-alerts/ endpoint with:
+     * - Server-side filtering by severity (high, critical)
+     * - Date range filtering at database level
+     * - Proper pagination and limit controls
+     * - Combined mortality and journal alerts in single response
+     * 
+     * Migration Path (Once Backend Endpoint Available):
+     * 1. Create `useHealthCriticalAlerts()` hook in features/health/api.ts
+     * 2. Replace this method with ApiService.apiV1HealthCriticalAlertsRetrieve()
+     * 3. Update health.tsx to use new hook
+     * 4. Remove this client-side filtering method
+     * 
+     * @returns Array of critical mortality events from last 7 days
      */
     async getCriticalAlerts() {
       try {
