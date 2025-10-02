@@ -390,12 +390,14 @@ export const api = {
           const response = await ApiService.apiV1InfrastructureContainersList(
             undefined, // active
             undefined, // area
+            undefined, // areaIn
             undefined, // containerType
             undefined, // hall
+            undefined, // hallIn
             undefined, // name
             undefined, // ordering
-            page,    // page
-            undefined // search
+            page,      // page
+            undefined  // search
           );
 
           const pageResults = response.results || [];

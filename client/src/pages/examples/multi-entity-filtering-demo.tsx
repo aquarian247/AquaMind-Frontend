@@ -75,7 +75,18 @@ export default function MultiEntityFilteringDemo() {
   } = useQuery({
     queryKey: ['filtered-containers', formattedFilters],
     queryFn: async () => {
-      const response = await ApiService.apiV1InfrastructureContainersList(formattedFilters);
+      const response = await ApiService.apiV1InfrastructureContainersList(
+        undefined, // active
+        undefined, // area (single filter not used)
+        filters.area__in, // areaIn (array of IDs)
+        undefined, // containerType
+        undefined, // hall (single filter not used)
+        filters.hall__in, // hallIn (array of IDs)
+        undefined, // name
+        undefined, // ordering
+        undefined, // page
+        undefined  // search
+      );
       return response;
     },
     enabled: hasAnyFilters // Only fetch when filters are applied
@@ -89,7 +100,28 @@ export default function MultiEntityFilteringDemo() {
   } = useQuery({
     queryKey: ['filtered-assignments', formattedFilters],
     queryFn: async () => {
-      const response = await ApiService.apiV1BatchContainerAssignmentsList(formattedFilters);
+      const response = await ApiService.apiV1BatchContainerAssignmentsList(
+        undefined, // assignmentDate
+        undefined, // assignmentDateAfter
+        undefined, // assignmentDateBefore
+        undefined, // batch
+        undefined, // batchIn
+        undefined, // batchNumber
+        undefined, // biomassMax
+        undefined, // biomassMin
+        undefined, // container
+        undefined, // containerIn
+        undefined, // containerName
+        undefined, // containerType
+        undefined, // isActive
+        undefined, // lifecycleStage
+        undefined, // ordering
+        undefined, // page
+        undefined, // populationMax
+        undefined, // populationMin
+        undefined, // search
+        undefined  // species
+      );
       return response;
     },
     enabled: hasAnyFilters
@@ -143,9 +175,7 @@ export default function MultiEntityFilteringDemo() {
                 halls?.results?.map(hall => ({
                   id: hall.id!,
                   label: hall.name || `Hall ${hall.id}`,
-                  description: hall.station_name
-                    ? `Station: ${hall.station_name}`
-                    : undefined
+                  description: undefined // station_name not available on Hall type
                 })) || []
               }
               selectedIds={filters.hall__in || []}
@@ -165,7 +195,7 @@ export default function MultiEntityFilteringDemo() {
                 areas?.results?.map(area => ({
                   id: area.id!,
                   label: area.name || `Area ${area.id}`,
-                  description: area.area_type || undefined
+                  description: undefined // area_type not available on Area type
                 })) || []
               }
               selectedIds={filters.area__in || []}

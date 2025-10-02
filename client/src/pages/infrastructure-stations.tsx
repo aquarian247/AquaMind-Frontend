@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
+import { AuthService, authenticatedFetch } from "@/services/auth.service";
+import { apiConfig } from "@/config/api.config";
 import { useStationSummaries } from "@/features/infrastructure/api";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
 
