@@ -154,6 +154,111 @@ describe('BatchHealthView', () => {
     }
   });
 
+  it('handles missing count values in mortality events gracefully', async () => {
+    // Mock fetch to return mortality events with missing/null count values
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url: string) => {
+      if (typeof url !== 'string') {
+        return Promise.resolve(json({}));
+      }
+
+      // Health records endpoint
+      if (url.includes('/api/v1/health/journal-entries')) {
+        return Promise.resolve(json({
+          results: [
+            {
+              id: 1,
+              entry_date: '2025-07-01',
+              description: 'Regular health check',
+              severity: 1
+            }
+          ]
+        }));
+      }
+
+      // Mortality events with missing/null counts
+      if (url.includes('/api/v1/batch/mortality-events')) {
+        return Promise.resolve(json({
+          results: [
+            {
+              id: 1,
+              event_date: '2025-07-01',
+              count: 10,
+              cause: 'DISEASE',
+              description: 'Test event 1'
+            },
+            {
+              id: 2,
+              event_date: '2025-07-02',
+              count: undefined, // Missing count
+              cause: 'STRESS',
+              description: 'Test event 2'
+            },
+            {
+              id: 3,
+              event_date: '2025-07-03',
+              count: null, // Null count
+              cause: 'ENVIRONMENTAL',
+              description: 'Test event 3'
+            },
+            {
+              id: 4,
+              event_date: '2025-07-04',
+              count: 5,
+              cause: 'OTHER',
+              description: 'Test event 4'
+            }
+          ]
+        }));
+      }
+
+      // Health assessments endpoint
+      if (url.includes('/api/v1/health/health-sampling-events')) {
+        return Promise.resolve(json({
+          results: [
+            {
+              id: 1,
+              sampling_date: '2025-07-01',
+              sampled_by_username: 'Dr. Test',
+              avg_k_factor: '0.9',
+              notes: 'Test assessment'
+            }
+          ]
+        }));
+      }
+
+      // Lab samples endpoint
+      if (url.includes('/api/v1/health/health-lab-samples')) {
+        return Promise.resolve(json({ results: [] }));
+      }
+
+      return Promise.resolve(json({}));
+    });
+
+    // Spy on console.warn to check for NaN warnings
+    const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    renderWithQueryClient(<BatchHealthView batchId={1} batchName="Test Batch" />);
+
+    // Wait for the component to load and render
+    await screen.findByText(/Health Status for Test Batch/i);
+
+    // Verify that no NaN warnings were logged
+    expect(consoleWarnSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('Received NaN for the `children` attribute')
+    );
+
+    // Verify that total mortality displays a valid number (should be 15: 10 + 0 + 0 + 5)
+    const totalMortalityElement = await screen.findByText('15');
+    expect(totalMortalityElement).toBeInTheDocument();
+
+    // Verify that recent mortality displays a valid number (all events are recent)
+    const recentMortalityElement = await screen.findByText('15');
+    expect(recentMortalityElement).toBeInTheDocument();
+
+    // Clean up spy
+    consoleWarnSpy.mockRestore();
+  });
+
   // Test removed: Backend Issue #77 fixed the JournalEntry serializer DateField mismatch
   // This error handling test is no longer relevant since the backend 500 error is resolved
   // See: https://github.com/aquarian247/AquaMind/issues/77

@@ -178,7 +178,7 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
   const mortalityEvents: MortalityEventView[] = mortalityData.map((event: any) => ({
     id: event.id,
     date: event.event_date || '', // from API
-    count: event.count,
+    count: event.count || 0, // Handle missing/null count values gracefully
     cause: event.cause || "UNKNOWN",
     description: event.description || "",
     // container_info may be a string in the API. If it's an object/null in some environments, coerce safely.
