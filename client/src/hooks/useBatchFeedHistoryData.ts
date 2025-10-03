@@ -308,7 +308,10 @@ export function useBatchFeedHistoryData(
 
         const containers = [...new Set(
           (response.results || [])
-            .map((assignment: any) => assignment.container_name)
+            .map((assignment: any) => {
+              // Container name can be in nested object or at top level
+              return assignment.container?.name || assignment.container_name;
+            })
             .filter(Boolean)
         )];
         
@@ -316,6 +319,7 @@ export function useBatchFeedHistoryData(
           totalAssignments: response.count,
           uniqueContainers: containers.length,
           containers: containers.slice(0, 10),
+          sampleAssignment: response.results?.[0], // Debug: show first assignment structure
         });
         return containers;
       } catch (error) {
