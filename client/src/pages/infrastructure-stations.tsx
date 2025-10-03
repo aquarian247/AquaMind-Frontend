@@ -21,8 +21,6 @@ import {
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
-import { AuthService, authenticatedFetch } from "@/services/auth.service";
-import { apiConfig } from "@/config/api.config";
 import { useStationSummaries } from "@/features/infrastructure/api";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
 
@@ -162,22 +160,20 @@ export default function InfrastructureStations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Fetch geographies for dynamic filter options
+  const { data: geographiesData } = useQuery({
+    queryKey: ["infrastructure/geographies"],
+    queryFn: async () => ApiService.apiV1InfrastructureGeographiesList(),
+  });
+
+  const geographies = geographiesData?.results || [];
+
   const { data: stationsData, isLoading } = useQuery({
     queryKey: ["stations", selectedGeography],
     queryFn: async () => {
-      // Check if user is authenticated
-      if (!AuthService.isAuthenticated()) {
-        console.warn("No auth token found for stations data");
-        return { results: [] };
-      }
-
-      // ✅ Use authenticatedFetch for complex queries with auth requirements
-      // This pattern matches the working area-details page
-      const response = await authenticatedFetch(
-        `${apiConfig.baseUrl}${apiConfig.endpoints.stations}`
-      );
-
-      const data = await response.json();
+      // ✅ Use generated ApiService for stations list
+      const data = await ApiService.apiV1InfrastructureFreshwaterStationsList();
+      
       const mapped = (data.results || []).map((raw: any): Station => ({
         id: raw.id,
         name: raw.name,
@@ -304,8 +300,11 @@ export default function InfrastructureStations() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Geographies</SelectItem>
-              <SelectItem value="faroe">Faroe Islands</SelectItem>
-              <SelectItem value="scotland">Scotland</SelectItem>
+              {geographies.map((geo: any) => (
+                <SelectItem key={geo.id} value={geo.name.toLowerCase()}>
+                  {geo.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

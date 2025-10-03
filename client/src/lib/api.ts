@@ -201,14 +201,60 @@ export const api = {
     },
 
     async getAssignments(batchId?: number) {
-      const assignments = await ApiService.apiV1BatchContainerAssignmentsList();
+      // Fetch all pages with server-side batch filtering
       if (batchId) {
+        let allAssignments: any[] = [];
+        let page = 1;
+        let hasMore = true;
+        let responseCount = 0;
+
+        while (hasMore) {
+          const response = await ApiService.apiV1BatchContainerAssignmentsList(
+            undefined, // assignmentDate
+            undefined, // assignmentDateAfter
+            undefined, // assignmentDateBefore
+            batchId,   // batch - SERVER-SIDE filter
+            undefined, // batchIn
+            undefined, // batchNumber
+            undefined, // biomassMax
+            undefined, // biomassMin
+            undefined, // container
+            undefined, // containerIn
+            undefined, // containerName
+            undefined, // containerType
+            undefined, // isActive - get ALL (active + inactive)
+            undefined, // lifecycleStage
+            undefined, // ordering
+            page,      // current page
+            undefined, // populationMax
+            undefined, // populationMin
+            undefined, // search
+            undefined  // species
+          );
+
+          allAssignments = [...allAssignments, ...(response.results || [])];
+          responseCount = response.count || 0;
+          hasMore = !!response.next;
+          page++;
+
+          if (page > 20) {
+            console.warn('⚠️ Stopped fetching batch assignments after 20 pages');
+            break;
+          }
+        }
+
+        console.log(`📦 api.batch.getAssignments: Fetched ${allAssignments.length} assignments for batch ${batchId} (${page - 1} pages)`);
+
         return {
-          ...assignments,
-          results: assignments.results.filter((a: any) => a.batch === batchId)
+          count: responseCount,
+          next: null,
+          previous: null,
+          results: allAssignments
         };
       }
-      return assignments;
+
+      // If no batchId, fetch first page only
+      return await ApiService.apiV1BatchContainerAssignmentsList();
     },
 
     async getTransfers(batchId?: number) {

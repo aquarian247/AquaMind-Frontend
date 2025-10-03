@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { differenceInDays, parseISO } from "date-fns";
+import { calculatePerformanceMetrics } from "@/features/batch-management/utils/analyticsCalculations";
 
 interface GrowthSample {
   id: number;
@@ -146,75 +147,17 @@ export function useAnalyticsData({
       });
   }, [growthSamplesData, batchAssignments]);
 
-  // Calculate performance metrics from available data
-  const performanceMetrics = useMemo((): PerformanceMetrics | null => {
-    if (calculatedGrowthMetrics.length === 0) return null;
-
-    // Get latest growth sample
-    const latestSample = calculatedGrowthMetrics[calculatedGrowthMetrics.length - 1];
-    const earliestSample = calculatedGrowthMetrics[0];
-
-    // Get assignment data
-    const latestAssignment = latestSample ? batchAssignments.find(a => a.id === growthSamplesData.find(s => s.sample_date === latestSample.date)?.assignment) : null;
-    const earliestAssignment = earliestSample ? batchAssignments.find(a => a.id === growthSamplesData.find(s => s.sample_date === earliestSample.date)?.assignment) : null;
-
-    // Calculate survival rate
-    const latestPopulation = latestAssignment?.population_count || 0;
-    const earliestPopulation = earliestAssignment?.population_count || 0;
-    const survivalRate = (latestPopulation > 0 && earliestPopulation > 0)
-      ? (latestPopulation / earliestPopulation) * 100
-      : 0;
-
-    // Calculate average growth rate
-    const avgGrowthRate = calculatedGrowthMetrics.length > 0
-      ? calculatedGrowthMetrics.reduce((sum, metric) => sum + metric.growthRate, 0) / calculatedGrowthMetrics.length
-      : 0;
-
-    // Calculate FCR from feeding summaries
-    let feedConversionRatio = 0;
-    if (feedingSummaries.length > 0 && latestAssignment && earliestAssignment) {
-      const totalFeed = feedingSummaries.reduce((sum, summary) => {
-        const feedAmount = summary.total_feed_kg ? parseFloat(summary.total_feed_kg) : 0;
-        return sum + feedAmount;
-      }, 0);
-
-      const latestBiomass = latestAssignment.biomass_kg ? parseFloat(String(latestAssignment.biomass_kg)) : 0;
-      const earliestBiomass = earliestAssignment.biomass_kg ? parseFloat(String(earliestAssignment.biomass_kg)) : 0;
-      const biomassGain = latestBiomass - earliestBiomass;
-
-      feedConversionRatio = biomassGain > 0 ? totalFeed / biomassGain : 0;
-    }
-
-    // Estimate health score based on survival rate and condition factor
-    const avgCondition = calculatedGrowthMetrics.length > 0
-      ? calculatedGrowthMetrics.reduce((sum, metric) => sum + metric.condition, 0) / calculatedGrowthMetrics.length
-      : 1.0;
-
-    const healthScore = Math.min(
-      Math.round((survivalRate * 0.6) + (avgCondition * 20 * 0.4)),
-      100
-    );
-
-    // Calculate productivity (biomass gain per day)
-    const productivity = (latestAssignment && earliestAssignment && latestSample?.date && earliestSample?.date)
-      ? ((parseFloat(String(latestAssignment.biomass_kg || 0)) - parseFloat(String(earliestAssignment.biomass_kg || 0))) /
-         Math.max(differenceInDays(parseISO(latestSample.date), parseISO(earliestSample.date)), 1)) * 100
-      : 0;
-
-    // Calculate efficiency (combination of FCR and growth rate)
-    const efficiency = feedConversionRatio > 0
-      ? (avgGrowthRate / feedConversionRatio) * 10
-      : avgGrowthRate;
-
-    return {
-      survivalRate,
-      growthRate: avgGrowthRate,
-      feedConversionRatio,
-      healthScore,
-      productivity,
-      efficiency
-    };
-  }, [calculatedGrowthMetrics, batchAssignments, feedingSummaries, growthSamplesData]);
+  // Calculate performance metrics from available data using extracted pure functions
+  const performanceMetrics = useMemo(
+    (): PerformanceMetrics | null =>
+      calculatePerformanceMetrics({
+        growthMetrics: calculatedGrowthMetrics,
+        batchAssignments,
+        feedingSummaries,
+        growthSamplesData
+      }),
+    [calculatedGrowthMetrics, batchAssignments, feedingSummaries, growthSamplesData]
+  );
 
   // Calculate environmental correlations
   const environmentalCorrelations = useMemo((): EnvironmentalCorrelation[] => {

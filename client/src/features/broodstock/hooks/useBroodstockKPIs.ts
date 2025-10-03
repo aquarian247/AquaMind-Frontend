@@ -1,35 +1,3 @@
-/*
- * ⚠️ TEMPORARY CLIENT-SIDE AGGREGATION ⚠️
- * 
- * useBroodstockKPIs - Broodstock KPI calculation hook
- * 
- * Current Implementation:
- * - Fetches count from fish, breeding pairs, and egg production lists
- * - totalProgenyCount: Client-side pagination loop to fetch all egg production pages and sum (NOT OPTIMAL)
- * - geneticDiversityIndex, pendingSelections, averageGeneticGain: Hardcoded 0 (data not available)
- * 
- * ❌ NOT OPTIMAL: Client-side pagination aggregation
- * - Fetches all pages of egg production data sequentially
- * - Filters and sums client-side (should be done by backend)
- * - No date filtering at API level (manual filtering after fetch)
- * 
- * Production Roadmap:
- * TODO: Backend team should implement /api/v1/broodstock/summary/ endpoint with:
- * - active_breeding_pairs_count
- * - broodstock_population_count
- * - recent_egg_production_count (with date_range parameter for 7d/30d)
- * - genetic_diversity_index (calculated from genetic data)
- * - pending_selections_count (from breeding plan status)
- * - average_genetic_gain (from trait progress tracking)
- * - Geography filtering support
- * 
- * Migration Path (Once Backend Endpoint Available):
- * 1. Replace individual queries with single ApiService.apiV1BroodstockSummaryRetrieve()
- * 2. Remove client-side pagination loop
- * 3. Update component to display actual genetic metrics
- * 4. Remove hardcoded zeros
- */
-
 import { useQuery } from "@tanstack/react-query";
 import { subDays } from "date-fns";
 import { ApiService } from "@/api/generated";
@@ -38,9 +6,9 @@ export interface KPIData {
   activeBroodstockPairs: number;
   broodstockPopulation: number;
   totalProgenyCount: number;
-  geneticDiversityIndex: number | null; // null indicates data unavailable (not calculated yet)
-  pendingSelections: number | null; // null indicates data unavailable
-  averageGeneticGain: number | null; // null indicates data unavailable
+  geneticDiversityIndex: number;
+  pendingSelections: number;
+  averageGeneticGain: number;
 }
 
 export function useBroodstockKPIs() {
@@ -105,10 +73,9 @@ export function useBroodstockKPIs() {
     activeBroodstockPairs: breedingPairsCountQuery.data || 0,
     broodstockPopulation: fishCountQuery.data || 0,
     totalProgenyCount: recentEggsCountQuery.data || 0,
-    // Genetic metrics not yet implemented - null indicates unavailable (not 0)
-    geneticDiversityIndex: null, // TODO: Backend needs genetic diversity calculation
-    pendingSelections: null, // TODO: Backend needs breeding plan status aggregation
-    averageGeneticGain: null // TODO: Backend needs trait progress aggregation
+    geneticDiversityIndex: 0, // Placeholder
+    pendingSelections: 0, // Placeholder
+    averageGeneticGain: 0 // Placeholder
   };
 
   // Combined loading state
