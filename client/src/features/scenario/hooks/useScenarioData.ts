@@ -16,13 +16,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { ApiService } from "@/api/generated";
 import { useScenarioSummaryStats } from "../api/api";
+import { calculateScenarioKPIs } from "../utils/kpiCalculations";
+import type { ScenarioPlanningKPIs } from "../utils/kpiCalculations";
 
-export interface ScenarioPlanningKPIs {
-  totalActiveScenarios: number;
-  scenariosInProgress: number;
-  completedProjections: number;
-  averageProjectionDuration: number;
-}
+// Re-export interface for backward compatibility
+export type { ScenarioPlanningKPIs };
 
 export function useScenarioData(searchTerm: string, statusFilter: string) {
   // Fetch Temperature Profiles
@@ -79,55 +77,15 @@ export function useScenarioData(searchTerm: string, statusFilter: string) {
   // Backend endpoint exists but returns Scenario type - may contain summary fields
   const summaryStatsQuery = useScenarioSummaryStats();
 
-  // Compute KPIs: Try server-side first, fall back to client-side
-  const computedKpis: ScenarioPlanningKPIs = useMemo(() => {
-    // Try to extract summary stats from backend response
-    const summaryData = summaryStatsQuery.data as any;
-    
-    // Check if backend response has summary fields (backend may add them to Scenario object)
-    if (summaryData && typeof summaryData === 'object') {
-      const hasSummaryFields = 
-        'totalActiveScenarios' in summaryData ||
-        'scenariosInProgress' in summaryData ||
-        'completedProjections' in summaryData ||
-        'averageProjectionDuration' in summaryData;
-      
-      if (hasSummaryFields) {
-        // Use backend-provided summary stats
-        return {
-          totalActiveScenarios: summaryData.totalActiveScenarios ?? 0,
-          scenariosInProgress: summaryData.scenariosInProgress ?? 0,
-          completedProjections: summaryData.completedProjections ?? 0,
-          averageProjectionDuration: summaryData.averageProjectionDuration ?? 0,
-        };
-      }
-    }
-
-    // Fallback: Client-side calculation from scenarios list
-    // This maintains existing behavior while we wait for backend API fix
-    const list = scenariosQuery.data?.results ?? [];
-    if (list.length === 0) {
-      return {
-        totalActiveScenarios: 0,
-        scenariosInProgress: 0,
-        completedProjections: 0,
-        averageProjectionDuration: 0,
-      };
-    }
-    
-    const totalActiveScenarios = list.length;
-    const scenariosInProgress = list.filter((s: any) => s.status === "running").length;
-    const completedProjections = list.filter((s: any) => s.status === "completed").length;
-    const averageProjectionDuration =
-      list.reduce((sum: number, s: any) => sum + (s.duration_days ?? 0), 0) / list.length;
-
-    return {
-      totalActiveScenarios,
-      scenariosInProgress,
-      completedProjections,
-      averageProjectionDuration,
-    };
-  }, [summaryStatsQuery.data, scenariosQuery.data]);
+  // TASK 3: Compute KPIs using extracted helper (CCN reduction from 18 to ≤12)
+  // Delegates to pure function for testability and maintainability
+  const computedKpis: ScenarioPlanningKPIs = useMemo(
+    () => calculateScenarioKPIs(
+      summaryStatsQuery.data,
+      scenariosQuery.data?.results ?? []
+    ),
+    [summaryStatsQuery.data, scenariosQuery.data]
+  );
 
   return {
     temperatureProfiles: temperatureProfilesQuery.data,

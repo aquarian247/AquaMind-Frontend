@@ -18,12 +18,88 @@
       11      4     57      0      15 async@67-81@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
        3      1      7      0       6 async@46-51@client/src/features/broodstock/hooks/useBroodstockGenetic.ts
        7      2     25      0      13 async@46-58@client/src/features/broodstock/hooks/useBroodstockGenetic.ts
-       9      2     40      0       9 async@55-63@client/src/features/scenario/hooks/useScenarioData.ts
-       1      1      6      0       1 (anonymous)@119-119@client/src/features/scenario/hooks/useScenarioData.ts
-       1      1      6      0       1 (anonymous)@120-120@client/src/features/scenario/hooks/useScenarioData.ts
-       1      3     13      0       1 (anonymous)@122-122@client/src/features/scenario/hooks/useScenarioData.ts
-      38     18    206      0      48 (anonymous)@83-130@client/src/features/scenario/hooks/useScenarioData.ts
-      25      9    133      5      78 ApiService.apiV1ScenarioScenariosList@69-146@client/src/features/scenario/hooks/useScenarioData.ts
+       3      1     15      0       3 (anonymous)@21-23@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     15      0       3 (anonymous)@25-27@client/src/features/scenario/utils/kpiCalculations.test.ts
+       5      1     41      0       5 (anonymous)@29-33@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     16      0       3 (anonymous)@35-37@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     19      0       3 (anonymous)@39-41@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     19      0       3 (anonymous)@43-45@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     19      0       3 (anonymous)@47-49@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     19      0       3 (anonymous)@51-53@client/src/features/scenario/utils/kpiCalculations.test.ts
+       8      1     32      0       8 (anonymous)@55-62@client/src/features/scenario/utils/kpiCalculations.test.ts
+       7      1     28      0       7 (anonymous)@64-70@client/src/features/scenario/utils/kpiCalculations.test.ts
+      12      1    102      0      52 (anonymous)@20-71@client/src/features/scenario/utils/kpiCalculations.test.ts
+      15      1     63      0      17 (anonymous)@74-90@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     42      0      10 (anonymous)@92-101@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     42      0      10 (anonymous)@103-112@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     42      0      10 (anonymous)@114-123@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     40      0      10 (anonymous)@125-134@client/src/features/scenario/utils/kpiCalculations.test.ts
+      15      1     59      0      17 (anonymous)@136-152@client/src/features/scenario/utils/kpiCalculations.test.ts
+      15      1     59      0      17 (anonymous)@154-170@client/src/features/scenario/utils/kpiCalculations.test.ts
+      19      1     75      0      21 (anonymous)@172-192@client/src/features/scenario/utils/kpiCalculations.test.ts
+      10      1     82      0     121 (anonymous)@73-193@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     16      0       3 (anonymous)@196-198@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     61      0      10 (anonymous)@200-209@client/src/features/scenario/utils/kpiCalculations.test.ts
+       8      1     51      0       9 (anonymous)@211-219@client/src/features/scenario/utils/kpiCalculations.test.ts
+       7      1     37      0       8 (anonymous)@221-228@client/src/features/scenario/utils/kpiCalculations.test.ts
+       7      1     41      0       8 (anonymous)@230-237@client/src/features/scenario/utils/kpiCalculations.test.ts
+       7      1     52      0      44 (anonymous)@195-238@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     16      0       3 (anonymous)@241-243@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     61      0      10 (anonymous)@245-254@client/src/features/scenario/utils/kpiCalculations.test.ts
+       8      1     51      0       9 (anonymous)@256-264@client/src/features/scenario/utils/kpiCalculations.test.ts
+       7      1     37      0       8 (anonymous)@266-273@client/src/features/scenario/utils/kpiCalculations.test.ts
+       6      1     42      0      35 (anonymous)@240-274@client/src/features/scenario/utils/kpiCalculations.test.ts
+       3      1     16      0       3 (anonymous)@277-279@client/src/features/scenario/utils/kpiCalculations.test.ts
+       4      1     30      0       4 (anonymous)@281-284@client/src/features/scenario/utils/kpiCalculations.test.ts
+       8      1     51      0       9 (anonymous)@286-294@client/src/features/scenario/utils/kpiCalculations.test.ts
+       8      1     55      0      10 (anonymous)@296-305@client/src/features/scenario/utils/kpiCalculations.test.ts
+       8      1     51      0      10 (anonymous)@307-316@client/src/features/scenario/utils/kpiCalculations.test.ts
+       8      1     47      0       9 (anonymous)@318-326@client/src/features/scenario/utils/kpiCalculations.test.ts
+       8      1     61      0      10 (anonymous)@328-337@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     72      0      63 (anonymous)@276-338@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     38      0      10 (anonymous)@341-350@client/src/features/scenario/utils/kpiCalculations.test.ts
+      16      1     93      0      18 (anonymous)@352-369@client/src/features/scenario/utils/kpiCalculations.test.ts
+      12      1     53      0      14 (anonymous)@371-384@client/src/features/scenario/utils/kpiCalculations.test.ts
+      14      1     60      0      16 (anonymous)@386-401@client/src/features/scenario/utils/kpiCalculations.test.ts
+       6      1     42      0      63 (anonymous)@340-402@client/src/features/scenario/utils/kpiCalculations.test.ts
+      18      1     77      0      21 (anonymous)@406-426@client/src/features/scenario/utils/kpiCalculations.test.ts
+      15      1     62      0      17 (anonymous)@428-444@client/src/features/scenario/utils/kpiCalculations.test.ts
+       4      1     22      0      41 (anonymous)@405-445@client/src/features/scenario/utils/kpiCalculations.test.ts
+      13      1     67      0      15 (anonymous)@448-462@client/src/features/scenario/utils/kpiCalculations.test.ts
+      12      1     55      0      14 (anonymous)@464-477@client/src/features/scenario/utils/kpiCalculations.test.ts
+      18      1     83      0      20 (anonymous)@479-498@client/src/features/scenario/utils/kpiCalculations.test.ts
+       9      1     40      0      10 (anonymous)@500-509@client/src/features/scenario/utils/kpiCalculations.test.ts
+       6      1     42      0      64 (anonymous)@447-510@client/src/features/scenario/utils/kpiCalculations.test.ts
+      12      1     50      0      15 (anonymous)@513-527@client/src/features/scenario/utils/kpiCalculations.test.ts
+      16      1     95      0      18 (anonymous)@529-546@client/src/features/scenario/utils/kpiCalculations.test.ts
+       4      1     22      0      36 (anonymous)@512-547@client/src/features/scenario/utils/kpiCalculations.test.ts
+       5      1     32      0     145 (anonymous)@404-548@client/src/features/scenario/utils/kpiCalculations.test.ts
+      11      6     43      1      12 hasBackendSummaryFields@41-52@client/src/features/scenario/utils/kpiCalculations.ts
+       8      9     49      1       8 extractBackendKPIs@63-70@client/src/features/scenario/utils/kpiCalculations.ts
+       1      1      6      0       1 (anonymous)@79-79@client/src/features/scenario/utils/kpiCalculations.ts
+       3      1     22      1       3 countScenariosInProgress@78-80@client/src/features/scenario/utils/kpiCalculations.ts
+       1      1      6      0       1 (anonymous)@89-89@client/src/features/scenario/utils/kpiCalculations.ts
+       3      1     22      1       3 countCompletedProjections@88-90@client/src/features/scenario/utils/kpiCalculations.ts
+       3      3     14      0       3 (anonymous)@106-108@client/src/features/scenario/utils/kpiCalculations.ts
+       7      2     49      1      11 calculateAverageProjectionDuration@101-111@client/src/features/scenario/utils/kpiCalculations.ts
+       3      1      7      1       3 calculateAverageProjectionDuration@138-140@client/src/features/scenario/utils/kpiCalculations.ts
+       9      2     36      2      12 calculateScenarioKPIs@172-183@client/src/features/scenario/utils/kpiCalculations.ts
+       9      2     40      0       9 async@53-61@client/src/features/scenario/hooks/useScenarioData.ts
+       5      3     18      0       5 (anonymous)@83-87@client/src/features/scenario/hooks/useScenarioData.ts
+      27      9    131      5      38 ApiService.apiV1ScenarioScenariosList@67-104@client/src/features/scenario/hooks/useScenarioData.ts
+       6      1     23      0       6 async@49-54@client/src/features/scenario/hooks/useScenarioMutations.ts
+       7      1     29      0       7 onSuccess@55-61@client/src/features/scenario/hooks/useScenarioMutations.ts
+       7      1     20      0       7 onError@62-68@client/src/features/scenario/hooks/useScenarioMutations.ts
+       7      1     29      0       7 async@82-88@client/src/features/scenario/hooks/useScenarioMutations.ts
+       7      1     29      0       7 onSuccess@89-95@client/src/features/scenario/hooks/useScenarioMutations.ts
+       7      1     20      0       7 onError@96-102@client/src/features/scenario/hooks/useScenarioMutations.ts
+       6      1     27      0       6 async@115-120@client/src/features/scenario/hooks/useScenarioMutations.ts
+       7      1     29      0       7 onSuccess@121-127@client/src/features/scenario/hooks/useScenarioMutations.ts
+       7      1     20      0       7 onError@128-134@client/src/features/scenario/hooks/useScenarioMutations.ts
+       8      1     19      0      15 onError@128-142@client/src/features/scenario/hooks/useScenarioMutations.ts
+       8      6     77      0      12 (anonymous)@74-85@client/src/features/scenario/hooks/useScenarioFilters.ts
+       3      1     14      0      14 (anonymous)@73-86@client/src/features/scenario/hooks/useScenarioFilters.ts
+      12      1     66      1      41 useScenarioFilters@55-95@client/src/features/scenario/hooks/useScenarioFilters.ts
        4      2     23      0       4 async@49-52@client/src/features/scenario/api/api.ts
        5      1     18      0       8 async@49-56@client/src/features/scenario/api/api.ts
       10      1     21      0      10 async@70-79@client/src/features/scenario/api/api.ts
@@ -797,7 +873,7 @@
        1      1      4      0       1 abort@17-17@client/src/setupTests.ts
        7      1     23      1       7 (anonymous)@15-21@client/src/setupTests.ts
        2      1      7      0       3 (anonymous)@86-88@client/src/setupTests.ts
-56 file analyzed.
+60 file analyzed.
 ==============================================================
 NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 --------------------------------------------------------------
@@ -807,7 +883,11 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
      25       5.3     2.7       27.0         3     client/src/features/broodstock/hooks/useBroodstockPopulation.ts
      44       5.0     1.8       20.8         4     client/src/features/broodstock/hooks/useBroodstockPrograms.ts
      25       5.0     1.5       16.0         2     client/src/features/broodstock/hooks/useBroodstockGenetic.ts
-    103      12.5     5.7       67.3         6     client/src/features/scenario/hooks/useScenarioData.ts
+    444       8.6     1.0       46.6        56     client/src/features/scenario/utils/kpiCalculations.test.ts
+     69       4.9     2.7       25.4        10     client/src/features/scenario/utils/kpiCalculations.ts
+     69      13.7     4.7       63.0         3     client/src/features/scenario/hooks/useScenarioData.ts
+     79       6.9     1.0       24.5        10     client/src/features/scenario/hooks/useScenarioMutations.ts
+     28       7.7     2.7       52.3         3     client/src/features/scenario/hooks/useScenarioFilters.ts
     245       6.1     1.6       20.2        27     client/src/features/scenario/api/api.ts
      60       6.9     2.1       43.4         7     client/src/features/batch/hooks/useBatchKPIs.ts
      51       2.0     1.3       11.7         3     client/src/features/batch/hooks/useBatchData.ts
@@ -863,9 +943,8 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 ================================================
   NLOC    CCN   token  PARAM  length  location  
 ------------------------------------------------
-      38     18    206      0      48 (anonymous)@83-130@client/src/features/scenario/hooks/useScenarioData.ts
       45     23    394      0      68 (anonymous)@150-217@client/src/hooks/use-analytics-data.ts
 ==========================================================================================
 Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
 ------------------------------------------------------------------------------------------
-      7813       5.9     1.6       35.5      796            2      0.00    0.02
+      8399       6.1     1.6       35.9      872            1      0.00    0.01
