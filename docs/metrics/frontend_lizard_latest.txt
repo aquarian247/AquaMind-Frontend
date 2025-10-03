@@ -405,6 +405,73 @@
        7      2     24      0       7 onError@53-59@client/src/features/batch-management/hooks/useBatchCreation.ts
        4      1     13      0       4 data.currentBiomassKg.toString@69-72@client/src/features/batch-management/hooks/useBatchCreation.ts
       12      1     35      0      16 data.initialBiomassKg.toString@68-83@client/src/features/batch-management/hooks/useBatchCreation.ts
+      20      1    160      0      22 (anonymous)@22-43@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      15      1    100      0      17 (anonymous)@45-61@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      15      1     98      0      17 (anonymous)@63-79@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      11      1     54      0      14 (anonymous)@81-94@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      11      1     52      0      14 (anonymous)@96-109@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       7      1     52      0      90 (anonymous)@21-110@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      13      1    130      0      14 (anonymous)@113-126@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      15      1    114      0      19 (anonymous)@128-146@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      15      1     98      0      17 (anonymous)@148-164@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       5      1     32      0      54 (anonymous)@112-165@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      12      1     64      0      14 (anonymous)@168-181@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      15      1    100      0      17 (anonymous)@183-199@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       4      1     22      0      34 (anonymous)@167-200@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       5      1     32      0     182 (anonymous)@20-201@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      14      1     96      0      16 (anonymous)@205-220@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      12      1     72      0      14 (anonymous)@222-235@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      14      1     92      0      16 (anonymous)@237-252@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      10      1     46      0      12 (anonymous)@254-265@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      10      1     46      0      12 (anonymous)@267-278@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       7      1     52      0      76 (anonymous)@204-279@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       9      1     76      0      11 (anonymous)@282-292@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      12      1     84      0      16 (anonymous)@294-309@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      10      1     44      0      12 (anonymous)@311-322@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       5      1     32      0      43 (anonymous)@281-323@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      10      1     48      0      12 (anonymous)@326-337@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      10      1     46      0      12 (anonymous)@339-350@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       4      1     22      0      27 (anonymous)@325-351@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       5      1     32      0     150 (anonymous)@203-352@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      12      1     57      0      14 (anonymous)@355-368@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      12      1     55      0      14 (anonymous)@370-383@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      12      1     57      0      14 (anonymous)@385-398@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      12      1     57      0      14 (anonymous)@400-413@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       4      1     22      0       5 (anonymous)@415-419@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      10      1     48      0      13 (anonymous)@421-433@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      11      1     52      0      13 (anonymous)@435-447@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      11      1     52      0      13 (anonymous)@449-461@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      10      1     82      0     109 (anonymous)@354-462@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       9      1     44      0      11 (anonymous)@465-475@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       5      1     31      0       7 (anonymous)@477-483@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       8      1     38      0      10 (anonymous)@485-494@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       4      1     21      0       5 (anonymous)@496-500@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       4      1     32      0       4 (anonymous)@502-505@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       8      1     38      0      10 (anonymous)@507-516@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       8      1     62      0      54 (anonymous)@464-517@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      11      1     56      0      13 (anonymous)@520-532@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       8      1     38      0      10 (anonymous)@534-543@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       4      1     21      0       5 (anonymous)@545-549@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       4      1     32      0       4 (anonymous)@551-554@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       9      1     44      0      11 (anonymous)@556-566@client/src/features/infrastructure/utils/areaFormatters.test.ts
+       7      1     52      0      49 (anonymous)@519-567@client/src/features/infrastructure/utils/areaFormatters.test.ts
+      33     18    238      1      46 formatAreaKPIs@57-102@client/src/features/infrastructure/utils/areaFormatters.ts
+       1      1     14      1       1 Math.round@142-142@client/src/features/infrastructure/utils/areaFormatters.ts
+      10      4     59      2      11 calculateAreaUtilization@161-171@client/src/features/infrastructure/utils/areaFormatters.ts
+       1      1      8      0       1 (anonymous)@184-184@client/src/features/infrastructure/utils/areaFormatters.ts
+       2      1      8      1       2 avgDepth.toFixed@186-187@client/src/features/infrastructure/utils/areaFormatters.ts
+       1      1      6      0       1 (anonymous)@200-200@client/src/features/infrastructure/utils/areaFormatters.ts
+       6      3     43      1       7 countActiveRings@195-201@client/src/features/infrastructure/utils/areaFormatters.ts
+       2      2     13      1       2 parseFloat@114-115@client/src/features/infrastructure/hooks/useAreaData.ts
+       5      1     14      0       5 Date.toISOString@118-122@client/src/features/infrastructure/hooks/useAreaData.ts
+       5      2     17      1       5 parseFloat@173-177@client/src/features/infrastructure/hooks/useAreaData.ts
+       8      3     46      1      13 parseFloat@172-184@client/src/features/infrastructure/hooks/useAreaData.ts
+      30      3    110      0      34 async@190-223@client/src/features/infrastructure/hooks/useAreaData.ts
+       1      1      2      0       1 setStatusFilter@18-18@client/src/features/infrastructure/hooks/useContainerFilters.ts
+       1      1      2      0       1 setSearchQuery@20-20@client/src/features/infrastructure/hooks/useContainerFilters.ts
+       8      4     43      0      12 (anonymous)@52-63@client/src/features/infrastructure/hooks/useContainerFilters.ts
+       3      1     14      0      14 (anonymous)@51-64@client/src/features/infrastructure/hooks/useContainerFilters.ts
+      14      1     68      1      30 useContainerFilters@44-73@client/src/features/infrastructure/hooks/useContainerFilters.ts
        4      2     23      0       4 async@63-66@client/src/features/infrastructure/api.ts
        5      1     18      0       8 async@63-70@client/src/features/infrastructure/api.ts
        4      2     23      0       4 async@80-83@client/src/features/infrastructure/api.ts
@@ -873,7 +940,7 @@
        1      1      4      0       1 abort@17-17@client/src/setupTests.ts
        7      1     23      1       7 (anonymous)@15-21@client/src/setupTests.ts
        2      1      7      0       3 (anonymous)@86-88@client/src/setupTests.ts
-60 file analyzed.
+64 file analyzed.
 ==============================================================
 NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 --------------------------------------------------------------
@@ -909,6 +976,10 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
      32       9.0     6.0       48.0         1     client/src/features/batch-management/schemas/batchFormSchema.ts
      30      10.0     2.7       58.7         3     client/src/features/batch-management/hooks/useBatchFilters.ts
      65       8.0     1.2       28.0         4     client/src/features/batch-management/hooks/useBatchCreation.ts
+    444       9.6     1.0       57.7        50     client/src/features/infrastructure/utils/areaFormatters.test.ts
+    102       7.7     4.1       53.7         7     client/src/features/infrastructure/utils/areaFormatters.ts
+    173      10.0     2.2       40.0         5     client/src/features/infrastructure/hooks/useAreaData.ts
+     32       5.4     1.6       25.8         5     client/src/features/infrastructure/hooks/useContainerFilters.ts
     150       3.8     1.2       16.5        25     client/src/features/infrastructure/api.ts
       2       0.0     0.0        0.0         0     client/src/components/filters/index.ts
      41       5.4     1.9       32.4         8     client/src/hooks/aggregations/useStationKpi.ts
@@ -943,8 +1014,9 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 ================================================
   NLOC    CCN   token  PARAM  length  location  
 ------------------------------------------------
+      33     18    238      1      46 formatAreaKPIs@57-102@client/src/features/infrastructure/utils/areaFormatters.ts
       45     23    394      0      68 (anonymous)@150-217@client/src/hooks/use-analytics-data.ts
 ==========================================================================================
 Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
 ------------------------------------------------------------------------------------------
-      8399       6.1     1.6       35.9      872            1      0.00    0.01
+      9150       6.3     1.6       37.2      939            2      0.00    0.01

@@ -1,0 +1,242 @@
+/**
+ * useAreaData Hook
+ * 
+ * Central data-fetching hook for Area Detail page.
+ * Integrates server-side aggregation via useAreaSummary for KPIs.
+ * 
+ * @module features/infrastructure/hooks/useAreaData
+ */
+
+import { useQuery } from "@tanstack/react-query";
+import { ApiService } from "@/api/generated";
+import { useAreaSummary, type AreaSummary } from "@/features/infrastructure/api";
+import { AuthService, authenticatedFetch } from "@/services/auth.service";
+import { apiConfig } from "@/config/api.config";
+
+/**
+ * Container/Ring data structure
+ */
+export interface Ring {
+  id: number;
+  name: string;
+  areaId: number;
+  areaName: string;
+  status: string;
+  biomass: number;
+  capacity: number;
+  fishCount: number;
+  averageWeight: number;
+  waterDepth: number;
+  netCondition: string;
+  lastInspection: string;
+  coordinates: { lat: number; lng: number };
+  environmentalStatus: string;
+}
+
+/**
+ * Area detail structure (client-side)
+ */
+export interface AreaDetail {
+  id: number;
+  name: string;
+  geography: string;
+  type: string;
+  rings: number;
+  coordinates: { lat: number; lng: number };
+  status: string;
+  waterDepth: number;
+  lastInspection: string;
+  capacity: number;
+}
+
+/**
+ * Environmental data structure
+ */
+export interface EnvironmentalData {
+  waterTemperature: number | null;
+  oxygenLevel: number | null;
+  salinity: number | null;
+  currentSpeed: number | null;
+  hasData: boolean;
+}
+
+/**
+ * Hook return value
+ */
+export interface UseAreaDataReturn {
+  area: AreaDetail | undefined;
+  areaSummary: AreaSummary | undefined;
+  rings: Ring[];
+  environmentalData: EnvironmentalData | undefined;
+  isLoading: boolean;
+  isAreaSummaryLoading: boolean;
+  isLoadingRings: boolean;
+  error: Error | null;
+  areaSummaryError: Error | null;
+}
+
+/**
+ * Fetch and aggregate all area-related data
+ * 
+ * Uses server-side aggregation for KPIs (biomass, population, etc.)
+ * and combines with detail data for comprehensive area view.
+ * 
+ * @param areaId - Area ID to fetch data for
+ * @returns Aggregated area data with loading/error states
+ * 
+ * @example
+ * ```typescript
+ * const { area, areaSummary, rings, isLoading } = useAreaData(123);
+ * 
+ * if (isLoading) return <LoadingSpinner />;
+ * 
+ * // areaSummary contains server-side aggregated KPIs
+ * const biomass = areaSummary?.active_biomass_kg;
+ * ```
+ */
+export function useAreaData(areaId: number): UseAreaDataReturn {
+  // 1. Fetch area details
+  const {
+    data: areaRaw,
+    isLoading: isLoadingArea,
+    error: areaError,
+  } = useQuery({
+    queryKey: ["area", areaId],
+    queryFn: async () => {
+      const raw = await ApiService.apiV1InfrastructureAreasRetrieve(areaId);
+      return {
+        ...raw,
+        geography: (raw as any).geography_name ?? (raw as any).geography ?? "Unknown",
+        type: (raw as any).area_type_name ?? (raw as any).type ?? "Sea",
+        rings: 0, // Will be updated from rings count or summary
+        coordinates: {
+          lat: parseFloat((raw as any).latitude) || 0,
+          lng: parseFloat((raw as any).longitude) || 0,
+        },
+        status: (raw as any).active ? "active" : "inactive",
+        waterDepth: 0, // Default, can be updated if API provides
+        lastInspection: new Date().toISOString(), // Default
+        capacity: 0, // Default, can be updated if API provides
+      } as AreaDetail;
+    },
+  });
+
+  // 2. Fetch server-side aggregated KPIs (primary data source)
+  const {
+    data: areaSummary,
+    isPending: isAreaSummaryLoading,
+    error: areaSummaryError,
+  } = useAreaSummary(areaId) as {
+    data: AreaSummary | undefined;
+    isPending: boolean;
+    error: Error | null;
+  };
+
+  // 3. Fetch containers/rings for detailed view
+  const { data: ringsData, isLoading: isLoadingRings } = useQuery({
+    queryKey: ["area", areaId, "rings"],
+    queryFn: async () => {
+      try {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
+          console.warn("No auth token found for area rings data");
+          return { results: [] };
+        }
+
+        // Fetch containers for this area
+        const containersResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${areaId}&page_size=100`
+        );
+
+        const containersData = await containersResponse.json();
+        const containers = containersData.results || [];
+
+        // Transform containers to ring format
+        // Note: Individual container metrics are not calculated client-side
+        // Server-side aggregation provides area-level KPIs
+        const rings: Ring[] = containers.map((container: any) => {
+          return {
+            id: container.id,
+            name: container.name || `Ring ${container.id}`,
+            areaId: container.area,
+            areaName: container.area_name || "Unknown Area",
+            status: container.active ? "active" : "inactive",
+            biomass: 0, // Individual biomass not calculated client-side
+            capacity: 50, // Default capacity in tons
+            fishCount: 0, // Individual population not calculated client-side
+            averageWeight: 0, // Individual average weight not calculated client-side
+            waterDepth: container.water_depth || 20,
+            netCondition: "good", // Default
+            lastInspection: container.updated_at || new Date().toISOString(),
+            coordinates: {
+              lat: parseFloat(container.latitude) || 0,
+              lng: parseFloat(container.longitude) || 0,
+            },
+            environmentalStatus: "optimal", // Default
+          };
+        });
+
+        return { results: rings };
+      } catch (error) {
+        console.warn("Failed to fetch area rings data:", error);
+        return { results: [] };
+      }
+    },
+  });
+
+  // 4. Fetch environmental data
+  const { data: environmentalData } = useQuery({
+    queryKey: ["area", areaId, "environmental"],
+    queryFn: async () => {
+      try {
+        // Check if user is authenticated
+        if (!AuthService.isAuthenticated()) {
+          console.warn("No auth token found for environmental data");
+          return {
+            waterTemperature: null,
+            oxygenLevel: null,
+            salinity: null,
+            currentSpeed: null,
+            hasData: false,
+          };
+        }
+
+        // Environmental data fetching not implemented yet - API endpoint needed
+        // Returning null values with hasData: false
+        return {
+          waterTemperature: null,
+          oxygenLevel: null,
+          salinity: null,
+          currentSpeed: null,
+          hasData: false,
+        };
+      } catch (error) {
+        console.warn("Failed to fetch environmental data:", error);
+        return {
+          waterTemperature: null,
+          oxygenLevel: null,
+          salinity: null,
+          currentSpeed: null,
+          hasData: false,
+        };
+      }
+    },
+  });
+
+  // Aggregate loading states
+  const isLoading = isLoadingArea || isAreaSummaryLoading;
+  const error = (areaError || areaSummaryError) as Error | null;
+
+  return {
+    area: areaRaw,
+    areaSummary,
+    rings: ringsData?.results || [],
+    environmentalData,
+    isLoading,
+    isAreaSummaryLoading,
+    isLoadingRings,
+    error,
+    areaSummaryError: areaSummaryError as Error | null,
+  };
+}
+
