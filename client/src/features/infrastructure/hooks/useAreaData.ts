@@ -174,7 +174,11 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
         }> = {};
 
         assignments.forEach((assignment: any) => {
-          const containerId = assignment.container_id || assignment.container;
+          // Container can be nested object {id, name} or just id
+          const containerId = typeof assignment.container === 'object' 
+            ? assignment.container.id 
+            : assignment.container;
+          
           if (!containerMetrics[containerId]) {
             containerMetrics[containerId] = {
               biomass: 0,
@@ -183,10 +187,15 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
               assignmentCount: 0,
             };
           }
-          containerMetrics[containerId].biomass += parseFloat(assignment.biomass_kg) || 0;
-          containerMetrics[containerId].fishCount += assignment.population_count || 0;
-          containerMetrics[containerId].totalWeightG += 
-            (assignment.population_count || 0) * (parseFloat(assignment.avg_weight_g) || 0);
+          
+          // Parse string decimals to numbers
+          const biomassKg = parseFloat(assignment.biomass_kg) || 0;
+          const populationCount = assignment.population_count || 0;
+          const avgWeightG = parseFloat(assignment.avg_weight_g) || 0;
+          
+          containerMetrics[containerId].biomass += biomassKg;
+          containerMetrics[containerId].fishCount += populationCount;
+          containerMetrics[containerId].totalWeightG += populationCount * avgWeightG;
           containerMetrics[containerId].assignmentCount += 1;
         });
 
