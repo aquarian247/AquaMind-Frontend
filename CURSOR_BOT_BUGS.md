@@ -237,16 +237,16 @@ const dateRange = periodFilter === "7"
 ## Prioritization
 
 ### 🔴 High Priority (Next Sprint)
-- [ ] **Bug 1** - Container routing error (breaks navigation)
+- [x] **Bug 1** - Container routing error (breaks navigation)
 
 ### 🟡 Medium Priority (Sprint +1)
-- [ ] **Bug 2** - Container/stage ID display
-- [ ] **Bug 3** - formatAreaKPIs null checks
-- [ ] **Bug 4** - Container name parsing
-- [ ] **Bug 5** - Assignment display inconsistency
+- [x] **Bug 2** - Container/stage ID display
+- [x] **Bug 3** - formatAreaKPIs null checks
+- [x] **Bug 4** - Container name parsing
+- [x] **Bug 5** - Assignment display inconsistency
 
 ### 🟢 Low Priority (Future)
-- [ ] **Bug 6** - DST handling (edge case)
+- [x] **Bug 6** - DST handling (edge case)
 
 ---
 
