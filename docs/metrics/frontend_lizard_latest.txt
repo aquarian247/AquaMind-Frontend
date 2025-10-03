@@ -373,6 +373,60 @@
        5      1     41      0       5 (anonymous)@103-107@client/src/features/batch-management/utils/lifecycleHelpers.test.ts
        6      1     42      0      25 (anonymous)@84-108@client/src/features/batch-management/utils/lifecycleHelpers.test.ts
        5      1     32      0     106 (anonymous)@4-109@client/src/features/batch-management/utils/lifecycleHelpers.test.ts
+       3      1     17      0       3 (anonymous)@18-20@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     15      0       3 (anonymous)@22-24@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     18      0       3 (anonymous)@26-28@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     15      0       3 (anonymous)@30-32@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     15      0       3 (anonymous)@34-36@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     52      0      21 (anonymous)@17-37@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       9      1     82      0       9 (anonymous)@40-48@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     60      0       7 (anonymous)@50-56@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     60      0       7 (anonymous)@58-64@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     32      0       5 (anonymous)@66-70@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     32      0       5 (anonymous)@72-76@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     27      1       5 Date@81-85@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       4      1     21      0       4 (anonymous)@87-90@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       4      1     22      1      12 Date@80-91@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     51      0       7 (anonymous)@94-100@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     28      0       5 (anonymous)@102-106@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     29      0       5 (anonymous)@108-112@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     32      0      21 (anonymous)@93-113@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       8      1     45      0       8 (anonymous)@116-123@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     16      0       3 (anonymous)@125-127@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       8      1     45      0       8 (anonymous)@129-136@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     37      0       7 (anonymous)@138-144@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     38      0       7 (anonymous)@146-152@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     52      0      39 (anonymous)@115-153@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     17      0       3 (anonymous)@156-158@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     17      0       3 (anonymous)@160-162@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     17      0       3 (anonymous)@164-166@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     23      0       3 (anonymous)@168-170@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     17      0       3 (anonymous)@172-174@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     52      0      21 (anonymous)@155-175@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       4      1     46      0       4 (anonymous)@178-181@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     18      0       3 (anonymous)@183-185@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     22      0       3 (anonymous)@187-189@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       4      1     30      0       4 (anonymous)@191-194@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       4      1     34      0       4 (anonymous)@196-199@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       7      1     52      0      24 (anonymous)@177-200@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+      40      1    162      0      42 (anonymous)@203-244@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       1      1      4      0       1 (anonymous)@279-279@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+      33      1    144      0      35 (anonymous)@246-280@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       3      1     17      0       3 (anonymous)@282-284@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+      19      1     82      0      21 (anonymous)@286-306@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       6      1     42      0     106 (anonymous)@202-307@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       1      1      6      0       1 (anonymous)@355-355@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     40      0       5 (anonymous)@352-356@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     39      0       5 (anonymous)@358-362@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       6      1     54      0       6 (anonymous)@364-369@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       4      1     24      0       4 (anonymous)@371-374@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       4      1     24      0       4 (anonymous)@376-379@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+      48      1    203      0      72 (anonymous)@309-380@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+      46      1    193      0      48 (anonymous)@383-430@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     37      0       5 (anonymous)@432-436@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+      20      1     95      0      22 (anonymous)@438-459@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+       5      1     32      0      79 (anonymous)@382-460@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
+      11      1     83      0     384 (anonymous)@78-461@client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
        5      1     41      0       5 (anonymous)@6-10@client/src/features/batch-management/utils/batchHelpers.test.ts
        5      1     41      0       5 (anonymous)@12-16@client/src/features/batch-management/utils/batchHelpers.test.ts
        5      1     41      0       5 (anonymous)@18-22@client/src/features/batch-management/utils/batchHelpers.test.ts
@@ -394,6 +448,20 @@
        1      1      8      0       1 (anonymous)@47-47@client/src/features/batch-management/utils/lifecycleHelpers.ts
       18      4    135      2      26 getStageProgress@34-59@client/src/features/batch-management/utils/lifecycleHelpers.ts
        6      4     39      1       6 getProgressColor@66-71@client/src/features/batch-management/utils/lifecycleHelpers.ts
+       3      1     23      1       3 formatNumber@14-16@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       5      2     15      1       5 endOfMonth@45-49@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       4      1     47      1       4 getDaysSinceStart@60-63@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       1      2     12      0       1 (anonymous)@76-76@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       3      1     24      1       3 calculateTotalFeedCost@75-77@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       9      3     33      2       9 calculateAverageDailyFeed@91-99@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+      10      3     53      2      10 getCurrentFCR@112-121@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       1      1      7      0       1 (anonymous)@148-148@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+      20      4    134      0      22 (anonymous)@146-167@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       5      1     34      1      26 groupFeedingEventsByType@143-168@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       5      4     33      0       5 (anonymous)@188-192@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       7      1     31      3      11 filterFeedingEvents@183-193@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       1      1      4      0       1 (anonymous)@211-211@client/src/features/batch-management/utils/feedHistoryHelpers.ts
+       3      1     31      1       3 Set@210-212@client/src/features/batch-management/utils/feedHistoryHelpers.ts
        7      5     48      1       7 getHealthStatus@13-19@client/src/features/batch-management/utils/batchHelpers.ts
       16      6     50      1      16 getHealthStatusColor@26-41@client/src/features/batch-management/utils/batchHelpers.ts
       14      3     96      1      18 calculateDaysActive@48-65@client/src/features/batch-management/utils/batchHelpers.ts
@@ -464,9 +532,11 @@
        6      3     43      1       7 countActiveRings@195-201@client/src/features/infrastructure/utils/areaFormatters.ts
        2      2     13      1       2 parseFloat@114-115@client/src/features/infrastructure/hooks/useAreaData.ts
        5      1     14      0       5 Date.toISOString@118-122@client/src/features/infrastructure/hooks/useAreaData.ts
-       5      2     17      1       5 parseFloat@173-177@client/src/features/infrastructure/hooks/useAreaData.ts
-       8      3     46      1      13 parseFloat@172-184@client/src/features/infrastructure/hooks/useAreaData.ts
-      30      3    110      0      34 async@190-223@client/src/features/infrastructure/hooks/useAreaData.ts
+       1      1      4      0       1 (anonymous)@159-159@client/src/features/infrastructure/hooks/useAreaData.ts
+      20      6    127      0      25 (anonymous)@176-200@client/src/features/infrastructure/hooks/useAreaData.ts
+       5      2     17      1       5 parseFloat@235-239@client/src/features/infrastructure/hooks/useAreaData.ts
+       8      3     46      1      13 parseFloat@234-246@client/src/features/infrastructure/hooks/useAreaData.ts
+      30      3    110      0      34 async@252-285@client/src/features/infrastructure/hooks/useAreaData.ts
        1      1      2      0       1 setStatusFilter@18-18@client/src/features/infrastructure/hooks/useContainerFilters.ts
        1      1      2      0       1 setSearchQuery@20-20@client/src/features/infrastructure/hooks/useContainerFilters.ts
        8      4     43      0      12 (anonymous)@52-63@client/src/features/infrastructure/hooks/useContainerFilters.ts
@@ -522,6 +592,22 @@
        2      2     12      0       2 (anonymous)@61-62@client/src/hooks/aggregations/useAreaKpi.ts
       60     10    349      0      77 async@8-84@client/src/hooks/aggregations/useAreaKpi.ts
        4      1     17      0      80 async@8-87@client/src/hooks/aggregations/useAreaKpi.ts
+      15      3     54      0      15 async@22-36@client/src/hooks/useBatchAnalyticsData.ts
+      13      3     47      0      13 async@46-58@client/src/hooks/useBatchAnalyticsData.ts
+      18      3     57      0      18 async@68-85@client/src/hooks/useBatchAnalyticsData.ts
+      15      3     51      0      17 async@95-111@client/src/hooks/useBatchAnalyticsData.ts
+      17      3     55      0      17 async@120-136@client/src/hooks/useBatchAnalyticsData.ts
+      34      8     80      0      62 async@120-181@client/src/hooks/useBatchAnalyticsData.ts
+       7      3     29      1       7 Number@93-99@client/src/hooks/useBatchFeedHistoryData.ts
+       5      9     38      1       5 Number@151-155@client/src/hooks/useBatchFeedHistoryData.ts
+       6      5     46      1      10 Number@150-159@client/src/hooks/useBatchFeedHistoryData.ts
+       6      2     22      0       6 (anonymous)@173-178@client/src/hooks/useBatchFeedHistoryData.ts
+       2      5     17      1       2 Number@214-215@client/src/hooks/useBatchFeedHistoryData.ts
+      10      8     53      2      11 Number@211-221@client/src/hooks/useBatchFeedHistoryData.ts
+       1      1      4      0       1 (anonymous)@240-240@client/src/hooks/useBatchFeedHistoryData.ts
+      22      4    145      0      25 async@227-251@client/src/hooks/useBatchFeedHistoryData.ts
+       1      1      4      0       1 (anonymous)@270-270@client/src/hooks/useBatchFeedHistoryData.ts
+       8      2     38      2       8 containers.slice@274-281@client/src/hooks/useBatchFeedHistoryData.ts
        4      1     21      0       4 genId@27-30@client/src/hooks/use-toast.ts
        7      1     21      0       7 (anonymous)@63-69@client/src/hooks/use-toast.ts
        7      2     34      0      15 addToRemoveQueue@58-72@client/src/hooks/use-toast.ts
@@ -940,7 +1026,7 @@
        1      1      4      0       1 abort@17-17@client/src/setupTests.ts
        7      1     23      1       7 (anonymous)@15-21@client/src/setupTests.ts
        2      1      7      0       3 (anonymous)@86-88@client/src/setupTests.ts
-64 file analyzed.
+68 file analyzed.
 ==============================================================
 NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 --------------------------------------------------------------
@@ -970,21 +1056,25 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
     643       9.7     3.6       52.9        13     client/src/features/audit-trail/api/api.ts
      13       0.0     0.0        0.0         0     client/src/features/audit-trail/index.ts
      90       5.0     1.0       35.4        22     client/src/features/batch-management/utils/lifecycleHelpers.test.ts
+    408       8.1     1.0       45.7        54     client/src/features/batch-management/utils/feedHistoryHelpers.test.ts
      72       5.3     1.0       40.5        16     client/src/features/batch-management/utils/batchHelpers.test.ts
      39       7.2     2.2       55.6         5     client/src/features/batch-management/utils/lifecycleHelpers.ts
+     95       5.5     1.9       34.4        14     client/src/features/batch-management/utils/feedHistoryHelpers.ts
      38      12.3     4.7       64.7         3     client/src/features/batch-management/utils/batchHelpers.ts
      32       9.0     6.0       48.0         1     client/src/features/batch-management/schemas/batchFormSchema.ts
      30      10.0     2.7       58.7         3     client/src/features/batch-management/hooks/useBatchFilters.ts
      65       8.0     1.2       28.0         4     client/src/features/batch-management/hooks/useBatchCreation.ts
     444       9.6     1.0       57.7        50     client/src/features/infrastructure/utils/areaFormatters.test.ts
     102       7.7     4.1       53.7         7     client/src/features/infrastructure/utils/areaFormatters.ts
-    173      10.0     2.2       40.0         5     client/src/features/infrastructure/hooks/useAreaData.ts
+    219      10.1     2.6       47.3         7     client/src/features/infrastructure/hooks/useAreaData.ts
      32       5.4     1.6       25.8         5     client/src/features/infrastructure/hooks/useContainerFilters.ts
     150       3.8     1.2       16.5        25     client/src/features/infrastructure/api.ts
       2       0.0     0.0        0.0         0     client/src/components/filters/index.ts
      41       5.4     1.9       32.4         8     client/src/hooks/aggregations/useStationKpi.ts
     101       8.2     4.3       65.8        11     client/src/hooks/aggregations/useBatchFcr.ts
      71      11.7     2.8       65.8         6     client/src/hooks/aggregations/useAreaKpi.ts
+    147      18.7     3.8       57.3         6     client/src/hooks/useBatchAnalyticsData.ts
+    243       6.8     4.0       39.6        10     client/src/hooks/useBatchFeedHistoryData.ts
     159       3.9     1.3       14.4        18     client/src/hooks/use-toast.ts
      37       4.0     1.0       11.2         5     client/src/hooks/use-dashboard-data.ts
     408       5.4     2.5       27.2        28     client/src/hooks/use-fcr-analytics.ts
@@ -1019,4 +1109,4 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 ==========================================================================================
 Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
 ------------------------------------------------------------------------------------------
-      9150       6.3     1.6       37.2      939            2      0.00    0.01
+     10089       6.5     1.6       37.8     1025            2      0.00    0.01

@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -9,17 +7,16 @@ import {
   AlertTriangle,
   Activity,
   Target,
-  AlertTriangle as AlertIcon,
   CheckCircle,
   TrendingUp,
   Scale,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ApiService } from "@/api/generated/services/ApiService";
-import { FCRSummaryCard } from "./FCRSummaryCard";
-import { FCRTrendChart } from "./FCRTrendChart";
+import { useBatchAnalyticsData } from "@/hooks/useBatchAnalyticsData";
 import { useFCRAnalytics } from "@/hooks/use-fcr-analytics";
 import { useAnalyticsData } from "@/hooks/use-analytics-data";
+import { FCRSummaryCard } from "./FCRSummaryCard";
+import { FCRTrendChart } from "./FCRTrendChart";
 import { PerformanceOverviewCards } from "./PerformanceOverviewCards";
 import { PerformanceMetricsTab } from "./PerformanceMetricsTab";
 import { GrowthAnalyticsTab } from "./GrowthAnalyticsTab";
@@ -35,7 +32,6 @@ interface BatchAnalyticsViewProps {
 export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewProps) {
   const [activeTab, setActiveTab] = useState("performance");
   const [timeframe, setTimeframe] = useState("30");
-  const [metricFilter, setMetricFilter] = useState("all");
   const isMobile = useIsMobile();
 
   // FCR Analytics Hook
@@ -45,114 +41,20 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
     isLoading: fcrLoading,
     error: fcrError,
     refresh: refreshFCR,
-    isRefreshing: fcrRefreshing,
     hasData: hasFCRData
   } = useFCRAnalytics({ batchId });
 
-  // Fetch growth samples data
-  const { data: growthSamplesData = [], isLoading: growthLoading, error: growthError } = useQuery({
-    queryKey: ["batch/growth-samples", batchId, timeframe],
-    queryFn: async () => {
-      try {
-        const response = await ApiService.apiV1BatchGrowthSamplesList(
-          batchId,
-          undefined,
-          undefined,
-          undefined,
-          undefined
-        );
-        return response.results || [];
-      } catch (error) {
-        console.error("Failed to fetch growth samples:", error);
-        throw new Error("Failed to fetch growth metrics");
-      }
-    },
-  });
-
-  // Fetch feeding summaries for FCR calculation
-  const { data: feedingSummaries = [], isLoading: feedingLoading, error: feedingError } = useQuery({
-    queryKey: ["batch/feeding-summaries", batchId],
-    queryFn: async () => {
-      try {
-        const response = await ApiService.apiV1InventoryBatchFeedingSummariesList(
-          batchId,
-          undefined,
-          undefined
-        );
-        return response.results || [];
-      } catch (error) {
-        console.error("Failed to fetch feeding summaries:", error);
-        return [];
-      }
-    },
-  });
-
-  // Fetch environmental readings
-  const { data: environmentalReadings = [], isLoading: envLoading, error: envError } = useQuery({
-    queryKey: ["environmental/readings", batchId],
-    queryFn: async () => {
-      try {
-        const response = await ApiService.apiV1EnvironmentalReadingsList(
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined
-        );
-        return response.results || [];
-      } catch (error) {
-        console.error("Failed to fetch environmental readings:", error);
-        return [];
-      }
-    },
-  });
-
-  // Fetch scenarios for predictions
-  const { data: scenarios = [], isLoading: scenarioLoading, error: scenarioError } = useQuery({
-    queryKey: ["scenario/scenarios", batchId],
-    queryFn: async () => {
-      try {
-        // Note: Scenarios endpoint doesn't have batch filter, so get all scenarios
-        // In the future, could add batch__id filter to scenario endpoint
-        const response = await ApiService.apiV1ScenarioScenariosList(
-          undefined, // createdBy (not batchId!)
-          undefined, // ordering
-          undefined, // page
-          undefined, // search
-          undefined  // startDate
-        );
-        return response.results || [];
-      } catch (error) {
-        console.error("Failed to fetch scenarios:", error);
-        return [];
-      }
-    },
-  });
-
-  // Fetch batch container assignments to get population counts
-  const { data: batchAssignments = [], isLoading: assignmentsLoading } = useQuery({
-    queryKey: ["batch/container-assignments", batchId],
-    queryFn: async () => {
-      try {
-        const response = await ApiService.apiV1BatchContainerAssignmentsList(
-          undefined, // assignmentDate (not batchId!)
-          undefined, // assignmentDateAfter
-          undefined, // assignmentDateBefore
-          batchId,   // ✅ batch parameter (4th position)
-          undefined, // batchIn
-          undefined, // batchNumber
-          undefined  // biomassMax
-        );
-        return response.results || [];
-      } catch (error) {
-        console.error("Failed to fetch batch assignments:", error);
-        return [];
-      }
-    },
-  });
+  // Batch Analytics Data Hook - consolidates all data fetching
+  const {
+    growthSamplesData,
+    feedingSummaries,
+    environmentalReadings,
+    scenarios,
+    batchAssignments,
+    isLoading,
+    hasError,
+    hasNoData,
+  } = useBatchAnalyticsData(batchId, timeframe);
 
   // Use the analytics data hook to calculate all derived metrics
   const {
@@ -171,11 +73,6 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
     scenarios,
     growthMetrics: [] // This will be calculated inside the hook
   });
-
-  // Loading and error states
-  const isLoading = growthLoading || feedingLoading || envLoading || scenarioLoading || assignmentsLoading;
-  const hasError = growthError || feedingError || envError || scenarioError;
-  const hasNoData = growthSamplesData.length === 0;
 
   if (isLoading) {
     return (
