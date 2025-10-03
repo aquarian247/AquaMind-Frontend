@@ -12,29 +12,294 @@
        3      1      9      0       3 async@9-11@client/src/features/broodstock/hooks/useBroodstockPopulation.ts
        3      1      9      0       3 async@16-18@client/src/features/broodstock/hooks/useBroodstockPopulation.ts
       10      6     63      0      15 async@16-30@client/src/features/broodstock/hooks/useBroodstockPopulation.ts
-       3      1      6      0       6 async@22-27@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
-       3      1     10      0       4 async@32-35@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
-       3      1     10      0       4 async@40-43@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
-      11      2     57      0      15 async@40-54@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
-       3      1      7      0       6 async@19-24@client/src/features/broodstock/hooks/useBroodstockGenetic.ts
-       7      1     23      0      13 async@19-31@client/src/features/broodstock/hooks/useBroodstockGenetic.ts
-       9      2     40      0       9 async@40-48@client/src/features/scenario/hooks/useScenarioData.ts
-       1      1      6      0       1 (anonymous)@75-75@client/src/features/scenario/hooks/useScenarioData.ts
-       1      1      6      0       1 (anonymous)@76-76@client/src/features/scenario/hooks/useScenarioData.ts
-       1      3     13      0       1 (anonymous)@78-78@client/src/features/scenario/hooks/useScenarioData.ts
-      22      4    121      0      23 (anonymous)@64-86@client/src/features/scenario/hooks/useScenarioData.ts
-      23      8    118      5      48 ApiService.apiV1ScenarioScenariosList@54-101@client/src/features/scenario/hooks/useScenarioData.ts
-       1      1      6      0       1 (anonymous)@19-19@client/src/features/batch/hooks/useBatchKPIs.ts
-       1      2     12      0       1 (anonymous)@20-20@client/src/features/batch/hooks/useBatchKPIs.ts
-       4      3     32      0       4 (anonymous)@21-24@client/src/features/batch/hooks/useBatchKPIs.ts
-       4      1     12      0       4 (anonymous)@28-31@client/src/features/batch/hooks/useBatchKPIs.ts
-      18      2    117      0      30 (anonymous)@18-47@client/src/features/batch/hooks/useBatchKPIs.ts
-       6      1     34      1      37 useBatchKPIs@17-53@client/src/features/batch/hooks/useBatchKPIs.ts
+       3      1      6      0       6 async@49-54@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
+       3      1     10      0       4 async@59-62@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
+       3      1     10      0       4 async@67-70@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
+      11      4     57      0      15 async@67-81@client/src/features/broodstock/hooks/useBroodstockPrograms.ts
+       3      1      7      0       6 async@46-51@client/src/features/broodstock/hooks/useBroodstockGenetic.ts
+       7      2     25      0      13 async@46-58@client/src/features/broodstock/hooks/useBroodstockGenetic.ts
+       9      2     40      0       9 async@55-63@client/src/features/scenario/hooks/useScenarioData.ts
+       1      1      6      0       1 (anonymous)@119-119@client/src/features/scenario/hooks/useScenarioData.ts
+       1      1      6      0       1 (anonymous)@120-120@client/src/features/scenario/hooks/useScenarioData.ts
+       1      3     13      0       1 (anonymous)@122-122@client/src/features/scenario/hooks/useScenarioData.ts
+      38     18    206      0      48 (anonymous)@83-130@client/src/features/scenario/hooks/useScenarioData.ts
+      25      9    133      5      78 ApiService.apiV1ScenarioScenariosList@69-146@client/src/features/scenario/hooks/useScenarioData.ts
+       4      2     23      0       4 async@49-52@client/src/features/scenario/api/api.ts
+       5      1     18      0       8 async@49-56@client/src/features/scenario/api/api.ts
+      10      1     21      0      10 async@70-79@client/src/features/scenario/api/api.ts
+       4      1     12      0      13 async@70-82@client/src/features/scenario/api/api.ts
+       4      2     23      0       4 async@94-97@client/src/features/scenario/api/api.ts
+       5      1     18      0       8 async@94-101@client/src/features/scenario/api/api.ts
+      14      5     49      0      14 async@120-133@client/src/features/scenario/api/api.ts
+       4      1     12      0      17 async@120-136@client/src/features/scenario/api/api.ts
+      10      1     21      0      12 async@150-161@client/src/features/scenario/api/api.ts
+       5      1     20      0      16 async@150-165@client/src/features/scenario/api/api.ts
+      10      1     21      0      10 async@181-190@client/src/features/scenario/api/api.ts
+       5      2     22      0      14 async@181-194@client/src/features/scenario/api/api.ts
+      10      1     21      0      12 async@209-220@client/src/features/scenario/api/api.ts
+       4      1     12      0      15 async@209-223@client/src/features/scenario/api/api.ts
+       3      1     10      0       3 async@237-239@client/src/features/scenario/api/api.ts
+       4      1     12      0       6 async@237-242@client/src/features/scenario/api/api.ts
+      24      5     76      0      28 async@260-287@client/src/features/scenario/api/api.ts
+       4      1     12      1       4 ||@288-291@client/src/features/scenario/api/api.ts
+      20      5     68      0      24 async@305-328@client/src/features/scenario/api/api.ts
+       4      1     12      1       4 ||@329-332@client/src/features/scenario/api/api.ts
+       2      1     11      0       2 scenario@339-340@client/src/features/scenario/api/api.ts
+       2      1     11      0       2 fcrModelStageSummary@340-341@client/src/features/scenario/api/api.ts
+       1      1      8      0       1 scenariosByBatch@341-341@client/src/features/scenario/api/api.ts
+       1      1      1      0       1 scenariosByDate@343-343@client/src/features/scenario/api/api.ts
+       1      1      8      0       1 photoperiod@347-347@client/src/features/scenario/api/api.ts
+       1      1      8      0       1 weather@348-348@client/src/features/scenario/api/api.ts
+       3      1     16      1       3 weather@348-350@client/src/features/scenario/api/api.ts
+       9      3     42      0      12 async@22-33@client/src/features/batch/hooks/useBatchKPIs.ts
+       1      1      6      0       1 (anonymous)@38-38@client/src/features/batch/hooks/useBatchKPIs.ts
+       1      2     12      0       1 (anonymous)@41-41@client/src/features/batch/hooks/useBatchKPIs.ts
+       4      3     32      0       4 (anonymous)@42-45@client/src/features/batch/hooks/useBatchKPIs.ts
+       4      2     23      0       4 (anonymous)@60-63@client/src/features/batch/hooks/useBatchKPIs.ts
+      21      3    145      0      40 (anonymous)@37-76@client/src/features/batch/hooks/useBatchKPIs.ts
+       8      1     44      0      61 async@22-82@client/src/features/batch/hooks/useBatchKPIs.ts
        2      1      6      0       2 Date.toISOString@19-20@client/src/features/batch/hooks/useBatchData.ts
        2      1     11      0       3 Date@19-21@client/src/features/batch/hooks/useBatchData.ts
        2      2     18      1       2 =>@26-27@client/src/features/batch/hooks/useBatchData.ts
+       8      1     42      1       8 useContainerAssignmentsSummary@33-40@client/src/features/batch/api/api.ts
+      10      3     36      0      11 useQuery@43-53@client/src/features/batch/api/api.ts
+      14      3     48      0      14 async@75-88@client/src/features/batch/api/api.ts
+       4      1     12      0      17 async@75-91@client/src/features/batch/api/api.ts
+      12      1     57      3      12 useBatchFCRTrends@100-111@client/src/features/batch/api/api.ts
+      12      1     55      3      12 useGeographyFCRTrends@120-131@client/src/features/batch/api/api.ts
+      16      1    102      2      17 useFCRTrendsLastDays@139-155@client/src/features/batch/api/api.ts
+      10      1     44      2      10 useWeeklyFCRTrends@163-172@client/src/features/batch/api/api.ts
+      10      1     44      2      10 useMonthlyFCRTrends@180-189@client/src/features/batch/api/api.ts
+      14      3     48      0      14 async@208-221@client/src/features/batch/api/api.ts
+       4      1     12      0      17 async@208-224@client/src/features/batch/api/api.ts
+       1      1      8      0       1 fcrTrendsByBatch@232-232@client/src/features/batch/api/api.ts
+       1      1      8      0       1 fcrTrendsByGeography@233-233@client/src/features/batch/api/api.ts
+       4      1     24      1       4 fcrTrendsByGeography@233-236@client/src/features/batch/api/api.ts
        9      8     65      0       9 calculated_avg_weight_g@105-113@client/src/features/batch/types.ts
        5      5     33      0      13 calculated_avg_weight_g@105-117@client/src/features/batch/types.ts
+      19      4     75      0      25 async@41-65@client/src/features/inventory/api.ts
+       5      2     22      0      29 async@41-69@client/src/features/inventory/api.ts
+       8      1     85      2       9 useFeedingEventsSummaryLastDays@77-85@client/src/features/inventory/api.ts
+       9      1     19      0       9 async@101-109@client/src/features/inventory/api.ts
+       4      1     12      0      12 async@101-112@client/src/features/inventory/api.ts
+       4      2     23      0       4 async@124-127@client/src/features/inventory/api.ts
+       5      1     18      0       8 async@124-131@client/src/features/inventory/api.ts
+       3      1     10      0       3 async@141-143@client/src/features/inventory/api.ts
+       4      1     12      0       6 async@141-146@client/src/features/inventory/api.ts
+       6      1     44      1       6 useTodayFeedingSummary@153-158@client/src/features/inventory/api.ts
+      10      1    110      1      12 useMonthlyFeedingSummary@165-176@client/src/features/inventory/api.ts
+       1      1      1      0       1 feedingEventsSummaryByDateRange@184-184@client/src/features/inventory/api.ts
+       2      1     11      0       2 batchFeedingSummary@186-187@client/src/features/inventory/api.ts
+       3      1     19      1       4 batchFeedingSummary@186-189@client/src/features/inventory/api.ts
+       1      1      2      0       1 (anonymous)@8-8@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       4      1     21      0       4 extends@5-8@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       1      1      8      0       1 (anonymous)@12-12@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       4      1     16      0       4 =@10-13@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       1      1      2      0       1 cancel@13-13@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       1      1      5      0       1 debounced.cancel@15-15@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       1      1      7      0       1 (anonymous)@41-41@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       2      1     11      0       2 (anonymous)@41-42@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       2      1      7      0       2 (anonymous)@47-48@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       3      1      8      0       4 (anonymous)@46-49@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       8      1     58      0      16 useHistoryFilters@35-50@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       5      2     25      0       6 (anonymous)@53-58@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       3      1      8      0       8 (anonymous)@52-59@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       3      1      7      0       3 (anonymous)@61-63@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       3      1     11      0       3 (anonymous)@65-67@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       6      2     20      0       7 (anonymous)@69-75@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       3      1      9      0       3 (anonymous)@77-79@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       3      1      9      0       3 (anonymous)@81-83@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       3      1      9      0       3 (anonymous)@85-87@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       1      2     12      1       1 page@90-90@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       2      1     10      0       2 (anonymous)@90-91@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       1      2     15      2       1 Math.max@94-94@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       1      1     12      0       1 (anonymous)@94-94@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       4      1     15      0       4 (anonymous)@98-101@client/src/features/audit-trail/hooks/useHistoryFilters.ts
+       3      1      8      0       3 (anonymous)@6-8@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       4      1     14      0       4 (anonymous)@10-13@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@16-16@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+      11      1     53      0      12 (anonymous)@15-26@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@29-29@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       6      1     19      0       6 (anonymous)@31-36@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       7      1     70      0      14 (anonymous)@28-41@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@44-44@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     15      0       3 (anonymous)@46-48@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       5      1     38      0       9 (anonymous)@43-51@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@54-54@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       7      1     23      0       7 (anonymous)@56-62@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     10      0       3 (anonymous)@64-66@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+      13      1     69      0      24 (anonymous)@53-76@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@79-79@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     13      0       3 (anonymous)@81-83@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       7      1     70      0      11 (anonymous)@78-88@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@91-91@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     11      0       3 (anonymous)@93-95@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1      9      0       3 (anonymous)@100-102@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       7      1     60      0      16 (anonymous)@90-105@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@108-108@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     11      0       3 (anonymous)@110-112@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       6      1     54      0      10 (anonymous)@107-116@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@119-119@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     11      0       3 (anonymous)@121-123@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       6      1     54      0      10 (anonymous)@118-127@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@130-130@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     11      0       3 (anonymous)@133-135@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     10      0       3 (anonymous)@139-141@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     10      0       3 (anonymous)@145-147@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       4      1     19      0       4 (anonymous)@151-154@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+      11      1    110      0      28 (anonymous)@129-156@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@159-159@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       8      1     27      0       8 (anonymous)@161-168@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+      13      1     76      0      24 (anonymous)@158-181@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@184-184@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     11      0       3 (anonymous)@186-188@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1      9      0       3 (anonymous)@194-196@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       7      1     58      0      17 (anonymous)@183-199@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@202-202@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1     11      0       3 (anonymous)@204-206@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1      9      0       3 (anonymous)@212-214@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       7      1     50      0      17 (anonymous)@201-217@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      4      0       1 (anonymous)@220-220@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       5      1     29      0       5 (anonymous)@222-226@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       3      1      9      0       3 (anonymous)@229-231@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       6      1     44      0      16 (anonymous)@219-234@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+      17      1    148      0     231 (anonymous)@5-235@client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+       1      1      7      0       1 (anonymous)@26-26@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      4      0       1 (anonymous)@30-30@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      8      0       1 (anonymous)@30-30@client/src/features/audit-trail/hooks/useAccessibility.ts
+       3      1      8      0       3 (anonymous)@29-31@client/src/features/audit-trail/hooks/useAccessibility.ts
+       5      2     25      0      10 (anonymous)@23-32@client/src/features/audit-trail/hooks/useAccessibility.ts
+       5      3     33      0       6 (anonymous)@35-40@client/src/features/audit-trail/hooks/useAccessibility.ts
+      10      3     40      0      11 (anonymous)@42-52@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onEnter?@58-58@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onSpace?@59-59@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onEscape?@60-60@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onArrowUp?@61-61@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onArrowDown?@62-62@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onArrowLeft?@63-63@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onArrowRight?@64-64@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onHome?@65-65@client/src/features/audit-trail/hooks/useAccessibility.ts
+       1      1      2      0       1 onEnd?@66-66@client/src/features/audit-trail/hooks/useAccessibility.ts
+      10      4     48      0      11 (anonymous)@68-78@client/src/features/audit-trail/hooks/useAccessibility.ts
+      11      3     44      0      21 onEnd?@66-86@client/src/features/audit-trail/hooks/useAccessibility.ts
+      13     10    116      0      16 (anonymous)@121-136@client/src/features/audit-trail/hooks/useAccessibility.ts
+       8      2     41      0       8 onClick@144-151@client/src/features/audit-trail/hooks/useAccessibility.ts
+       5      1     21      1      12 onClick@144-155@client/src/features/audit-trail/hooks/useAccessibility.ts
+       3      1      8      0       3 (anonymous)@159-161@client/src/features/audit-trail/hooks/useAccessibility.ts
+       3      1      8      0       5 (anonymous)@158-162@client/src/features/audit-trail/hooks/useAccessibility.ts
+       3      1     12      0       3 (anonymous)@24-26@client/src/features/audit-trail/hooks/useHistory.test.ts
+       3      1     12      0       3 (anonymous)@28-30@client/src/features/audit-trail/hooks/useHistory.test.ts
+       3      1     12      0       3 (anonymous)@32-34@client/src/features/audit-trail/hooks/useHistory.test.ts
+       3      1     12      0       3 (anonymous)@36-38@client/src/features/audit-trail/hooks/useHistory.test.ts
+       3      1     12      0       3 (anonymous)@40-42@client/src/features/audit-trail/hooks/useHistory.test.ts
+       3      1     12      0       3 (anonymous)@44-46@client/src/features/audit-trail/hooks/useHistory.test.ts
+       1      1      2      0       1 testHistoryType@50-50@client/src/features/audit-trail/hooks/useHistory.test.ts
+       1      1      2      0       1 testApiHistoryType@51-51@client/src/features/audit-trail/hooks/useHistory.test.ts
+      10      1    100      0      13 (anonymous)@48-60@client/src/features/audit-trail/hooks/useHistory.test.ts
+       9      1     72      0      39 (anonymous)@23-61@client/src/features/audit-trail/hooks/useHistory.test.ts
+      15      1     74      0      19 (anonymous)@10-28@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@33-33@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@35-37@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       5      1     36      0       9 (anonymous)@32-40@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@43-43@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@45-47@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       5      1     36      0       9 (anonymous)@42-50@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@54-54@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@56-58@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1      9      0       3 (anonymous)@62-64@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       9      1     72      0      18 (anonymous)@52-69@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       5      1     32      0      40 (anonymous)@31-70@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@74-74@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@77-79@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+      10      1     59      0      14 (anonymous)@73-86@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@89-89@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@92-94@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       7      1     54      0      11 (anonymous)@88-98@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@101-101@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@103-105@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       5      1     33      0       9 (anonymous)@100-108@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@111-111@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@117-119@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+      11      1     70      0      16 (anonymous)@110-125@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@128-128@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@131-133@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       6      1     43      0      10 (anonymous)@127-136@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       7      1     52      0      66 (anonymous)@72-137@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@141-141@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     17      0       3 (anonymous)@149-151@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       6      1     36      0      10 vi.fn@146-155@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@158-158@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     17      0       3 (anonymous)@166-168@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       6      1     36      0      10 vi.fn@163-172@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@175-175@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       4      1     32      0       4 (anonymous)@189-192@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       6      1     34      0      11 vi.fn@186-196@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@199-199@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     17      0       3 (anonymous)@207-209@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       5      1     27      0       9 vi.fn@204-212@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       7      1     39      0      16 (anonymous)@198-213@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@217-217@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+      23      1     83      0      25 (anonymous)@216-240@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@243-243@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       5      1     39      0       7 (anonymous)@242-248@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       4      1     22      0      35 (anonymous)@215-249@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@253-253@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       5      1     16      1       5 expect.any@259-263@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@266-266@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       5      1     37      0       7 (anonymous)@265-271@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      9      0       1 (anonymous)@274-274@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1      9      0       3 (anonymous)@286-288@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       8      1     59      0      13 vi.fn@283-295@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       9      1     65      0      24 (anonymous)@273-296@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      4      0       1 (anonymous)@300-300@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@303-305@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@309-311@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+      10      1     89      0      18 (anonymous)@299-316@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     12      0      20 (anonymous)@298-317@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      4      0       1 (anonymous)@321-321@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     11      0       3 (anonymous)@323-325@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       1      1      4      0       1 (anonymous)@333-333@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       7      1     55      0      15 (anonymous)@320-334@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+       3      1     12      0      17 (anonymous)@319-335@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+      11      1     88      0      85 (anonymous)@252-336@client/src/features/audit-trail/hooks/useAccessibility.test.ts
+      44     12    220      1      56 categorizeError@111-166@client/src/features/audit-trail/api/api.ts
+       7      3     34      0       9 retry@172-180@client/src/features/audit-trail/api/api.ts
+       4      1     18      0       4 (anonymous)@193-196@client/src/features/audit-trail/api/api.ts
+      12      4    106      4      16 getHistoryQueryKey@185-200@client/src/features/audit-trail/api/api.ts
+       1      1      5      0       1 list@205-205@client/src/features/audit-trail/api/api.ts
+       1      1      5      0       1 detail@206-206@client/src/features/audit-trail/api/api.ts
+      11      5     87      0      13 async@627-639@client/src/features/audit-trail/api/api.ts
+       4      2     12      1       4 !@640-643@client/src/features/audit-trail/api/api.ts
+      11      5     87      0      13 async@653-665@client/src/features/audit-trail/api/api.ts
+       4      3     14      1       4 !@666-669@client/src/features/audit-trail/api/api.ts
+       3      2     16      1       3 getAvailableModels@672-674@client/src/features/audit-trail/api/api.ts
+      12      4     42      1      12 getHistoryTypeLabel@677-688@client/src/features/audit-trail/api/api.ts
+      12      4     42      1      12 getHistoryTypeColor@691-702@client/src/features/audit-trail/api/api.ts
+       4      2     23      0       4 async@63-66@client/src/features/infrastructure/api.ts
+       5      1     18      0       8 async@63-70@client/src/features/infrastructure/api.ts
+       4      2     23      0       4 async@80-83@client/src/features/infrastructure/api.ts
+       5      1     18      0       8 async@80-87@client/src/features/infrastructure/api.ts
+       4      2     23      0       4 async@97-100@client/src/features/infrastructure/api.ts
+       5      1     18      0       8 async@97-104@client/src/features/infrastructure/api.ts
+       4      2     23      0       4 async@114-117@client/src/features/infrastructure/api.ts
+       5      1     18      0       8 async@114-121@client/src/features/infrastructure/api.ts
+       1      1      7      0       1 (anonymous)@134-134@client/src/features/infrastructure/api.ts
+       6      1     22      0       6 async@132-137@client/src/features/infrastructure/api.ts
+       5      1     20      0      10 async@132-141@client/src/features/infrastructure/api.ts
+       1      1      7      0       1 (anonymous)@154-154@client/src/features/infrastructure/api.ts
+       6      1     22      0       6 async@152-157@client/src/features/infrastructure/api.ts
+       5      1     20      0      10 async@152-161@client/src/features/infrastructure/api.ts
+       1      1      7      0       1 (anonymous)@174-174@client/src/features/infrastructure/api.ts
+       6      1     22      0       6 async@172-177@client/src/features/infrastructure/api.ts
+       5      1     20      0      10 async@172-181@client/src/features/infrastructure/api.ts
+       1      1      7      0       1 (anonymous)@194-194@client/src/features/infrastructure/api.ts
+       6      1     22      0       6 async@192-197@client/src/features/infrastructure/api.ts
+       5      1     20      0      10 async@192-201@client/src/features/infrastructure/api.ts
+       2      1     11      0       2 area@208-209@client/src/features/infrastructure/api.ts
+       2      1     11      0       2 station@210-211@client/src/features/infrastructure/api.ts
+       2      1     11      0       2 hall@212-213@client/src/features/infrastructure/api.ts
+       2      1     11      0       2 geography@214-215@client/src/features/infrastructure/api.ts
+       2      1      9      1       3 geography@214-216@client/src/features/infrastructure/api.ts
        1      1      4      0       1 (anonymous)@11-11@client/src/hooks/aggregations/useStationKpi.ts
        1      1      1      0       1 (anonymous)@19-19@client/src/hooks/aggregations/useStationKpi.ts
        1      1      4      0       1 (anonymous)@21-21@client/src/hooks/aggregations/useStationKpi.ts
@@ -114,7 +379,7 @@
        5      3     49      0       5 (anonymous)@97-101@client/src/hooks/use-analytics-data.ts
        1      1      8      0       1 (anonymous)@132-132@client/src/hooks/use-analytics-data.ts
       37     14    252      0      45 (anonymous)@102-146@client/src/hooks/use-analytics-data.ts
-       5      1     29      0      53 (anonymous)@95-147@client/src/hooks/use-analytics-data.ts
+       5      1     29      0      53 useMemo@95-147@client/src/hooks/use-analytics-data.ts
        1      1      8      0       1 (anonymous)@158-158@client/src/hooks/use-analytics-data.ts
        1      2     15      0       1 (anonymous)@158-158@client/src/hooks/use-analytics-data.ts
        1      1      8      0       1 (anonymous)@159-159@client/src/hooks/use-analytics-data.ts
@@ -129,7 +394,29 @@
       12      7    102      0      13 (anonymous)@281-293@client/src/hooks/use-analytics-data.ts
       29      4    163      0      49 (anonymous)@278-326@client/src/hooks/use-analytics-data.ts
        4      3     19      1       4 status@377-380@client/src/hooks/use-analytics-data.ts
-      22      6    128      1      28 status@370-397@client/src/hooks/use-analytics-data.ts
+       1      1      2      0       1 onChange?@23-23@client/src/hooks/useMultiEntityFilter.ts
+       1      1      2      0       1 setFilter@37-37@client/src/hooks/useMultiEntityFilter.ts
+       1      1      2      0       1 clearFilter@39-39@client/src/hooks/useMultiEntityFilter.ts
+       1      1      2      0       1 clearAllFilters@41-41@client/src/hooks/useMultiEntityFilter.ts
+       1      1      2      0       1 addToFilter@43-43@client/src/hooks/useMultiEntityFilter.ts
+       1      1      2      0       1 removeFromFilter@45-45@client/src/hooks/useMultiEntityFilter.ts
+       1      1      2      0       1 toggleFilterId@47-47@client/src/hooks/useMultiEntityFilter.ts
+       1      1      2      0       1 hasFilter@49-49@client/src/hooks/useMultiEntityFilter.ts
+       2      2     14      0       2 (anonymous)@105-106@client/src/hooks/useMultiEntityFilter.ts
+      24      7    163      0      31 (anonymous)@111-141@client/src/hooks/useMultiEntityFilter.ts
+       3      1     16      0       3 (anonymous)@147-149@client/src/hooks/useMultiEntityFilter.ts
+       5      1     21      0       5 (anonymous)@155-159@client/src/hooks/useMultiEntityFilter.ts
+       3      1      8      0       3 (anonymous)@164-166@client/src/hooks/useMultiEntityFilter.ts
+       5      2     40      0       5 (anonymous)@170-174@client/src/hooks/useMultiEntityFilter.ts
+       1      1      8      0       1 (anonymous)@183-183@client/src/hooks/useMultiEntityFilter.ts
+      10      3     58      0      10 (anonymous)@180-189@client/src/hooks/useMultiEntityFilter.ts
+       8      3     45      0       8 (anonymous)@195-202@client/src/hooks/useMultiEntityFilter.ts
+       3      3     17      0       3 (anonymous)@208-210@client/src/hooks/useMultiEntityFilter.ts
+       1      1      6      0       1 (anonymous)@216-216@client/src/hooks/useMultiEntityFilter.ts
+       3      1     16      0       3 (anonymous)@215-217@client/src/hooks/useMultiEntityFilter.ts
+       3      1      8      0       3 (anonymous)@220-222@client/src/hooks/useMultiEntityFilter.ts
+       3      1      8      0       3 (anonymous)@225-227@client/src/hooks/useMultiEntityFilter.ts
+      63      1    373      1     161 useMultiEntityFilter@84-244@client/src/hooks/useMultiEntityFilter.ts
        1      2     12      0       1 (anonymous)@54-54@client/src/hooks/use-feed-data.ts
        5      2     23      0       5 (anonymous)@52-56@client/src/hooks/use-feed-data.ts
        1      2     12      0       1 (anonymous)@59-59@client/src/hooks/use-feed-data.ts
@@ -170,6 +457,44 @@
        4      1     19      0       4 switchToDjango@108-111@client/src/lib/debug.ts
        3      2     11      0       3 getCurrentBackend@113-115@client/src/lib/debug.ts
        6      2     29      0       6 DevelopmentTools.getCurrentBackend@120-125@client/src/lib/debug.ts
+       3      1     15      0       3 (anonymous)@14-16@client/src/lib/formatFallback.test.ts
+       3      1     15      0       3 (anonymous)@18-20@client/src/lib/formatFallback.test.ts
+       3      1     15      0       3 (anonymous)@22-24@client/src/lib/formatFallback.test.ts
+       3      1     23      0       3 (anonymous)@26-28@client/src/lib/formatFallback.test.ts
+       6      1     42      0      17 (anonymous)@13-29@client/src/lib/formatFallback.test.ts
+       3      1     15      0       3 (anonymous)@32-34@client/src/lib/formatFallback.test.ts
+       4      1     40      0       4 (anonymous)@36-39@client/src/lib/formatFallback.test.ts
+       4      1     34      0       4 (anonymous)@41-44@client/src/lib/formatFallback.test.ts
+       4      1     36      0       4 (anonymous)@46-49@client/src/lib/formatFallback.test.ts
+       3      1     15      0       3 (anonymous)@51-53@client/src/lib/formatFallback.test.ts
+       4      1     30      0       4 (anonymous)@55-58@client/src/lib/formatFallback.test.ts
+       8      1     62      0      29 (anonymous)@31-59@client/src/lib/formatFallback.test.ts
+       5      1     41      0       5 (anonymous)@62-66@client/src/lib/formatFallback.test.ts
+       5      1     47      0       5 (anonymous)@68-72@client/src/lib/formatFallback.test.ts
+       4      1     22      0      13 (anonymous)@61-73@client/src/lib/formatFallback.test.ts
+       5      1     32      0      63 (anonymous)@12-74@client/src/lib/formatFallback.test.ts
+       5      1     47      0       5 (anonymous)@77-81@client/src/lib/formatFallback.test.ts
+       4      1     28      0       4 (anonymous)@83-86@client/src/lib/formatFallback.test.ts
+       4      1     22      0      12 (anonymous)@76-87@client/src/lib/formatFallback.test.ts
+       5      1     47      0       5 (anonymous)@90-94@client/src/lib/formatFallback.test.ts
+       4      1     28      0       4 (anonymous)@96-99@client/src/lib/formatFallback.test.ts
+       4      1     22      0      12 (anonymous)@89-100@client/src/lib/formatFallback.test.ts
+       5      1     45      0       5 (anonymous)@103-107@client/src/lib/formatFallback.test.ts
+       4      1     32      0       4 (anonymous)@109-112@client/src/lib/formatFallback.test.ts
+       4      1     28      0       4 (anonymous)@114-117@client/src/lib/formatFallback.test.ts
+       5      1     32      0      17 (anonymous)@102-118@client/src/lib/formatFallback.test.ts
+       5      1     47      0       5 (anonymous)@121-125@client/src/lib/formatFallback.test.ts
+       4      1     28      0       4 (anonymous)@127-130@client/src/lib/formatFallback.test.ts
+       3      1     15      0       3 (anonymous)@132-134@client/src/lib/formatFallback.test.ts
+       5      1     32      0      16 (anonymous)@120-135@client/src/lib/formatFallback.test.ts
+       5      1     41      0       5 (anonymous)@138-142@client/src/lib/formatFallback.test.ts
+       7      1     69      0       7 (anonymous)@144-150@client/src/lib/formatFallback.test.ts
+       4      1     22      0      15 (anonymous)@137-151@client/src/lib/formatFallback.test.ts
+       6      1     50      0       6 (anonymous)@154-159@client/src/lib/formatFallback.test.ts
+       3      1     15      0       3 (anonymous)@161-163@client/src/lib/formatFallback.test.ts
+       4      1     28      0       4 (anonymous)@165-168@client/src/lib/formatFallback.test.ts
+       6      1     54      0       6 (anonymous)@170-175@client/src/lib/formatFallback.test.ts
+       6      1     42      0      24 (anonymous)@153-176@client/src/lib/formatFallback.test.ts
        3      1      8      0       3 (anonymous)@17-19@client/src/lib/container-filtering.test.ts
        4      1     17      0       4 (anonymous)@22-25@client/src/lib/container-filtering.test.ts
       19      1    209      0      26 (anonymous)@28-53@client/src/lib/container-filtering.test.ts
@@ -185,6 +510,59 @@
        4      1     24      0      91 (anonymous)@201-291@client/src/lib/container-filtering.test.ts
        5      1     30      0     272 (anonymous)@21-292@client/src/lib/container-filtering.test.ts
        3      1     18      1       3 cn@4-6@client/src/lib/utils.ts
+       3      1     21      0       3 (anonymous)@14-16@client/src/lib/filterUtils.test.ts
+       3      1     17      0       3 (anonymous)@18-20@client/src/lib/filterUtils.test.ts
+       3      1     15      0       3 (anonymous)@22-24@client/src/lib/filterUtils.test.ts
+       4      1     26      0       4 (anonymous)@26-29@client/src/lib/filterUtils.test.ts
+       3      1     27      0       3 (anonymous)@31-33@client/src/lib/filterUtils.test.ts
+       3      1     21      0       3 (anonymous)@35-37@client/src/lib/filterUtils.test.ts
+       3      1     27      0       3 (anonymous)@39-41@client/src/lib/filterUtils.test.ts
+       9      1     72      0      30 (anonymous)@13-42@client/src/lib/filterUtils.test.ts
+       3      1     21      0       3 (anonymous)@45-47@client/src/lib/filterUtils.test.ts
+       3      1     17      0       3 (anonymous)@49-51@client/src/lib/filterUtils.test.ts
+       3      1     16      0       3 (anonymous)@53-55@client/src/lib/filterUtils.test.ts
+       4      1     30      0       4 (anonymous)@57-60@client/src/lib/filterUtils.test.ts
+       4      1     40      0       4 (anonymous)@62-65@client/src/lib/filterUtils.test.ts
+       3      1     21      0       3 (anonymous)@67-69@client/src/lib/filterUtils.test.ts
+       3      1     21      0       3 (anonymous)@71-73@client/src/lib/filterUtils.test.ts
+       9      1     72      0      31 (anonymous)@44-74@client/src/lib/filterUtils.test.ts
+       5      1     39      0       5 (anonymous)@77-81@client/src/lib/filterUtils.test.ts
+       4      1     23      0       4 (anonymous)@83-86@client/src/lib/filterUtils.test.ts
+       5      1     36      0       5 (anonymous)@88-92@client/src/lib/filterUtils.test.ts
+       5      1     36      0       5 (anonymous)@94-98@client/src/lib/filterUtils.test.ts
+       5      1     40      0       5 (anonymous)@100-104@client/src/lib/filterUtils.test.ts
+       5      1     36      0       5 (anonymous)@106-110@client/src/lib/filterUtils.test.ts
+       5      1     38      0       5 (anonymous)@112-116@client/src/lib/filterUtils.test.ts
+       4      1     28      0       4 (anonymous)@118-121@client/src/lib/filterUtils.test.ts
+      10      1     82      0      47 (anonymous)@76-122@client/src/lib/filterUtils.test.ts
+      12      1     56      0      13 (anonymous)@125-137@client/src/lib/filterUtils.test.ts
+      10      1     45      0      11 (anonymous)@139-149@client/src/lib/filterUtils.test.ts
+       9      1     34      0      10 (anonymous)@151-160@client/src/lib/filterUtils.test.ts
+       4      1     22      0       4 (anonymous)@162-165@client/src/lib/filterUtils.test.ts
+       6      1     42      0      43 (anonymous)@124-166@client/src/lib/filterUtils.test.ts
+       1      1      7      0       1 (anonymous)@182-182@client/src/lib/filterUtils.test.ts
+      11      1     75      0      19 (anonymous)@169-187@client/src/lib/filterUtils.test.ts
+       1      1      7      0       1 (anonymous)@196-196@client/src/lib/filterUtils.test.ts
+       1      1      7      0       1 (anonymous)@200-200@client/src/lib/filterUtils.test.ts
+       9      1     61      0      14 (anonymous)@189-202@client/src/lib/filterUtils.test.ts
+       4      1     24      0      36 (anonymous)@168-203@client/src/lib/filterUtils.test.ts
+       5      1     53      0       5 (anonymous)@206-210@client/src/lib/filterUtils.test.ts
+       1      1      4      0       1 (anonymous)@213-213@client/src/lib/filterUtils.test.ts
+       7      1     71      0       8 (anonymous)@212-219@client/src/lib/filterUtils.test.ts
+       4      1     31      0       4 (anonymous)@221-224@client/src/lib/filterUtils.test.ts
+       1      1      4      0       1 (anonymous)@227-227@client/src/lib/filterUtils.test.ts
+       5      1     44      0       5 (anonymous)@226-230@client/src/lib/filterUtils.test.ts
+       6      1     42      0      27 (anonymous)@205-231@client/src/lib/filterUtils.test.ts
+       5      1     41      0       5 (anonymous)@234-238@client/src/lib/filterUtils.test.ts
+       5      1     43      0       5 (anonymous)@240-244@client/src/lib/filterUtils.test.ts
+       4      1     32      0       4 (anonymous)@246-249@client/src/lib/filterUtils.test.ts
+       7      1     68      0       7 (anonymous)@251-257@client/src/lib/filterUtils.test.ts
+       6      1     42      0      26 (anonymous)@233-258@client/src/lib/filterUtils.test.ts
+       8      1     44      0       9 (anonymous)@261-269@client/src/lib/filterUtils.test.ts
+       8      1     41      0       9 (anonymous)@271-279@client/src/lib/filterUtils.test.ts
+       4      1     21      0       4 (anonymous)@281-284@client/src/lib/filterUtils.test.ts
+       6      1     28      0       7 (anonymous)@286-292@client/src/lib/filterUtils.test.ts
+       6      1     42      0      34 (anonymous)@260-293@client/src/lib/filterUtils.test.ts
        3      1      8      0       3 (anonymous)@5-7@client/src/lib/pagination.test.ts
       33      1    261      0      37 (anonymous)@10-46@client/src/lib/pagination.test.ts
       13      1    117      0      15 (anonymous)@48-62@client/src/lib/pagination.test.ts
@@ -243,58 +621,65 @@
        3      1     12      0       3 getActiveAlerts@347-349@client/src/lib/api.ts
        2      1      6      0       2 Date.toISOString@370-371@client/src/lib/api.ts
        6      2     26      0       7 Date@370-376@client/src/lib/api.ts
-       1      1      1      0       1 (anonymous)@413-413@client/src/lib/api.ts
-       1      1      8      0       1 (anonymous)@413-413@client/src/lib/api.ts
-       5      4     38      0       5 (anonymous)@443-447@client/src/lib/api.ts
-       1      1      1      0       1 (anonymous)@465-465@client/src/lib/api.ts
-       1      1      1      0       1 (anonymous)@472-472@client/src/lib/api.ts
-       1      1      7      0       1 (anonymous)@487-487@client/src/lib/api.ts
-       4      4     45      0       4 (anonymous)@485-488@client/src/lib/api.ts
-      12      5     55      0      15 (anonymous)@499-513@client/src/lib/api.ts
-       1      1      6      0       1 (anonymous)@516-516@client/src/lib/api.ts
-       4      1      8      0       4 Date.toISOString@544-547@client/src/lib/api.ts
-       7      2     39      0      10 Date@544-553@client/src/lib/api.ts
-       1      1      5      0       1 (anonymous)@572-572@client/src/lib/api.ts
-       2      1      6      1       2 key.includes@578-579@client/src/lib/api.ts
-       6      2     30      0       6 (anonymous)@620-625@client/src/lib/api.ts
-       6      2     39      0       6 (anonymous)@629-634@client/src/lib/api.ts
-       6      2     39      0       6 (anonymous)@635-640@client/src/lib/api.ts
-       5      2     29      0       5 (anonymous)@659-663@client/src/lib/api.ts
-       6      1     24      0       8 Array.from.sort@669-676@client/src/lib/api.ts
-       1      2     17      0       1 (anonymous)@705-705@client/src/lib/api.ts
-       5      1     21      0       5 Date.toISOString@720-724@client/src/lib/api.ts
-       3      2     14      0       3 (anonymous)@757-759@client/src/lib/api.ts
-       3      2     14      0       3 (anonymous)@761-763@client/src/lib/api.ts
-      15      4    101      0      17 async@813-829@client/src/lib/api.ts
-      15      4     92      0      17 async@834-850@client/src/lib/api.ts
-       3      1     11      0       3 getFeedTypes@855-857@client/src/lib/api.ts
-       3      1     14      1       3 getFeedStock@859-861@client/src/lib/api.ts
-       3      1     14      1       3 getFeedingEvents@863-865@client/src/lib/api.ts
-       3      1     15      1       3 createFeedingEvent@877-879@client/src/lib/api.ts
-       3      1     17      1       3 getFeedPurchases@881-883@client/src/lib/api.ts
-       2      1      9      1       2 Array.from@915-916@client/src/lib/api.ts
-      12      1     51      2      12 Math.min@942-953@client/src/lib/api.ts
-      14      4     80      0      27 (anonymous)@931-957@client/src/lib/api.ts
-       9      3     36      1       9 parseFloat@978-986@client/src/lib/api.ts
-      19      7     95      0      28 (anonymous)@968-995@client/src/lib/api.ts
-      11      2     32      0      11 Date.toISOString@1025-1035@client/src/lib/api.ts
-      17      1     52      0      18 getTraits@1039-1056@client/src/lib/api.ts
-       1      1      6      0       1 records.results.filter@1082-1082@client/src/lib/api.ts
-       3      1     11      1       3 records.results.filter@1082-1084@client/src/lib/api.ts
-       1      1      6      0       1 records.results.filter@1096-1096@client/src/lib/api.ts
-       1      1      9      0       1 (anonymous)@1118-1118@client/src/lib/api.ts
-       1      1      9      0       1 (anonymous)@1119-1119@client/src/lib/api.ts
-       1      1      9      0       1 (anonymous)@1120-1120@client/src/lib/api.ts
-       1      1      6      0       1 (anonymous)@1125-1125@client/src/lib/api.ts
-       3      1     13      0       3 (anonymous)@1131-1133@client/src/lib/api.ts
-       2      1      7      0       2 (anonymous)@1136-1137@client/src/lib/api.ts
-       2      2     14      0       2 (anonymous)@1140-1141@client/src/lib/api.ts
-       1      1      9      0       1 (anonymous)@1180-1180@client/src/lib/api.ts
-       1      1      9      0       1 (anonymous)@1181-1181@client/src/lib/api.ts
-       2      1     11      0       2 (anonymous)@1188-1189@client/src/lib/api.ts
-       2      3     15      0       2 (anonymous)@1193-1194@client/src/lib/api.ts
-      10      3     52      0      10 (anonymous)@1199-1208@client/src/lib/api.ts
-       4      1     17      2       4 j.description.substring@1215-1218@client/src/lib/api.ts
+       1      1      1      0       1 (anonymous)@415-415@client/src/lib/api.ts
+       1      1      8      0       1 (anonymous)@415-415@client/src/lib/api.ts
+       5      4     38      0       5 (anonymous)@445-449@client/src/lib/api.ts
+       1      1      1      0       1 (anonymous)@467-467@client/src/lib/api.ts
+       1      1      1      0       1 (anonymous)@474-474@client/src/lib/api.ts
+       1      1      7      0       1 (anonymous)@489-489@client/src/lib/api.ts
+       4      4     45      0       4 (anonymous)@487-490@client/src/lib/api.ts
+      12      5     55      0      15 (anonymous)@501-515@client/src/lib/api.ts
+       1      1      6      0       1 (anonymous)@518-518@client/src/lib/api.ts
+       4      1      8      0       4 Date.toISOString@546-549@client/src/lib/api.ts
+       7      2     39      0      10 Date@546-555@client/src/lib/api.ts
+       1      1      5      0       1 (anonymous)@574-574@client/src/lib/api.ts
+       2      1      6      1       2 key.includes@580-581@client/src/lib/api.ts
+       6      2     30      0       6 (anonymous)@622-627@client/src/lib/api.ts
+       6      2     39      0       6 (anonymous)@631-636@client/src/lib/api.ts
+       6      2     39      0       6 (anonymous)@637-642@client/src/lib/api.ts
+       5      2     29      0       5 (anonymous)@661-665@client/src/lib/api.ts
+       6      1     24      0       8 Array.from.sort@671-678@client/src/lib/api.ts
+       1      2     17      0       1 (anonymous)@707-707@client/src/lib/api.ts
+       5      1     21      0       5 Date.toISOString@722-726@client/src/lib/api.ts
+       3      2     14      0       3 (anonymous)@759-761@client/src/lib/api.ts
+       3      2     14      0       3 (anonymous)@763-765@client/src/lib/api.ts
+      15      4    101      0      17 async@815-831@client/src/lib/api.ts
+      15      4     92      0      17 async@836-852@client/src/lib/api.ts
+       3      1     11      0       3 getFeedTypes@857-859@client/src/lib/api.ts
+       3      1     14      1       3 getFeedStock@861-863@client/src/lib/api.ts
+       3      1     14      1       3 getFeedingEvents@865-867@client/src/lib/api.ts
+       3      1     15      1       3 createFeedingEvent@879-881@client/src/lib/api.ts
+       3      1     17      1       3 getFeedPurchases@883-885@client/src/lib/api.ts
+       2      1      9      1       2 Array.from@917-918@client/src/lib/api.ts
+      12      1     51      2      12 Math.min@944-955@client/src/lib/api.ts
+      14      4     80      0      27 (anonymous)@933-959@client/src/lib/api.ts
+       9      3     36      1       9 parseFloat@980-988@client/src/lib/api.ts
+      19      7     95      0      28 (anonymous)@970-997@client/src/lib/api.ts
+      11      2     32      0      11 Date.toISOString@1027-1037@client/src/lib/api.ts
+      17      1     52      0      18 getTraits@1041-1058@client/src/lib/api.ts
+       1      1      6      0       1 records.results.filter@1084-1084@client/src/lib/api.ts
+       3      1     11      1       3 records.results.filter@1084-1086@client/src/lib/api.ts
+       1      1      6      0       1 records.results.filter@1098-1098@client/src/lib/api.ts
+       1      1      9      0       1 (anonymous)@1153-1153@client/src/lib/api.ts
+       1      1      9      0       1 (anonymous)@1154-1154@client/src/lib/api.ts
+       1      1      9      0       1 (anonymous)@1155-1155@client/src/lib/api.ts
+       1      1      6      0       1 (anonymous)@1160-1160@client/src/lib/api.ts
+       3      1     13      0       3 (anonymous)@1166-1168@client/src/lib/api.ts
+       2      1      7      0       2 (anonymous)@1171-1172@client/src/lib/api.ts
+       2      2     14      0       2 (anonymous)@1175-1176@client/src/lib/api.ts
+       1      1      9      0       1 (anonymous)@1242-1242@client/src/lib/api.ts
+       1      1      9      0       1 (anonymous)@1243-1243@client/src/lib/api.ts
+       2      1     11      0       2 (anonymous)@1250-1251@client/src/lib/api.ts
+       2      3     15      0       2 (anonymous)@1255-1256@client/src/lib/api.ts
+      10      3     52      0      10 (anonymous)@1261-1270@client/src/lib/api.ts
+       4      1     17      2       4 j.description.substring@1277-1280@client/src/lib/api.ts
+      18      6     88      1      24 Number.isInteger@65-88@client/src/lib/formatFallback.ts
+       6      1     31      2       6 formatPercentage@96-101@client/src/lib/formatFallback.ts
+       6      1     31      2       6 formatWeight@109-114@client/src/lib/formatFallback.ts
+       6      1     31      2       6 formatCount@122-127@client/src/lib/formatFallback.ts
+      10      4     69      2      11 formatCurrency@135-145@client/src/lib/formatFallback.ts
+       3      3     22      1       3 isDataAvailable@152-154@client/src/lib/formatFallback.ts
+      13      4     68      2      16 formatDateFallback@162-177@client/src/lib/formatFallback.ts
        6      3     51      1       6 throwIfResNotOk@4-9@client/src/lib/queryClient.ts
        1      1      1      0       1 (anonymous)@17-17@client/src/lib/queryClient.ts
       11      3     78      0      18 getCsrfToken@12-29@client/src/lib/queryClient.ts
@@ -304,6 +689,15 @@
        7      3     21      0      10 getAuthToken@42-51@client/src/lib/config.ts
        1      1      4      0       1 OpenAPI.TOKEN@61-61@client/src/lib/config.ts
       10      3     58      0      10 getApiUrl@63-72@client/src/lib/config.ts
+       1      1     11      0       1 (anonymous)@52-52@client/src/lib/filterUtils.ts
+       1      2     10      0       1 (anonymous)@53-53@client/src/lib/filterUtils.ts
+       9      2     46      1      10 parseInFilter@45-54@client/src/lib/filterUtils.ts
+       3      1      8      0       3 (anonymous)@129-131@client/src/lib/filterUtils.ts
+       6      2     25      0       9 (anonymous)@124-132@client/src/lib/filterUtils.ts
+       4      1     27      0      13 extends@121-133@client/src/lib/filterUtils.ts
+      14      2     96      3      16 optimizeEntityIdArray@143-158@client/src/lib/filterUtils.ts
+       3      3     28      1       3 isValidEntityId@163-165@client/src/lib/filterUtils.ts
+       1      1     18      0       1 (anonymous)@189-189@client/src/lib/filterUtils.ts
        3      1      8      0       3 (anonymous)@10-12@client/src/lib/api.test.ts
        4      1     11      1       4 expect.any@43-46@client/src/lib/api.test.ts
       15      1     74      0      22 (anonymous)@48-69@client/src/lib/api.test.ts
@@ -349,7 +743,7 @@
        1      1      4      0       1 abort@17-17@client/src/setupTests.ts
        7      1     23      1       7 (anonymous)@15-21@client/src/setupTests.ts
        2      1      7      0       3 (anonymous)@86-88@client/src/setupTests.ts
-31 file analyzed.
+49 file analyzed.
 ==============================================================
 NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 --------------------------------------------------------------
@@ -357,28 +751,46 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
      90       4.5     2.0       42.5         2     client/src/config/api.config.ts
      72       9.2     2.5       43.8         6     client/src/features/broodstock/hooks/useBroodstockKPIs.ts
      25       5.3     2.7       27.0         3     client/src/features/broodstock/hooks/useBroodstockPopulation.ts
-     44       5.0     1.2       20.8         4     client/src/features/broodstock/hooks/useBroodstockPrograms.ts
-     25       5.0     1.0       15.0         2     client/src/features/broodstock/hooks/useBroodstockGenetic.ts
-     84       9.5     3.2       50.7         6     client/src/features/scenario/hooks/useScenarioData.ts
-     43       5.7     1.7       35.5         6     client/src/features/batch/hooks/useBatchKPIs.ts
+     44       5.0     1.8       20.8         4     client/src/features/broodstock/hooks/useBroodstockPrograms.ts
+     25       5.0     1.5       16.0         2     client/src/features/broodstock/hooks/useBroodstockGenetic.ts
+    103      12.5     5.7       67.3         6     client/src/features/scenario/hooks/useScenarioData.ts
+    245       6.1     1.6       20.2        27     client/src/features/scenario/api/api.ts
+     60       6.9     2.1       43.4         7     client/src/features/batch/hooks/useBatchKPIs.ts
      51       2.0     1.3       11.7         3     client/src/features/batch/hooks/useBatchData.ts
+    166       8.6     1.4       38.6        14     client/src/features/batch/api/api.ts
     100       7.0     6.5       49.0         2     client/src/features/batch/types.ts
+    122       5.9     1.4       32.9        14     client/src/features/inventory/api.ts
+     92       2.8     1.2       12.8        24     client/src/features/audit-trail/hooks/useHistoryFilters.ts
+      9       0.0     0.0        0.0         0     client/src/features/audit-trail/hooks/useHistory.ts
+    173       4.4     1.0       26.6        49     client/src/features/audit-trail/hooks/useHistoryFilters.test.ts
+    148       3.8     1.9       18.7        23     client/src/features/audit-trail/hooks/useAccessibility.ts
+     49       3.9     1.0       24.8        10     client/src/features/audit-trail/hooks/useHistory.test.ts
+    253       4.3     1.0       26.1        65     client/src/features/audit-trail/hooks/useAccessibility.test.ts
+    643       9.7     3.6       52.9        13     client/src/features/audit-trail/api/api.ts
+     13       0.0     0.0        0.0         0     client/src/features/audit-trail/index.ts
+    150       3.8     1.2       16.5        25     client/src/features/infrastructure/api.ts
+      2       0.0     0.0        0.0         0     client/src/components/filters/index.ts
      41       5.4     1.9       32.4         8     client/src/hooks/aggregations/useStationKpi.ts
     101       8.2     4.3       65.8        11     client/src/hooks/aggregations/useBatchFcr.ts
      71      11.7     2.8       65.8         6     client/src/hooks/aggregations/useAreaKpi.ts
     159       3.9     1.3       14.4        18     client/src/hooks/use-toast.ts
      37       4.0     1.0       11.2         5     client/src/hooks/use-dashboard-data.ts
     408       5.4     2.5       27.2        28     client/src/hooks/use-fcr-analytics.ts
-    318      11.4     4.9       82.5        19     client/src/hooks/use-analytics-data.ts
+    318      10.8     4.9       80.0        18     client/src/hooks/use-analytics-data.ts
+    154       6.3     1.6       35.5        23     client/src/hooks/useMultiEntityFilter.ts
     151       4.7     1.6       32.4        25     client/src/hooks/use-feed-data.ts
      82       3.8     2.0       21.0         5     client/src/lib/pagination.ts
     106       4.2     2.7       32.2        10     client/src/lib/debug.ts
+    148       4.4     1.0       33.1        38     client/src/lib/formatFallback.test.ts
     215      15.5     1.0      126.9        14     client/src/lib/container-filtering.test.ts
       5       3.0     1.0       18.0         1     client/src/lib/utils.ts
+    233       5.0     1.0       35.0        53     client/src/lib/filterUtils.test.ts
     262      10.2     1.0       74.4        26     client/src/lib/pagination.test.ts
-    953       4.4     1.6       21.8        84     client/src/lib/api.ts
+    955       4.4     1.6       21.8        84     client/src/lib/api.ts
+     99       8.9     2.9       48.6         7     client/src/lib/formatFallback.ts
      73       5.8     2.0       34.7         6     client/src/lib/queryClient.ts
      94       6.0     2.3       27.7         3     client/src/lib/config.ts
+     92       4.7     1.7       29.9         9     client/src/lib/filterUtils.ts
     354      12.0     1.0       71.9        29     client/src/lib/api.test.ts
     265       0.0     0.0        0.0         0     client/src/api/generated/index.ts
     105       6.9     2.2       34.3        10     client/src/api/index.ts
@@ -390,8 +802,9 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 ================================================
   NLOC    CCN   token  PARAM  length  location  
 ------------------------------------------------
+      38     18    206      0      48 (anonymous)@83-130@client/src/features/scenario/hooks/useScenarioData.ts
       45     23    394      0      68 (anonymous)@150-217@client/src/hooks/use-analytics-data.ts
 ==========================================================================================
 Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
 ------------------------------------------------------------------------------------------
-      4618       6.9     2.0       42.6      348            1      0.00    0.02
+      7447       5.9     1.6       35.1      742            2      0.00    0.02
