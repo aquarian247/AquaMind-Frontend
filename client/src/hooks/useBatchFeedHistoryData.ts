@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { subDays, startOfDay, endOfDay } from "date-fns";
 import { ApiService } from "@/api/generated/services/ApiService";
 
 /**
@@ -104,19 +105,20 @@ export function useBatchFeedHistoryData(
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Calculate actual date range for API filtering
+  // Calculate actual date range for API filtering (DST-safe using date-fns)
   const { from: dateFrom, to: dateTo } = (() => {
     const now = new Date();
+
     switch (periodFilter) {
       case "7":
-        return { from: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), to: now };
+        return { from: startOfDay(subDays(now, 7)), to: endOfDay(now) };
       case "30":
-        return { from: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), to: now };
+        return { from: startOfDay(subDays(now, 30)), to: endOfDay(now) };
       case "90":
-        return { from: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000), to: now };
+        return { from: startOfDay(subDays(now, 90)), to: endOfDay(now) };
       default:
-        return dateRange.from && dateRange.to 
-          ? { from: dateRange.from, to: dateRange.to }
+        return dateRange.from && dateRange.to
+          ? { from: startOfDay(dateRange.from), to: endOfDay(dateRange.to) }
           : { from: undefined, to: undefined };
     }
   })();
