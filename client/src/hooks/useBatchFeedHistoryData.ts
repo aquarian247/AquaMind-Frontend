@@ -327,7 +327,12 @@ export function useBatchFeedHistoryData(
           );
 
           const pageContainers = (response.results || [])
-            .map((e: any) => e.container_name)
+            .map((e: any) => {
+              const fullName = e.container_name;
+              // Extract just the container name (before parenthesis) if it contains location info
+              // e.g., "Ring-20 (Sea Rings in Faroe Islands Sea Area 2)" → "Ring-20"
+              return fullName ? fullName.split(' (')[0].trim() : fullName;
+            })
             .filter(Boolean);
           
           allContainerNames = [...allContainerNames, ...pageContainers];
