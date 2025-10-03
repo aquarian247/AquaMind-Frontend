@@ -188,7 +188,7 @@ export function calculateAverageRingDepth(rings: Array<{ waterDepth: number }>):
 
 /**
  * Count active rings from filtered rings
- * 
+ *
  * @param rings - Array of rings with status property
  * @returns Count of active rings
  */
@@ -196,7 +196,71 @@ export function countActiveRings(rings: Array<{ status: string }>): number {
   if (!rings || rings.length === 0) {
     return 0;
   }
-  
+
   return rings.filter(ring => ring.status === 'active').length;
+}
+
+/**
+ * Format container name from assignment data
+ *
+ * Handles both object and primitive container references consistently.
+ * When container is an object, uses the name property.
+ * When container is primitive, falls back to container_name or "Unknown".
+ *
+ * @param assignment - Batch container assignment object
+ * @returns Formatted container name string
+ *
+ * @example
+ * ```typescript
+ * // Object container
+ * formatContainerName({ container: { id: 1, name: "Tank A" } }) // "Tank A"
+ *
+ * // Primitive container ID
+ * formatContainerName({ container: 123, container_name: "Tank B" }) // "Tank B"
+ *
+ * // Missing data
+ * formatContainerName({ container: 123 }) // "Unknown"
+ * ```
+ */
+export function formatContainerName(assignment: {
+  container?: any;
+  container_name?: string;
+}): string {
+  if (typeof assignment.container === 'object') {
+    return assignment.container?.name || 'Unknown';
+  }
+  return assignment.container_name || 'Unknown';
+}
+
+/**
+ * Format lifecycle stage name from assignment data
+ *
+ * Handles both object and primitive lifecycle_stage references consistently.
+ * When lifecycle_stage is an object, uses the name property.
+ * When lifecycle_stage is primitive, falls back to lifecycle_stage_name or "Unknown".
+ *
+ * @param assignment - Batch container assignment object
+ * @returns Formatted lifecycle stage name string
+ *
+ * @example
+ * ```typescript
+ * // Object lifecycle stage
+ * formatLifecycleStageName({ lifecycle_stage: { id: 1, name: "Smolt" } }) // "Smolt"
+ *
+ * // Primitive lifecycle stage ID
+ * formatLifecycleStageName({ lifecycle_stage: 456, lifecycle_stage_name: "Post-Smolt" }) // "Post-Smolt"
+ *
+ * // Missing data
+ * formatLifecycleStageName({ lifecycle_stage: 456 }) // "Unknown"
+ * ```
+ */
+export function formatLifecycleStageName(assignment: {
+  lifecycle_stage?: any;
+  lifecycle_stage_name?: string;
+}): string {
+  if (typeof assignment.lifecycle_stage === 'object') {
+    return assignment.lifecycle_stage?.name || 'Unknown';
+  }
+  return assignment.lifecycle_stage_name || 'Unknown';
 }
 
