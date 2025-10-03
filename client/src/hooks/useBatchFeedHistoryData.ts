@@ -100,14 +100,37 @@ export function useBatchFeedHistoryData(
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
+  // Calculate actual date range for API filtering
+  const { from: dateFrom, to: dateTo } = (() => {
+    const now = new Date();
+    switch (periodFilter) {
+      case "7":
+        return { from: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), to: now };
+      case "30":
+        return { from: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), to: now };
+      case "90":
+        return { from: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000), to: now };
+      default:
+        return dateRange.from && dateRange.to 
+          ? { from: dateRange.from, to: dateRange.to }
+          : { from: undefined, to: undefined };
+    }
+  })();
+
+  // Format dates to YYYY-MM-DD for API
+  const feedingDateAfter = dateFrom ? dateFrom.toISOString().split('T')[0] : undefined;
+  const feedingDateBefore = dateTo ? dateTo.toISOString().split('T')[0] : undefined;
+
   // Fetch feeding data with pagination (only current page, not all pages)
   const { data: feedingEventsData, isLoading: isLoadingFeedingEvents } = useQuery({
-    queryKey: ["batch/feeding-events", batchId, currentPage],
+    queryKey: ["batch/feeding-events", batchId, currentPage, periodFilter, dateRange],
     queryFn: async () => {
       try {
-        console.log(`🍽️ Fetching feeding events page ${currentPage} for batch ${batchId}...`);
+        console.log(`🍽️ Fetching feeding events page ${currentPage} for batch ${batchId}...`, {
+          dateRange: { from: feedingDateAfter, to: feedingDateBefore }
+        });
 
-        // Only fetch the current page
+        // Only fetch the current page with date filtering
         const response = await ApiService.apiV1InventoryFeedingEventsList(
           undefined,  // amountMax
           undefined,  // amountMin
@@ -121,8 +144,8 @@ export function useBatchFeedHistoryData(
           undefined,  // feedIn
           undefined,  // feedName
           undefined,  // feedingDate
-          undefined,  // feedingDateAfter
-          undefined,  // feedingDateBefore
+          feedingDateAfter,  // feedingDateAfter - date range filter START
+          feedingDateBefore, // feedingDateBefore - date range filter END
           undefined,  // method
           undefined,  // methodIn
           undefined,  // ordering
@@ -252,30 +275,51 @@ export function useBatchFeedHistoryData(
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
-  // Fetch all available containers for dropdown population
+  // Fetch containers from batch assignments (all containers this batch has been in)
   const { data: allContainers = [], isLoading: isLoadingContainers } = useQuery<string[]>({
-    queryKey: ["containers"],
+    queryKey: ["batch-containers", batchId],
     queryFn: async () => {
       try {
-        console.log('🏗️ Fetching ALL containers for dropdown...');
+        console.log(`🏗️ Fetching containers from batch ${batchId} assignments...`);
 
-        // Get first page only for dropdown population
-        const response = await ApiService.apiV1InfrastructureContainersList(
-          undefined, undefined, undefined, undefined, undefined, undefined,
-          undefined, undefined,
-          1,  // page - first page only
-          undefined
+        // Get all container assignments for this batch (paginated if needed)
+        const response = await ApiService.apiV1BatchContainerAssignmentsList(
+          undefined, // assignmentDate
+          undefined, // assignmentDateAfter
+          undefined, // assignmentDateBefore
+          batchId,   // batch - filter by specific batch
+          undefined, // batchIn
+          undefined, // batchNumber
+          undefined, // biomassMax
+          undefined, // biomassMin
+          undefined, // container
+          undefined, // containerIn
+          undefined, // containerName
+          undefined, // containerType
+          undefined, // isActive - get ALL (both active and inactive)
+          undefined, // lifecycleStage
+          undefined, // ordering
+          undefined, // page - get all pages
+          undefined, // populationMax
+          undefined, // populationMin
+          undefined, // search
+          undefined  // species
         );
 
-        const containers = [...new Set((response.results || []).map((c: any) => c.name))];
-        console.log('🏗️ Containers:', {
-          totalContainersInFirstPage: response.results?.length || 0,
+        const containers = [...new Set(
+          (response.results || [])
+            .map((assignment: any) => assignment.container_name)
+            .filter(Boolean)
+        )];
+        
+        console.log('🏗️ Batch Containers:', {
+          totalAssignments: response.count,
           uniqueContainers: containers.length,
           containers: containers.slice(0, 10),
         });
-        return containers.filter(Boolean);
+        return containers;
       } catch (error) {
-        console.error("❌ Failed to fetch containers:", error);
+        console.error("❌ Failed to fetch batch containers:", error);
         return [];
       }
     },
