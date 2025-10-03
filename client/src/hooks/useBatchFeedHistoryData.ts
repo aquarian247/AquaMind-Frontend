@@ -165,6 +165,12 @@ export function useBatchFeedHistoryData(
           totalEvents: response.count,
           eventsInPage: response.results?.length || 0,
           totalPages: Math.ceil((response.count || 0) / 20),
+          appliedFilters: {
+            containerName: containerFilter !== "all" ? containerFilter : undefined,
+            feedName: feedTypeFilter !== "all" ? feedTypeFilter : undefined,
+            dateAfter: feedingDateAfter,
+            dateBefore: feedingDateBefore,
+          },
           sampleEvent: response.results?.[0], // Debug: show event structure
           containerNames: [...new Set((response.results || []).map((e: any) => e.container_name))].slice(0, 5),
         });
