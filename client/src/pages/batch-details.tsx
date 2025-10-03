@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, Heart, Utensils, BarChart3, MapPin, Eye, Settings } from "lucide-react";
 import { useIsMobile } from "../hooks/use-mobile";
+import { useToast } from "../hooks/use-toast";
 import { BatchTraceabilityView } from "../components/batch-management/BatchTraceabilityView";
 import { BatchHealthView } from "../components/batch-management/BatchHealthView";
 import { BatchFeedHistoryView } from "../components/batch-management/BatchFeedHistoryView";
@@ -46,6 +47,8 @@ export default function BatchDetails() {
   const batchId = parseInt(params.id!);
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("overview");
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const { data: batch, isLoading } = useQuery({
     queryKey: ["batch/details", batchId],
@@ -551,7 +554,18 @@ export default function BatchDetails() {
                             onClick={() => {
                               // Extract container ID from nested object or use direct ID
                               const containerId = assignment.container?.id || assignment.container_id || assignment.container;
-                              window.location.href = `/infrastructure/containers/${containerId}`;
+
+                              if (!containerId) {
+                                console.warn('Container ID not found for assignment', assignment);
+                                toast({
+                                  title: "Container details not available",
+                                  description: "Unable to navigate to container details. The container ID is missing.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+
+                              navigate(`/infrastructure/containers/${containerId}`);
                             }}
                           >
                             <Eye className="h-4 w-4 mr-2" />
