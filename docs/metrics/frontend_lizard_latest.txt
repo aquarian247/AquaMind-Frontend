@@ -624,13 +624,15 @@
        4      1     32      0       4 (anonymous)@551-554@client/src/features/infrastructure/utils/areaFormatters.test.ts
        9      1     44      0      11 (anonymous)@556-566@client/src/features/infrastructure/utils/areaFormatters.test.ts
        7      1     52      0      49 (anonymous)@519-567@client/src/features/infrastructure/utils/areaFormatters.test.ts
-      33     18    238      1      46 formatAreaKPIs@57-102@client/src/features/infrastructure/utils/areaFormatters.ts
-       1      1     14      1       1 Math.round@142-142@client/src/features/infrastructure/utils/areaFormatters.ts
-      10      4     59      2      11 calculateAreaUtilization@161-171@client/src/features/infrastructure/utils/areaFormatters.ts
-       1      1      8      0       1 (anonymous)@184-184@client/src/features/infrastructure/utils/areaFormatters.ts
-       2      1      8      1       2 avgDepth.toFixed@186-187@client/src/features/infrastructure/utils/areaFormatters.ts
-       1      1      6      0       1 (anonymous)@200-200@client/src/features/infrastructure/utils/areaFormatters.ts
-       6      3     43      1       7 countActiveRings@195-201@client/src/features/infrastructure/utils/areaFormatters.ts
+      37     21    256      1      50 formatAreaKPIs@57-106@client/src/features/infrastructure/utils/areaFormatters.ts
+       1      1     14      1       1 Math.round@146-146@client/src/features/infrastructure/utils/areaFormatters.ts
+      10      4     59      2      11 calculateAreaUtilization@165-175@client/src/features/infrastructure/utils/areaFormatters.ts
+       1      1      8      0       1 (anonymous)@188-188@client/src/features/infrastructure/utils/areaFormatters.ts
+       2      1      8      1       2 avgDepth.toFixed@190-191@client/src/features/infrastructure/utils/areaFormatters.ts
+       1      1      6      0       1 (anonymous)@204-204@client/src/features/infrastructure/utils/areaFormatters.ts
+       6      3     43      1       7 countActiveRings@199-205@client/src/features/infrastructure/utils/areaFormatters.ts
+       9      4     45      1       9 formatContainerName@229-237@client/src/features/infrastructure/utils/areaFormatters.ts
+       9      4     45      1       9 formatLifecycleStageName@261-269@client/src/features/infrastructure/utils/areaFormatters.ts
        2      2     13      1       2 parseFloat@114-115@client/src/features/infrastructure/hooks/useAreaData.ts
        5      1     14      0       5 Date.toISOString@118-122@client/src/features/infrastructure/hooks/useAreaData.ts
        1      1      4      0       1 (anonymous)@159-159@client/src/features/infrastructure/hooks/useAreaData.ts
@@ -699,18 +701,18 @@
       15      3     51      0      17 async@95-111@client/src/hooks/useBatchAnalyticsData.ts
       17      3     55      0      17 async@120-136@client/src/hooks/useBatchAnalyticsData.ts
       34      8     80      0      62 async@120-181@client/src/hooks/useBatchAnalyticsData.ts
-       7      3     29      1       7 Number@97-103@client/src/hooks/useBatchFeedHistoryData.ts
-       1      1     22      1       1 Date@114-114@client/src/hooks/useBatchFeedHistoryData.ts
-       6      3     59      1       6 Date@116-121@client/src/hooks/useBatchFeedHistoryData.ts
-       1      1      4      0       1 (anonymous)@175-175@client/src/hooks/useBatchFeedHistoryData.ts
-       5      9     38      1       5 Number@188-192@client/src/hooks/useBatchFeedHistoryData.ts
-       6      2     22      0       6 (anonymous)@210-215@client/src/hooks/useBatchFeedHistoryData.ts
-       2      5     17      1       2 Number@251-252@client/src/hooks/useBatchFeedHistoryData.ts
-      10      8     53      2      11 Number@248-258@client/src/hooks/useBatchFeedHistoryData.ts
-       1      1      4      0       1 (anonymous)@277-277@client/src/hooks/useBatchFeedHistoryData.ts
-      22      4    145      0      25 async@264-288@client/src/hooks/useBatchFeedHistoryData.ts
-       4      2     28      0       6 (anonymous)@330-335@client/src/hooks/useBatchFeedHistoryData.ts
-      47      5    216      0      62 async@296-357@client/src/hooks/useBatchFeedHistoryData.ts
+       7      3     29      1       7 Number@98-104@client/src/hooks/useBatchFeedHistoryData.ts
+       1      1     16      2       1 startOfDay@116-116@client/src/hooks/useBatchFeedHistoryData.ts
+       3      1     18      1       3 endOfDay@121-123@client/src/hooks/useBatchFeedHistoryData.ts
+       1      1      4      0       1 (anonymous)@177-177@client/src/hooks/useBatchFeedHistoryData.ts
+       5      9     38      1       5 Number@190-194@client/src/hooks/useBatchFeedHistoryData.ts
+       6      2     22      0       6 (anonymous)@212-217@client/src/hooks/useBatchFeedHistoryData.ts
+       2      5     17      1       2 Number@253-254@client/src/hooks/useBatchFeedHistoryData.ts
+      10      8     53      2      11 Number@250-260@client/src/hooks/useBatchFeedHistoryData.ts
+       1      1      4      0       1 (anonymous)@279-279@client/src/hooks/useBatchFeedHistoryData.ts
+      22      4    145      0      25 async@266-290@client/src/hooks/useBatchFeedHistoryData.ts
+       5      3     60      0       7 (anonymous)@332-338@client/src/hooks/useBatchFeedHistoryData.ts
+      47      5    216      0      63 async@298-360@client/src/hooks/useBatchFeedHistoryData.ts
        4      1     21      0       4 genId@27-30@client/src/hooks/use-toast.ts
        7      1     21      0       7 (anonymous)@63-69@client/src/hooks/use-toast.ts
        7      2     34      0      15 addToRemoveQueue@58-72@client/src/hooks/use-toast.ts
@@ -1163,7 +1165,7 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
      30      10.0     2.7       58.7         3     client/src/features/batch-management/hooks/useBatchFilters.ts
      65       8.0     1.2       28.0         4     client/src/features/batch-management/hooks/useBatchCreation.ts
     444       9.6     1.0       57.7        50     client/src/features/infrastructure/utils/areaFormatters.test.ts
-    102       7.7     4.1       53.7         7     client/src/features/infrastructure/utils/areaFormatters.ts
+    124       8.4     4.4       53.8         9     client/src/features/infrastructure/utils/areaFormatters.ts
     219      10.1     2.6       47.3         7     client/src/features/infrastructure/hooks/useAreaData.ts
      32       5.4     1.6       25.8         5     client/src/features/infrastructure/hooks/useContainerFilters.ts
     150       3.8     1.2       16.5        25     client/src/features/infrastructure/api.ts
@@ -1172,7 +1174,7 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
     101       8.2     4.3       65.8        11     client/src/hooks/aggregations/useBatchFcr.ts
      71      11.7     2.8       65.8         6     client/src/hooks/aggregations/useAreaKpi.ts
     147      18.7     3.8       57.3         6     client/src/hooks/useBatchAnalyticsData.ts
-    303       9.3     3.7       53.1        12     client/src/hooks/useBatchFeedHistoryData.ts
+    305       9.2     3.6       51.8        12     client/src/hooks/useBatchFeedHistoryData.ts
     159       3.9     1.3       14.4        18     client/src/hooks/use-toast.ts
      37       4.0     1.0       11.2         5     client/src/hooks/use-dashboard-data.ts
     408       5.4     2.5       27.2        28     client/src/hooks/use-fcr-analytics.ts
@@ -1202,8 +1204,8 @@ NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
 ================================================
   NLOC    CCN   token  PARAM  length  location  
 ------------------------------------------------
-      33     18    238      1      46 formatAreaKPIs@57-102@client/src/features/infrastructure/utils/areaFormatters.ts
+      37     21    256      1      50 formatAreaKPIs@57-106@client/src/features/infrastructure/utils/areaFormatters.ts
 ==========================================================================================
 Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
 ------------------------------------------------------------------------------------------
-     10766       6.5     1.6       38.5     1121            1      0.00    0.00
+     10790       6.5     1.6       38.5     1123            1      0.00    0.01

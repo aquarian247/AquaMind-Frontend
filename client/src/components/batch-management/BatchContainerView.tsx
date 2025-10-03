@@ -28,8 +28,10 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
         let allAssignments: any[] = [];
         let page = 1;
         let hasMore = true;
+        let previousPageCount = 0;
+        const maxPages = 20;
 
-        while (hasMore) {
+        while (hasMore && page <= maxPages) {
           const response = await ApiService.apiV1BatchContainerAssignmentsList(
             undefined, // assignmentDate
             undefined, // assignmentDateAfter
@@ -52,20 +54,23 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
             undefined, // search
             undefined  // species
           );
-          
+
+          // Safety: ensure we're making progress
+          const newCount = allAssignments.length + (response.results || []).length;
+          if (newCount === previousPageCount) {
+            console.error('Pagination loop stuck at page', page, 'with', newCount, 'assignments');
+            break;
+          }
+          previousPageCount = newCount;
+
           allAssignments = [...allAssignments, ...(response.results || [])];
-          
+
           // Check if there are more pages
           hasMore = !!response.next;
           page++;
-
-          // Safety limit to prevent infinite loops
-          if (page > 20) {
-            console.warn('⚠️ Stopped fetching assignments after 20 pages');
-            break;
-          }
         }
-        
+
+        console.debug('Fetched', allAssignments.length, 'assignments across', page - 1, 'pages');
         return { assignments: allAssignments, pages: page - 1 };
       };
 
