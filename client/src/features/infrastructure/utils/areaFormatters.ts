@@ -64,7 +64,9 @@ export function formatAreaKPIs(summary: AreaSummary | undefined): FormattedAreaK
     minimumFractionDigits: 1,
     maximumFractionDigits: 1
   }).format(biomassTonnes) + ' t';
-  const totalBiomassTooltip = biomassKg !== null ? 'Current active biomass (from server)' : 'No data available';
+  const totalBiomassTooltip = (biomassKg !== null && biomassKg !== undefined && biomassKg > 0)
+    ? 'Current active biomass (from server)'
+    : 'No biomass data available';
   
   // Average Weight: kg per fish, 2 decimal places
   const avgWeight = summary?.avg_weight_kg ?? 0; // Honest zero fallback
@@ -73,7 +75,9 @@ export function formatAreaKPIs(summary: AreaSummary | undefined): FormattedAreaK
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(avgWeight) + ' kg';
-  const averageWeightTooltip = summary?.avg_weight_kg !== null && summary?.avg_weight_kg !== undefined ? 'kg per fish' : 'No data available';
+  const averageWeightTooltip = (summary?.avg_weight_kg !== null && summary?.avg_weight_kg !== undefined && summary?.avg_weight_kg > 0)
+    ? 'kg per fish'
+    : 'No weight data available';
   
   // Container Count
   const containerCount = formatCount(summary?.container_count ?? 0, 'containers'); // Honest zero fallback
