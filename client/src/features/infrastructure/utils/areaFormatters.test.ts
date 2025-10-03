@@ -114,9 +114,9 @@ describe('formatAreaKPIs', () => {
       const result = formatAreaKPIs(undefined);
 
       expect(result.totalBiomass).toBe('0.0 t'); // Consistent 1 decimal place
-      expect(result.totalBiomassTooltip).toBe('No data available');
+      expect(result.totalBiomassTooltip).toBe('No biomass data available');
       expect(result.averageWeight).toBe('0.00 kg'); // Consistent 2 decimal places
-      expect(result.averageWeightTooltip).toBe('No data available');
+      expect(result.averageWeightTooltip).toBe('No weight data available');
       expect(result.containerCount).toBe('0 containers');
       expect(result.containerCountTooltip).toBe('No data available');
       expect(result.populationCount).toBe('0 fish');
@@ -139,7 +139,7 @@ describe('formatAreaKPIs', () => {
       expect(result.totalBiomass).toBe('10.0 t');
       expect(result.totalBiomassTooltip).toBe('Current active biomass (from server)');
       expect(result.averageWeight).toBe('0.00 kg'); // Honest fallback, consistent precision
-      expect(result.averageWeightTooltip).toBe('No data available');
+      expect(result.averageWeightTooltip).toBe('No weight data available');
       expect(result.containerCount).toBe('5 containers');
       expect(result.populationCount).toBe('0 fish'); // Honest fallback
       expect(result.ringCount).toBe('5 rings');
