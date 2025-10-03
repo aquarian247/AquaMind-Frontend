@@ -414,15 +414,24 @@ export default function BatchDetails() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {assignments.map((assignment: any) => {
-                  const container = containers?.find(c => c.id === assignment.container);
+                {assignments.map((assignment: any, index: number) => {
+                  // Extract container name from nested object or use fallback
+                  const containerName = assignment.container?.name 
+                    || assignment.container_name 
+                    || `Container ${assignment.container_id || assignment.container || 'Unknown'}`;
+                  
+                  // Extract lifecycle stage name from nested object or use fallback
+                  const lifecycleStageName = assignment.lifecycle_stage?.name 
+                    || assignment.lifecycle_stage_name 
+                    || 'Unknown';
+
                   return (
-                    <Card key={assignment.id}>
+                    <Card key={`assignment-${assignment.id}-${index}`}>
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base flex items-center gap-2">
                             <Fish className="h-4 w-4" />
-                            {container?.name || `Container ${assignment.container}`}
+                            {containerName}
                           </CardTitle>
                           <Badge variant={assignment.is_active ? "default" : "secondary"}>
                             {assignment.is_active ? "Active" : "Inactive"}
@@ -445,7 +454,7 @@ export default function BatchDetails() {
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-muted-foreground">Lifecycle Stage</span>
                             <Badge variant="outline" className="text-xs">
-                              {assignment.lifecycle_stage_name || assignment.lifecycle_stage || 'Unknown'}
+                              {lifecycleStageName}
                             </Badge>
                           </div>
 
