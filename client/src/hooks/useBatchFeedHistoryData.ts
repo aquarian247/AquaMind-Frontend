@@ -158,7 +158,9 @@ export function useBatchFeedHistoryData(
           currentPage: currentPage,
           totalEvents: response.count,
           eventsInPage: response.results?.length || 0,
-          totalPages: Math.ceil((response.count || 0) / 20)
+          totalPages: Math.ceil((response.count || 0) / 20),
+          sampleEvent: response.results?.[0], // Debug: show event structure
+          containerNames: [...new Set((response.results || []).map((e: any) => e.container_name))].slice(0, 5),
         });
 
         return {
@@ -275,69 +277,60 @@ export function useBatchFeedHistoryData(
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
-  // Fetch containers from batch assignments (only ACTIVE assignments to reduce dropdown size)
+  // Fetch containers from feeding events (only containers with actual feeding data)
+  // This is more accurate than using assignments, since it shows containers that have feeding events
   const { data: allContainers = [], isLoading: isLoadingContainers } = useQuery<string[]>({
-    queryKey: ["batch-containers", batchId],
+    queryKey: ["batch-feeding-containers", batchId],
     queryFn: async () => {
       try {
-        console.log(`🏗️ Fetching ACTIVE containers from batch ${batchId} assignments...`);
+        console.log(`🏗️ Fetching containers from batch ${batchId} feeding events...`);
 
-        // Fetch all pages by making multiple requests if needed
-        let allAssignments: any[] = [];
+        // Fetch first few pages of feeding events to get container names
+        // This is more efficient than fetching ALL events just for container names
+        let allContainerNames: string[] = [];
         let page = 1;
         let hasMore = true;
 
-        while (hasMore) {
-          const response = await ApiService.apiV1BatchContainerAssignmentsList(
-            undefined, // assignmentDate
-            undefined, // assignmentDateAfter
-            undefined, // assignmentDateBefore
-            batchId,   // batch - filter by specific batch
-            undefined, // batchIn
-            undefined, // batchNumber
-            undefined, // biomassMax
-            undefined, // biomassMin
-            undefined, // container
-            undefined, // containerIn
-            undefined, // containerName
-            undefined, // containerType
-            true,      // isActive - ONLY active assignments to reduce dropdown size
-            undefined, // lifecycleStage
-            undefined, // ordering
-            page,      // current page
-            undefined, // populationMax
-            undefined, // populationMin
-            undefined, // search
-            undefined  // species
+        while (hasMore && page <= 5) { // Limit to first 5 pages (100 events) for dropdown
+          const response = await ApiService.apiV1InventoryFeedingEventsList(
+            undefined,  // amountMax
+            undefined,  // amountMin
+            batchId,    // batch - filter by specific batch
+            undefined,  // batchIn
+            undefined,  // batchNumber
+            undefined,  // container
+            undefined,  // containerIn
+            undefined,  // containerName
+            undefined,  // feed
+            undefined,  // feedIn
+            undefined,  // feedName
+            undefined,  // feedingDate
+            undefined,  // feedingDateAfter - no date filter for container list
+            undefined,  // feedingDateBefore
+            undefined,  // method
+            undefined,  // methodIn
+            undefined,  // ordering
+            page,       // current page
+            undefined   // search
           );
 
-          allAssignments = [...allAssignments, ...(response.results || [])];
+          const pageContainers = (response.results || [])
+            .map((e: any) => e.container_name)
+            .filter(Boolean);
+          
+          allContainerNames = [...allContainerNames, ...pageContainers];
           
           // Check if there are more pages
           hasMore = !!response.next;
           page++;
-
-          // Safety limit to prevent infinite loops
-          if (page > 20) {
-            console.warn('⚠️ Stopped fetching containers after 20 pages');
-            break;
-          }
         }
 
-        const containers = [...new Set(
-          allAssignments
-            .map((assignment: any) => {
-              // Container name can be in nested object or at top level
-              return assignment.container?.name || assignment.container_name;
-            })
-            .filter(Boolean)
-        )].sort(); // Sort alphabetically for better UX
+        const containers = [...new Set(allContainerNames)].sort(); // Unique + sorted
         
-        console.log('🏗️ Batch Containers (ACTIVE only):', {
-          totalAssignments: allAssignments.length,
-          uniqueContainers: containers.length,
-          containers: containers.slice(0, 10),
-          sampleAssignment: allAssignments[0], // Debug: show first assignment structure
+        console.log('🏗️ Batch Containers (from feeding events):', {
+          totalContainers: containers.length,
+          containers: containers,
+          pagesFetched: page - 1,
         });
         return containers;
       } catch (error) {
