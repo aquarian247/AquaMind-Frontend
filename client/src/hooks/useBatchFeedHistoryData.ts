@@ -58,13 +58,17 @@ export interface FeedingSummary {
  * @param currentPage - Current page number for pagination
  * @param periodFilter - Time period filter
  * @param dateRange - Custom date range filter
+ * @param containerFilter - Container name filter ("all" or specific container name)
+ * @param feedTypeFilter - Feed type name filter ("all" or specific feed type)
  * @returns Object containing all feed history data and loading/error states
  */
 export function useBatchFeedHistoryData(
   batchId: number,
   currentPage: number,
   periodFilter: string,
-  dateRange: { from?: Date; to?: Date }
+  dateRange: { from?: Date; to?: Date },
+  containerFilter: string = "all",
+  feedTypeFilter: string = "all"
 ) {
   const [totalPages, setTotalPages] = useState(1);
   const [totalEvents, setTotalEvents] = useState(0);
@@ -123,26 +127,28 @@ export function useBatchFeedHistoryData(
 
   // Fetch feeding data with pagination (only current page, not all pages)
   const { data: feedingEventsData, isLoading: isLoadingFeedingEvents } = useQuery({
-    queryKey: ["batch/feeding-events", batchId, currentPage, periodFilter, dateRange],
+    queryKey: ["batch/feeding-events", batchId, currentPage, periodFilter, dateRange, containerFilter, feedTypeFilter],
     queryFn: async () => {
       try {
         console.log(`🍽️ Fetching feeding events page ${currentPage} for batch ${batchId}...`, {
-          dateRange: { from: feedingDateAfter, to: feedingDateBefore }
+          dateRange: { from: feedingDateAfter, to: feedingDateBefore },
+          container: containerFilter !== "all" ? containerFilter : "all containers",
+          feedType: feedTypeFilter !== "all" ? feedTypeFilter : "all types"
         });
 
-        // Only fetch the current page with date filtering
+        // Only fetch the current page with date, container, and feed type filtering
         const response = await ApiService.apiV1InventoryFeedingEventsList(
           undefined,  // amountMax
           undefined,  // amountMin
           batchId,    // batch - filter by specific batch
           undefined,  // batchIn
           undefined,  // batchNumber
-          undefined,  // container
+          undefined,  // container (ID, not name)
           undefined,  // containerIn
-          undefined,  // containerName
+          containerFilter !== "all" ? containerFilter : undefined,  // containerName - SERVER-SIDE filter
           undefined,  // feed
           undefined,  // feedIn
-          undefined,  // feedName
+          feedTypeFilter !== "all" ? feedTypeFilter : undefined,  // feedName - SERVER-SIDE filter
           undefined,  // feedingDate
           feedingDateAfter,  // feedingDateAfter - date range filter START
           feedingDateBefore, // feedingDateBefore - date range filter END

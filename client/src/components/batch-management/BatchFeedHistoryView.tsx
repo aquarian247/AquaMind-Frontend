@@ -42,7 +42,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   const batchStartDate = new Date('2023-05-08'); // From batch data
   const daysSinceStart = getDaysSinceStart(batchStartDate);
 
-  // Fetch all feed history data via custom hook
+  // Fetch all feed history data via custom hook (with server-side filtering)
   const {
     feedingEvents,
     feedingSummaries,
@@ -55,7 +55,7 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
     isLoadingFeedingEvents,
     isLoadingFeedTypes,
     isLoadingContainers,
-  } = useBatchFeedHistoryData(batchId, currentPage, periodFilter, dateRange);
+  } = useBatchFeedHistoryData(batchId, currentPage, periodFilter, dateRange, containerFilter, feedTypeFilter);
 
   // Calculate derived metrics using helper functions
   const totalFeedConsumed = feedingSummary?.totalFeedKg || 0;
@@ -68,8 +68,9 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   const { feedTypes: uniqueFeedTypes, containers: uniqueContainers } = 
     getUniqueFilterValues(feedingEvents);
 
-  // Filter events based on selected filters
-  const filteredEvents = filterFeedingEvents(feedingEvents, feedTypeFilter, containerFilter);
+  // No client-side filtering needed - server-side filtering handles it
+  // Events are already filtered by the API based on containerFilter and feedTypeFilter
+  const filteredEvents = feedingEvents;
 
   // Debug logging for summary data
   console.log('🔢 Summary Data Debug:', {
