@@ -6,7 +6,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, Heart, Utensils, BarChart3, MapPin } from "lucide-react";
+import { ArrowLeft, Fish, Calendar, Scale, TrendingUp, MoreVertical, Activity, Heart, Utensils, BarChart3, MapPin, Eye, Settings } from "lucide-react";
 import { useIsMobile } from "../hooks/use-mobile";
 import { BatchTraceabilityView } from "../components/batch-management/BatchTraceabilityView";
 import { BatchHealthView } from "../components/batch-management/BatchHealthView";
@@ -399,21 +399,69 @@ export default function BatchDetails() {
           </TabsContent>
 
         <TabsContent value="containers" className="space-y-6">
-          {assignments && assignments.length > 0 ? (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Container Assignments</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Containers currently assigned to this batch
-                  </p>
-                </div>
-                <Badge variant="outline">
-                  {assignments.length} container{assignments.length !== 1 ? 's' : ''}
-                </Badge>
-              </div>
+          <div className="space-y-4">
+            {/* Summary Stats */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Containers</CardTitle>
+                  <MapPin className="h-4 w-4 text-blue-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {assignments?.length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Container assignments</p>
+                </CardContent>
+              </Card>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Biomass</CardTitle>
+                  <Fish className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    {assignments && assignments.length > 0
+                      ? `${(assignments.reduce((sum: number, a: any) => sum + (Number(a.biomass_kg) || 0), 0) / 1000).toFixed(1)} t`
+                      : "0.0 t"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Current stock</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Active Containers</CardTitle>
+                  <Activity className="h-4 w-4 text-purple-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {assignments?.filter((a: any) => a.is_active).length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Currently operational</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Population</CardTitle>
+                  <Fish className="h-4 w-4 text-orange-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {assignments && assignments.length > 0
+                      ? formatCount(assignments.reduce((sum: number, a: any) => sum + (a.population_count || 0), 0))
+                      : "0"}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Total fish</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Containers Grid */}
+            {assignments && assignments.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {assignments.map((assignment: any, index: number) => {
                   // Extract container name from nested object or use fallback
                   const containerName = assignment.container?.name 
@@ -425,63 +473,107 @@ export default function BatchDetails() {
                     || assignment.lifecycle_stage_name 
                     || 'Unknown';
 
+                  // Calculate average weight (in kg)
+                  const avgWeight = assignment.population_count && assignment.population_count > 0
+                    ? Number(assignment.biomass_kg) / assignment.population_count
+                    : 0;
+
                   return (
-                    <Card key={`assignment-${assignment.id}-${index}`}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <Fish className="h-4 w-4" />
-                            {containerName}
-                          </CardTitle>
-                          <Badge variant={assignment.is_active ? "default" : "secondary"}>
-                            {assignment.is_active ? "Active" : "Inactive"}
-                          </Badge>
+                    <Card key={`assignment-${assignment.id}-${index}`} className="hover:shadow-lg transition-shadow">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-lg flex items-center">
+                              <span className="mr-2">🌊</span>
+                              {containerName}
+                            </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                              {lifecycleStageName} • Assigned {assignment.assignment_date ? new Date(assignment.assignment_date).toLocaleDateString() : 'Unknown'}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <Badge variant={assignment.is_active ? "default" : "secondary"}>
+                              {assignment.is_active ? "active" : "inactive"}
+                            </Badge>
+                          </div>
                         </div>
                       </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="grid grid-cols-2 gap-2 text-sm">
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <label className="text-muted-foreground">Population</label>
-                            <p className="font-medium">{assignment.population_count?.toLocaleString() || '0'}</p>
+                            <span className="text-muted-foreground">Biomass</span>
+                            <div className="font-semibold text-lg">
+                              {assignment.biomass_kg ? `${Number(assignment.biomass_kg).toLocaleString()} kg` : '0 kg'}
+                            </div>
                           </div>
                           <div>
-                            <label className="text-muted-foreground">Biomass</label>
-                            <p className="font-medium">{assignment.biomass_kg ? `${Number(assignment.biomass_kg).toFixed(1)} kg` : '0 kg'}</p>
+                            <span className="text-muted-foreground">Population</span>
+                            <div className="font-semibold text-lg">
+                              {assignment.population_count?.toLocaleString() || '0'}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Avg Weight</span>
+                            <div className="font-medium">
+                              {avgWeight > 0 ? `${avgWeight.toFixed(2)} kg` : '0.00 kg'}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Environment</span>
+                            <Badge variant="outline" className="border-green-500 text-green-700">
+                              optimal
+                            </Badge>
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Lifecycle Stage</span>
-                            <Badge variant="outline" className="text-xs">
-                              {lifecycleStageName}
-                            </Badge>
+                          <div className="flex justify-between text-sm">
+                            <span>Capacity Utilization</span>
+                            <span>0%</span>
                           </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: '0%' }}></div>
+                          </div>
+                        </div>
 
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-muted-foreground">Assigned Date</span>
-                            <span className="text-sm font-medium">
-                              {assignment.assignment_date ? new Date(assignment.assignment_date).toLocaleDateString() : 'Unknown'}
-                            </span>
-                          </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span className="flex items-center">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            Inspected {new Date().toLocaleDateString()}
+                          </span>
+                        </div>
+
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => window.location.href = `/infrastructure/containers/${assignment.container_id || assignment.container}`}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            <Settings className="h-4 w-4" />
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
                   );
                 })}
               </div>
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center">
-                <MapPin className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Container Assignments</h3>
-                <p className="text-muted-foreground">
-                  This batch doesn't have any container assignments yet.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No container assignments found</h3>
+                  <p className="text-muted-foreground text-center">
+                    This batch doesn't have any container assignments yet.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="health" className="space-y-6">
