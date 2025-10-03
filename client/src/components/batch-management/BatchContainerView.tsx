@@ -17,36 +17,56 @@ interface BatchContainerViewProps {
 export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   // Simplified: Just show containers for the selected batch - no filters needed
 
-  // Fetch ACTIVE container assignments for this batch (has all the data we need!)
+  // Fetch ACTIVE container assignments for this batch (fetch ALL pages)
   const { data: assignmentsData } = useQuery({
     queryKey: ["batch/container-assignments", selectedBatch?.id, "active"],
     queryFn: async () => {
       if (!selectedBatch?.id) return [];
       
-      const response = await ApiService.apiV1BatchContainerAssignmentsList(
-        undefined, // assignmentDate
-        undefined, // assignmentDateAfter
-        undefined, // assignmentDateBefore
-        selectedBatch.id, // batch filter
-        undefined, // batchIn
-        undefined, // batchNumber
-        undefined, // biomassMax
-        undefined, // biomassMin
-        undefined, // container
-        undefined, // containerIn
-        undefined, // containerName
-        undefined, // containerType
-        true,      // isActive - ONLY active assignments!
-        undefined, // lifecycleStage
-        undefined, // ordering
-        undefined, // page
-        undefined, // populationMax
-        undefined, // populationMin
-        undefined, // search
-        undefined  // species
-      );
+      // Fetch all pages to show all active containers (not just first 20)
+      let allAssignments: any[] = [];
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore) {
+        const response = await ApiService.apiV1BatchContainerAssignmentsList(
+          undefined, // assignmentDate
+          undefined, // assignmentDateAfter
+          undefined, // assignmentDateBefore
+          selectedBatch.id, // batch filter
+          undefined, // batchIn
+          undefined, // batchNumber
+          undefined, // biomassMax
+          undefined, // biomassMin
+          undefined, // container
+          undefined, // containerIn
+          undefined, // containerName
+          undefined, // containerType
+          true,      // isActive - ONLY active assignments!
+          undefined, // lifecycleStage
+          undefined, // ordering
+          page,      // current page
+          undefined, // populationMax
+          undefined, // populationMin
+          undefined, // search
+          undefined  // species
+        );
+        
+        allAssignments = [...allAssignments, ...(response.results || [])];
+        
+        // Check if there are more pages
+        hasMore = !!response.next;
+        page++;
+
+        // Safety limit to prevent infinite loops
+        if (page > 20) {
+          console.warn('⚠️ Stopped fetching assignments after 20 pages');
+          break;
+        }
+      }
       
-      return response.results || [];
+      console.log(`📦 Fetched ${allAssignments.length} active container assignments for batch ${selectedBatch.id}`);
+      return allAssignments;
     },
     enabled: !!selectedBatch?.id,
   });
