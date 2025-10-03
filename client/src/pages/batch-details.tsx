@@ -173,7 +173,7 @@ export default function BatchDetails() {
   const isComplexBatch = hasMultipleAssignments && hasMultipleTransfers;
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-4 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Link href="/batch-management">
           <Button variant="ghost" size="sm">
@@ -548,7 +548,11 @@ export default function BatchDetails() {
                             variant="outline"
                             size="sm"
                             className="flex-1"
-                            onClick={() => window.location.href = `/infrastructure/containers/${assignment.container_id || assignment.container}`}
+                            onClick={() => {
+                              // Extract container ID from nested object or use direct ID
+                              const containerId = assignment.container?.id || assignment.container_id || assignment.container;
+                              window.location.href = `/infrastructure/containers/${containerId}`;
+                            }}
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
