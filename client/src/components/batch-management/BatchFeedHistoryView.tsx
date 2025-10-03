@@ -91,10 +91,12 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   });
 
   console.log('📦 CONTAINERS:', {
-    'All available': allContainers.length,
-    'From current batch': uniqueContainers.length,
-    'All containers (first 10)': allContainers.slice(0, 10),
-    'Batch containers': uniqueContainers.slice(0, 10)
+    'All available (from assignments)': allContainers.length,
+    'From current page events': uniqueContainers.length,
+    'Assignment containers (first 10)': allContainers.slice(0, 10),
+    'Event containers (first 10)': uniqueContainers.slice(0, 10),
+    'Container filter value': containerFilter,
+    'Sample feeding event': feedingEvents[0]
   });
 
   console.log('📈 EVENTS:', {

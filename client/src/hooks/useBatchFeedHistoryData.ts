@@ -275,51 +275,69 @@ export function useBatchFeedHistoryData(
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
-  // Fetch containers from batch assignments (all containers this batch has been in)
+  // Fetch containers from batch assignments (only ACTIVE assignments to reduce dropdown size)
   const { data: allContainers = [], isLoading: isLoadingContainers } = useQuery<string[]>({
     queryKey: ["batch-containers", batchId],
     queryFn: async () => {
       try {
-        console.log(`🏗️ Fetching containers from batch ${batchId} assignments...`);
+        console.log(`🏗️ Fetching ACTIVE containers from batch ${batchId} assignments...`);
 
-        // Get all container assignments for this batch (paginated if needed)
-        const response = await ApiService.apiV1BatchContainerAssignmentsList(
-          undefined, // assignmentDate
-          undefined, // assignmentDateAfter
-          undefined, // assignmentDateBefore
-          batchId,   // batch - filter by specific batch
-          undefined, // batchIn
-          undefined, // batchNumber
-          undefined, // biomassMax
-          undefined, // biomassMin
-          undefined, // container
-          undefined, // containerIn
-          undefined, // containerName
-          undefined, // containerType
-          undefined, // isActive - get ALL (both active and inactive)
-          undefined, // lifecycleStage
-          undefined, // ordering
-          undefined, // page - get all pages
-          undefined, // populationMax
-          undefined, // populationMin
-          undefined, // search
-          undefined  // species
-        );
+        // Fetch all pages by making multiple requests if needed
+        let allAssignments: any[] = [];
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+          const response = await ApiService.apiV1BatchContainerAssignmentsList(
+            undefined, // assignmentDate
+            undefined, // assignmentDateAfter
+            undefined, // assignmentDateBefore
+            batchId,   // batch - filter by specific batch
+            undefined, // batchIn
+            undefined, // batchNumber
+            undefined, // biomassMax
+            undefined, // biomassMin
+            undefined, // container
+            undefined, // containerIn
+            undefined, // containerName
+            undefined, // containerType
+            true,      // isActive - ONLY active assignments to reduce dropdown size
+            undefined, // lifecycleStage
+            undefined, // ordering
+            page,      // current page
+            undefined, // populationMax
+            undefined, // populationMin
+            undefined, // search
+            undefined  // species
+          );
+
+          allAssignments = [...allAssignments, ...(response.results || [])];
+          
+          // Check if there are more pages
+          hasMore = !!response.next;
+          page++;
+
+          // Safety limit to prevent infinite loops
+          if (page > 20) {
+            console.warn('⚠️ Stopped fetching containers after 20 pages');
+            break;
+          }
+        }
 
         const containers = [...new Set(
-          (response.results || [])
+          allAssignments
             .map((assignment: any) => {
               // Container name can be in nested object or at top level
               return assignment.container?.name || assignment.container_name;
             })
             .filter(Boolean)
-        )];
+        )].sort(); // Sort alphabetically for better UX
         
-        console.log('🏗️ Batch Containers:', {
-          totalAssignments: response.count,
+        console.log('🏗️ Batch Containers (ACTIVE only):', {
+          totalAssignments: allAssignments.length,
           uniqueContainers: containers.length,
           containers: containers.slice(0, 10),
-          sampleAssignment: response.results?.[0], // Debug: show first assignment structure
+          sampleAssignment: allAssignments[0], // Debug: show first assignment structure
         });
         return containers;
       } catch (error) {
