@@ -329,9 +329,10 @@ export function useBatchFeedHistoryData(
           const pageContainers = (response.results || [])
             .map((e: any) => {
               const fullName = e.container_name;
-              // Extract just the container name (before parenthesis) if it contains location info
-              // e.g., "Ring-20 (Sea Rings in Faroe Islands Sea Area 2)" → "Ring-20"
-              return fullName ? fullName.split(' (')[0].trim() : fullName;
+              // Only remove location descriptions matching specific pattern
+              // Preserves legitimate parentheses in container names like "Tank A (Primary)"
+              const locationPattern = /\s+\(.*(?:Sea Area|Location|Site|Area \d+).*\)$/;
+              return fullName ? fullName.replace(locationPattern, '').trim() : fullName;
             })
             .filter(Boolean);
           
