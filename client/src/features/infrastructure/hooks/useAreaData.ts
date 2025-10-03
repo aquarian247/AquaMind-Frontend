@@ -151,28 +151,81 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
         const containersData = await containersResponse.json();
         const containers = containersData.results || [];
 
-        // Transform containers to ring format
-        // Note: Individual container metrics are not calculated client-side
-        // Server-side aggregation provides area-level KPIs
+        if (containers.length === 0) {
+          return { results: [] };
+        }
+
+        // Fetch active batch assignments for these containers
+        const containerIds = containers.map((c: any) => c.id).join(",");
+        const assignmentsResponse = await authenticatedFetch(
+          `${apiConfig.baseUrl}/api/v1/batch/container-assignments/?container__in=${containerIds}&is_active=true&page_size=100`
+        );
+
+        const assignmentsData = await assignmentsResponse.json();
+        const assignments = assignmentsData.results || [];
+
+        // Create a map of container assignments by container_id
+        // Sum up metrics if multiple batches in same container
+        const containerMetrics: Record<number, { 
+          biomass: number; 
+          fishCount: number; 
+          totalWeightG: number; 
+          assignmentCount: number;
+        }> = {};
+
+        assignments.forEach((assignment: any) => {
+          const containerId = assignment.container_id || assignment.container;
+          if (!containerMetrics[containerId]) {
+            containerMetrics[containerId] = {
+              biomass: 0,
+              fishCount: 0,
+              totalWeightG: 0,
+              assignmentCount: 0,
+            };
+          }
+          containerMetrics[containerId].biomass += parseFloat(assignment.biomass_kg) || 0;
+          containerMetrics[containerId].fishCount += assignment.population_count || 0;
+          containerMetrics[containerId].totalWeightG += 
+            (assignment.population_count || 0) * (parseFloat(assignment.avg_weight_g) || 0);
+          containerMetrics[containerId].assignmentCount += 1;
+        });
+
+        // Transform containers to ring format with real assignment data
         const rings: Ring[] = containers.map((container: any) => {
+          const metrics = containerMetrics[container.id] || {
+            biomass: 0,
+            fishCount: 0,
+            totalWeightG: 0,
+            assignmentCount: 0,
+          };
+
+          // Calculate weighted average weight
+          const averageWeightG = metrics.fishCount > 0 
+            ? metrics.totalWeightG / metrics.fishCount 
+            : 0;
+          const averageWeightKg = averageWeightG / 1000;
+
+          // Convert biomass from kg to tonnes for consistency
+          const biomassT = metrics.biomass / 1000;
+
           return {
             id: container.id,
             name: container.name || `Ring ${container.id}`,
             areaId: container.area,
             areaName: container.area_name || "Unknown Area",
             status: container.active ? "active" : "inactive",
-            biomass: 0, // Individual biomass not calculated client-side
-            capacity: 50, // Default capacity in tons
-            fishCount: 0, // Individual population not calculated client-side
-            averageWeight: 0, // Individual average weight not calculated client-side
+            biomass: biomassT, // Now in tonnes from real data
+            capacity: parseFloat(container.max_biomass_kg) / 1000 || 50, // Use real capacity
+            fishCount: metrics.fishCount, // Real fish count from assignments
+            averageWeight: averageWeightKg, // Real average weight in kg
             waterDepth: container.water_depth || 20,
-            netCondition: "good", // Default
+            netCondition: "good", // Default (could be enhanced with inspection data)
             lastInspection: container.updated_at || new Date().toISOString(),
             coordinates: {
               lat: parseFloat(container.latitude) || 0,
               lng: parseFloat(container.longitude) || 0,
             },
-            environmentalStatus: "optimal", // Default
+            environmentalStatus: "optimal", // Default (could be enhanced)
           };
         });
 
