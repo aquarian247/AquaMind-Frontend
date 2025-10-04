@@ -3,12 +3,12 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * Enhanced serializer for scenario model changes.
+ * Serializer for scenario model changes.
  */
 export type ScenarioModelChange = {
     readonly change_id: number;
     /**
-     * Day of change (e.g., 180)
+     * Day of change (e.g., 180). Day 1 is the first simulation day.
      */
     change_day: number;
     new_tgc_model?: number | null;

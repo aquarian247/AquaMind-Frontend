@@ -70,8 +70,8 @@ export function ScenarioDetailDialog({ scenario, children }: ScenarioDetailDialo
   const { data: projectionData, isLoading: projectionsLoading } = useQuery<ProjectionData>({
     queryKey: ["scenario", scenario.id, "projections"],
     queryFn: async () => {
-      const raw: any = await ApiService.apiV1ScenarioScenariosProjectionsRetrieve(
-        scenario.id as any
+      const raw: any = await ApiService.apiV1ScenarioScenariosProjectionsList(
+        scenario.id
       );
       // Handle different possible shapes gracefully
       if (raw && Array.isArray(raw.results)) return raw as ProjectionData;

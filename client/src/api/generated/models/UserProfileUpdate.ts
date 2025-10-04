@@ -6,7 +6,8 @@
  * Serializer for updating UserProfile information.
  *
  * Provides a dedicated serializer for profile updates separate from user data.
- * Includes all fields from the UserProfile model that should be updatable by users.
+ * Allows users to update their own profile information excluding RBAC fields
+ * (role, geography, subsidiary) which require admin privileges.
  */
 export type UserProfileUpdate = {
     full_name?: string;
@@ -14,36 +15,6 @@ export type UserProfileUpdate = {
     profile_picture?: string | null;
     job_title?: string | null;
     department?: string | null;
-    /**
-     * Geographic region access level
-     *
-     * * `FO` - Faroe Islands
-     * * `SC` - Scotland
-     * * `ALL` - All Geographies
-     */
-    geography?: 'FO' | 'SC' | 'ALL';
-    /**
-     * Subsidiary access level
-     *
-     * * `BS` - Broodstock
-     * * `FW` - Freshwater
-     * * `FM` - Farming
-     * * `LG` - Logistics
-     * * `ALL` - All Subsidiaries
-     */
-    subsidiary?: 'BS' | 'FW' | 'FM' | 'LG' | 'ALL';
-    /**
-     * User role and permission level
-     *
-     * * `ADMIN` - Administrator
-     * * `MGR` - Manager
-     * * `OPR` - Operator
-     * * `VET` - Veterinarian
-     * * `QA` - Quality Assurance
-     * * `FIN` - Finance
-     * * `VIEW` - Viewer
-     */
-    role?: 'ADMIN' | 'MGR' | 'OPR' | 'VET' | 'QA' | 'FIN' | 'VIEW';
     /**
      * * `en` - English
      * * `fo` - Faroese

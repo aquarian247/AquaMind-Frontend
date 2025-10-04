@@ -25,7 +25,7 @@ export type ScenarioModelChangeHistory = {
     readonly history_change_reason: string;
     change_id?: number;
     /**
-     * Day of change (e.g., 180)
+     * Day of change (e.g., 180). Day 1 is the first simulation day.
      */
     change_day: number;
     readonly created_at: string;

@@ -27,18 +27,6 @@ export type PhotoperiodData = {
      */
     day_length_hours: string;
     /**
-     * Time when artificial lighting starts, if used.
-     */
-    artificial_light_start?: string | null;
-    /**
-     * Time when artificial lighting ends, if used.
-     */
-    artificial_light_end?: string | null;
-    /**
-     * Additional notes about the photoperiod conditions.
-     */
-    notes?: string | null;
-    /**
      * Light intensity in lux
      */
     light_intensity?: string | null;

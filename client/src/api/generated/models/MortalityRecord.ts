@@ -15,9 +15,9 @@ export type MortalityRecord = {
      */
     batch: number;
     /**
-     * The container where the mortality occurred.
+     * The container where the mortality occurred (optional).
      */
-    container: number;
+    container?: number | null;
     /**
      * Name of the container where the mortality occurred.
      */

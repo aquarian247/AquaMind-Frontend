@@ -2,9 +2,6 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-/**
- * Enhanced serializer for CSV file upload.
- */
 export type CSVUpload = {
     file: string;
     /**

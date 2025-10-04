@@ -54,6 +54,8 @@ const INFRASTRUCTURE_QUERY_OPTIONS = {
 
 /**
  * Hook to fetch area summary with server-side aggregation
+ * Note: Backend does not have summary endpoint for areas yet.
+ * Returns base area data without aggregated metrics.
  * @param areaId - The area ID to fetch summary for
  * @returns Query result with area summary data
  */
@@ -62,7 +64,7 @@ export function useAreaSummary(areaId: number | undefined): UseQueryResult<AreaS
     queryKey: ["infrastructure", "area-summary", areaId],
     queryFn: async () => {
       if (!areaId) throw new Error("Area ID is required");
-      return await ApiService.apiV1InfrastructureAreasSummaryRetrieve(areaId);
+      return await ApiService.apiV1InfrastructureAreasRetrieve(areaId);
     },
     enabled: !!areaId,
     ...INFRASTRUCTURE_QUERY_OPTIONS,
@@ -88,6 +90,8 @@ export function useStationSummary(stationId: number | undefined): UseQueryResult
 
 /**
  * Hook to fetch hall summary with server-side aggregation
+ * Note: Backend does not have summary endpoint for halls yet.
+ * Returns base hall data without aggregated metrics.
  * @param hallId - The hall ID to fetch summary for
  * @returns Query result with hall summary data
  */
@@ -96,7 +100,7 @@ export function useHallSummary(hallId: number | undefined): UseQueryResult<HallS
     queryKey: ["infrastructure", "hall-summary", hallId],
     queryFn: async () => {
       if (!hallId) throw new Error("Hall ID is required");
-      return await ApiService.apiV1InfrastructureHallsSummaryRetrieve(hallId);
+      return await ApiService.apiV1InfrastructureHallsRetrieve(hallId);
     },
     enabled: !!hallId,
     ...INFRASTRUCTURE_QUERY_OPTIONS,
@@ -123,6 +127,8 @@ export function useGeographySummary(geographyId: number | undefined): UseQueryRe
 /**
  * Hook to fetch multiple area summaries
  * Useful for listing pages that need summaries for multiple areas
+ * Note: Backend does not have summary endpoint for areas yet.
+ * Returns base area data without aggregated metrics.
  * @param areaIds - Array of area IDs to fetch summaries for
  * @returns Array of query results
  */
@@ -131,7 +137,7 @@ export function useAreaSummaries(areaIds: number[]): UseQueryResult<AreaSummary[
     queryKey: ["infrastructure", "area-summaries", areaIds],
     queryFn: async () => {
       const summaries = await Promise.all(
-        areaIds.map(id => ApiService.apiV1InfrastructureAreasSummaryRetrieve(id))
+        areaIds.map(id => ApiService.apiV1InfrastructureAreasRetrieve(id))
       );
       return summaries;
     },
@@ -163,6 +169,8 @@ export function useStationSummaries(stationIds: number[]): UseQueryResult<Freshw
 /**
  * Hook to fetch multiple hall summaries
  * Useful for listing pages that need summaries for multiple halls
+ * Note: Backend does not have summary endpoint for halls yet.
+ * Returns base hall data without aggregated metrics.
  * @param hallIds - Array of hall IDs to fetch summaries for
  * @returns Array of query results
  */
@@ -171,7 +179,7 @@ export function useHallSummaries(hallIds: number[]): UseQueryResult<HallSummary[
     queryKey: ["infrastructure", "hall-summaries", hallIds],
     queryFn: async () => {
       const summaries = await Promise.all(
-        hallIds.map(id => ApiService.apiV1InfrastructureHallsSummaryRetrieve(id))
+        hallIds.map(id => ApiService.apiV1InfrastructureHallsRetrieve(id))
       );
       return summaries;
     },

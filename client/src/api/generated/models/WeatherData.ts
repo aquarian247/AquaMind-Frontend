@@ -43,6 +43,10 @@ export type WeatherData = {
      */
     wave_height?: string | null;
     /**
+     * Wave period in seconds.
+     */
+    wave_period?: string | null;
+    /**
      * Wave direction in degrees (0-360, where 0/360 is North).
      */
     wave_direction?: number | null;
@@ -50,10 +54,6 @@ export type WeatherData = {
      * Cloud cover percentage (0-100).
      */
     cloud_cover?: number | null;
-    /**
-     * Wave period in seconds
-     */
-    wave_period?: string | null;
     readonly created_at: string;
 };
 

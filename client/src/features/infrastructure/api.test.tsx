@@ -16,9 +16,9 @@ import {
 // Mock the ApiService
 vi.mock("@/api/generated", () => ({
   ApiService: {
-    apiV1InfrastructureAreasSummaryRetrieve: vi.fn(),
+    apiV1InfrastructureAreasRetrieve: vi.fn(),
     apiV1InfrastructureFreshwaterStationsSummaryRetrieve: vi.fn(),
-    apiV1InfrastructureHallsSummaryRetrieve: vi.fn(),
+    apiV1InfrastructureHallsRetrieve: vi.fn(),
     apiV1InfrastructureGeographiesSummaryRetrieve: vi.fn(),
   },
 }));
@@ -56,7 +56,7 @@ describe("Infrastructure API Hooks", () => {
         avg_weight_kg: 0.75,
       };
 
-      vi.mocked(ApiService.apiV1InfrastructureAreasSummaryRetrieve).mockResolvedValue(
+      vi.mocked(ApiService.apiV1InfrastructureAreasRetrieve).mockResolvedValue(
         mockSummary as any
       );
 
@@ -67,7 +67,7 @@ describe("Infrastructure API Hooks", () => {
       });
 
       expect(result.current.data).toEqual(mockSummary);
-      expect(ApiService.apiV1InfrastructureAreasSummaryRetrieve).toHaveBeenCalledWith(1);
+      expect(ApiService.apiV1InfrastructureAreasRetrieve).toHaveBeenCalledWith(1);
     });
 
     it("should not fetch when areaId is undefined", () => {
@@ -76,12 +76,12 @@ describe("Infrastructure API Hooks", () => {
       // When enabled is false, the query stays in pending state but doesn't fetch
       expect(result.current.isFetching).toBe(false);
       expect(result.current.data).toBeUndefined();
-      expect(ApiService.apiV1InfrastructureAreasSummaryRetrieve).not.toHaveBeenCalled();
+      expect(ApiService.apiV1InfrastructureAreasRetrieve).not.toHaveBeenCalled();
     });
 
     it("should handle errors properly", async () => {
       const error = new Error("Failed to fetch area summary");
-      vi.mocked(ApiService.apiV1InfrastructureAreasSummaryRetrieve).mockRejectedValue(error);
+      vi.mocked(ApiService.apiV1InfrastructureAreasRetrieve).mockRejectedValue(error);
 
       const { result } = renderHook(() => useAreaSummary(1), { wrapper });
 
@@ -129,7 +129,7 @@ describe("Infrastructure API Hooks", () => {
         avg_weight_kg: 0.75,
       };
 
-      vi.mocked(ApiService.apiV1InfrastructureHallsSummaryRetrieve).mockResolvedValue(
+      vi.mocked(ApiService.apiV1InfrastructureHallsRetrieve).mockResolvedValue(
         mockSummary as any
       );
 
@@ -140,7 +140,7 @@ describe("Infrastructure API Hooks", () => {
       });
 
       expect(result.current.data).toEqual(mockSummary);
-      expect(ApiService.apiV1InfrastructureHallsSummaryRetrieve).toHaveBeenCalledWith(1);
+      expect(ApiService.apiV1InfrastructureHallsRetrieve).toHaveBeenCalledWith(1);
     });
   });
 
@@ -180,7 +180,7 @@ describe("Infrastructure API Hooks", () => {
       ];
 
       mockSummaries.forEach((summary, index) => {
-        vi.mocked(ApiService.apiV1InfrastructureAreasSummaryRetrieve)
+        vi.mocked(ApiService.apiV1InfrastructureAreasRetrieve)
           .mockResolvedValueOnce(summary as any);
       });
 
@@ -192,9 +192,9 @@ describe("Infrastructure API Hooks", () => {
       });
 
       expect(result.current.data).toEqual(mockSummaries);
-      expect(ApiService.apiV1InfrastructureAreasSummaryRetrieve).toHaveBeenCalledTimes(3);
+      expect(ApiService.apiV1InfrastructureAreasRetrieve).toHaveBeenCalledTimes(3);
       areaIds.forEach((id) => {
-        expect(ApiService.apiV1InfrastructureAreasSummaryRetrieve).toHaveBeenCalledWith(id);
+        expect(ApiService.apiV1InfrastructureAreasRetrieve).toHaveBeenCalledWith(id);
       });
     });
 
@@ -204,7 +204,7 @@ describe("Infrastructure API Hooks", () => {
       // When enabled is false, the query stays in pending state but doesn't fetch
       expect(result.current.isFetching).toBe(false);
       expect(result.current.data).toBeUndefined();
-      expect(ApiService.apiV1InfrastructureAreasSummaryRetrieve).not.toHaveBeenCalled();
+      expect(ApiService.apiV1InfrastructureAreasRetrieve).not.toHaveBeenCalled();
     });
   });
 
@@ -241,7 +241,7 @@ describe("Infrastructure API Hooks", () => {
       ];
 
       mockSummaries.forEach((summary) => {
-        vi.mocked(ApiService.apiV1InfrastructureHallsSummaryRetrieve)
+        vi.mocked(ApiService.apiV1InfrastructureHallsRetrieve)
           .mockResolvedValueOnce(summary as any);
       });
 
@@ -253,14 +253,14 @@ describe("Infrastructure API Hooks", () => {
       });
 
       expect(result.current.data).toEqual(mockSummaries);
-      expect(ApiService.apiV1InfrastructureHallsSummaryRetrieve).toHaveBeenCalledTimes(3);
+      expect(ApiService.apiV1InfrastructureHallsRetrieve).toHaveBeenCalledTimes(3);
     });
   });
 
   describe("Error handling", () => {
     it("should retry once on error", async () => {
       const error = new Error("Network error");
-      vi.mocked(ApiService.apiV1InfrastructureAreasSummaryRetrieve)
+      vi.mocked(ApiService.apiV1InfrastructureAreasRetrieve)
         .mockRejectedValueOnce(error)
         .mockRejectedValueOnce(error);
 
@@ -286,7 +286,7 @@ describe("Infrastructure API Hooks", () => {
       }, { timeout: 3000 });
 
       // Should have been called twice (initial + 1 retry)
-      expect(ApiService.apiV1InfrastructureAreasSummaryRetrieve).toHaveBeenCalledTimes(2);
+      expect(ApiService.apiV1InfrastructureAreasRetrieve).toHaveBeenCalledTimes(2);
     });
   });
 });

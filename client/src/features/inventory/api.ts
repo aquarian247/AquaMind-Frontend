@@ -132,14 +132,14 @@ export function useBatchFeedingSummary(
 
 /**
  * Hook to fetch batch feeding summaries aggregated by batch
- * This returns an array of summaries for all batches
- * @returns Query result with array of batch feeding summaries
+ * This returns paginated summaries for all batches
+ * @returns Query result with paginated batch feeding summaries
  */
-export function useBatchFeedingSummariesByBatch(): UseQueryResult<BatchFeedingSummary[], Error> {
+export function useBatchFeedingSummariesByBatch(): UseQueryResult<PaginatedBatchFeedingSummaryList, Error> {
   return useQuery({
     queryKey: ["inventory", "batch-feeding-summaries-by-batch"],
     queryFn: async () => {
-      return await ApiService.apiV1InventoryBatchFeedingSummariesByBatchRetrieve();
+      return await ApiService.apiV1InventoryBatchFeedingSummariesList();
     },
     ...INVENTORY_QUERY_OPTIONS,
   });

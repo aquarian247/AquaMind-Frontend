@@ -15,9 +15,9 @@ export type PatchedLiceCount = {
      */
     batch?: number;
     /**
-     * The container where the fish were sampled for lice counting.
+     * The container where fish were sampled (optional).
      */
-    container?: number;
+    container?: number | null;
     /**
      * User who performed the lice count (auto-set from request).
      */

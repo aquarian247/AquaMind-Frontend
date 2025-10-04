@@ -20,7 +20,7 @@ export type PatchedBiologicalConstraints = {
      */
     is_active?: boolean;
     /**
-     * Get stage constraints in a structured format.
+     * Serialize stage constraints as dictionaries.
      */
     readonly stage_constraints?: Array<Record<string, any>>;
     readonly created_at?: string;

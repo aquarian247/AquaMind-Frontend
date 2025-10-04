@@ -150,6 +150,7 @@ import type { PaginatedSampleTypeList } from '../models/PaginatedSampleTypeList'
 import type { PaginatedScenarioHistoryList } from '../models/PaginatedScenarioHistoryList';
 import type { PaginatedScenarioList } from '../models/PaginatedScenarioList';
 import type { PaginatedScenarioModelChangeHistoryList } from '../models/PaginatedScenarioModelChangeHistoryList';
+import type { PaginatedScenarioProjectionList } from '../models/PaginatedScenarioProjectionList';
 import type { PaginatedSensorHistoryList } from '../models/PaginatedSensorHistoryList';
 import type { PaginatedSensorList } from '../models/PaginatedSensorList';
 import type { PaginatedSpeciesList } from '../models/PaginatedSpeciesList';
@@ -1008,13 +1009,22 @@ export class ApiService {
      * Options: growth, mortality, biomass, all
      *
      * Example URL: /api/v1/batch/batches/compare/?batch_ids=1,2,3&metrics=growth,mortality
+     * @param batchIds Comma-separated list of batch IDs to compare.
+     * @param metrics Comma-separated metrics to include (growth, mortality, biomass, all).
      * @returns Batch
      * @throws ApiError
      */
-    public static apiV1BatchBatchesCompareRetrieve(): CancelablePromise<Array<Batch>> {
+    public static apiV1BatchBatchesCompareRetrieve(
+        batchIds: string,
+        metrics: string = 'all',
+    ): CancelablePromise<Array<Batch>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/batch/batches/compare/',
+            query: {
+                'batch_ids': batchIds,
+                'metrics': metrics,
+            },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,
@@ -3373,14 +3383,36 @@ export class ApiService {
     }
     /**
      * Get complete lineage for a batch.
-     * @returns BatchParentage
+     * @param batchId ID of the batch to retrieve lineage information for.
+     * @param assignmentDate
+     * @param batch
+     * @param eggProduction
+     * @param ordering Which field to use when ordering the results.
+     * @param page A page number within the paginated result set.
+     * @returns PaginatedBatchParentageList
      * @throws ApiError
      */
-    public static apiV1BroodstockBatchParentagesLineageRetrieve(): CancelablePromise<Array<BatchParentage>> {
+    public static apiV1BroodstockBatchParentagesLineageList(
+        batchId: number,
+        assignmentDate?: string,
+        batch?: number,
+        eggProduction?: number,
+        ordering?: string,
+        page?: number,
+    ): CancelablePromise<Array<PaginatedBatchParentageList>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/broodstock/batch-parentages/lineage/',
+            query: {
+                'assignment_date': assignmentDate,
+                'batch': batch,
+                'batch_id': batchId,
+                'egg_production': eggProduction,
+                'ordering': ordering,
+                'page': page,
+            },
             errors: {
+                400: `Bad request (validation error)`,
                 401: `Unauthorized`,
                 403: `Forbidden`,
                 500: `Internal Server Error`,
@@ -3925,6 +3957,11 @@ export class ApiService {
     }
     /**
      * Create external egg acquisition.
+     *
+     * Delegates to EggManagementService for proper validation including:
+     * - Duplicate batch number prevention
+     * - Atomic transaction handling
+     * - Unique batch ID generation
      * @param requestBody
      * @returns EggProduction
      * @throws ApiError
@@ -3947,6 +3984,12 @@ export class ApiService {
     }
     /**
      * Create internal egg production from a breeding pair.
+     *
+     * Delegates to EggManagementService for proper validation including:
+     * - Active breeding plan validation
+     * - Fish health status checks
+     * - Automatic progeny count updates
+     * - Unique batch ID generation
      * @param requestBody
      * @returns EggProduction
      * @throws ApiError
@@ -4632,14 +4675,41 @@ export class ApiService {
     }
     /**
      * Get fish grouped by container.
-     * @returns BroodstockFish
+     * @param containerId ID of the container to list broodstock fish for.
+     * @param container
+     * @param healthStatus Current health status
+     *
+     * * `healthy` - Healthy
+     * * `monitored` - Monitored
+     * * `sick` - Sick
+     * * `deceased` - Deceased
+     * @param ordering Which field to use when ordering the results.
+     * @param page A page number within the paginated result set.
+     * @param search A search term.
+     * @returns PaginatedBroodstockFishList
      * @throws ApiError
      */
-    public static apiV1BroodstockFishByContainerRetrieve(): CancelablePromise<Array<BroodstockFish>> {
+    public static apiV1BroodstockFishByContainerList(
+        containerId: number,
+        container?: number,
+        healthStatus?: 'deceased' | 'healthy' | 'monitored' | 'sick',
+        ordering?: string,
+        page?: number,
+        search?: string,
+    ): CancelablePromise<Array<PaginatedBroodstockFishList>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/broodstock/fish/by_container/',
+            query: {
+                'container': container,
+                'container_id': containerId,
+                'health_status': healthStatus,
+                'ordering': ordering,
+                'page': page,
+                'search': search,
+            },
             errors: {
+                400: `Bad request (validation error)`,
                 401: `Unauthorized`,
                 403: `Forbidden`,
                 500: `Internal Server Error`,
@@ -5944,7 +6014,52 @@ export class ApiService {
         });
     }
     /**
-     * Return the most recent readings for each parameter-container combination.
+     * Get readings filtered by container and optional time range.
+     *
+     * Query parameters:
+     * - container_id: Required, container to fetch readings for
+     * - parameter_id: Optional, filter by specific parameter
+     * - start_time: Optional, ISO format datetime for range start
+     * - end_time: Optional, ISO format datetime for range end
+     * - limit: Optional, limit number of results (default: 1000)
+     * @param containerId ID of the container to fetch readings for.
+     * @param endTime Filter readings at or before this timestamp.
+     * @param limit Maximum number of readings to return (default 1000).
+     * @param parameterId Filter readings by environmental parameter.
+     * @param startTime Filter readings at or after this timestamp.
+     * @returns EnvironmentalReading
+     * @throws ApiError
+     */
+    public static apiV1EnvironmentalReadingsByContainerRetrieve(
+        containerId: number,
+        endTime?: string,
+        limit: number = 1000,
+        parameterId?: number,
+        startTime?: string,
+    ): CancelablePromise<Array<EnvironmentalReading>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/environmental/readings/by_container/',
+            query: {
+                'container_id': containerId,
+                'end_time': endTime,
+                'limit': limit,
+                'parameter_id': parameterId,
+                'start_time': startTime,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Return the most recent readings for each parameter-container combo.
+     *
+     * Optimized using PostgreSQL's DISTINCT ON to get latest reading
+     * for each unique parameter-container pair in a single query.
+     * Avoids N+1 query problem by using select_related for FKs.
      * @returns EnvironmentalReading
      * @throws ApiError
      */
@@ -5961,13 +6076,22 @@ export class ApiService {
     }
     /**
      * Return aggregated statistics for readings based on query parameters.
+     * @param days Number of days to include in the aggregation window.
+     * @param groupBy Aggregation dimension: parameter (default), container, or batch.
      * @returns EnvironmentalReading
      * @throws ApiError
      */
-    public static apiV1EnvironmentalReadingsStatsRetrieve(): CancelablePromise<Array<EnvironmentalReading>> {
+    public static apiV1EnvironmentalReadingsStatsRetrieve(
+        days: number = 7,
+        groupBy: string = 'parameter',
+    ): CancelablePromise<Array<EnvironmentalReading>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/environmental/readings/stats/',
+            query: {
+                'days': days,
+                'group_by': groupBy,
+            },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,
@@ -6303,7 +6427,47 @@ export class ApiService {
         });
     }
     /**
+     * Get weather data filtered by area and optional time range.
+     *
+     * Query parameters:
+     * - area_id: Required, the ID of the area to fetch weather data for
+     * - start_time: Optional, ISO format datetime for range start
+     * - end_time: Optional, ISO format datetime for range end
+     * - limit: Optional, limit number of results (default: 1000)
+     * @param areaId ID of the area to fetch weather data for.
+     * @param endTime Filter weather data at or before this timestamp.
+     * @param limit Maximum number of records to return (default 1000).
+     * @param startTime Filter weather data at or after this timestamp.
+     * @returns WeatherData
+     * @throws ApiError
+     */
+    public static apiV1EnvironmentalWeatherByAreaRetrieve(
+        areaId: number,
+        endTime?: string,
+        limit: number = 1000,
+        startTime?: string,
+    ): CancelablePromise<WeatherData> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/environmental/weather/by_area/',
+            query: {
+                'area_id': areaId,
+                'end_time': endTime,
+                'limit': limit,
+                'start_time': startTime,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
      * Return the most recent weather data for each area.
+     *
+     * Optimized using PostgreSQL's DISTINCT ON to get latest data
+     * for each area in a single query. Avoids N+1 query problem.
      * @returns WeatherData
      * @throws ApiError
      */
@@ -7860,33 +8024,77 @@ export class ApiService {
      *
      * Provides CRUD operations for lice counts, which track sea lice infestations
      * in fish populations.
+     *
+     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+     * @param adultFemaleCount
+     * @param adultFemaleCountGte
+     * @param adultFemaleCountLte
+     * @param adultMaleCount
+     * @param adultMaleCountGte
+     * @param adultMaleCountLte
+     * @param batch
+     * @param container
      * @param countDate
      * @param countDateGte
      * @param countDateLte
+     * @param fishSampled
+     * @param fishSampledGte
+     * @param fishSampledLte
+     * @param juvenileCount
+     * @param juvenileCountGte
+     * @param juvenileCountLte
      * @param page A page number within the paginated result set.
      * @param search A search term.
-     * @param userId
+     * @param user
      * @returns PaginatedLiceCountList
      * @throws ApiError
      */
     public static apiV1HealthLiceCountsList(
+        adultFemaleCount?: number,
+        adultFemaleCountGte?: number,
+        adultFemaleCountLte?: number,
+        adultMaleCount?: number,
+        adultMaleCountGte?: number,
+        adultMaleCountLte?: number,
+        batch?: number,
+        container?: number,
         countDate?: string,
         countDateGte?: string,
         countDateLte?: string,
+        fishSampled?: number,
+        fishSampledGte?: number,
+        fishSampledLte?: number,
+        juvenileCount?: number,
+        juvenileCountGte?: number,
+        juvenileCountLte?: number,
         page?: number,
         search?: string,
-        userId?: number,
+        user?: number,
     ): CancelablePromise<PaginatedLiceCountList> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/health/lice-counts/',
             query: {
+                'adult_female_count': adultFemaleCount,
+                'adult_female_count__gte': adultFemaleCountGte,
+                'adult_female_count__lte': adultFemaleCountLte,
+                'adult_male_count': adultMaleCount,
+                'adult_male_count__gte': adultMaleCountGte,
+                'adult_male_count__lte': adultMaleCountLte,
+                'batch': batch,
+                'container': container,
                 'count_date': countDate,
                 'count_date__gte': countDateGte,
                 'count_date__lte': countDateLte,
+                'fish_sampled': fishSampled,
+                'fish_sampled__gte': fishSampledGte,
+                'fish_sampled__lte': fishSampledLte,
+                'juvenile_count': juvenileCount,
+                'juvenile_count__gte': juvenileCountGte,
+                'juvenile_count__lte': juvenileCountLte,
                 'page': page,
                 'search': search,
-                'user__id': userId,
+                'user': user,
             },
             errors: {
                 400: `Bad request (validation error)`,
@@ -7901,6 +8109,8 @@ export class ApiService {
      *
      * Provides CRUD operations for lice counts, which track sea lice infestations
      * in fish populations.
+     *
+     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
      * @param requestBody
      * @returns LiceCount
      * @throws ApiError
@@ -7926,6 +8136,8 @@ export class ApiService {
      *
      * Provides CRUD operations for lice counts, which track sea lice infestations
      * in fish populations.
+     *
+     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
      * @param id A unique integer value identifying this lice count.
      * @returns LiceCount
      * @throws ApiError
@@ -7952,6 +8164,8 @@ export class ApiService {
      *
      * Provides CRUD operations for lice counts, which track sea lice infestations
      * in fish populations.
+     *
+     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
      * @param id A unique integer value identifying this lice count.
      * @param requestBody
      * @returns LiceCount
@@ -7983,6 +8197,8 @@ export class ApiService {
      *
      * Provides CRUD operations for lice counts, which track sea lice infestations
      * in fish populations.
+     *
+     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
      * @param id A unique integer value identifying this lice count.
      * @param requestBody
      * @returns LiceCount
@@ -8014,6 +8230,8 @@ export class ApiService {
      *
      * Provides CRUD operations for lice counts, which track sea lice infestations
      * in fish populations.
+     *
+     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
      * @param id A unique integer value identifying this lice count.
      * @returns void
      * @throws ApiError
@@ -8208,32 +8426,49 @@ export class ApiService {
      *
      * Provides CRUD operations for mortality records, which track fish deaths
      * and their causes.
+     *
+     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+     * @param batch
+     * @param container
      * @param count
      * @param countGte
      * @param countLte
+     * @param eventDate
+     * @param eventDateGte
+     * @param eventDateLte
      * @param page A page number within the paginated result set.
-     * @param reasonId
+     * @param reason
      * @param search A search term.
      * @returns PaginatedMortalityRecordList
      * @throws ApiError
      */
     public static apiV1HealthMortalityRecordsList(
+        batch?: number,
+        container?: number,
         count?: number,
         countGte?: number,
         countLte?: number,
+        eventDate?: string,
+        eventDateGte?: string,
+        eventDateLte?: string,
         page?: number,
-        reasonId?: number,
+        reason?: number,
         search?: string,
     ): CancelablePromise<PaginatedMortalityRecordList> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/health/mortality-records/',
             query: {
+                'batch': batch,
+                'container': container,
                 'count': count,
                 'count__gte': countGte,
                 'count__lte': countLte,
+                'event_date': eventDate,
+                'event_date__gte': eventDateGte,
+                'event_date__lte': eventDateLte,
                 'page': page,
-                'reason__id': reasonId,
+                'reason': reason,
                 'search': search,
             },
             errors: {
@@ -8249,6 +8484,8 @@ export class ApiService {
      *
      * Provides CRUD operations for mortality records, which track fish deaths
      * and their causes.
+     *
+     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
      * @param requestBody
      * @returns MortalityRecord
      * @throws ApiError
@@ -8274,6 +8511,8 @@ export class ApiService {
      *
      * Provides CRUD operations for mortality records, which track fish deaths
      * and their causes.
+     *
+     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
      * @param id A unique integer value identifying this mortality record.
      * @returns MortalityRecord
      * @throws ApiError
@@ -8300,6 +8539,8 @@ export class ApiService {
      *
      * Provides CRUD operations for mortality records, which track fish deaths
      * and their causes.
+     *
+     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
      * @param id A unique integer value identifying this mortality record.
      * @param requestBody
      * @returns MortalityRecord
@@ -8331,6 +8572,8 @@ export class ApiService {
      *
      * Provides CRUD operations for mortality records, which track fish deaths
      * and their causes.
+     *
+     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
      * @param id A unique integer value identifying this mortality record.
      * @param requestBody
      * @returns MortalityRecord
@@ -8362,6 +8605,8 @@ export class ApiService {
      *
      * Provides CRUD operations for mortality records, which track fish deaths
      * and their causes.
+     *
+     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
      * @param id A unique integer value identifying this mortality record.
      * @returns void
      * @throws ApiError
@@ -9228,32 +9473,45 @@ export class ApiService {
         });
     }
     /**
-     * Return KPI summary for a specific area.
-     *
-     * Computes aggregated metrics including:
-     * - container_count: Total containers in the area
-     * - ring_count: Containers that are rings/pens (category='PEN' or name contains 'Ring')
-     * - active_biomass_kg: Sum of biomass from active batch assignments
-     * - population_count: Sum of population from active batch assignments
-     * - avg_weight_kg: Biomass divided by population (0 if no population)
-     *
-     * Query Parameters:
-     * - is_active: Filter by active status (default: true)
-     *
-     * Returns:
-     * Response: JSON with aggregated area metrics
+     * Get KPI summary for an area including container counts, biomass, population, and average weight.
      * @param id A unique integer value identifying this area.
-     * @returns Area
+     * @param isActive Filter assignments by active status (default: true).
+     * @returns any Area KPI metrics
      * @throws ApiError
      */
-    public static apiV1InfrastructureAreasSummaryRetrieve(
+    public static areaSummary(
         id: number,
-    ): CancelablePromise<Area> {
+        isActive: boolean = true,
+    ): CancelablePromise<{
+        /**
+         * Total number of containers in the area
+         */
+        container_count: number;
+        /**
+         * Number of ring/pen containers in the area
+         */
+        ring_count: number;
+        /**
+         * Total active biomass in kilograms
+         */
+        active_biomass_kg: number;
+        /**
+         * Total population count
+         */
+        population_count: number;
+        /**
+         * Average weight in kilograms per fish
+         */
+        avg_weight_kg: number;
+    }> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/infrastructure/areas/{id}/summary/',
             path: {
                 'id': id,
+            },
+            query: {
+                'is_active': isActive,
             },
             errors: {
                 401: `Unauthorized`,
@@ -11099,41 +11357,6 @@ export class ApiService {
         });
     }
     /**
-     * Return KPI summary for a specific hall.
-     *
-     * Computes aggregated metrics including:
-     * - container_count: Total containers in the hall
-     * - active_biomass_kg: Sum of biomass from active batch assignments
-     * - population_count: Sum of population from active batch assignments
-     * - avg_weight_kg: Biomass divided by population (0 if no population)
-     *
-     * Query Parameters:
-     * - is_active: Filter by active status (default: true)
-     *
-     * Returns:
-     * Response: JSON with aggregated hall metrics
-     * @param id A unique integer value identifying this hall.
-     * @returns Hall
-     * @throws ApiError
-     */
-    public static apiV1InfrastructureHallsSummaryRetrieve(
-        id: number,
-    ): CancelablePromise<Hall> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/infrastructure/halls/{id}/summary/',
-            path: {
-                'id': id,
-            },
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
      * List historical records with enhanced OpenAPI documentation.
      * @param active
      * @param dateFrom Filter records from this date onwards (inclusive)
@@ -12159,13 +12382,19 @@ export class ApiService {
     }
     /**
      * Get feeding summaries for a specific batch.
+     * @param batchId ID of the batch to retrieve feeding summaries for.
      * @returns BatchFeedingSummary
      * @throws ApiError
      */
-    public static apiV1InventoryBatchFeedingSummariesByBatchRetrieve(): CancelablePromise<Array<BatchFeedingSummary>> {
+    public static apiV1InventoryBatchFeedingSummariesByBatchRetrieve(
+        batchId: number,
+    ): CancelablePromise<Array<BatchFeedingSummary>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/inventory/batch-feeding-summaries/by_batch/',
+            query: {
+                'batch_id': batchId,
+            },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,
@@ -12424,13 +12653,19 @@ export class ApiService {
          *
          * Query parameters:
          * - container_id: Filter by specific container
+         * @param containerId Limit results to a specific feed container.
          * @returns FeedContainerStock
          * @throws ApiError
          */
-        public static apiV1InventoryFeedContainerStockByContainerRetrieve(): CancelablePromise<Array<FeedContainerStock>> {
+        public static apiV1InventoryFeedContainerStockByContainerRetrieve(
+            containerId?: number,
+        ): CancelablePromise<Array<FeedContainerStock>> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/inventory/feed-container-stock/by_container/',
+                query: {
+                    'container_id': containerId,
+                },
                 errors: {
                     401: `Unauthorized`,
                     403: `Forbidden`,
@@ -12443,13 +12678,19 @@ export class ApiService {
          *
          * Query parameters:
          * - container_id: Required. Container to get FIFO order for.
+         * @param containerId ID of the feed container to fetch FIFO ordered stock for.
          * @returns FeedContainerStock
          * @throws ApiError
          */
-        public static apiV1InventoryFeedContainerStockFifoOrderRetrieve(): CancelablePromise<Array<FeedContainerStock>> {
+        public static apiV1InventoryFeedContainerStockFifoOrderRetrieve(
+            containerId: number,
+        ): CancelablePromise<Array<FeedContainerStock>> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/inventory/feed-container-stock/fifo_order/',
+                query: {
+                    'container_id': containerId,
+                },
                 errors: {
                     401: `Unauthorized`,
                     403: `Forbidden`,
@@ -13148,14 +13389,82 @@ export class ApiService {
         }
         /**
          * Get feeding events for a specific batch.
-         * @returns FeedingEvent
+         * @param batchId ID of the batch to fetch feeding events for.
+         * @param amountMax
+         * @param amountMin
+         * @param batch
+         * @param batchIn Multiple values may be separated by commas.
+         * @param batchNumber
+         * @param container
+         * @param containerIn Multiple values may be separated by commas.
+         * @param containerName
+         * @param feed
+         * @param feedIn Multiple values may be separated by commas.
+         * @param feedName
+         * @param feedingDate
+         * @param feedingDateAfter
+         * @param feedingDateBefore
+         * @param method * `MANUAL` - Manual
+         * * `AUTOMATIC` - Automatic Feeder
+         * * `BROADCAST` - Broadcast
+         * @param methodIn * `MANUAL` - Manual
+         * * `AUTOMATIC` - Automatic Feeder
+         * * `BROADCAST` - Broadcast
+         * @param ordering Which field to use when ordering the results.
+         * @param page A page number within the paginated result set.
+         * @param search A search term.
+         * @returns PaginatedFeedingEventList
          * @throws ApiError
          */
-        public static apiV1InventoryFeedingEventsByBatchRetrieve(): CancelablePromise<Array<FeedingEvent>> {
+        public static apiV1InventoryFeedingEventsByBatchList(
+            batchId: number,
+            amountMax?: number,
+            amountMin?: number,
+            batch?: number,
+            batchIn?: Array<number>,
+            batchNumber?: string,
+            container?: number,
+            containerIn?: Array<number>,
+            containerName?: string,
+            feed?: number,
+            feedIn?: Array<number>,
+            feedName?: string,
+            feedingDate?: string,
+            feedingDateAfter?: string,
+            feedingDateBefore?: string,
+            method?: 'AUTOMATIC' | 'BROADCAST' | 'MANUAL',
+            methodIn?: Array<'AUTOMATIC' | 'BROADCAST' | 'MANUAL'>,
+            ordering?: string,
+            page?: number,
+            search?: string,
+        ): CancelablePromise<Array<PaginatedFeedingEventList>> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/inventory/feeding-events/by_batch/',
+                query: {
+                    'amount_max': amountMax,
+                    'amount_min': amountMin,
+                    'batch': batch,
+                    'batch__in': batchIn,
+                    'batch_id': batchId,
+                    'batch_number': batchNumber,
+                    'container': container,
+                    'container__in': containerIn,
+                    'container_name': containerName,
+                    'feed': feed,
+                    'feed__in': feedIn,
+                    'feed_name': feedName,
+                    'feeding_date': feedingDate,
+                    'feeding_date_after': feedingDateAfter,
+                    'feeding_date_before': feedingDateBefore,
+                    'method': method,
+                    'method_in': methodIn,
+                    'ordering': ordering,
+                    'page': page,
+                    'search': search,
+                },
                 errors: {
+                    400: `Bad request (validation error)`,
                     401: `Unauthorized`,
                     403: `Forbidden`,
                     500: `Internal Server Error`,
@@ -13535,13 +13844,31 @@ export class ApiService {
          *
          * Args:
          * assignment_id: Assignment ID from URL path
+         * @param assignmentId Container assignment ID to retrieve FCR trends for.
+         * @param endDate End date for the trend analysis (YYYY-MM-DD).
+         * @param includePredicted Include predicted FCR values (default: true).
+         * @param interval Aggregation interval (DAILY, WEEKLY, or MONTHLY).
+         * @param startDate Start date for the trend analysis (YYYY-MM-DD).
          * @returns FCRTrends
          * @throws ApiError
          */
-        public static apiV1OperationalFcrTrendsAssignmentTrendsRetrieve(): CancelablePromise<FCRTrends> {
+        public static apiV1OperationalFcrTrendsAssignmentTrendsRetrieve(
+            assignmentId: number,
+            endDate?: string,
+            includePredicted: boolean = true,
+            interval: 'DAILY' | 'MONTHLY' | 'WEEKLY' = 'DAILY',
+            startDate?: string,
+        ): CancelablePromise<FCRTrends> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/operational/fcr-trends/assignment_trends/',
+                query: {
+                    'assignment_id': assignmentId,
+                    'end_date': endDate,
+                    'include_predicted': includePredicted,
+                    'interval': interval,
+                    'start_date': startDate,
+                },
                 errors: {
                     401: `Unauthorized`,
                     403: `Forbidden`,
@@ -13554,13 +13881,31 @@ export class ApiService {
          *
          * Args:
          * batch_id: Batch ID from URL path
+         * @param batchId Batch ID to retrieve FCR trends for.
+         * @param endDate End date for the trend analysis (YYYY-MM-DD).
+         * @param includePredicted Include predicted FCR values (default: true).
+         * @param interval Aggregation interval (DAILY, WEEKLY, or MONTHLY).
+         * @param startDate Start date for the trend analysis (YYYY-MM-DD).
          * @returns FCRTrends
          * @throws ApiError
          */
-        public static apiV1OperationalFcrTrendsBatchTrendsRetrieve(): CancelablePromise<FCRTrends> {
+        public static apiV1OperationalFcrTrendsBatchTrendsRetrieve(
+            batchId: number,
+            endDate?: string,
+            includePredicted: boolean = true,
+            interval: 'DAILY' | 'MONTHLY' | 'WEEKLY' = 'DAILY',
+            startDate?: string,
+        ): CancelablePromise<FCRTrends> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/operational/fcr-trends/batch_trends/',
+                query: {
+                    'batch_id': batchId,
+                    'end_date': endDate,
+                    'include_predicted': includePredicted,
+                    'interval': interval,
+                    'start_date': startDate,
+                },
                 errors: {
                     401: `Unauthorized`,
                     403: `Forbidden`,
@@ -13573,13 +13918,31 @@ export class ApiService {
          *
          * Args:
          * geography_id: Geography ID from URL path
+         * @param geographyId Geography ID to retrieve FCR trends for.
+         * @param endDate End date for the trend analysis (YYYY-MM-DD).
+         * @param includePredicted Include predicted FCR values (default: true).
+         * @param interval Aggregation interval (DAILY, WEEKLY, or MONTHLY).
+         * @param startDate Start date for the trend analysis (YYYY-MM-DD).
          * @returns FCRTrends
          * @throws ApiError
          */
-        public static apiV1OperationalFcrTrendsGeographyTrendsRetrieve(): CancelablePromise<FCRTrends> {
+        public static apiV1OperationalFcrTrendsGeographyTrendsRetrieve(
+            geographyId: number,
+            endDate?: string,
+            includePredicted: boolean = true,
+            interval: 'DAILY' | 'MONTHLY' | 'WEEKLY' = 'DAILY',
+            startDate?: string,
+        ): CancelablePromise<FCRTrends> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/operational/fcr-trends/geography_trends/',
+                query: {
+                    'end_date': endDate,
+                    'geography_id': geographyId,
+                    'include_predicted': includePredicted,
+                    'interval': interval,
+                    'start_date': startDate,
+                },
                 errors: {
                     401: `Unauthorized`,
                     403: `Forbidden`,
@@ -13762,13 +14125,22 @@ export class ApiService {
          * Query params:
          * - data_type: 'temperature', 'fcr', or 'mortality'
          * - include_sample_data: true/false
-         * @returns CSVUpload
+         * @param dataType Type of template to download (temperature, fcr, mortality).
+         * @param includeSampleData Include sample rows in the generated template.
+         * @returns any CSV template file
          * @throws ApiError
          */
-        public static apiV1ScenarioDataEntryCsvTemplateRetrieve(): CancelablePromise<CSVUpload> {
+        public static apiV1ScenarioDataEntryCsvTemplateRetrieve(
+            dataType: 'fcr' | 'mortality' | 'temperature',
+            includeSampleData: boolean = false,
+        ): CancelablePromise<any> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/scenario/data-entry/csv_template/',
+                query: {
+                    'data_type': dataType,
+                    'include_sample_data': includeSampleData,
+                },
                 errors: {
                     401: `Unauthorized`,
                     403: `Forbidden`,
@@ -14733,17 +15105,28 @@ export class ApiService {
         /**
          * Get projection data formatted for charts.
          * @param scenarioId A unique integer value identifying this Scenario.
+         * @param aggregation Temporal aggregation for chart data (daily, weekly, monthly).
+         * @param chartType Chart visualization type (line, area, or bar).
+         * @param metrics Comma-separated metrics to include (weight, population, biomass, feed, temperature).
          * @returns Scenario
          * @throws ApiError
          */
         public static apiV1ScenarioScenariosChartDataRetrieve(
             scenarioId: number,
+            aggregation: 'daily' | 'monthly' | 'weekly' = 'daily',
+            chartType: 'area' | 'bar' | 'line' = 'line',
+            metrics?: string,
         ): CancelablePromise<Scenario> {
             return __request(OpenAPI, {
                 method: 'GET',
                 url: '/api/v1/scenario/scenarios/{scenario_id}/chart_data/',
                 path: {
                     'scenario_id': scenarioId,
+                },
+                query: {
+                    'aggregation': aggregation,
+                    'chart_type': chartType,
+                    'metrics': metrics,
                 },
                 errors: {
                     401: `Unauthorized`,
@@ -14814,19 +15197,46 @@ export class ApiService {
             /**
              * Get projections for a scenario with optional filtering.
              * @param scenarioId A unique integer value identifying this Scenario.
-             * @returns Scenario
+             * @param aggregation Aggregation granularity for projections (daily, weekly, monthly).
+             * @param createdBy
+             * @param endDate Filter projections at or before this date (YYYY-MM-DD).
+             * @param ordering Which field to use when ordering the results.
+             * @param page A page number within the paginated result set.
+             * @param search A search term.
+             * @param startDate Filter projections at or after this date (YYYY-MM-DD).
+             * @param tgcModelLocation
+             * @returns PaginatedScenarioProjectionList
              * @throws ApiError
              */
-            public static apiV1ScenarioScenariosProjectionsRetrieve(
+            public static apiV1ScenarioScenariosProjectionsList(
                 scenarioId: number,
-            ): CancelablePromise<Scenario> {
+                aggregation: 'daily' | 'monthly' | 'weekly' = 'daily',
+                createdBy?: number,
+                endDate?: string,
+                ordering?: string,
+                page?: number,
+                search?: string,
+                startDate?: string,
+                tgcModelLocation?: string,
+            ): CancelablePromise<PaginatedScenarioProjectionList> {
                 return __request(OpenAPI, {
                     method: 'GET',
                     url: '/api/v1/scenario/scenarios/{scenario_id}/projections/',
                     path: {
                         'scenario_id': scenarioId,
                     },
+                    query: {
+                        'aggregation': aggregation,
+                        'created_by': createdBy,
+                        'end_date': endDate,
+                        'ordering': ordering,
+                        'page': page,
+                        'search': search,
+                        'start_date': startDate,
+                        'tgc_model__location': tgcModelLocation,
+                    },
                     errors: {
+                        400: `Bad request (validation error)`,
                         401: `Unauthorized`,
                         403: `Forbidden`,
                         404: `Not Found`,
@@ -15798,6 +16208,44 @@ export class ApiService {
                                             'id': id,
                                         },
                                         errors: {
+                                            401: `Unauthorized`,
+                                            403: `Forbidden`,
+                                            404: `Not Found`,
+                                            500: `Internal Server Error`,
+                                        },
+                                    });
+                                }
+                                /**
+                                 * Admin-only endpoint to update user profile including RBAC fields.
+                                 *
+                                 * Allows administrators to modify role, geography, and subsidiary
+                                 * fields which are restricted for regular users to prevent
+                                 * privilege escalation.
+                                 *
+                                 * Args:
+                                 * pk: User ID to update
+                                 *
+                                 * Returns:
+                                 * Response: Updated user profile data or error messages
+                                 * @param id A unique integer value identifying this user.
+                                 * @param requestBody
+                                 * @returns User
+                                 * @throws ApiError
+                                 */
+                                public static apiV1UsersUsersAdminUpdatePartialUpdate(
+                                    id: number,
+                                    requestBody?: PatchedUser,
+                                ): CancelablePromise<User> {
+                                    return __request(OpenAPI, {
+                                        method: 'PATCH',
+                                        url: '/api/v1/users/users/{id}/admin_update/',
+                                        path: {
+                                            'id': id,
+                                        },
+                                        body: requestBody,
+                                        mediaType: 'application/json',
+                                        errors: {
+                                            400: `Bad request (validation error)`,
                                             401: `Unauthorized`,
                                             403: `Forbidden`,
                                             404: `Not Found`,
