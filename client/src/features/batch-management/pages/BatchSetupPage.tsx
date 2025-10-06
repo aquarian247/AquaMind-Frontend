@@ -2,12 +2,14 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Fish, TrendingUp } from 'lucide-react'
-import { useBatches, useLifecycleStages } from '../api'
+import { Plus, Fish, TrendingUp, Link as LinkIcon, ArrowRightLeft } from 'lucide-react'
+import { useBatches, useLifecycleStages, useBatchContainerAssignments, useBatchTransfers } from '../api'
 import { BatchForm } from '../components/BatchForm'
 import { LifecycleStageForm } from '../components/LifecycleStageForm'
+import { BatchContainerAssignmentForm } from '../components/BatchContainerAssignmentForm'
+import { BatchTransferForm } from '../components/BatchTransferForm'
 
-type EntityType = 'batch' | 'lifecycleStage' | null
+type EntityType = 'batch' | 'lifecycleStage' | 'assignment' | 'transfer' | null
 
 /**
  * Batch Setup Page with Create Dialogs
@@ -27,6 +29,8 @@ export default function BatchSetupPage() {
   // Load counts for display
   const { data: batchesData } = useBatches()
   const { data: stagesData } = useLifecycleStages()
+  const { data: assignmentsData } = useBatchContainerAssignments()
+  const { data: transfersData } = useBatchTransfers()
 
   const handleSuccess = () => {
     setCreateDialogOpen(null)
@@ -53,12 +57,30 @@ export default function BatchSetupPage() {
       count: stagesData?.results?.length || 0,
       color: 'green'
     },
+    {
+      id: 'assignment' as const,
+      name: 'Container Assignment',
+      description: 'Assign batch to container',
+      icon: LinkIcon,
+      count: assignmentsData?.results?.length || 0,
+      color: 'purple'
+    },
+    {
+      id: 'transfer' as const,
+      name: 'Batch Transfer',
+      description: 'Transfer batch between containers',
+      icon: ArrowRightLeft,
+      count: transfersData?.results?.length || 0,
+      color: 'orange'
+    },
   ]
 
   const getColorClasses = (color: string) => {
     const colors: Record<string, { icon: string; text: string; bg: string }> = {
       blue: { icon: 'text-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
       green: { icon: 'text-green-600', text: 'text-green-600', bg: 'bg-green-50' },
+      purple: { icon: 'text-purple-600', text: 'text-purple-600', bg: 'bg-purple-50' },
+      orange: { icon: 'text-orange-600', text: 'text-orange-600', bg: 'bg-orange-50' },
     }
     return colors[color] || colors.blue
   }
@@ -75,7 +97,7 @@ export default function BatchSetupPage() {
       </div>
 
       {/* Entity Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {entities.map((entity) => {
           const colors = getColorClasses(entity.color)
           const Icon = entity.icon
@@ -129,6 +151,28 @@ export default function BatchSetupPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Container Assignment Create Dialog */}
+      <Dialog open={createDialogOpen === 'assignment'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Container Assignment</DialogTitle>
+            <DialogDescription>Assign a batch to a container for tracking</DialogDescription>
+          </DialogHeader>
+          <BatchContainerAssignmentForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Transfer Create Dialog */}
+      <Dialog open={createDialogOpen === 'transfer'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Transfer Batch</DialogTitle>
+            <DialogDescription>Move fish from one container to another</DialogDescription>
+          </DialogHeader>
+          <BatchTransferForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        </DialogContent>
+      </Dialog>
+
       {/* Info Section */}
       <Card className="mt-8">
         <CardHeader>
@@ -158,6 +202,32 @@ export default function BatchSetupPage() {
               <li>Sequential ordering (Egg → Fry → Juvenile → Adult)</li>
               <li>Expected weight and length ranges</li>
               <li>Used for batch tracking and reporting</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-2">Container Assignments</h3>
+            <p className="text-sm text-muted-foreground">
+              Container assignments link batches to physical containers. Each assignment tracks:
+            </p>
+            <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 mt-1">
+              <li>Batch-to-container mapping</li>
+              <li>Population count and average weight</li>
+              <li>Assignment and removal dates</li>
+              <li>Current lifecycle stage</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-2">Batch Transfers</h3>
+            <p className="text-sm text-muted-foreground">
+              Batch transfers record movement of fish between containers. Features include:
+            </p>
+            <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 mt-1">
+              <li>Source and destination tracking</li>
+              <li>Population and biomass calculations</li>
+              <li>Mortality recording during transfer</li>
+              <li>Audit trail for compliance</li>
             </ul>
           </div>
         </CardContent>

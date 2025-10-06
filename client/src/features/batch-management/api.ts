@@ -11,9 +11,13 @@ import { useCrudMutation } from '@/features/shared/hooks/useCrudMutation'
 import type {
   Batch,
   LifeCycleStage,
+  BatchContainerAssignment,
+  BatchTransfer,
   PaginatedBatchList,
   PaginatedLifeCycleStageList,
   PaginatedSpeciesList,
+  PaginatedBatchContainerAssignmentList,
+  PaginatedBatchTransferList,
 } from '@/api/generated'
 
 // ========================================
@@ -207,6 +211,178 @@ export function useDeleteLifecycleStage() {
     mutationFn: ({ id }: { id: number }) => ApiService.apiV1BatchLifecycleStagesDestroy(id),
     description: 'Lifecycle stage deleted successfully',
     invalidateQueries: ['lifecycle-stages', 'batch/lifecycle-stages'],
+    injectAuditReason: (vars, reason) => ({ ...vars, change_reason: reason }),
+  })
+}
+
+// ========================================
+// BATCH CONTAINER ASSIGNMENT HOOKS
+// ========================================
+
+/**
+ * Fetch all batch container assignments with optional filtering
+ */
+export function useBatchContainerAssignments(filters?: {
+  batch?: number
+  container?: number
+  isActive?: boolean
+}): UseQueryResult<PaginatedBatchContainerAssignmentList, Error> {
+  return useQuery({
+    queryKey: ['batch-container-assignments', filters],
+    queryFn: () =>
+      ApiService.apiV1BatchContainerAssignmentsList(
+        undefined, // assignmentDate
+        undefined, // assignmentDateAfter
+        undefined, // assignmentDateBefore
+        filters?.batch,
+        undefined, // batchIn
+        undefined, // batchNumber
+        undefined, // biomassMax
+        undefined, // biomassMin
+        filters?.container,
+        undefined, // containerIn
+        undefined, // containerName
+        undefined, // containerType
+        filters?.isActive,
+        undefined, // lifecycleStage
+        undefined, // ordering
+        undefined, // page
+        undefined, // populationMax
+        undefined, // populationMin
+        undefined, // search
+        undefined  // species
+      ),
+  })
+}
+
+/**
+ * Fetch a single batch container assignment by ID
+ */
+export function useBatchContainerAssignment(
+  id: number | undefined
+): UseQueryResult<BatchContainerAssignment, Error> {
+  return useQuery({
+    queryKey: ['batch-container-assignments', id],
+    queryFn: () => {
+      if (!id) throw new Error('Assignment ID is required')
+      return ApiService.apiV1BatchContainerAssignmentsRetrieve(id)
+    },
+    enabled: !!id,
+  })
+}
+
+/**
+ * Create a new batch container assignment
+ */
+export function useCreateBatchContainerAssignment() {
+  return useCrudMutation<BatchContainerAssignment, BatchContainerAssignment>({
+    mutationFn: (data) => ApiService.apiV1BatchContainerAssignmentsCreate(data),
+    description: 'Batch assigned to container successfully',
+    invalidateQueries: ['batch-container-assignments', 'batches', 'batch/batches'],
+  })
+}
+
+/**
+ * Update an existing batch container assignment
+ */
+export function useUpdateBatchContainerAssignment() {
+  return useCrudMutation<
+    BatchContainerAssignment & { id: number },
+    BatchContainerAssignment
+  >({
+    mutationFn: ({ id, ...data }) =>
+      ApiService.apiV1BatchContainerAssignmentsUpdate(id, data as BatchContainerAssignment),
+    description: 'Assignment updated successfully',
+    invalidateQueries: ['batch-container-assignments', 'batches', 'batch/batches'],
+  })
+}
+
+/**
+ * Delete a batch container assignment
+ */
+export function useDeleteBatchContainerAssignment() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1BatchContainerAssignmentsDestroy(id),
+    description: 'Assignment deleted successfully',
+    invalidateQueries: ['batch-container-assignments', 'batches', 'batch/batches'],
+    injectAuditReason: (vars, reason) => ({ ...vars, change_reason: reason }),
+  })
+}
+
+// ========================================
+// BATCH TRANSFER HOOKS
+// ========================================
+
+/**
+ * Fetch all batch transfers with optional filtering
+ */
+export function useBatchTransfers(filters?: {
+  sourceBatch?: number
+  destinationBatch?: number
+}): UseQueryResult<PaginatedBatchTransferList, Error> {
+  return useQuery({
+    queryKey: ['batch-transfers', filters],
+    queryFn: () =>
+      ApiService.apiV1BatchTransfersList(
+        undefined, // biomassMax
+        undefined, // biomassMin
+        undefined, // destinationAssignment
+        filters?.destinationBatch,
+        undefined, // destinationBatchNumber
+        undefined, // destinationLifecycleStage
+        undefined, // ordering
+        undefined, // page
+        undefined, // populationMax
+        undefined, // populationMin
+        undefined, // search
+        undefined, // sourceAssignment
+        filters?.sourceBatch,
+        undefined, // sourceBatchNumber
+        undefined, // sourceLifecycleStage
+        undefined, // transferDateAfter
+        undefined, // transferDateBefore
+        undefined, // transferType
+        undefined  // transferTypeIn
+      ),
+  })
+}
+
+/**
+ * Fetch a single batch transfer by ID
+ */
+export function useBatchTransfer(
+  id: number | undefined
+): UseQueryResult<BatchTransfer, Error> {
+  return useQuery({
+    queryKey: ['batch-transfers', id],
+    queryFn: () => {
+      if (!id) throw new Error('Transfer ID is required')
+      return ApiService.apiV1BatchTransfersRetrieve(id)
+    },
+    enabled: !!id,
+  })
+}
+
+/**
+ * Create a new batch transfer
+ */
+export function useCreateBatchTransfer() {
+  return useCrudMutation<BatchTransfer, BatchTransfer>({
+    mutationFn: (data) => ApiService.apiV1BatchTransfersCreate(data),
+    description: 'Batch transferred successfully',
+    invalidateQueries: ['batch-transfers', 'batch-container-assignments', 'batches', 'batch/batches'],
+  })
+}
+
+/**
+ * Delete a batch transfer
+ */
+export function useDeleteBatchTransfer() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) => ApiService.apiV1BatchTransfersDestroy(id),
+    description: 'Transfer deleted successfully',
+    invalidateQueries: ['batch-transfers', 'batch-container-assignments', 'batches', 'batch/batches'],
     injectAuditReason: (vars, reason) => ({ ...vars, change_reason: reason }),
   })
 }
