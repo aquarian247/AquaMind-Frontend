@@ -232,7 +232,6 @@ export function ContainerForm({ container, onSuccess, onCancel }: ContainerFormP
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None (clear selection)</SelectItem>
                     {hallsData?.results?.map((hall) => (
                       <SelectItem key={hall.id} value={hall.id.toString()}>
                         {hall.name}
@@ -275,7 +274,6 @@ export function ContainerForm({ container, onSuccess, onCancel }: ContainerFormP
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None (clear selection)</SelectItem>
                     {areasData?.results?.map((area) => (
                       <SelectItem key={area.id} value={area.id.toString()}>
                         {area.name}

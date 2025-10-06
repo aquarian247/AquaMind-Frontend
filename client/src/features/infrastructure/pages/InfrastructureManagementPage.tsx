@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Building2, MapPin, Waves, Factory, Container as ContainerIcon, Radio, Package } from 'lucide-react'
 import { useGeographies, useAreas, useFreshwaterStations, useHalls, useContainerTypes, useContainers, useSensors, useFeedContainers } from '../api'
@@ -199,6 +199,7 @@ export default function InfrastructureManagementPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Geography</DialogTitle>
+            <DialogDescription>Form for creating a new geography</DialogDescription>
           </DialogHeader>
           <GeographyForm
             onSuccess={handleSuccess}
@@ -211,6 +212,7 @@ export default function InfrastructureManagementPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Area</DialogTitle>
+            <DialogDescription>Form for creating a new area</DialogDescription>
           </DialogHeader>
           <AreaForm
             onSuccess={handleSuccess}
@@ -223,6 +225,7 @@ export default function InfrastructureManagementPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Freshwater Station</DialogTitle>
+            <DialogDescription>Form for creating a new freshwater station</DialogDescription>
           </DialogHeader>
           <FreshwaterStationForm
             onSuccess={handleSuccess}
@@ -235,6 +238,7 @@ export default function InfrastructureManagementPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Hall</DialogTitle>
+            <DialogDescription>Form for creating a new hall</DialogDescription>
           </DialogHeader>
           <HallForm
             onSuccess={handleSuccess}
@@ -247,6 +251,7 @@ export default function InfrastructureManagementPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Container Type</DialogTitle>
+            <DialogDescription>Form for creating a new container type</DialogDescription>
           </DialogHeader>
           <ContainerTypeForm
             onSuccess={handleSuccess}
@@ -259,6 +264,7 @@ export default function InfrastructureManagementPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Container</DialogTitle>
+            <DialogDescription>Form for creating a new container</DialogDescription>
           </DialogHeader>
           <ContainerForm
             onSuccess={handleSuccess}
@@ -271,6 +277,7 @@ export default function InfrastructureManagementPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Sensor</DialogTitle>
+            <DialogDescription>Form for creating a new sensor</DialogDescription>
           </DialogHeader>
           <SensorForm
             onSuccess={handleSuccess}
@@ -283,6 +290,7 @@ export default function InfrastructureManagementPage() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Feed Container</DialogTitle>
+            <DialogDescription>Form for creating a new feed container</DialogDescription>
           </DialogHeader>
           <FeedContainerForm
             onSuccess={handleSuccess}
