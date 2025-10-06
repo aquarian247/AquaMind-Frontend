@@ -1,0 +1,124 @@
+**Task:** Implement Phase 1 (I1.1) - Geography & Area Management Forms for the AquaMind frontend CRU initiative.
+
+**Repository / branch:** `AquaMind-Frontend`, branch `feature/frontend-cru-forms` (already exists, pull first).
+
+**Context:**
+Phase 0 (F0.1-F0.4) is COMPLETE ✅ with all foundation utilities ready:
+- Mutation infrastructure: `useCrudMutation` hook with toast notifications and query invalidation
+- Form layout primitives: `FormLayout`, `FormSection`, `FormActions` (from F0.1)
+- Validation schemas: `geographySchema` and `areaSchema` ready with 24 tests passing (from F0.2)
+- Permission system: `usePermissionGuard`, `WriteGate`, `DeleteGate` with RBAC (from F0.3)
+- Audit system: `useAuditReasonPrompt`, `AuditReasonDialog` for change tracking (from F0.3)
+- API verified: 100% CRUD coverage, zero blocking gaps (from F0.4)
+- Tests: 746 passing (148 new in Phase 0), type-check clean
+
+**Your objectives (I1.1):**
+1. **Implement Geography CRUD forms** - Create, edit, delete with modal/inline UI. Use `geographySchema` from validation library. Simple entity: name (max 100 chars) + optional description.
+2. **Implement Area CRUD forms** - Create, edit, delete with lat/long validation, geography dropdown (FK), max_biomass decimal, active boolean. Use `areaSchema` from validation library.
+3. **Apply permission gates** - Use `<WriteGate>` for create/edit buttons, `<DeleteGate>` for delete buttons (manager or higher).
+4. **Add audit trail** - Use `useAuditReasonPrompt` with `<AuditReasonDialog>` on delete operations. Required reason with min 10 chars.
+5. **Create query hooks** in `client/src/features/infrastructure/api.ts` using `useCrudMutation` helper and TanStack Query.
+6. **Write comprehensive tests** - Form validation, submission flows, permission gates, audit prompts. Target 20-30 new tests.
+7. **Manual QA** - Test in light/dark themes, responsive layouts, keyboard navigation, all CRUD operations end-to-end.
+
+**Must-read before coding (15 min):**
+- `docs/progress/frontend_write_forms/README.md` - Main entry point with quick links
+- `docs/progress/frontend_write_forms/session_checklist.md` - Pre-implementation workflow
+- `docs/progress/frontend_write_forms/frontend_forms.md` - Form composition patterns
+- `docs/progress/frontend_write_forms/backend_gaps.md` - Infrastructure section (confirms API ready)
+- `client/src/features/shared/pages/SpeciesExampleForm.tsx` - Reference implementation from F0.1
+- `client/src/lib/validation/README.md` - Validation usage guide
+
+**Quick API verification** (already done in F0.4, but confirm):
+```bash
+# Geography endpoints (6 CRUD + 1 summary):
+grep "apiV1InfrastructureGeographies" client/src/api/generated/services/ApiService.ts
+
+# Area endpoints (6 CRUD):
+grep "apiV1InfrastructureAreas" client/src/api/generated/services/ApiService.ts
+```
+
+**Success criteria:**
+- Geography and Area forms fully functional (create, edit, delete)
+- Permission gates protect write operations (VIEW role cannot edit/delete)
+- Delete operations capture audit reasons via dialog
+- List views integrated or extended with new actions
+- Query hooks properly invalidate caches on mutations
+- 20-30 new tests passing, zero regressions (746+ total tests)
+- Type-check clean
+- Manual QA complete (themes, responsive, accessibility)
+- Documentation updated if new patterns emerge
+
+**Implementation strategy:**
+1. Read foundation docs (15 min) - Especially session_checklist.md
+2. Create `features/infrastructure/api.ts` with query/mutation hooks
+3. Build Geography form (simpler, start here):
+   - GeographyForm component using FormLayout
+   - GeographyDeleteButton with audit prompt
+   - Tests for validation and submission
+4. Build Area form (more complex):
+   - AreaForm with geography dropdown, lat/long inputs
+   - AreaDeleteButton with audit prompt  
+   - Tests including foreign key handling
+5. Integrate with list views (extend existing infrastructure pages)
+6. Write comprehensive tests
+7. Manual QA (light/dark themes, responsive, keyboard nav)
+8. Run `npm run type-check` and `npm run test` (full suite)
+9. Document any gotchas or special patterns
+10. Commit and summarize
+
+**Key references:**
+- Phase 0 summary: `docs/progress/frontend_write_forms/Phase_0_Complete.md`
+- Implementation plan: `docs/progress/frontend_write_forms/CRU_implementation_plan.md` (see I1.1 section)
+- Form patterns: `docs/progress/frontend_write_forms/frontend_forms.md`
+- API coverage: `docs/progress/frontend_write_forms/backend_gaps.md` (Infrastructure section)
+- Session workflow: `docs/progress/frontend_write_forms/session_checklist.md`
+
+**Foundation components to use:**
+```typescript
+// Import everything you need from Phase 0:
+import { geographySchema, areaSchema, type GeographyFormValues, type AreaFormValues } from '@/lib/validation'
+import { FormLayout, FormSection, FormActions } from '@/features/shared/components/form'
+import { useCrudMutation } from '@/features/shared/hooks/useCrudMutation'
+import { WriteGate, DeleteGate, usePermissionGuard } from '@/features/shared/permissions'
+import { useAuditReasonPrompt, AuditReasonDialog } from '@/features/shared/audit'
+import { ApiService } from '@/api/generated'
+```
+
+**House rules:**
+- ASCII-only unless file already uses non-ASCII
+- No `npm run lint` script exists (expected, don't try to run it)
+- Follow existing patterns from Phase 0 (don't reinvent)
+- Keep components under 300 LOC (split if larger)
+- All mutation operations use `useCrudMutation` (never raw fetch)
+- All forms use validation schemas (never manual validation)
+- All write operations have permission gates
+- All delete operations have audit prompts
+- Write tests for all new components/hooks
+- Manual QA required for Phase 1+ (test themes, responsive)
+
+**Expected deliverables:**
+- `features/infrastructure/api.ts` - Query/mutation hooks
+- `features/infrastructure/components/GeographyForm.tsx` - Create/edit form
+- `features/infrastructure/components/GeographyDeleteButton.tsx` - Delete with audit
+- `features/infrastructure/components/AreaForm.tsx` - Create/edit form
+- `features/infrastructure/components/AreaDeleteButton.tsx` - Delete with audit
+- `features/infrastructure/__tests__/GeographyForm.test.tsx` - Tests
+- `features/infrastructure/__tests__/AreaForm.test.tsx` - Tests
+- Integration with existing infrastructure pages (or new list pages)
+- Updated documentation if new patterns emerge
+
+**Suggested workflow:**
+1. Pull branch: `git checkout feature/frontend-cru-forms && git pull`
+2. Read docs (15 min): README → session_checklist → frontend_forms
+3. Implement Geography CRUD (45-60 min)
+4. Test Geography (15 min)
+5. Implement Area CRUD (60-75 min)
+6. Test Area (15 min)
+7. Manual QA (15 min): themes, responsive, keyboard nav
+8. Run full test suite and type-check (5 min)
+9. Document and commit (10 min)
+
+**Total estimated time:** 3-4 hours
+
+Good luck! The foundation is solid - just follow the patterns and build on what's there. 🚀
