@@ -452,6 +452,172 @@ export function useDeleteHall() {
   });
 }
 
+// ===== CONTAINER TYPE CRUD HOOKS =====
+
+/**
+ * Hook to fetch all container types with optional filtering
+ * @param filters - Optional filter parameters
+ * @returns Query result with container types list
+ */
+export function useContainerTypes(filters?: { category?: 'TANK' | 'PEN' | 'TRAY' | 'OTHER' }) {
+  return useQuery({
+    queryKey: ["container-types", filters],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureContainerTypesList(
+        filters?.category,
+        undefined, // name
+        undefined, // ordering
+        undefined  // page
+      ),
+  });
+}
+
+/**
+ * Hook to fetch a single container type by ID
+ * @param id - The container type ID to fetch
+ * @returns Query result with container type data
+ */
+export function useContainerType(id: number | undefined) {
+  return useQuery({
+    queryKey: ["container-type", id],
+    queryFn: () => {
+      if (!id) throw new Error("Container type ID is required");
+      return ApiService.apiV1InfrastructureContainerTypesRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new container type
+ * @returns Mutation hook for creating container type
+ */
+export function useCreateContainerType() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureContainerTypesCreate,
+    description: "Container type created successfully",
+    invalidateQueries: ["container-types"],
+  });
+}
+
+/**
+ * Hook to update an existing container type
+ * @returns Mutation hook for updating container type
+ */
+export function useUpdateContainerType() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: any) =>
+      ApiService.apiV1InfrastructureContainerTypesUpdate(id, data),
+    description: "Container type updated successfully",
+    invalidateQueries: ["container-types"],
+  });
+}
+
+/**
+ * Hook to delete a container type with audit trail support
+ * @returns Mutation hook for deleting container type
+ */
+export function useDeleteContainerType() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureContainerTypesDestroy(id),
+    description: "Container type deleted",
+    invalidateQueries: ["container-types"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
+}
+
+// ===== CONTAINER CRUD HOOKS =====
+
+/**
+ * Hook to fetch all containers with optional filtering
+ * @param filters - Optional filter parameters
+ * @returns Query result with containers list
+ */
+export function useContainers(filters?: { 
+  hall?: number; 
+  area?: number; 
+  containerType?: number;
+  active?: boolean;
+}) {
+  return useQuery({
+    queryKey: ["containers", filters],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureContainersList(
+        filters?.active,
+        filters?.area,
+        undefined, // areaIn
+        filters?.containerType,
+        filters?.hall,
+        undefined, // hallIn
+        undefined, // name
+        undefined, // ordering
+        undefined  // page
+      ),
+  });
+}
+
+/**
+ * Hook to fetch a single container by ID
+ * @param id - The container ID to fetch
+ * @returns Query result with container data
+ */
+export function useContainer(id: number | undefined) {
+  return useQuery({
+    queryKey: ["container", id],
+    queryFn: () => {
+      if (!id) throw new Error("Container ID is required");
+      return ApiService.apiV1InfrastructureContainersRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new container
+ * @returns Mutation hook for creating container
+ */
+export function useCreateContainer() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureContainersCreate,
+    description: "Container created successfully",
+    invalidateQueries: ["containers"],
+  });
+}
+
+/**
+ * Hook to update an existing container
+ * @returns Mutation hook for updating container
+ */
+export function useUpdateContainer() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: any) =>
+      ApiService.apiV1InfrastructureContainersUpdate(id, data),
+    description: "Container updated successfully",
+    invalidateQueries: ["containers"],
+  });
+}
+
+/**
+ * Hook to delete a container with audit trail support
+ * @returns Mutation hook for deleting container
+ */
+export function useDeleteContainer() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureContainersDestroy(id),
+    description: "Container deleted",
+    invalidateQueries: ["containers"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
+}
+
 // ===== AREA CRUD HOOKS =====
 
 /**
