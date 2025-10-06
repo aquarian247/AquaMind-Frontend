@@ -59,6 +59,7 @@ export {
   type HallFormValues,
   freshwaterStationSchema,
   type FreshwaterStationFormValues,
+  stationTypeEnum,
   sensorSchema,
   type SensorFormValues,
   feedContainerSchema,

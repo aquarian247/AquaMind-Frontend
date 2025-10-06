@@ -296,6 +296,162 @@ export function useDeleteGeography() {
   });
 }
 
+// ===== FRESHWATER STATION CRUD HOOKS =====
+
+/**
+ * Hook to fetch all freshwater stations with optional filtering
+ * @param filters - Optional filter parameters
+ * @returns Query result with stations list
+ */
+export function useFreshwaterStations(filters?: { geography?: number; active?: boolean }) {
+  return useQuery({
+    queryKey: ["freshwater-stations", filters],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureFreshwaterStationsList(
+        filters?.active,
+        filters?.geography,
+        undefined, // ordering
+        undefined // page
+      ),
+  });
+}
+
+/**
+ * Hook to fetch a single freshwater station by ID
+ * @param id - The station ID to fetch
+ * @returns Query result with station data
+ */
+export function useFreshwaterStation(id: number | undefined) {
+  return useQuery({
+    queryKey: ["freshwater-station", id],
+    queryFn: () => {
+      if (!id) throw new Error("Freshwater station ID is required");
+      return ApiService.apiV1InfrastructureFreshwaterStationsRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new freshwater station
+ * @returns Mutation hook for creating station
+ */
+export function useCreateFreshwaterStation() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureFreshwaterStationsCreate,
+    description: "Freshwater station created successfully",
+    invalidateQueries: ["freshwater-stations"],
+  });
+}
+
+/**
+ * Hook to update an existing freshwater station
+ * @returns Mutation hook for updating station
+ */
+export function useUpdateFreshwaterStation() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: FreshwaterStation) =>
+      ApiService.apiV1InfrastructureFreshwaterStationsUpdate(id, data as FreshwaterStation),
+    description: "Freshwater station updated successfully",
+    invalidateQueries: ["freshwater-stations"],
+  });
+}
+
+/**
+ * Hook to delete a freshwater station with audit trail support
+ * @returns Mutation hook for deleting station
+ */
+export function useDeleteFreshwaterStation() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureFreshwaterStationsDestroy(id),
+    description: "Freshwater station deleted",
+    invalidateQueries: ["freshwater-stations"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
+}
+
+// ===== HALL CRUD HOOKS =====
+
+/**
+ * Hook to fetch all halls with optional filtering
+ * @param filters - Optional filter parameters
+ * @returns Query result with halls list
+ */
+export function useHalls(filters?: { freshwater_station?: number; active?: boolean }) {
+  return useQuery({
+    queryKey: ["halls", filters],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureHallsList(
+        filters?.active,
+        filters?.freshwater_station,
+        undefined, // ordering
+        undefined // page
+      ),
+  });
+}
+
+/**
+ * Hook to fetch a single hall by ID
+ * @param id - The hall ID to fetch
+ * @returns Query result with hall data
+ */
+export function useHall(id: number | undefined) {
+  return useQuery({
+    queryKey: ["hall", id],
+    queryFn: () => {
+      if (!id) throw new Error("Hall ID is required");
+      return ApiService.apiV1InfrastructureHallsRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new hall
+ * @returns Mutation hook for creating hall
+ */
+export function useCreateHall() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureHallsCreate,
+    description: "Hall created successfully",
+    invalidateQueries: ["halls"],
+  });
+}
+
+/**
+ * Hook to update an existing hall
+ * @returns Mutation hook for updating hall
+ */
+export function useUpdateHall() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: Hall) =>
+      ApiService.apiV1InfrastructureHallsUpdate(id, data as Hall),
+    description: "Hall updated successfully",
+    invalidateQueries: ["halls"],
+  });
+}
+
+/**
+ * Hook to delete a hall with audit trail support
+ * @returns Mutation hook for deleting hall
+ */
+export function useDeleteHall() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureHallsDestroy(id),
+    description: "Hall deleted",
+    invalidateQueries: ["halls"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
+}
+
 // ===== AREA CRUD HOOKS =====
 
 /**

@@ -134,13 +134,21 @@ export const hallSchema = z.object({
 export type HallFormValues = z.infer<typeof hallSchema>
 
 /**
+ * Freshwater Station station_type enum.
+ */
+export const stationTypeEnum = z.enum(['FRESHWATER', 'BROODSTOCK'])
+
+/**
  * Freshwater Station creation/update form schema.
  * Maps to the FreshwaterStation model from generated API.
  */
 export const freshwaterStationSchema = z.object({
   name: nonEmptyString.max(100, 'Name must be 100 characters or less'),
+  station_type: stationTypeEnum,
   geography: z.coerce.number().int().positive('Geography is required'),
-  location_address: optionalString,
+  latitude: latitudeString,
+  longitude: longitudeString,
+  description: optionalString,
   active: booleanWithDefault(true),
 })
 
