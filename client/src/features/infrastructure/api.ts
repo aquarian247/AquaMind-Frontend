@@ -1,10 +1,12 @@
 /**
  * Infrastructure API Wrappers
  * Server-side aggregation endpoints for infrastructure KPIs
+ * Plus CRUD operations for Geography and Area entities
  */
 
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { ApiService } from "@/api/generated";
+import { useCrudMutation } from "@/features/shared/hooks/useCrudMutation";
 import type {
   Area,
   FreshwaterStation,
@@ -221,4 +223,153 @@ export function getInfrastructureQueryKeys() {
     geographies: ["infrastructure", "geography-summary"] as const,
     geography: (id: number) => ["infrastructure", "geography-summary", id] as const,
   };
+}
+
+// ===== GEOGRAPHY CRUD HOOKS =====
+
+/**
+ * Hook to fetch all geographies
+ * @returns Query result with geographies list
+ */
+export function useGeographies() {
+  return useQuery({
+    queryKey: ["geographies"],
+    queryFn: () => ApiService.apiV1InfrastructureGeographiesList(),
+  });
+}
+
+/**
+ * Hook to fetch a single geography by ID
+ * @param id - The geography ID to fetch
+ * @returns Query result with geography data
+ */
+export function useGeography(id: number | undefined) {
+  return useQuery({
+    queryKey: ["geography", id],
+    queryFn: () => {
+      if (!id) throw new Error("Geography ID is required");
+      return ApiService.apiV1InfrastructureGeographiesRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new geography
+ * @returns Mutation hook for creating geography
+ */
+export function useCreateGeography() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureGeographiesCreate,
+    description: "Geography created successfully",
+    invalidateQueries: ["geographies"],
+  });
+}
+
+/**
+ * Hook to update an existing geography
+ * @returns Mutation hook for updating geography
+ */
+export function useUpdateGeography() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: Geography) =>
+      ApiService.apiV1InfrastructureGeographiesUpdate(id, data as Geography),
+    description: "Geography updated successfully",
+    invalidateQueries: ["geographies"],
+  });
+}
+
+/**
+ * Hook to delete a geography with audit trail support
+ * @returns Mutation hook for deleting geography
+ */
+export function useDeleteGeography() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureGeographiesDestroy(id),
+    description: "Geography deleted",
+    invalidateQueries: ["geographies"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
+}
+
+// ===== AREA CRUD HOOKS =====
+
+/**
+ * Hook to fetch all areas with optional filtering
+ * @param filters - Optional filter parameters
+ * @returns Query result with areas list
+ */
+export function useAreas(filters?: { geography?: number; active?: boolean }) {
+  return useQuery({
+    queryKey: ["areas", filters],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureAreasList(
+        filters?.active,
+        filters?.geography,
+        undefined, // ordering
+        undefined // page
+      ),
+  });
+}
+
+/**
+ * Hook to fetch a single area by ID
+ * @param id - The area ID to fetch
+ * @returns Query result with area data
+ */
+export function useArea(id: number | undefined) {
+  return useQuery({
+    queryKey: ["area", id],
+    queryFn: () => {
+      if (!id) throw new Error("Area ID is required");
+      return ApiService.apiV1InfrastructureAreasRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new area
+ * @returns Mutation hook for creating area
+ */
+export function useCreateArea() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureAreasCreate,
+    description: "Area created successfully",
+    invalidateQueries: ["areas"],
+  });
+}
+
+/**
+ * Hook to update an existing area
+ * @returns Mutation hook for updating area
+ */
+export function useUpdateArea() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: Area) =>
+      ApiService.apiV1InfrastructureAreasUpdate(id, data as Area),
+    description: "Area updated successfully",
+    invalidateQueries: ["areas"],
+  });
+}
+
+/**
+ * Hook to delete an area with audit trail support
+ * @returns Mutation hook for deleting area
+ */
+export function useDeleteArea() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureAreasDestroy(id),
+    description: "Area deleted",
+    invalidateQueries: ["areas"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
 }
