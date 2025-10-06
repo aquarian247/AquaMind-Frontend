@@ -128,6 +128,10 @@ export const hallSchema = z.object({
   name: nonEmptyString.max(100, 'Name must be 100 characters or less'),
   freshwater_station: z.coerce.number().int().positive('Freshwater station is required'),
   description: optionalString,
+  area_sqm: optionalDecimalString({
+    decimalPlaces: 2,
+    label: 'Area (sqm)',
+  }),
   active: booleanWithDefault(true),
 })
 

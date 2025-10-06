@@ -46,7 +46,7 @@ export function FeedContainerForm({ feedContainer, onSuccess, onCancel }: FeedCo
     resolver: zodResolver(feedContainerSchema),
     defaultValues: {
       name: feedContainer?.name || '',
-      hall: feedContainer?.hall || undefined,
+      hall: feedContainer?.hall || ('' as any),
       capacity_kg: feedContainer?.capacity_kg || '',
       active: feedContainer?.active ?? true,
     },
@@ -143,8 +143,8 @@ export function FeedContainerForm({ feedContainer, onSuccess, onCancel }: FeedCo
                 </div>
               }>
                 <Select
-                  onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                  value={field.value?.toString()}
+                  onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : ('' as any))}
+                  value={field.value?.toString() || ''}
                   disabled={hallsLoading}
                 >
                   <FormControl>

@@ -47,8 +47,9 @@ export function HallForm({ hall, onSuccess, onCancel }: HallFormProps) {
     resolver: zodResolver(hallSchema),
     defaultValues: {
       name: hall?.name || '',
-      freshwater_station: hall?.freshwater_station || undefined,
+      freshwater_station: hall?.freshwater_station || ('' as any),
       description: hall?.description || '',
+      area_sqm: hall?.area_sqm || '',
       active: hall?.active ?? true,
     },
   })
@@ -144,8 +145,8 @@ export function HallForm({ hall, onSuccess, onCancel }: HallFormProps) {
                 </div>
               }>
                 <Select
-                  onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                  value={field.value?.toString()}
+                  onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : ('' as any))}
+                  value={field.value?.toString() || ''}
                   disabled={stationsLoading}
                 >
                   <FormControl>
@@ -161,6 +162,30 @@ export function HallForm({ hall, onSuccess, onCancel }: HallFormProps) {
                     ))}
                   </SelectContent>
                 </Select>
+              </WriteGate>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="area_sqm"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="hall-area-sqm">Area (m²)</FormLabel>
+              <WriteGate fallback={
+                <div className="text-sm text-muted-foreground">{field.value || 'N/A'} m²</div>
+              }>
+                <FormControl>
+                  <Input
+                    id="hall-area-sqm"
+                    aria-label="Area Square Meters"
+                    type="text"
+                    placeholder="e.g., 500.75"
+                    {...field}
+                  />
+                </FormControl>
               </WriteGate>
               <FormMessage />
             </FormItem>

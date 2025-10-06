@@ -197,6 +197,9 @@ export default function InfrastructureManagementPage() {
       {/* Create Dialogs */}
       <Dialog open={createDialogOpen === 'geography'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Geography</DialogTitle>
+          </DialogHeader>
           <GeographyForm
             onSuccess={handleSuccess}
             onCancel={() => setCreateDialogOpen(null)}
@@ -206,6 +209,9 @@ export default function InfrastructureManagementPage() {
 
       <Dialog open={createDialogOpen === 'area'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Area</DialogTitle>
+          </DialogHeader>
           <AreaForm
             onSuccess={handleSuccess}
             onCancel={() => setCreateDialogOpen(null)}
@@ -215,6 +221,9 @@ export default function InfrastructureManagementPage() {
 
       <Dialog open={createDialogOpen === 'station'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Freshwater Station</DialogTitle>
+          </DialogHeader>
           <FreshwaterStationForm
             onSuccess={handleSuccess}
             onCancel={() => setCreateDialogOpen(null)}
@@ -224,6 +233,9 @@ export default function InfrastructureManagementPage() {
 
       <Dialog open={createDialogOpen === 'hall'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Hall</DialogTitle>
+          </DialogHeader>
           <HallForm
             onSuccess={handleSuccess}
             onCancel={() => setCreateDialogOpen(null)}
@@ -233,6 +245,9 @@ export default function InfrastructureManagementPage() {
 
       <Dialog open={createDialogOpen === 'containerType'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Container Type</DialogTitle>
+          </DialogHeader>
           <ContainerTypeForm
             onSuccess={handleSuccess}
             onCancel={() => setCreateDialogOpen(null)}
@@ -242,6 +257,9 @@ export default function InfrastructureManagementPage() {
 
       <Dialog open={createDialogOpen === 'container'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Container</DialogTitle>
+          </DialogHeader>
           <ContainerForm
             onSuccess={handleSuccess}
             onCancel={() => setCreateDialogOpen(null)}
@@ -251,6 +269,9 @@ export default function InfrastructureManagementPage() {
 
       <Dialog open={createDialogOpen === 'sensor'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Sensor</DialogTitle>
+          </DialogHeader>
           <SensorForm
             onSuccess={handleSuccess}
             onCancel={() => setCreateDialogOpen(null)}
@@ -260,6 +281,9 @@ export default function InfrastructureManagementPage() {
 
       <Dialog open={createDialogOpen === 'feedContainer'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Feed Container</DialogTitle>
+          </DialogHeader>
           <FeedContainerForm
             onSuccess={handleSuccess}
             onCancel={() => setCreateDialogOpen(null)}

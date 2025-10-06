@@ -55,7 +55,7 @@ export function ContainerForm({ container, onSuccess, onCancel }: ContainerFormP
     resolver: zodResolver(containerSchema),
     defaultValues: {
       name: container?.name || '',
-      container_type: container?.container_type || undefined,
+      container_type: container?.container_type || ('' as any),
       hall: container?.hall || null,
       area: container?.area || null,
       volume_m3: container?.volume_m3 || '',
@@ -170,8 +170,8 @@ export function ContainerForm({ container, onSuccess, onCancel }: ContainerFormP
                 </div>
               }>
                 <Select
-                  onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                  value={field.value?.toString()}
+                  onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : ('' as any))}
+                  value={field.value?.toString() || ''}
                   disabled={containerTypesLoading}
                 >
                   <FormControl>

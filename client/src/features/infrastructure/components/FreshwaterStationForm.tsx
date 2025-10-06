@@ -51,7 +51,7 @@ export function FreshwaterStationForm({ station, onSuccess, onCancel }: Freshwat
     defaultValues: {
       name: station?.name || '',
       station_type: station?.station_type || 'FRESHWATER',
-      geography: station?.geography || undefined,
+      geography: station?.geography || ('' as any),
       latitude: station?.latitude || '',
       longitude: station?.longitude || '',
       description: station?.description || '',
@@ -182,8 +182,8 @@ export function FreshwaterStationForm({ station, onSuccess, onCancel }: Freshwat
                 </div>
               }>
                 <Select
-                  onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                  value={field.value?.toString()}
+                  onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : ('' as any))}
+                  value={field.value?.toString() || ''}
                   disabled={geographiesLoading}
                 >
                   <FormControl>

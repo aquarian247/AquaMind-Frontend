@@ -48,7 +48,7 @@ export function AreaForm({ area, onSuccess, onCancel }: AreaFormProps) {
     resolver: zodResolver(areaSchema),
     defaultValues: {
       name: area?.name || '',
-      geography: area?.geography || undefined,
+      geography: area?.geography || ('' as any),
       latitude: area?.latitude || '',
       longitude: area?.longitude || '',
       max_biomass: area?.max_biomass || '',
@@ -147,8 +147,8 @@ export function AreaForm({ area, onSuccess, onCancel }: AreaFormProps) {
                 </div>
               }>
                 <Select
-                  onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                  value={field.value?.toString()}
+                  onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : ('' as any))}
+                  value={field.value?.toString() || ''}
                   disabled={geographiesLoading}
                 >
                   <FormControl>
@@ -262,9 +262,9 @@ export function AreaForm({ area, onSuccess, onCancel }: AreaFormProps) {
           name="max_biomass"
           render={({ field }) => (
             <FormItem>
-              <FormLabel htmlFor="area-max-biomass">Maximum Biomass (kg) *</FormLabel>
+              <FormLabel htmlFor="area-max-biomass">Maximum Biomass (tonnes) *</FormLabel>
               <WriteGate fallback={
-                <div className="text-sm text-muted-foreground">{field.value || 'N/A'}</div>
+                <div className="text-sm text-muted-foreground">{field.value || 'N/A'} tonnes</div>
               }>
                 <FormControl>
                   <Input
@@ -277,6 +277,7 @@ export function AreaForm({ area, onSuccess, onCancel }: AreaFormProps) {
                 </FormControl>
               </WriteGate>
               <FormMessage />
+              <p className="text-xs text-muted-foreground">Enter value in tonnes (stored as kg internally)</p>
             </FormItem>
           )}
         />
