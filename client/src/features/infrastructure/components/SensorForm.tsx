@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InfoIcon } from 'lucide-react'
 import { WriteGate } from '@/features/shared/permissions'
-import { useCreateSensor, useUpdateSensor, useContainers, useAreas, useHalls } from '../api'
+import { useCreateSensor, useUpdateSensor, useContainers, useAreas, useHalls, useFreshwaterStations } from '../api'
 import type { Sensor } from '@/api/generated'
 
 interface SensorFormProps {
@@ -50,6 +50,7 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
 
   // Filter state for narrowing down container selection
   const [filterArea, setFilterArea] = useState<number | undefined>(undefined)
+  const [filterStation, setFilterStation] = useState<number | undefined>(undefined)
   const [filterHall, setFilterHall] = useState<number | undefined>(undefined)
 
   const form = useForm<SensorFormValues>({
@@ -71,7 +72,12 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
   
   // Load filter options
   const { data: areasData, isLoading: areasLoading } = useAreas()
-  const { data: hallsData, isLoading: hallsLoading } = useHalls()
+  const { data: stationsData, isLoading: stationsLoading } = useFreshwaterStations()
+  
+  // Load halls filtered by selected station
+  const { data: hallsData, isLoading: hallsLoading } = useHalls(
+    filterStation ? { freshwater_station: filterStation } : undefined
+  )
   
   // Load containers with filters applied
   const { data: containersData, isLoading: containersLoading } = useContainers({
@@ -137,13 +143,20 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
         <Alert>
           <InfoIcon className="h-4 w-4" />
           <AlertDescription>
-            With 1000+ containers, use these filters to find the right one. Select an <strong>Area</strong> (for sea containers) <strong>or</strong> a <strong>Hall</strong> (for freshwater containers).
+            With 1000+ containers, use these filters to find the right one.
+            <br />
+            <strong>Sea:</strong> Select an Area
+            <br />
+            <strong>Freshwater:</strong> Select a Station, then a Hall
           </AlertDescription>
         </Alert>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4">
+          {/* Option 1: Area filter for sea containers */}
           <div>
-            <FormLabel htmlFor="filter-area">Filter by Area (Sea)</FormLabel>
+            <FormLabel htmlFor="filter-area" className="text-base font-semibold">
+              Sea Containers - Filter by Area
+            </FormLabel>
             <Select
               value={filterArea?.toString() || 'none'}
               onValueChange={(value) => {
@@ -151,17 +164,19 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
                   setFilterArea(undefined)
                 } else {
                   setFilterArea(parseInt(value, 10))
-                  setFilterHall(undefined) // Clear hall when area selected
+                  // Clear freshwater filters when area selected
+                  setFilterStation(undefined)
+                  setFilterHall(undefined)
                 }
                 form.setValue('container', '' as any) // Clear container selection
               }}
-              disabled={areasLoading}
+              disabled={areasLoading || !!filterStation || !!filterHall}
             >
               <SelectTrigger id="filter-area">
                 <SelectValue placeholder="Select an area..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">No filter (all areas)</SelectItem>
+                <SelectItem value="none">No filter</SelectItem>
                 {areasData?.results?.map((area) => (
                   <SelectItem key={area.id} value={area.id.toString()}>
                     {area.name}
@@ -171,39 +186,98 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
             </Select>
           </div>
 
-          <div>
-            <FormLabel htmlFor="filter-hall">Filter by Hall (Freshwater)</FormLabel>
-            <Select
-              value={filterHall?.toString() || 'none'}
-              onValueChange={(value) => {
-                if (value === 'none') {
-                  setFilterHall(undefined)
-                } else {
-                  setFilterHall(parseInt(value, 10))
-                  setFilterArea(undefined) // Clear area when hall selected
-                }
-                form.setValue('container', '' as any) // Clear container selection
-              }}
-              disabled={hallsLoading}
-            >
-              <SelectTrigger id="filter-hall">
-                <SelectValue placeholder="Select a hall..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No filter (all halls)</SelectItem>
-                {hallsData?.results?.map((hall) => (
-                  <SelectItem key={hall.id} value={hall.id.toString()}>
-                    {hall.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Option 2: Station + Hall filter for freshwater containers */}
+          <div className="space-y-3 pt-2 border-t">
+            <FormLabel className="text-base font-semibold">
+              Freshwater Containers - Filter by Station & Hall
+            </FormLabel>
+            
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <FormLabel htmlFor="filter-station">1. Freshwater Station</FormLabel>
+                <Select
+                  value={filterStation?.toString() || 'none'}
+                  onValueChange={(value) => {
+                    if (value === 'none') {
+                      setFilterStation(undefined)
+                      setFilterHall(undefined) // Clear hall when station cleared
+                    } else {
+                      setFilterStation(parseInt(value, 10))
+                      setFilterHall(undefined) // Clear hall when changing station
+                      setFilterArea(undefined) // Clear area when station selected
+                    }
+                    form.setValue('container', '' as any) // Clear container selection
+                  }}
+                  disabled={stationsLoading || !!filterArea}
+                >
+                  <SelectTrigger id="filter-station">
+                    <SelectValue placeholder="Select a station..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">No filter</SelectItem>
+                    {stationsData?.results?.map((station) => (
+                      <SelectItem key={station.id} value={station.id.toString()}>
+                        {station.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <FormLabel htmlFor="filter-hall">2. Hall in Station</FormLabel>
+                <Select
+                  value={filterHall?.toString() || 'none'}
+                  onValueChange={(value) => {
+                    if (value === 'none') {
+                      setFilterHall(undefined)
+                    } else {
+                      setFilterHall(parseInt(value, 10))
+                    }
+                    form.setValue('container', '' as any) // Clear container selection
+                  }}
+                  disabled={hallsLoading || !filterStation || !!filterArea}
+                >
+                  <SelectTrigger id="filter-hall">
+                    <SelectValue placeholder={
+                      !filterStation 
+                        ? "Select a station first..." 
+                        : hallsData?.results?.length === 0
+                        ? "No halls in this station"
+                        : "Select a hall..."
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">All halls in station</SelectItem>
+                    {hallsData?.results?.map((hall) => (
+                      <SelectItem key={hall.id} value={hall.id.toString()}>
+                        {hall.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription className="text-xs">
+                  {!filterStation 
+                    ? "Choose a station first"
+                    : hallsData?.results?.length 
+                    ? `${hallsData.results.length} hall${hallsData.results.length !== 1 ? 's' : ''} in this station`
+                    : "No halls found"
+                  }
+                </FormDescription>
+              </div>
+            </div>
           </div>
         </div>
 
         {(filterArea || filterHall) && (
-          <div className="text-sm text-muted-foreground">
-            Showing {containerCount} container{containerCount !== 1 ? 's' : ''} {filterArea ? 'in selected area' : 'in selected hall'}
+          <div className="text-sm text-green-700 bg-green-50 rounded p-2">
+            ✓ Showing {containerCount} container{containerCount !== 1 ? 's' : ''} {
+              filterArea 
+                ? 'in selected area' 
+                : filterHall 
+                ? `in selected hall${filterStation ? ' (within station)' : ''}`
+                : ''
+            }
           </div>
         )}
       </FormSection>
