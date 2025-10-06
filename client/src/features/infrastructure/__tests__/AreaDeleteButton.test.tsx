@@ -17,18 +17,20 @@ vi.mock('@/features/shared/permissions', () => ({
 }))
 
 // Mock audit components
-vi.mock('@/features/shared/audit', () => ({
-  useAuditReasonPrompt: vi.fn(),
-  AuditReasonDialog: ({ open, onConfirm, onCancel }: any) => {
-    if (!open) return null
-    return (
-      <div data-testid="audit-dialog">
-        <button onClick={() => onConfirm('Test reason')}>Confirm</button>
-        <button onClick={onCancel}>Cancel Dialog</button>
-      </div>
-    )
-  },
-}))
+vi.mock('@/features/shared/audit', async () => {
+  return {
+    useAuditReasonPrompt: vi.fn(),
+    AuditReasonDialog: ({ open, onConfirm, onCancel }: any) => {
+      if (!open) return null
+      return (
+        <div data-testid="audit-dialog">
+          <button onClick={() => onConfirm('Test reason')}>Confirm</button>
+          <button onClick={onCancel}>Cancel Dialog</button>
+        </div>
+      )
+    },
+  }
+})
 
 const mockArea: Area = {
   id: 1,
@@ -65,8 +67,8 @@ describe('AreaDeleteButton', () => {
     const mockDelete = { mutateAsync: vi.fn(), isPending: false }
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
-    const { useAuditReasonPrompt } = require('@/features/shared/audit')
-    useAuditReasonPrompt.mockReturnValue({
+    const { useAuditReasonPrompt } = await import('@/features/shared/audit')
+    vi.mocked(useAuditReasonPrompt).mockReturnValue({
       promptReason: vi.fn(),
       dialogState: { isOpen: false, options: {}, onConfirm: vi.fn(), onCancel: vi.fn() },
     })
@@ -83,8 +85,8 @@ describe('AreaDeleteButton', () => {
     
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
-    const { useAuditReasonPrompt } = require('@/features/shared/audit')
-    useAuditReasonPrompt.mockReturnValue({
+    const { useAuditReasonPrompt } = await import('@/features/shared/audit')
+    vi.mocked(useAuditReasonPrompt).mockReturnValue({
       promptReason: mockPromptReason,
       dialogState: { isOpen: true, options: {}, onConfirm: vi.fn(), onCancel: vi.fn() },
     })
@@ -108,8 +110,8 @@ describe('AreaDeleteButton', () => {
     
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
-    const { useAuditReasonPrompt } = require('@/features/shared/audit')
-    useAuditReasonPrompt.mockReturnValue({
+    const { useAuditReasonPrompt } = await import('@/features/shared/audit')
+    vi.mocked(useAuditReasonPrompt).mockReturnValue({
       promptReason: mockPromptReason,
       dialogState: { isOpen: false, options: {}, onConfirm: vi.fn(), onCancel: vi.fn() },
     })
@@ -151,8 +153,8 @@ describe('AreaDeleteButton', () => {
     
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
-    const { useAuditReasonPrompt } = require('@/features/shared/audit')
-    useAuditReasonPrompt.mockReturnValue({
+    const { useAuditReasonPrompt } = await import('@/features/shared/audit')
+    vi.mocked(useAuditReasonPrompt).mockReturnValue({
       promptReason: mockPromptReason,
       dialogState: { isOpen: false, options: {}, onConfirm: vi.fn(), onCancel: vi.fn() },
     })
@@ -173,8 +175,8 @@ describe('AreaDeleteButton', () => {
     const mockDelete = { mutateAsync: vi.fn(), isPending: true }
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
-    const { useAuditReasonPrompt } = require('@/features/shared/audit')
-    useAuditReasonPrompt.mockReturnValue({
+    const { useAuditReasonPrompt } = await import('@/features/shared/audit')
+    vi.mocked(useAuditReasonPrompt).mockReturnValue({
       promptReason: vi.fn(),
       dialogState: { isOpen: false, options: {}, onConfirm: vi.fn(), onCancel: vi.fn() },
     })
@@ -197,8 +199,8 @@ describe('AreaDeleteButton', () => {
     
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
-    const { useAuditReasonPrompt } = require('@/features/shared/audit')
-    useAuditReasonPrompt.mockReturnValue({
+    const { useAuditReasonPrompt } = await import('@/features/shared/audit')
+    vi.mocked(useAuditReasonPrompt).mockReturnValue({
       promptReason: mockPromptReason,
       dialogState: { isOpen: false, options: {}, onConfirm: vi.fn(), onCancel: vi.fn() },
     })
@@ -222,8 +224,8 @@ describe('AreaDeleteButton', () => {
     const mockDelete = { mutateAsync: vi.fn(), isPending: false }
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
-    const { useAuditReasonPrompt } = require('@/features/shared/audit')
-    useAuditReasonPrompt.mockReturnValue({
+    const { useAuditReasonPrompt } = await import('@/features/shared/audit')
+    vi.mocked(useAuditReasonPrompt).mockReturnValue({
       promptReason: vi.fn(),
       dialogState: { isOpen: false, options: {}, onConfirm: vi.fn(), onCancel: vi.fn() },
     })

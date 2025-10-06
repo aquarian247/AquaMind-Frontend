@@ -235,7 +235,9 @@ describe('Infrastructure Schemas', () => {
       const result = freshwaterStationSchema.parse({
         name: 'Station 1',
         geography: '1',
-        location_address: '123 Main St',
+        station_type: 'FRESHWATER',
+        latitude: '59.9139',
+        longitude: '10.7522',
         active: true,
       })
       expect(result.name).toBe('Station 1')
@@ -255,12 +257,12 @@ describe('Infrastructure Schemas', () => {
 
     it('accepts valid sensor', () => {
       const result = sensorSchema.parse({
-        sensor_id: 'SENSOR-001',
-        sensor_type: 'Temperature',
+        name: 'SENSOR-001',
+        sensor_type: 'TEMPERATURE',
         container: '1',
         active: true,
       })
-      expect(result.sensor_id).toBe('SENSOR-001')
+      expect(result.name).toBe('SENSOR-001')
       expect(result.container).toBe(1)
     })
   })
@@ -279,6 +281,7 @@ describe('Infrastructure Schemas', () => {
       const result = feedContainerSchema.parse({
         name: 'Feed Silo 1',
         hall: '1',
+        container_type: 'SILO',
         capacity_kg: '1000.00',
         active: true,
       })
