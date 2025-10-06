@@ -41,3 +41,4 @@ export interface AuditReasonPromptResult {
   /** User-provided reason (empty string if cancelled) */
   reason: string
 }
+

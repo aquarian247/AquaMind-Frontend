@@ -123,3 +123,4 @@ export function DeleteGate({
   const { canDelete } = usePermissionGuard()
   return canDelete ? <>{children}</> : fallback ? <>{fallback}</> : null
 }
+

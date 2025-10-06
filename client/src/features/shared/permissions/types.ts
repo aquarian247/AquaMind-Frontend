@@ -74,3 +74,4 @@ export interface PermissionCheckResult {
   /** Reason for denial (if not allowed) */
   reason?: string
 }
+

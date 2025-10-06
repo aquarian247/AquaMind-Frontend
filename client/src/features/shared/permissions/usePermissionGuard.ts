@@ -87,3 +87,4 @@ export function usePermissionGuard() {
  * Result type for usePermissionGuard hook.
  */
 export type PermissionGuard = ReturnType<typeof usePermissionGuard>
+

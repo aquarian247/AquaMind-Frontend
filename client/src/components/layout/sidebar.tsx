@@ -38,12 +38,6 @@ const navigationItems = [
     path: "/batch-management",
   },
   {
-    id: 15,
-    label: "Batch Setup",
-    icon: "fas fa-plus-circle",
-    path: "/batch-setup",
-  },
-  {
     id: 6,
     label: "Health",
     icon: "fas fa-heart",

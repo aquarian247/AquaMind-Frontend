@@ -197,3 +197,4 @@ describe('DeleteGate', () => {
     expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument()
   })
 })
+

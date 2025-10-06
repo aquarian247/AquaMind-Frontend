@@ -2,14 +2,16 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Fish, TrendingUp, Link as LinkIcon, ArrowRightLeft } from 'lucide-react'
-import { useBatches, useLifecycleStages, useBatchContainerAssignments, useBatchTransfers } from '../api'
+import { Plus, Fish, TrendingUp, Link as LinkIcon, ArrowRightLeft, LineChart, Skull } from 'lucide-react'
+import { useBatches, useLifecycleStages, useBatchContainerAssignments, useBatchTransfers, useGrowthSamples, useMortalityEvents } from '../api'
 import { BatchForm } from '../components/BatchForm'
 import { LifecycleStageForm } from '../components/LifecycleStageForm'
 import { BatchContainerAssignmentForm } from '../components/BatchContainerAssignmentForm'
 import { BatchTransferForm } from '../components/BatchTransferForm'
+import { GrowthSampleForm } from '../components/GrowthSampleForm'
+import { MortalityEventForm } from '../components/MortalityEventForm'
 
-type EntityType = 'batch' | 'lifecycleStage' | 'assignment' | 'transfer' | null
+type EntityType = 'batch' | 'lifecycleStage' | 'assignment' | 'transfer' | 'growthSample' | 'mortalityEvent' | null
 
 /**
  * Batch Setup Page with Create Dialogs
@@ -31,6 +33,8 @@ export default function BatchSetupPage() {
   const { data: stagesData } = useLifecycleStages()
   const { data: assignmentsData } = useBatchContainerAssignments()
   const { data: transfersData } = useBatchTransfers()
+  const { data: growthSamplesData } = useGrowthSamples()
+  const { data: mortalityEventsData } = useMortalityEvents()
 
   const handleSuccess = () => {
     setCreateDialogOpen(null)
@@ -73,6 +77,22 @@ export default function BatchSetupPage() {
       count: transfersData?.results?.length || 0,
       color: 'orange'
     },
+    {
+      id: 'growthSample' as const,
+      name: 'Growth Sample',
+      description: 'Record growth measurements',
+      icon: LineChart,
+      count: growthSamplesData?.results?.length || 0,
+      color: 'teal'
+    },
+    {
+      id: 'mortalityEvent' as const,
+      name: 'Mortality Event',
+      description: 'Record mortality occurrences',
+      icon: Skull,
+      count: mortalityEventsData?.results?.length || 0,
+      color: 'red'
+    },
   ]
 
   const getColorClasses = (color: string) => {
@@ -81,6 +101,8 @@ export default function BatchSetupPage() {
       green: { icon: 'text-green-600', text: 'text-green-600', bg: 'bg-green-50' },
       purple: { icon: 'text-purple-600', text: 'text-purple-600', bg: 'bg-purple-50' },
       orange: { icon: 'text-orange-600', text: 'text-orange-600', bg: 'bg-orange-50' },
+      teal: { icon: 'text-teal-600', text: 'text-teal-600', bg: 'bg-teal-50' },
+      red: { icon: 'text-red-600', text: 'text-red-600', bg: 'bg-red-50' },
     }
     return colors[color] || colors.blue
   }
@@ -97,7 +119,7 @@ export default function BatchSetupPage() {
       </div>
 
       {/* Entity Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {entities.map((entity) => {
           const colors = getColorClasses(entity.color)
           const Icon = entity.icon
@@ -170,6 +192,28 @@ export default function BatchSetupPage() {
             <DialogDescription>Move fish from one container to another</DialogDescription>
           </DialogHeader>
           <BatchTransferForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Growth Sample Create Dialog */}
+      <Dialog open={createDialogOpen === 'growthSample'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Record Growth Sample</DialogTitle>
+            <DialogDescription>Record weight and length measurements for batch monitoring</DialogDescription>
+          </DialogHeader>
+          <GrowthSampleForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Mortality Event Create Dialog */}
+      <Dialog open={createDialogOpen === 'mortalityEvent'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Record Mortality Event</DialogTitle>
+            <DialogDescription>Record fish mortalities for batch tracking</DialogDescription>
+          </DialogHeader>
+          <MortalityEventForm onSuccess={handleSuccess} onCancel={handleCancel} />
         </DialogContent>
       </Dialog>
 

@@ -182,3 +182,4 @@ export function canWrite(user: User | null | undefined): boolean {
 export function canDelete(user: User | null | undefined): boolean {
   return isManager(user)
 }
+
