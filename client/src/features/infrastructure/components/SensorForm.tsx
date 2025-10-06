@@ -1,13 +1,15 @@
-import React from 'react'
+import React, { useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { sensorSchema, sensorTypeEnum, type SensorFormValues } from '@/lib/validation'
 import { FormLayout, FormSection } from '@/features/shared/components/form'
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
+import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { InfoIcon } from 'lucide-react'
 import { WriteGate } from '@/features/shared/permissions'
-import { useCreateSensor, useUpdateSensor, useContainers } from '../api'
+import { useCreateSensor, useUpdateSensor, useContainers, useAreas, useHalls } from '../api'
 import type { Sensor } from '@/api/generated'
 
 interface SensorFormProps {
@@ -46,6 +48,10 @@ interface SensorFormProps {
 export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
   const isEditMode = !!sensor
 
+  // Filter state for narrowing down container selection
+  const [filterArea, setFilterArea] = useState<number | undefined>(undefined)
+  const [filterHall, setFilterHall] = useState<number | undefined>(undefined)
+
   const form = useForm<SensorFormValues>({
     resolver: zodResolver(sensorSchema),
     defaultValues: {
@@ -62,7 +68,19 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
 
   const createMutation = useCreateSensor()
   const updateMutation = useUpdateSensor()
-  const { data: containersData, isLoading: containersLoading } = useContainers()
+  
+  // Load filter options
+  const { data: areasData, isLoading: areasLoading } = useAreas()
+  const { data: hallsData, isLoading: hallsLoading } = useHalls()
+  
+  // Load containers with filters applied
+  const { data: containersData, isLoading: containersLoading } = useContainers({
+    area: filterArea,
+    hall: filterHall,
+  })
+
+  // Count filtered containers
+  const containerCount = containersData?.results?.length || 0
 
   const onSubmit = async (values: SensorFormValues) => {
     try {
@@ -112,6 +130,84 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
         } : undefined,
       }}
     >
+      <FormSection
+        title="Container Filter"
+        description="Narrow down container selection by location (optional but recommended)."
+      >
+        <Alert>
+          <InfoIcon className="h-4 w-4" />
+          <AlertDescription>
+            With 1000+ containers, use these filters to find the right one. Select an <strong>Area</strong> (for sea containers) <strong>or</strong> a <strong>Hall</strong> (for freshwater containers).
+          </AlertDescription>
+        </Alert>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <FormLabel htmlFor="filter-area">Filter by Area (Sea)</FormLabel>
+            <Select
+              value={filterArea?.toString() || 'none'}
+              onValueChange={(value) => {
+                if (value === 'none') {
+                  setFilterArea(undefined)
+                } else {
+                  setFilterArea(parseInt(value, 10))
+                  setFilterHall(undefined) // Clear hall when area selected
+                }
+                form.setValue('container', '' as any) // Clear container selection
+              }}
+              disabled={areasLoading}
+            >
+              <SelectTrigger id="filter-area">
+                <SelectValue placeholder="Select an area..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No filter (all areas)</SelectItem>
+                {areasData?.results?.map((area) => (
+                  <SelectItem key={area.id} value={area.id.toString()}>
+                    {area.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <FormLabel htmlFor="filter-hall">Filter by Hall (Freshwater)</FormLabel>
+            <Select
+              value={filterHall?.toString() || 'none'}
+              onValueChange={(value) => {
+                if (value === 'none') {
+                  setFilterHall(undefined)
+                } else {
+                  setFilterHall(parseInt(value, 10))
+                  setFilterArea(undefined) // Clear area when hall selected
+                }
+                form.setValue('container', '' as any) // Clear container selection
+              }}
+              disabled={hallsLoading}
+            >
+              <SelectTrigger id="filter-hall">
+                <SelectValue placeholder="Select a hall..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No filter (all halls)</SelectItem>
+                {hallsData?.results?.map((hall) => (
+                  <SelectItem key={hall.id} value={hall.id.toString()}>
+                    {hall.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {(filterArea || filterHall) && (
+          <div className="text-sm text-muted-foreground">
+            Showing {containerCount} container{containerCount !== 1 ? 's' : ''} {filterArea ? 'in selected area' : 'in selected hall'}
+          </div>
+        )}
+      </FormSection>
+
       <FormSection
         title="Sensor Details"
         description="Provide identification and assignment details for this sensor device."
@@ -189,10 +285,19 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
                 >
                   <FormControl>
                     <SelectTrigger id="sensor-container" aria-label="Container">
-                      <SelectValue placeholder="Select a container" />
+                      <SelectValue placeholder={
+                        containerCount === 0 
+                          ? "Use filters above to narrow down containers"
+                          : `Select from ${containerCount} container${containerCount !== 1 ? 's' : ''}...`
+                      } />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    {containerCount > 100 && (
+                      <div className="px-2 py-1 text-sm text-orange-600 bg-orange-50">
+                        {containerCount} containers - consider using filters above
+                      </div>
+                    )}
                     {containersData?.results?.map((container) => (
                       <SelectItem key={container.id} value={container.id.toString()}>
                         {container.name}
@@ -201,6 +306,12 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
                   </SelectContent>
                 </Select>
               </WriteGate>
+              <FormDescription>
+                {!filterArea && !filterHall && containerCount > 50 
+                  ? "💡 Tip: Use Area or Hall filters above to reduce the list"
+                  : `${containerCount} container${containerCount !== 1 ? 's' : ''} available`
+                }
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
