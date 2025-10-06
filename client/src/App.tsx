@@ -32,6 +32,7 @@ import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
 import BatchManagement from "@/pages/batch-management";
 import BatchDetails from "@/pages/batch-details";
+import BatchSetupPage from "@/features/batch-management/pages/BatchSetupPage";
 import Health from "@/pages/health";
 import Broodstock from "@/pages/broodstock";
 import BroodstockPrograms from "@/pages/broodstock-programs";
@@ -228,6 +229,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <BatchManagement />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/batch-setup">
+        <ProtectedRoute>
+          <AppLayout>
+            <BatchSetupPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

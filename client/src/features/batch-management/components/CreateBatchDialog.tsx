@@ -1,77 +1,49 @@
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react'
+import { Plus } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useBatchCreation } from "../hooks/useBatchCreation";
+} from '@/components/ui/dialog'
+import { BatchForm } from './BatchForm'
 
 /**
  * CreateBatchDialog Component
- * Dialog for creating new fish batches with form validation
+ * Dialog for creating new fish batches with full form validation
  * 
- * Integrates with useBatchCreation hook for state management
- * Responsive design with mobile-optimized layout
- * 
- * TODO: Expand form fields for full batch creation functionality
- * Current implementation is minimal placeholder matching existing code
+ * Uses production-ready BatchForm component (Phase 2 B2.1)
+ * Features: Species FK, lifecycle stage cascading filter, status/type enums, dates
  */
 export function CreateBatchDialog() {
-  const isMobile = useIsMobile();
-  const { isOpen, setIsOpen, form, onSubmit, isLoading } = useBatchCreation();
+  const [isOpen, setIsOpen] = useState(false)
+
+  const handleSuccess = () => {
+    setIsOpen(false)
+  }
+
+  const handleCancel = () => {
+    setIsOpen(false)
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          New Batch
-        </Button>
-      </DialogTrigger>
-      <DialogContent className={cn("max-w-2xl", isMobile && "max-w-[95vw]")}>
-        <DialogHeader>
+      <Button onClick={() => setIsOpen(true)}>
+        <Plus className="h-4 w-4 mr-2" />
+        New Batch
+      </Button>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="sr-only">
           <DialogTitle>Create New Batch</DialogTitle>
           <DialogDescription>
-            Add a new fish batch to the system
+            Add a new fish batch to the system with species, lifecycle stage, and timeline details.
           </DialogDescription>
         </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* TODO: Add form fields for batch creation
-                - Batch name/number
-                - Species selection
-                - Lifecycle stage
-                - Initial count & biomass
-                - Container assignment
-                - Broodstock traceability (egg source)
-                - Expected harvest date
-                - Notes
-            */}
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Batch"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        <BatchForm onSuccess={handleSuccess} onCancel={handleCancel} />
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
