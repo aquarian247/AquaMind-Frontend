@@ -62,6 +62,7 @@ export {
   stationTypeEnum,
   sensorSchema,
   type SensorFormValues,
+  sensorTypeEnum,
   feedContainerSchema,
   type FeedContainerFormValues,
 } from './infrastructure'

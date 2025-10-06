@@ -618,6 +618,162 @@ export function useDeleteContainer() {
   });
 }
 
+// ===== SENSOR CRUD HOOKS =====
+
+/**
+ * Hook to fetch all sensors with optional filtering
+ * @param filters - Optional filter parameters
+ * @returns Query result with sensors list
+ */
+export function useSensors(filters?: { container?: number; active?: boolean }) {
+  return useQuery({
+    queryKey: ["sensors", filters],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureSensorsList(
+        filters?.active,
+        filters?.container,
+        undefined, // ordering
+        undefined // page
+      ),
+  });
+}
+
+/**
+ * Hook to fetch a single sensor by ID
+ * @param id - The sensor ID to fetch
+ * @returns Query result with sensor data
+ */
+export function useSensor(id: number | undefined) {
+  return useQuery({
+    queryKey: ["sensor", id],
+    queryFn: () => {
+      if (!id) throw new Error("Sensor ID is required");
+      return ApiService.apiV1InfrastructureSensorsRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new sensor
+ * @returns Mutation hook for creating sensor
+ */
+export function useCreateSensor() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureSensorsCreate,
+    description: "Sensor created successfully",
+    invalidateQueries: ["sensors"],
+  });
+}
+
+/**
+ * Hook to update an existing sensor
+ * @returns Mutation hook for updating sensor
+ */
+export function useUpdateSensor() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: any) =>
+      ApiService.apiV1InfrastructureSensorsUpdate(id, data),
+    description: "Sensor updated successfully",
+    invalidateQueries: ["sensors"],
+  });
+}
+
+/**
+ * Hook to delete a sensor with audit trail support
+ * @returns Mutation hook for deleting sensor
+ */
+export function useDeleteSensor() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureSensorsDestroy(id),
+    description: "Sensor deleted",
+    invalidateQueries: ["sensors"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
+}
+
+// ===== FEED CONTAINER CRUD HOOKS =====
+
+/**
+ * Hook to fetch all feed containers with optional filtering
+ * @param filters - Optional filter parameters
+ * @returns Query result with feed containers list
+ */
+export function useFeedContainers(filters?: { hall?: number; active?: boolean }) {
+  return useQuery({
+    queryKey: ["feed-containers", filters],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureFeedContainersList(
+        filters?.active,
+        filters?.hall,
+        undefined, // ordering
+        undefined // page
+      ),
+  });
+}
+
+/**
+ * Hook to fetch a single feed container by ID
+ * @param id - The feed container ID to fetch
+ * @returns Query result with feed container data
+ */
+export function useFeedContainer(id: number | undefined) {
+  return useQuery({
+    queryKey: ["feed-container", id],
+    queryFn: () => {
+      if (!id) throw new Error("Feed container ID is required");
+      return ApiService.apiV1InfrastructureFeedContainersRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new feed container
+ * @returns Mutation hook for creating feed container
+ */
+export function useCreateFeedContainer() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureFeedContainersCreate,
+    description: "Feed container created successfully",
+    invalidateQueries: ["feed-containers"],
+  });
+}
+
+/**
+ * Hook to update an existing feed container
+ * @returns Mutation hook for updating feed container
+ */
+export function useUpdateFeedContainer() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: any) =>
+      ApiService.apiV1InfrastructureFeedContainersUpdate(id, data),
+    description: "Feed container updated successfully",
+    invalidateQueries: ["feed-containers"],
+  });
+}
+
+/**
+ * Hook to delete a feed container with audit trail support
+ * @returns Mutation hook for deleting feed container
+ */
+export function useDeleteFeedContainer() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureFeedContainersDestroy(id),
+    description: "Feed container deleted",
+    invalidateQueries: ["feed-containers"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
+}
+
 // ===== AREA CRUD HOOKS =====
 
 /**

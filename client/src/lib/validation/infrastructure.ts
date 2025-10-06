@@ -155,13 +155,22 @@ export const freshwaterStationSchema = z.object({
 export type FreshwaterStationFormValues = z.infer<typeof freshwaterStationSchema>
 
 /**
+ * Sensor type enum.
+ */
+export const sensorTypeEnum = z.enum(['TEMPERATURE', 'OXYGEN', 'PH', 'SALINITY', 'CO2', 'OTHER'])
+
+/**
  * Sensor creation/update form schema.
  * Maps to the Sensor model from generated API.
  */
 export const sensorSchema = z.object({
-  sensor_id: nonEmptyString.max(50, 'Sensor ID must be 50 characters or less'),
-  sensor_type: nonEmptyString.max(50, 'Sensor type must be 50 characters or less'),
+  name: nonEmptyString.max(100, 'Name must be 100 characters or less'),
+  sensor_type: sensorTypeEnum,
   container: z.coerce.number().int().positive('Container is required'),
+  serial_number: optionalString,
+  manufacturer: optionalString,
+  installation_date: optionalString,
+  last_calibration_date: optionalString,
   active: booleanWithDefault(true),
 })
 
