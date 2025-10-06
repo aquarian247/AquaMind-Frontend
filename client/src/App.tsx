@@ -15,6 +15,7 @@ import Dashboard from "@/pages/dashboard";
 import Monitoring from "@/pages/monitoring";
 import FarmManagement from "@/pages/farm-management";
 import Infrastructure from "@/pages/infrastructure";
+import InfrastructureManagementPage from "@/features/infrastructure/pages/InfrastructureManagementPage";
 import InfrastructureAreas from "@/pages/infrastructure-areas";
 import InfrastructureStations from "@/pages/infrastructure-stations";
 import AreaDetail from "@/pages/area-detail";
@@ -109,6 +110,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Infrastructure />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/infrastructure/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <InfrastructureManagementPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

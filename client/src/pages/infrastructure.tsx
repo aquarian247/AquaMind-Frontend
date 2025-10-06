@@ -248,9 +248,12 @@ export default function Infrastructure() {
               ))}
             </SelectContent>
           </Select>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            className="bg-green-600 hover:bg-green-700"
+            onClick={() => setLocation('/infrastructure/manage')}
+          >
             <Plus className="h-4 w-4 mr-2" />
-            Add Container
+            Create Infrastructure
           </Button>
         </div>
       </div>
