@@ -65,6 +65,7 @@ export {
   sensorTypeEnum,
   feedContainerSchema,
   type FeedContainerFormValues,
+  feedContainerTypeEnum,
 } from './infrastructure'
 
 // Domain schemas - Batch

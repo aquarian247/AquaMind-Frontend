@@ -181,18 +181,51 @@ export const sensorSchema = z.object({
 export type SensorFormValues = z.infer<typeof sensorSchema>
 
 /**
+ * Feed Container type enum.
+ */
+export const feedContainerTypeEnum = z.enum(['SILO', 'BARGE', 'TANK', 'OTHER'])
+
+/**
  * Feed Container creation/update form schema.
  * Maps to the FeedContainer model from generated API.
+ * 
+ * Note: hall and area are mutually exclusive (same as Container).
+ * Feed containers can be silos (in halls) or barges (in areas).
  */
-export const feedContainerSchema = z.object({
-  name: nonEmptyString.max(100, 'Name must be 100 characters or less'),
-  hall: z.coerce.number().int().positive('Hall is required'),
-  capacity_kg: positiveDecimalString({
-    decimalPlaces: 2,
-    required: true,
-    label: 'Capacity',
-  }),
-  active: booleanWithDefault(true),
-})
+export const feedContainerSchema = z
+  .object({
+    name: nonEmptyString.max(100, 'Name must be 100 characters or less'),
+    container_type: feedContainerTypeEnum,
+    hall: z.coerce
+      .number()
+      .int()
+      .positive()
+      .nullable()
+      .optional()
+      .or(z.literal('').transform(() => null)),
+    area: z.coerce
+      .number()
+      .int()
+      .positive()
+      .nullable()
+      .optional()
+      .or(z.literal('').transform(() => null)),
+    capacity_kg: positiveDecimalString({
+      decimalPlaces: 2,
+      required: true,
+      label: 'Capacity',
+    }),
+    active: booleanWithDefault(true),
+  })
+  .refine(
+    (data) => {
+      // At least one of hall or area must be provided
+      return data.hall !== null || data.area !== null
+    },
+    {
+      message: 'Either hall or area must be specified',
+      path: ['hall'],
+    }
+  )
 
 export type FeedContainerFormValues = z.infer<typeof feedContainerSchema>
