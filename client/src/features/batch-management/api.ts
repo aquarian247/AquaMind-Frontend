@@ -104,7 +104,7 @@ export function useCreateBatch() {
   return useCrudMutation<Batch, Batch>({
     mutationFn: (data) => ApiService.apiV1BatchBatchesCreate(data),
     description: 'Batch created successfully',
-    invalidateQueries: ['batches'],
+    invalidateQueries: ['batches', 'batch/batches', 'batch/lifecycle-stages'],
   })
 }
 
@@ -115,7 +115,7 @@ export function useUpdateBatch() {
   return useCrudMutation<Batch & { id: number }, Batch>({
     mutationFn: ({ id, ...data }) => ApiService.apiV1BatchBatchesUpdate(id, data as Batch),
     description: 'Batch updated successfully',
-    invalidateQueries: ['batches'],
+    invalidateQueries: ['batches', 'batch/batches'],
   })
 }
 
@@ -126,7 +126,7 @@ export function useDeleteBatch() {
   return useCrudMutation({
     mutationFn: ({ id }: { id: number }) => ApiService.apiV1BatchBatchesDestroy(id),
     description: 'Batch deleted successfully',
-    invalidateQueries: ['batches'],
+    invalidateQueries: ['batches', 'batch/batches'],
     injectAuditReason: (vars, reason) => ({ ...vars, change_reason: reason }),
   })
 }
@@ -183,7 +183,7 @@ export function useCreateLifecycleStage() {
   return useCrudMutation<LifeCycleStage, LifeCycleStage>({
     mutationFn: (data) => ApiService.apiV1BatchLifecycleStagesCreate(data),
     description: 'Lifecycle stage created successfully',
-    invalidateQueries: ['lifecycle-stages'],
+    invalidateQueries: ['lifecycle-stages', 'batch/lifecycle-stages'],
   })
 }
 
@@ -195,7 +195,7 @@ export function useUpdateLifecycleStage() {
     mutationFn: ({ id, ...data }) =>
       ApiService.apiV1BatchLifecycleStagesUpdate(id, data as LifeCycleStage),
     description: 'Lifecycle stage updated successfully',
-    invalidateQueries: ['lifecycle-stages'],
+    invalidateQueries: ['lifecycle-stages', 'batch/lifecycle-stages'],
   })
 }
 
@@ -206,7 +206,7 @@ export function useDeleteLifecycleStage() {
   return useCrudMutation({
     mutationFn: ({ id }: { id: number }) => ApiService.apiV1BatchLifecycleStagesDestroy(id),
     description: 'Lifecycle stage deleted successfully',
-    invalidateQueries: ['lifecycle-stages'],
+    invalidateQueries: ['lifecycle-stages', 'batch/lifecycle-stages'],
     injectAuditReason: (vars, reason) => ({ ...vars, change_reason: reason }),
   })
 }
