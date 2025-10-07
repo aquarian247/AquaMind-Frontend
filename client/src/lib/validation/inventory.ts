@@ -101,3 +101,37 @@ export const feedContainerStockSchema = z.object({
 })
 
 export type FeedContainerStockFormValues = z.infer<typeof feedContainerStockSchema>
+
+/**
+ * Feeding method enum.
+ * Maps to the FeedingEvent.method field from the generated API.
+ */
+export const feedingMethodEnum = z.enum(['MANUAL', 'AUTOMATIC', 'BROADCAST'])
+
+/**
+ * FeedingEvent creation/update form schema.
+ * Maps to the FeedingEvent model from generated API.
+ * 
+ * Note: feeding_percentage and feed_cost are auto-calculated by backend.
+ */
+export const feedingEventSchema = z.object({
+  batch: z.coerce.number().int().positive('Batch is required'),
+  container: z.coerce.number().int().positive('Container is required'),
+  feed: z.coerce.number().int().positive('Feed is required'),
+  feeding_date: dateString,
+  feeding_time: z.string().regex(/^\d{2}:\d{2}$/, 'Time must be in HH:MM format'),
+  amount_kg: positiveDecimalString({
+    decimalPlaces: 2,
+    required: true,
+    label: 'Amount (kg)',
+  }),
+  batch_biomass_kg: optionalDecimalString({
+    min: 0,
+    decimalPlaces: 2,
+    label: 'Batch biomass',
+  }),
+  method: feedingMethodEnum.default('MANUAL'),
+  notes: optionalString,
+})
+
+export type FeedingEventFormValues = z.infer<typeof feedingEventSchema>

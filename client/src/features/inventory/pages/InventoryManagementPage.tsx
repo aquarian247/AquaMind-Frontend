@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Package, ShoppingCart, Warehouse } from 'lucide-react'
-import { useFeeds, useFeedPurchases, useFeedContainerStock } from '../api'
-import { FeedForm, FeedPurchaseForm, FeedContainerStockForm } from '../components'
+import { Plus, Package, ShoppingCart, Warehouse, ClipboardList } from 'lucide-react'
+import { useFeeds, useFeedPurchases, useFeedContainerStock, useFeedingEvents } from '../api'
+import { FeedForm, FeedPurchaseForm, FeedContainerStockForm, FeedingEventForm } from '../components'
 
-type EntityType = 'feed' | 'feedPurchase' | 'feedContainerStock' | null
+type EntityType = 'feed' | 'feedPurchase' | 'feedContainerStock' | 'feedingEvent' | null
 
 /**
  * Inventory Management Page with Create Dialogs
@@ -27,6 +27,7 @@ export default function InventoryManagementPage() {
   const { data: feedsData } = useFeeds({ isActive: true })
   const { data: purchasesData } = useFeedPurchases()
   const { data: containerStockData } = useFeedContainerStock({ ordering: 'entry_date' })
+  const { data: feedingEventsData } = useFeedingEvents({ ordering: '-feeding_date' })
 
   const handleSuccess = () => {
     setCreateDialogOpen(null)
@@ -61,6 +62,14 @@ export default function InventoryManagementPage() {
       count: containerStockData?.results?.length || 0,
       color: 'purple'
     },
+    {
+      id: 'feedingEvent' as const,
+      name: 'Feeding Event',
+      description: 'Record feeding events with calculations',
+      icon: ClipboardList,
+      count: feedingEventsData?.results?.length || 0,
+      color: 'orange'
+    },
   ]
 
   const getColorClasses = (color: string) => {
@@ -68,6 +77,7 @@ export default function InventoryManagementPage() {
       blue: { icon: 'text-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
       green: { icon: 'text-green-600', text: 'text-green-600', bg: 'bg-green-50' },
       purple: { icon: 'text-purple-600', text: 'text-purple-600', bg: 'bg-purple-50' },
+      orange: { icon: 'text-orange-600', text: 'text-orange-600', bg: 'bg-orange-50' },
     }
     return colors[color] || colors.blue
   }
@@ -84,7 +94,7 @@ export default function InventoryManagementPage() {
       </div>
 
       {/* Entity Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {entities.map((entity) => {
           const colors = getColorClasses(entity.color)
           const Icon = entity.icon
@@ -146,6 +156,17 @@ export default function InventoryManagementPage() {
             <DialogDescription>Add feed batch to a container with FIFO tracking</DialogDescription>
           </DialogHeader>
           <FeedContainerStockForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Feeding Event Dialog */}
+      <Dialog open={createDialogOpen === 'feedingEvent'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Record Feeding Event</DialogTitle>
+            <DialogDescription>Record a feeding event with amount and timing information</DialogDescription>
+          </DialogHeader>
+          <FeedingEventForm onSuccess={handleSuccess} onCancel={handleCancel} />
         </DialogContent>
       </Dialog>
     </div>

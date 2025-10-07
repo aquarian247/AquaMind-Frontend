@@ -16,6 +16,8 @@ import type {
   FeedContainerStock,
   PaginatedFeedContainerStockList,
   FeedContainerStockCreate,
+  FeedingEvent,
+  PaginatedFeedingEventList,
 } from "@/api/generated";
 
 // Type for feeding events summary response
@@ -199,6 +201,8 @@ export function getInventoryQueryKeys() {
     feedPurchase: (id: number) => ["inventory", "feed-purchase", id] as const,
     feedContainerStock: ["inventory", "feed-container-stock"] as const,
     feedContainerStockItem: (id: number) => ["inventory", "feed-container-stock", id] as const,
+    feedingEvents: ["inventory", "feeding-events"] as const,
+    feedingEvent: (id: number) => ["inventory", "feeding-event", id] as const,
   };
 }
 
@@ -457,5 +461,125 @@ export function useDeleteFeedContainerStock() {
       ApiService.apiV1InventoryFeedContainerStockDestroy(id),
     description: "Feed container stock deleted successfully",
     invalidateQueries: ["inventory", "feed-container-stock"],
+  });
+}
+
+// ============================================================================
+// FeedingEvent CRUD Operations
+// ============================================================================
+
+/**
+ * Hook to fetch paginated list of feeding events
+ * @param filters - Optional filters for feeding events
+ * @returns Query result with paginated feeding events
+ */
+export function useFeedingEvents(filters?: {
+  batch?: number;
+  container?: number;
+  feed?: number;
+  feedingDateAfter?: string;
+  feedingDateBefore?: string;
+  method?: 'MANUAL' | 'AUTOMATIC' | 'BROADCAST';
+  ordering?: string;
+  page?: number;
+}): UseQueryResult<PaginatedFeedingEventList, Error> {
+  return useQuery({
+    queryKey: ["inventory", "feeding-events", filters],
+    queryFn: () =>
+      ApiService.apiV1InventoryFeedingEventsList(
+        undefined, // amountMax
+        undefined, // amountMin
+        filters?.batch,
+        undefined, // batchIn
+        undefined, // batchNumber
+        filters?.container,
+        undefined, // containerIn
+        undefined, // containerName
+        filters?.feed,
+        undefined, // feedIn
+        undefined, // feedName
+        undefined, // feedingDate
+        filters?.feedingDateAfter,
+        filters?.feedingDateBefore,
+        filters?.method,
+        undefined, // methodIn
+        filters?.ordering,
+        filters?.page,
+        undefined  // search
+      ),
+    ...INVENTORY_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to fetch a single feeding event by ID
+ * @param id - The feeding event ID
+ * @returns Query result with the feeding event
+ */
+export function useFeedingEvent(
+  id: number | undefined
+): UseQueryResult<FeedingEvent, Error> {
+  return useQuery({
+    queryKey: ["inventory", "feeding-event", id],
+    queryFn: () => {
+      if (!id) throw new Error("Feeding event ID is required");
+      return ApiService.apiV1InventoryFeedingEventsRetrieve(id);
+    },
+    enabled: !!id,
+    ...INVENTORY_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to create a new feeding event
+ * @returns Mutation hook for creating feeding events
+ */
+export function useCreateFeedingEvent() {
+  return useCrudMutation<FeedingEvent, FeedingEvent>({
+    mutationFn: (data) => ApiService.apiV1InventoryFeedingEventsCreate(data),
+    description: "Feeding event recorded successfully",
+    invalidateQueries: [
+      "inventory",
+      "feeding-events",
+      "batch-feeding-summaries",
+      "feeding-events-summary",
+    ],
+  });
+}
+
+/**
+ * Hook to update an existing feeding event
+ * @returns Mutation hook for updating feeding events
+ */
+export function useUpdateFeedingEvent() {
+  return useCrudMutation<FeedingEvent & { id: number }, FeedingEvent>({
+    mutationFn: (data) =>
+      ApiService.apiV1InventoryFeedingEventsUpdate(data.id, data),
+    description: "Feeding event updated successfully",
+    invalidateQueries: [
+      "inventory",
+      "feeding-events",
+      "feeding-event",
+      "batch-feeding-summaries",
+      "feeding-events-summary",
+    ],
+  });
+}
+
+/**
+ * Hook to delete a feeding event
+ * @returns Mutation hook for deleting feeding events
+ */
+export function useDeleteFeedingEvent() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InventoryFeedingEventsDestroy(id),
+    description: "Feeding event deleted successfully",
+    invalidateQueries: [
+      "inventory",
+      "feeding-events",
+      "batch-feeding-summaries",
+      "feeding-events-summary",
+    ],
   });
 }
