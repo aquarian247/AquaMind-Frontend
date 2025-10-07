@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Package, ShoppingCart } from 'lucide-react'
-import { useFeeds, useFeedPurchases } from '../api'
-import { FeedForm, FeedPurchaseForm } from '../components'
+import { Plus, Package, ShoppingCart, Warehouse } from 'lucide-react'
+import { useFeeds, useFeedPurchases, useFeedContainerStock } from '../api'
+import { FeedForm, FeedPurchaseForm, FeedContainerStockForm } from '../components'
 
-type EntityType = 'feed' | 'feedPurchase' | null
+type EntityType = 'feed' | 'feedPurchase' | 'feedContainerStock' | null
 
 /**
  * Inventory Management Page with Create Dialogs
@@ -26,6 +26,7 @@ export default function InventoryManagementPage() {
   // Load counts for display
   const { data: feedsData } = useFeeds({ isActive: true })
   const { data: purchasesData } = useFeedPurchases()
+  const { data: containerStockData } = useFeedContainerStock({ ordering: 'entry_date' })
 
   const handleSuccess = () => {
     setCreateDialogOpen(null)
@@ -52,12 +53,21 @@ export default function InventoryManagementPage() {
       count: purchasesData?.results?.length || 0,
       color: 'green'
     },
+    {
+      id: 'feedContainerStock' as const,
+      name: 'Container Stock',
+      description: 'Add feed to containers (FIFO tracking)',
+      icon: Warehouse,
+      count: containerStockData?.results?.length || 0,
+      color: 'purple'
+    },
   ]
 
   const getColorClasses = (color: string) => {
     const colors: Record<string, { icon: string; text: string; bg: string }> = {
       blue: { icon: 'text-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
       green: { icon: 'text-green-600', text: 'text-green-600', bg: 'bg-green-50' },
+      purple: { icon: 'text-purple-600', text: 'text-purple-600', bg: 'bg-purple-50' },
     }
     return colors[color] || colors.blue
   }
@@ -74,7 +84,7 @@ export default function InventoryManagementPage() {
       </div>
 
       {/* Entity Cards Grid */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {entities.map((entity) => {
           const colors = getColorClasses(entity.color)
           const Icon = entity.icon
@@ -125,6 +135,17 @@ export default function InventoryManagementPage() {
             <DialogDescription>Record a new feed purchase with quantity and cost information</DialogDescription>
           </DialogHeader>
           <FeedPurchaseForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Feed Container Stock Dialog */}
+      <Dialog open={createDialogOpen === 'feedContainerStock'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Add Feed to Container</DialogTitle>
+            <DialogDescription>Add feed batch to a container with FIFO tracking</DialogDescription>
+          </DialogHeader>
+          <FeedContainerStockForm onSuccess={handleSuccess} onCancel={handleCancel} />
         </DialogContent>
       </Dialog>
     </div>

@@ -13,6 +13,9 @@ import type {
   FeedPurchase,
   PaginatedFeedList,
   PaginatedFeedPurchaseList,
+  FeedContainerStock,
+  PaginatedFeedContainerStockList,
+  FeedContainerStockCreate,
 } from "@/api/generated";
 
 // Type for feeding events summary response
@@ -194,6 +197,8 @@ export function getInventoryQueryKeys() {
     feed: (id: number) => ["inventory", "feed", id] as const,
     feedPurchases: ["inventory", "feed-purchases"] as const,
     feedPurchase: (id: number) => ["inventory", "feed-purchase", id] as const,
+    feedContainerStock: ["inventory", "feed-container-stock"] as const,
+    feedContainerStockItem: (id: number) => ["inventory", "feed-container-stock", id] as const,
   };
 }
 
@@ -358,5 +363,99 @@ export function useDeleteFeedPurchase() {
     mutationFn: ({ id }: { id: number }) => ApiService.apiV1InventoryFeedPurchasesDestroy(id),
     description: "Feed purchase deleted successfully",
     invalidateQueries: ["inventory", "feed-purchases"],
+  });
+}
+
+// ============================================================================
+// FeedContainerStock CRUD Operations (FIFO Tracking)
+// ============================================================================
+
+/**
+ * Hook to fetch paginated list of feed container stock entries
+ * @param filters - Optional filters for feed container stock
+ * @returns Query result with paginated feed container stock
+ */
+export function useFeedContainerStock(filters?: {
+  feedContainer?: number;
+  feedPurchase?: number;
+  entryDateGte?: string;
+  entryDateLte?: string;
+  ordering?: string;
+  page?: number;
+}): UseQueryResult<PaginatedFeedContainerStockList, Error> {
+  return useQuery({
+    queryKey: ["inventory", "feed-container-stock", filters],
+    queryFn: () =>
+      ApiService.apiV1InventoryFeedContainerStockList(
+        undefined, // entryDate
+        filters?.entryDateGte,
+        filters?.entryDateLte,
+        filters?.feedContainer,
+        filters?.feedPurchase,
+        filters?.ordering,
+        filters?.page,
+        undefined, // quantityKg
+        undefined, // quantityKgGte
+        undefined, // quantityKgLte
+        undefined  // search
+      ),
+    ...INVENTORY_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to fetch a single feed container stock entry by ID
+ * @param id - The feed container stock ID
+ * @returns Query result with the feed container stock entry
+ */
+export function useFeedContainerStockItem(
+  id: number | undefined
+): UseQueryResult<FeedContainerStock, Error> {
+  return useQuery({
+    queryKey: ["inventory", "feed-container-stock", id],
+    queryFn: () => {
+      if (!id) throw new Error("Feed container stock ID is required");
+      return ApiService.apiV1InventoryFeedContainerStockRetrieve(id);
+    },
+    enabled: !!id,
+    ...INVENTORY_QUERY_OPTIONS,
+  });
+}
+
+/**
+ * Hook to create a new feed container stock entry
+ * @returns Mutation hook for creating feed container stock
+ */
+export function useCreateFeedContainerStock() {
+  return useCrudMutation<FeedContainerStockCreate, FeedContainerStockCreate>({
+    mutationFn: (data) => ApiService.apiV1InventoryFeedContainerStockCreate(data),
+    description: "Feed stock added to container successfully",
+    invalidateQueries: ["inventory", "feed-container-stock"],
+  });
+}
+
+/**
+ * Hook to update an existing feed container stock entry
+ * @returns Mutation hook for updating feed container stock
+ */
+export function useUpdateFeedContainerStock() {
+  return useCrudMutation<FeedContainerStock & { id: number }, FeedContainerStock>({
+    mutationFn: (data) =>
+      ApiService.apiV1InventoryFeedContainerStockUpdate(data.id, data),
+    description: "Feed container stock updated successfully",
+    invalidateQueries: ["inventory", "feed-container-stock"],
+  });
+}
+
+/**
+ * Hook to delete a feed container stock entry
+ * @returns Mutation hook for deleting feed container stock
+ */
+export function useDeleteFeedContainerStock() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InventoryFeedContainerStockDestroy(id),
+    description: "Feed container stock deleted successfully",
+    invalidateQueries: ["inventory", "feed-container-stock"],
   });
 }

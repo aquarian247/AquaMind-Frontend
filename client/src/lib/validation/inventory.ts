@@ -80,3 +80,24 @@ export const feedPurchaseSchema = z.object({
 })
 
 export type FeedPurchaseFormValues = z.infer<typeof feedPurchaseSchema>
+
+/**
+ * FeedContainerStock creation/update form schema.
+ * Maps to the FeedContainerStock model from generated API.
+ * 
+ * FIFO Constraint: Entry dates for a feed container should follow FIFO ordering
+ * (First In, First Out). The form will validate that new entries don't pre-date
+ * existing entries for the same container (handled in component logic).
+ */
+export const feedContainerStockSchema = z.object({
+  feed_container: z.coerce.number().int().positive('Feed container is required'),
+  feed_purchase: z.coerce.number().int().positive('Feed purchase is required'),
+  quantity_kg: positiveDecimalString({
+    decimalPlaces: 2,
+    required: true,
+    label: 'Quantity (kg)',
+  }),
+  entry_date: dateString,
+})
+
+export type FeedContainerStockFormValues = z.infer<typeof feedContainerStockSchema>
