@@ -166,7 +166,7 @@ describe('GeographyDeleteButton', () => {
     expect(mockDelete.mutateAsync).not.toHaveBeenCalled()
   })
 
-  it('shows loading state during deletion', () => {
+  it('shows loading state during deletion', async () => {
     const mockDelete = { mutateAsync: vi.fn(), isPending: true }
     vi.mocked(api.useDeleteGeography).mockReturnValue(mockDelete as any)
     
@@ -215,7 +215,7 @@ describe('GeographyDeleteButton', () => {
     consoleError.mockRestore()
   })
 
-  it('supports custom button variants', () => {
+  it('supports custom button variants', async () => {
     const mockDelete = { mutateAsync: vi.fn(), isPending: false }
     vi.mocked(api.useDeleteGeography).mockReturnValue(mockDelete as any)
     

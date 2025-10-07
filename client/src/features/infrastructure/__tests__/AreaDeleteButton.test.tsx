@@ -63,7 +63,7 @@ describe('AreaDeleteButton', () => {
     )
   }
 
-  it('renders delete button', () => {
+  it('renders delete button', async () => {
     const mockDelete = { mutateAsync: vi.fn(), isPending: false }
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
@@ -171,7 +171,7 @@ describe('AreaDeleteButton', () => {
     expect(mockDelete.mutateAsync).not.toHaveBeenCalled()
   })
 
-  it('shows loading state during deletion', () => {
+  it('shows loading state during deletion', async () => {
     const mockDelete = { mutateAsync: vi.fn(), isPending: true }
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     
@@ -220,7 +220,7 @@ describe('AreaDeleteButton', () => {
     consoleError.mockRestore()
   })
 
-  it('supports custom button variants and sizes', () => {
+  it('supports custom button variants and sizes', async () => {
     const mockDelete = { mutateAsync: vi.fn(), isPending: false }
     vi.mocked(api.useDeleteArea).mockReturnValue(mockDelete as any)
     

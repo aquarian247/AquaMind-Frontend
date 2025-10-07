@@ -69,7 +69,7 @@ describe('AreaForm', () => {
 
       renderForm()
 
-      expect(screen.getByText('Create Area')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /create area/i })).toBeInTheDocument()
       expect(screen.getByLabelText('Area Name')).toHaveValue('')
       expect(screen.getByLabelText('Latitude')).toHaveValue('')
       expect(screen.getByLabelText('Longitude')).toHaveValue('')
@@ -112,7 +112,7 @@ describe('AreaForm', () => {
       await user.click(screen.getByRole('button', { name: /create area/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/latitude must be between -90 and 90/i)).toBeInTheDocument()
+        expect(screen.getByText(/latitude must be at most 90/i)).toBeInTheDocument()
       })
 
       expect(mockCreate.mutateAsync).not.toHaveBeenCalled()
@@ -133,7 +133,7 @@ describe('AreaForm', () => {
       await user.click(screen.getByRole('button', { name: /create area/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/longitude must be between -180 and 180/i)).toBeInTheDocument()
+        expect(screen.getByText(/longitude must be at most 180/i)).toBeInTheDocument()
       })
 
       expect(mockCreate.mutateAsync).not.toHaveBeenCalled()
@@ -154,7 +154,7 @@ describe('AreaForm', () => {
       await user.click(screen.getByRole('button', { name: /create area/i }))
 
       await waitFor(() => {
-        expect(screen.getByText(/must be greater than or equal to 0/i)).toBeInTheDocument()
+        expect(screen.getByText(/maximum biomass must be at least 0/i)).toBeInTheDocument()
       })
 
       expect(mockCreate.mutateAsync).not.toHaveBeenCalled()
@@ -162,11 +162,12 @@ describe('AreaForm', () => {
 
     it('submits valid form data with all fields', async () => {
       const user = userEvent.setup()
-      const mockCreate = { mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }
+      const mockCreate = { mutateAsync: vi.fn(), isPending: false }
+      const mockUpdate = { mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }
       const mockOnSuccess = vi.fn()
       
       vi.mocked(api.useCreateArea).mockReturnValue(mockCreate as any)
-      vi.mocked(api.useUpdateArea).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any)
+      vi.mocked(api.useUpdateArea).mockReturnValue(mockUpdate as any)
 
       // Use pre-filled area to avoid Select component issues in jsdom
       const preFilledArea = {
@@ -193,15 +194,16 @@ describe('AreaForm', () => {
       await user.clear(bioInput)
       await user.type(bioInput, '150000.50')
       
-      await user.click(screen.getByRole('button', { name: /create area/i }))
+      // Since area is provided (even with id:undefined), form is in edit mode
+      await user.click(screen.getByRole('button', { name: /update area/i }))
 
       await waitFor(() => {
-        expect(mockCreate.mutateAsync).toHaveBeenCalledWith(
+        expect(mockUpdate.mutateAsync).toHaveBeenCalledWith(
           expect.objectContaining({
             name: 'New Site',
             geography: 1,
-            latitude: '60.5',
-            longitude: '5.25',
+            latitude: '60.500000', // Schema formats to 6 decimal places
+            longitude: '5.250000', // Schema formats to 6 decimal places
             max_biomass: '150000.50',
             active: true,
           })
@@ -215,10 +217,11 @@ describe('AreaForm', () => {
 
     it('handles checkbox for active status', async () => {
       const user = userEvent.setup()
-      const mockCreate = { mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }
+      const mockCreate = { mutateAsync: vi.fn(), isPending: false }
+      const mockUpdate = { mutateAsync: vi.fn().mockResolvedValue({}), isPending: false }
       
       vi.mocked(api.useCreateArea).mockReturnValue(mockCreate as any)
-      vi.mocked(api.useUpdateArea).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any)
+      vi.mocked(api.useUpdateArea).mockReturnValue(mockUpdate as any)
 
       // Use pre-filled area to avoid Select component issues in jsdom
       const preFilledArea = {
@@ -238,10 +241,11 @@ describe('AreaForm', () => {
       expect(activeCheckbox).not.toBeChecked()
 
       await user.type(screen.getByLabelText('Area Name'), 'Test')
-      await user.click(screen.getByRole('button', { name: /create area/i }))
+      // Since area is provided, form is in edit mode
+      await user.click(screen.getByRole('button', { name: /update area/i }))
 
       await waitFor(() => {
-        expect(mockCreate.mutateAsync).toHaveBeenCalledWith(
+        expect(mockUpdate.mutateAsync).toHaveBeenCalledWith(
           expect.objectContaining({
             active: false,
           })
@@ -253,12 +257,16 @@ describe('AreaForm', () => {
       const user = userEvent.setup()
       const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
       const mockCreate = {
+        mutateAsync: vi.fn(),
+        isPending: false,
+      }
+      const mockUpdate = {
         mutateAsync: vi.fn().mockRejectedValue(new Error('API Error')),
         isPending: false,
       }
       
       vi.mocked(api.useCreateArea).mockReturnValue(mockCreate as any)
-      vi.mocked(api.useUpdateArea).mockReturnValue({ mutateAsync: vi.fn(), isPending: false } as any)
+      vi.mocked(api.useUpdateArea).mockReturnValue(mockUpdate as any)
 
       // Use pre-filled area to avoid Select component issues in jsdom
       const preFilledArea = {
@@ -270,7 +278,8 @@ describe('AreaForm', () => {
       renderForm({ area: preFilledArea })
 
       await user.type(screen.getByLabelText('Area Name'), 'Test')
-      await user.click(screen.getByRole('button', { name: /create area/i }))
+      // Since area is provided, form is in edit mode
+      await user.click(screen.getByRole('button', { name: /update area/i }))
 
       await waitFor(() => {
         expect(consoleError).toHaveBeenCalledWith(
