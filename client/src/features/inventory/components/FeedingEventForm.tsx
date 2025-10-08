@@ -109,28 +109,41 @@ export function FeedingEventForm({
       selectedBatchId
         ? {
             batch: Number(selectedBatchId),
-            isActive: true,
+            // Note: Not filtering by isActive to get all containers for batch
+            // User can see all historical locations
           }
         : undefined
     )
 
   // Get unique containers from assignments (a batch may be in multiple containers)
   const availableContainers = React.useMemo(() => {
-    if (!assignmentsData?.results) return []
+    if (!assignmentsData?.results || assignmentsData.results.length === 0) {
+      console.log('No assignment results available', assignmentsData)
+      return []
+    }
+    
+    console.log(`Processing ${assignmentsData.results.length} assignments for batch ${selectedBatchId}`)
     
     // Create map to deduplicate containers
     const containerMap = new Map()
     assignmentsData.results.forEach((assignment) => {
-      if (assignment.container_id && !containerMap.has(assignment.container_id)) {
-        containerMap.set(assignment.container_id, {
-          id: assignment.container_id,
-          name: assignment.container?.name || `Container ${assignment.container_id}`,
+      // Check both container_id and nested container object
+      const containerId = assignment.container_id || assignment.container?.id
+      const containerName = assignment.container?.name || `Container ${containerId}`
+      
+      if (containerId && !containerMap.has(containerId)) {
+        console.log(`Adding container: ${containerId} - ${containerName}`)
+        containerMap.set(containerId, {
+          id: containerId,
+          name: containerName,
         })
       }
     })
     
-    return Array.from(containerMap.values())
-  }, [assignmentsData])
+    const containers = Array.from(containerMap.values())
+    console.log(`Found ${containers.length} unique containers`, containers)
+    return containers
+  }, [assignmentsData, selectedBatchId])
 
   // Auto-populate biomass from latest assignment if available
   React.useEffect(() => {

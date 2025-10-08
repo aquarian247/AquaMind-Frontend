@@ -380,7 +380,7 @@ export function FeedPurchaseForm({
         {quantityKg && costPerKg && (
           <div className="rounded-lg bg-muted p-4">
             <div className="text-sm font-medium">Total Cost</div>
-            <div className="text-2xl font-bold">${totalCost}</div>
+            <div className="text-2xl font-bold">{totalCost} DKK</div>
           </div>
         )}
       </FormSection>

@@ -400,9 +400,9 @@ export function FeedContainerStockForm({
         {quantityKg && selectedPurchase && (
           <div className="rounded-lg bg-muted p-4">
             <div className="text-sm font-medium">Calculated Stock Value</div>
-            <div className="text-2xl font-bold">${totalValue}</div>
+            <div className="text-2xl font-bold">{totalValue} DKK</div>
             <div className="text-xs text-muted-foreground">
-              {quantityKg} kg × ${selectedPurchase.cost_per_kg}/kg
+              {quantityKg} kg × {selectedPurchase.cost_per_kg} DKK/kg
             </div>
           </div>
         )}
