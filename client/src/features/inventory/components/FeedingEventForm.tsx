@@ -118,11 +118,8 @@ export function FeedingEventForm({
   // Get unique containers from assignments (a batch may be in multiple containers)
   const availableContainers = React.useMemo(() => {
     if (!assignmentsData?.results || assignmentsData.results.length === 0) {
-      console.log('No assignment results available', assignmentsData)
       return []
     }
-    
-    console.log(`Processing ${assignmentsData.results.length} assignments for batch ${selectedBatchId}`)
     
     // Create map to deduplicate containers
     const containerMap = new Map()
@@ -132,7 +129,6 @@ export function FeedingEventForm({
       const containerName = assignment.container?.name || `Container ${containerId}`
       
       if (containerId && !containerMap.has(containerId)) {
-        console.log(`Adding container: ${containerId} - ${containerName}`)
         containerMap.set(containerId, {
           id: containerId,
           name: containerName,
@@ -140,9 +136,7 @@ export function FeedingEventForm({
       }
     })
     
-    const containers = Array.from(containerMap.values())
-    console.log(`Found ${containers.length} unique containers`, containers)
-    return containers
+    return Array.from(containerMap.values())
   }, [assignmentsData, selectedBatchId])
 
   // Auto-populate biomass from latest assignment if available
