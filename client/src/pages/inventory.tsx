@@ -1,5 +1,6 @@
 import { useState } from "react";
 import * as React from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -349,6 +350,7 @@ const api = {
 export default function Inventory() {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
   const [selectedGeography, setSelectedGeography] = useState("all");
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -582,9 +584,12 @@ export default function Inventory() {
               ))}
             </SelectContent>
           </Select>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            className="bg-green-600 hover:bg-green-700"
+            onClick={() => setLocation('/inventory/manage')}
+          >
             <Plus className="h-4 w-4 mr-2" />
-            Add Feed
+            Manage Inventory
           </Button>
         </div>
       </div>
