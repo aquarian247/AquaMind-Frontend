@@ -6,12 +6,12 @@ import {
   useAuditReasonPrompt,
   AuditReasonDialog,
 } from '@/features/shared/audit'
-import { useDeleteFeedingEvent } from '../api'
-import type { FeedingEvent } from '@/api/generated'
+import { useDeleteHealthSamplingEvent } from '../api'
+import type { HealthSamplingEvent } from '@/api/generated'
 
-interface FeedingEventDeleteButtonProps {
-  /** Feeding event to delete */
-  feedingEvent: FeedingEvent
+interface HealthSamplingEventDeleteButtonProps {
+  /** Health sampling event to delete */
+  samplingEvent: HealthSamplingEvent
   /** Callback when deletion succeeds */
   onSuccess?: () => void
   /** Optional CSS class for styling */
@@ -21,50 +21,56 @@ interface FeedingEventDeleteButtonProps {
 }
 
 /**
- * Delete button for FeedingEvent entities with audit trail.
+ * Delete button for HealthSamplingEvent entities with audit trail.
  *
  * Features:
  * - Permission gate (Manager+ only)
  * - Audit reason dialog (required, min 10 chars)
  * - Confirmation flow with detailed messaging
- * - Warning about summary recalculation
- * - Automatic query invalidation (includes summaries)
+ * - Automatic query invalidation
  * - Success/error toast notifications
+ * - Cascades to delete all individual fish observations
  *
  * @example
  * ```tsx
- * <FeedingEventDeleteButton
- *   feedingEvent={event}
+ * <HealthSamplingEventDeleteButton
+ *   samplingEvent={samplingEvent}
  *   onSuccess={() => refetch()}
  * />
  * ```
  */
-export function FeedingEventDeleteButton({
-  feedingEvent,
+export function HealthSamplingEventDeleteButton({
+  samplingEvent,
   onSuccess,
   className,
   iconOnly = false,
-}: FeedingEventDeleteButtonProps) {
+}: HealthSamplingEventDeleteButtonProps) {
   const { promptReason, dialogState } = useAuditReasonPrompt()
-  const deleteMutation = useDeleteFeedingEvent()
+  const deleteMutation = useDeleteHealthSamplingEvent()
 
   const handleDelete = async () => {
+    const samplingDate = samplingEvent.sampling_date
+      ? new Date(samplingEvent.sampling_date).toLocaleDateString()
+      : 'Unknown date'
+
+    const fishCount = samplingEvent.calculated_sample_size || samplingEvent.number_of_fish_sampled
+    
     const { confirmed, reason } = await promptReason({
-      title: 'Confirm Feeding Event Deletion',
-      description: `You are about to delete the feeding event for ${feedingEvent.batch_name} in ${feedingEvent.container_name} on ${feedingEvent.feeding_date} at ${feedingEvent.feeding_time} (${feedingEvent.amount_kg} kg of ${feedingEvent.feed_name}). This action cannot be undone and will affect feeding summaries and FCR calculations.`,
+      title: 'Confirm Sampling Event Deletion',
+      description: `You are about to delete the health sampling event from ${samplingDate} (${fishCount} fish sampled for ${samplingEvent.batch_number}). This will also delete all individual fish observations. This action cannot be undone.`,
       required: true,
       minLength: 10,
       placeholder:
-        'Enter reason for deleting this feeding event (min 10 characters)...',
+        'Enter reason for deleting this sampling event (min 10 characters)...',
     })
 
     if (confirmed && reason) {
       try {
-        await deleteMutation.mutateAsync({ id: feedingEvent.id })
+        await deleteMutation.mutateAsync({ id: samplingEvent.id })
         onSuccess?.()
       } catch (error) {
         // Error handled by useCrudMutation toast
-        console.error('Delete feeding event error:', error)
+        console.error('Delete sampling event error:', error)
       }
     }
   }
@@ -78,7 +84,7 @@ export function FeedingEventDeleteButton({
           onClick={handleDelete}
           disabled={deleteMutation.isPending}
           className={className}
-          aria-label={`Delete feeding event for ${feedingEvent.batch_name}`}
+          aria-label={`Delete sampling event from ${samplingEvent.sampling_date}`}
         >
           <Trash2 className={iconOnly ? 'h-4 w-4' : 'mr-2 h-4 w-4'} />
           {!iconOnly && 'Delete Event'}
@@ -94,5 +100,4 @@ export function FeedingEventDeleteButton({
     </>
   )
 }
-
 

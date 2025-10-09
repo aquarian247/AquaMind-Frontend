@@ -7,7 +7,8 @@
 - Keep tasks sized so a single 250K-context agent session can deliver them end-to-end, including implementation, tests, and documentation updates.
 - Enforce the standard session wrap-up: `npm run lint`, `npm run type-check`, `npm run test` (or targeted `npm run test -- <pattern>` when scope is narrow) before hand-off.
 - Uphold the shared design system and theme support (Shadcn UI primitives, Tailwind tokens, theme-aware components) for every new form or mutation experience.
-- Execute the entire initiative on a single long-lived feature branch (e.g., `feature/frontend-cru-forms`), incorporating each session’s work via commits, with one PR raised and merged at completion.
+- Execute the entire initiative on a single long-lived feature branch (e.g., `feature/frontend-cru-forms`), incorporating each session's work via commits, with one PR raised and merged at completion.
+- **🔒 MANDATORY AUDIT TRAIL VERIFICATION**: Before implementing forms for ANY domain, verify backend audit trail compliance using `AUDIT_TRAIL_VERIFICATION_PLAYBOOK.md`. All models MUST have `HistoricalRecords` and all viewsets MUST have `HistoryReasonMixin` (first in MRO) for regulatory compliance. See Phase 4 health app fixes as reference.
 
 ## Phase 0 – Foundations & Cross-Cutting Enablement ✅ COMPLETE (2025-10-06)
 
@@ -197,6 +198,7 @@
 ## Session Checklist (applies to every task above)
 - Sync OpenAPI spec if backend changes suspected: `npm run sync:openapi`.
 - Review relevant OpenAPI endpoints and generated client typings before implementation; raise gaps using the Phase 0 checklist if discrepancies appear.
+- **🔒 AUDIT TRAIL CHECKPOINT**: Before implementing ANY domain forms, verify backend audit trail compliance using `AUDIT_TRAIL_VERIFICATION_PLAYBOOK.md`. Ensure all models have `HistoricalRecords` and all viewsets have `HistoryReasonMixin` (first in MRO chain). This is **MANDATORY** for regulatory compliance.
 - Implement scoped feature using foundation utilities, domain conventions, and approved design-system components (respect theme tokens, spacing, and accessibility patterns).
 - Add/extend Vitest + RTL coverage for new logic; include contract tests for schemas.
 - Update relevant docs (feature-level README, changelog section).

@@ -6,12 +6,12 @@ import {
   useAuditReasonPrompt,
   AuditReasonDialog,
 } from '@/features/shared/audit'
-import { useDeleteFeedingEvent } from '../api'
-import type { FeedingEvent } from '@/api/generated'
+import { useDeleteJournalEntry } from '../api'
+import type { JournalEntry } from '@/api/generated'
 
-interface FeedingEventDeleteButtonProps {
-  /** Feeding event to delete */
-  feedingEvent: FeedingEvent
+interface JournalEntryDeleteButtonProps {
+  /** Journal entry to delete */
+  journalEntry: JournalEntry
   /** Callback when deletion succeeds */
   onSuccess?: () => void
   /** Optional CSS class for styling */
@@ -21,50 +21,53 @@ interface FeedingEventDeleteButtonProps {
 }
 
 /**
- * Delete button for FeedingEvent entities with audit trail.
+ * Delete button for JournalEntry entities with audit trail.
  *
  * Features:
  * - Permission gate (Manager+ only)
  * - Audit reason dialog (required, min 10 chars)
  * - Confirmation flow with detailed messaging
- * - Warning about summary recalculation
- * - Automatic query invalidation (includes summaries)
+ * - Automatic query invalidation
  * - Success/error toast notifications
  *
  * @example
  * ```tsx
- * <FeedingEventDeleteButton
- *   feedingEvent={event}
+ * <JournalEntryDeleteButton
+ *   journalEntry={journalEntry}
  *   onSuccess={() => refetch()}
  * />
  * ```
  */
-export function FeedingEventDeleteButton({
-  feedingEvent,
+export function JournalEntryDeleteButton({
+  journalEntry,
   onSuccess,
   className,
   iconOnly = false,
-}: FeedingEventDeleteButtonProps) {
+}: JournalEntryDeleteButtonProps) {
   const { promptReason, dialogState } = useAuditReasonPrompt()
-  const deleteMutation = useDeleteFeedingEvent()
+  const deleteMutation = useDeleteJournalEntry()
 
   const handleDelete = async () => {
+    const entryDate = journalEntry.entry_date
+      ? new Date(journalEntry.entry_date).toLocaleDateString()
+      : 'Unknown date'
+    
     const { confirmed, reason } = await promptReason({
-      title: 'Confirm Feeding Event Deletion',
-      description: `You are about to delete the feeding event for ${feedingEvent.batch_name} in ${feedingEvent.container_name} on ${feedingEvent.feeding_date} at ${feedingEvent.feeding_time} (${feedingEvent.amount_kg} kg of ${feedingEvent.feed_name}). This action cannot be undone and will affect feeding summaries and FCR calculations.`,
+      title: 'Confirm Journal Entry Deletion',
+      description: `You are about to delete the ${journalEntry.category} entry from ${entryDate} (Batch ID: ${journalEntry.batch}). This action cannot be undone.`,
       required: true,
       minLength: 10,
       placeholder:
-        'Enter reason for deleting this feeding event (min 10 characters)...',
+        'Enter reason for deleting this journal entry (min 10 characters)...',
     })
 
     if (confirmed && reason) {
       try {
-        await deleteMutation.mutateAsync({ id: feedingEvent.id })
+        await deleteMutation.mutateAsync({ id: journalEntry.id })
         onSuccess?.()
       } catch (error) {
         // Error handled by useCrudMutation toast
-        console.error('Delete feeding event error:', error)
+        console.error('Delete journal entry error:', error)
       }
     }
   }
@@ -78,10 +81,10 @@ export function FeedingEventDeleteButton({
           onClick={handleDelete}
           disabled={deleteMutation.isPending}
           className={className}
-          aria-label={`Delete feeding event for ${feedingEvent.batch_name}`}
+          aria-label={`Delete journal entry from ${journalEntry.entry_date}`}
         >
           <Trash2 className={iconOnly ? 'h-4 w-4' : 'mr-2 h-4 w-4'} />
-          {!iconOnly && 'Delete Event'}
+          {!iconOnly && 'Delete Entry'}
         </Button>
       </DeleteGate>
 
@@ -94,5 +97,4 @@ export function FeedingEventDeleteButton({
     </>
   )
 }
-
 
