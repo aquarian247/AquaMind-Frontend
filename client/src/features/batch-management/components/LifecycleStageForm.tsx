@@ -94,6 +94,9 @@ export function LifecycleStageForm({
 
   const onSubmit = async (values: LifeCycleStageFormValues) => {
     try {
+      // Log payload for debugging
+      console.log('Submitting LifecycleStage:', values)
+      
       if (isEditMode) {
         await updateMutation.mutateAsync({
           id: lifecycleStage.id,
@@ -108,6 +111,10 @@ export function LifecycleStageForm({
     } catch (error) {
       // Error handled by useCrudMutation toast
       console.error('Form submission error:', error)
+      // Log full error details for debugging
+      if (error && typeof error === 'object') {
+        console.error('Error details:', JSON.stringify(error, null, 2))
+      }
     }
   }
 

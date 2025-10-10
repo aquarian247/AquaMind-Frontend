@@ -204,14 +204,17 @@ export function GrowthSampleForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {assignmentsData?.results?.map((assignment) => (
-                      <SelectItem
-                        key={assignment.id}
-                        value={`${assignment.batch_id}-${assignment.container_id}`}
-                      >
-                        {assignment.batch?.batch_number} in {assignment.container?.name}
-                      </SelectItem>
-                    ))}
+                    {assignmentsData?.results
+                      ?.filter((a) => a.batch_id && a.container_id) // Filter out invalid assignments
+                      .map((assignment) => (
+                        <SelectItem
+                          key={assignment.id}
+                          value={`${assignment.batch_id}-${assignment.container_id}`}
+                        >
+                          {assignment.batch?.batch_number || `Batch ${assignment.batch_id}`} in{' '}
+                          {assignment.container?.name || `Container ${assignment.container_id}`}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </WriteGate>
