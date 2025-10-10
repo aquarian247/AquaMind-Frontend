@@ -28,6 +28,7 @@ import {
   useCreateLifecycleStage,
   useUpdateLifecycleStage,
   useSpecies,
+  useLifecycleStages,
 } from '../api'
 import type { LifeCycleStage } from '@/api/generated'
 
@@ -92,10 +93,28 @@ export function LifecycleStageForm({
   // Load species for dropdown
   const { data: speciesData, isLoading: speciesLoading } = useSpecies()
 
+  // Load existing lifecycle stages for the selected species (for duplicate order check)
+  const selectedSpecies = form.watch('species')
+  const { data: existingStagesData } = useLifecycleStages(
+    selectedSpecies ? { species: Number(selectedSpecies) } : undefined
+  )
+
   const onSubmit = async (values: LifeCycleStageFormValues) => {
     try {
-      // Log payload for debugging
-      console.log('Submitting LifecycleStage:', values)
+      // Client-side validation: Check for duplicate order for this species
+      if (!isEditMode && selectedSpecies && values.order) {
+        const duplicateOrder = existingStagesData?.results?.find(
+          (stage) => stage.species === Number(selectedSpecies) && stage.order === values.order
+        )
+        
+        if (duplicateOrder) {
+          form.setError('order', {
+            type: 'manual',
+            message: `Order ${values.order} is already used by "${duplicateOrder.name}" for this species. Please choose a different order number.`,
+          })
+          return
+        }
+      }
       
       if (isEditMode) {
         await updateMutation.mutateAsync({
@@ -111,10 +130,6 @@ export function LifecycleStageForm({
     } catch (error) {
       // Error handled by useCrudMutation toast
       console.error('Form submission error:', error)
-      // Log full error details for debugging
-      if (error && typeof error === 'object') {
-        console.error('Error details:', JSON.stringify(error, null, 2))
-      }
     }
   }
 
