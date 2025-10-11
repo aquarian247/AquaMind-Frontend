@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FeedStockHistory } from './FeedStockHistory';
-export type PaginatedFeedStockHistoryList = {
+import type { FactHarvest } from './FactHarvest';
+export type PaginatedFactHarvestList = {
     count: number;
     next?: string | null;
     previous?: string | null;
-    results: Array<FeedStockHistory>;
+    results: Array<FactHarvest>;
 };
 

@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FCRModelHistory } from './FCRModelHistory';
-export type PaginatedFCRModelHistoryList = {
+import type { HarvestEvent } from './HarvestEvent';
+export type PaginatedHarvestEventList = {
     count: number;
     next?: string | null;
     previous?: string | null;
-    results: Array<FCRModelHistory>;
+    results: Array<HarvestEvent>;
 };
 

@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ScenarioHistory } from './ScenarioHistory';
-export type PaginatedScenarioHistoryList = {
+import type { HarvestLot } from './HarvestLot';
+export type PaginatedHarvestLotList = {
     count: number;
     next?: string | null;
     previous?: string | null;
-    results: Array<ScenarioHistory>;
+    results: Array<HarvestLot>;
 };
 

@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { FeedStock } from './FeedStock';
-export type PaginatedFeedStockList = {
+import type { IntercompanyTransaction } from './IntercompanyTransaction';
+export type PaginatedIntercompanyTransactionList = {
     count: number;
     next?: string | null;
     previous?: string | null;
-    results: Array<FeedStock>;
+    results: Array<IntercompanyTransaction>;
 };
 
