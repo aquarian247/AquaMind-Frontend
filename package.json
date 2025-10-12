@@ -17,6 +17,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ci": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
     "validate:endpoints": "tsx scripts/validate-endpoints.ts",
     "sync:openapi": "curl -L https://raw.githubusercontent.com/aquarian247/AquaMind/main/api/openapi.yaml -o api/openapi.yaml && cp api/openapi.yaml tmp/openapi/openapi.yaml && npm run generate:api",
     "sync:openapi:branch": "node -e \"const branch = process.argv[2] || 'main'; require('child_process').execSync('curl -L https://raw.githubusercontent.com/aquarian247/AquaMind/' + branch + '/api/openapi.yaml -o api/openapi.yaml && cp api/openapi.yaml tmp/openapi/openapi.yaml && npm run generate:api', { stdio: 'inherit' });\"",
@@ -95,6 +100,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.0",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.3",
     "@testing-library/jest-dom": "^6.4.8",

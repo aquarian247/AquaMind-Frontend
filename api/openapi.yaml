@@ -8156,7 +8156,10 @@ paths:
   /api/v1/environmental/parameters/:
     get:
       operationId: api_v1_environmental_parameters_list
-      description: ViewSet for viewing and editing EnvironmentalParameter instances.
+      description: |-
+        ViewSet for viewing and editing EnvironmentalParameter instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: name
@@ -8212,7 +8215,10 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_environmental_parameters_create
-      description: ViewSet for viewing and editing EnvironmentalParameter instances.
+      description: |-
+        ViewSet for viewing and editing EnvironmentalParameter instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -8248,7 +8254,10 @@ paths:
   /api/v1/environmental/parameters/{id}/:
     get:
       operationId: api_v1_environmental_parameters_retrieve
-      description: ViewSet for viewing and editing EnvironmentalParameter instances.
+      description: |-
+        ViewSet for viewing and editing EnvironmentalParameter instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8280,7 +8289,10 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_environmental_parameters_update
-      description: ViewSet for viewing and editing EnvironmentalParameter instances.
+      description: |-
+        ViewSet for viewing and editing EnvironmentalParameter instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8326,7 +8338,10 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_environmental_parameters_partial_update
-      description: ViewSet for viewing and editing EnvironmentalParameter instances.
+      description: |-
+        ViewSet for viewing and editing EnvironmentalParameter instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8371,7 +8386,10 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_environmental_parameters_destroy
-      description: ViewSet for viewing and editing EnvironmentalParameter instances.
+      description: |-
+        ViewSet for viewing and editing EnvironmentalParameter instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8400,7 +8418,10 @@ paths:
   /api/v1/environmental/photoperiod/:
     get:
       operationId: api_v1_environmental_photoperiod_list
-      description: ViewSet for viewing and editing PhotoperiodData instances.
+      description: |-
+        ViewSet for viewing and editing PhotoperiodData instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: area
@@ -8470,7 +8491,10 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_environmental_photoperiod_create
-      description: ViewSet for viewing and editing PhotoperiodData instances.
+      description: |-
+        ViewSet for viewing and editing PhotoperiodData instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -8506,7 +8530,10 @@ paths:
   /api/v1/environmental/photoperiod/{id}/:
     get:
       operationId: api_v1_environmental_photoperiod_retrieve
-      description: ViewSet for viewing and editing PhotoperiodData instances.
+      description: |-
+        ViewSet for viewing and editing PhotoperiodData instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8538,7 +8565,10 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_environmental_photoperiod_update
-      description: ViewSet for viewing and editing PhotoperiodData instances.
+      description: |-
+        ViewSet for viewing and editing PhotoperiodData instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8584,7 +8614,10 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_environmental_photoperiod_partial_update
-      description: ViewSet for viewing and editing PhotoperiodData instances.
+      description: |-
+        ViewSet for viewing and editing PhotoperiodData instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8629,7 +8662,10 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_environmental_photoperiod_destroy
-      description: ViewSet for viewing and editing PhotoperiodData instances.
+      description: |-
+        ViewSet for viewing and editing PhotoperiodData instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8662,6 +8698,7 @@ paths:
         ViewSet for viewing and editing EnvironmentalReading instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: batch
@@ -8781,6 +8818,7 @@ paths:
         ViewSet for viewing and editing EnvironmentalReading instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -8820,6 +8858,7 @@ paths:
         ViewSet for viewing and editing EnvironmentalReading instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8855,6 +8894,7 @@ paths:
         ViewSet for viewing and editing EnvironmentalReading instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8904,6 +8944,7 @@ paths:
         ViewSet for viewing and editing EnvironmentalReading instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -8952,6 +8993,7 @@ paths:
         ViewSet for viewing and editing EnvironmentalReading instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -9115,7 +9157,10 @@ paths:
   /api/v1/environmental/stage-transitions/:
     get:
       operationId: api_v1_environmental_stage_transitions_list
-      description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
+      description: |-
+        ViewSet for viewing and editing StageTransitionEnvironmental instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: batch_transfer
@@ -9165,7 +9210,10 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_environmental_stage_transitions_create
-      description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
+      description: |-
+        ViewSet for viewing and editing StageTransitionEnvironmental instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -9201,7 +9249,10 @@ paths:
   /api/v1/environmental/stage-transitions/{id}/:
     get:
       operationId: api_v1_environmental_stage_transitions_retrieve
-      description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
+      description: |-
+        ViewSet for viewing and editing StageTransitionEnvironmental instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -9233,7 +9284,10 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_environmental_stage_transitions_update
-      description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
+      description: |-
+        ViewSet for viewing and editing StageTransitionEnvironmental instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -9279,7 +9333,10 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_environmental_stage_transitions_partial_update
-      description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
+      description: |-
+        ViewSet for viewing and editing StageTransitionEnvironmental instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -9324,7 +9381,10 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_environmental_stage_transitions_destroy
-      description: ViewSet for viewing and editing StageTransitionEnvironmental instances.
+      description: |-
+        ViewSet for viewing and editing StageTransitionEnvironmental instances.
+
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -9357,6 +9417,7 @@ paths:
         ViewSet for viewing and editing WeatherData instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: query
         name: area
@@ -9421,6 +9482,7 @@ paths:
         ViewSet for viewing and editing WeatherData instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       tags:
       - api
       requestBody:
@@ -9460,6 +9522,7 @@ paths:
         ViewSet for viewing and editing WeatherData instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -9495,6 +9558,7 @@ paths:
         ViewSet for viewing and editing WeatherData instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -9544,6 +9608,7 @@ paths:
         ViewSet for viewing and editing WeatherData instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id
@@ -9592,6 +9657,7 @@ paths:
         ViewSet for viewing and editing WeatherData instances.
 
         Includes special filtering and aggregation methods for time-series data.
+        Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
       parameters:
       - in: path
         name: id

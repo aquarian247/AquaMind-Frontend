@@ -126,3 +126,11 @@ next_session_prompt.md
 
 # TypeScript cache
 *.tsbuildinfo
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+e2e-results.json
+e2e/artifacts/*.png
+e2e/artifacts/*.log
+e2e/artifacts/*.txt
