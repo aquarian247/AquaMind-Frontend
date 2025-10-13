@@ -87,6 +87,12 @@ const navigationItems = [
   },
   {
     id: 14,
+    label: "User Management",
+    icon: "fas fa-users-cog",
+    path: "/users/manage",
+  },
+  {
+    id: 15,
     label: "Settings",
     icon: "fas fa-cog",
     path: "/settings",

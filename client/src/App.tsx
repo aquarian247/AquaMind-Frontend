@@ -18,6 +18,11 @@ import Infrastructure from "@/pages/infrastructure";
 import InfrastructureManagementPage from "@/features/infrastructure/pages/InfrastructureManagementPage";
 import InfrastructureAreas from "@/pages/infrastructure-areas";
 import InventoryManagementPage from "@/features/inventory/pages/InventoryManagementPage";
+import HealthManagementPage from "@/features/health/pages/HealthManagementPage";
+import EnvironmentalManagementPage from "@/features/environmental/pages/EnvironmentalManagementPage";
+import UserManagementPage from "@/features/users/pages/UserManagementPage";
+import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModelManagementPage";
+import BroodstockManagementPage from "@/features/broodstock/pages/BroodstockManagementPage";
 import InfrastructureStations from "@/pages/infrastructure-stations";
 import AreaDetail from "@/pages/area-detail";
 import StationDetail from "@/pages/station-detail";
@@ -96,6 +101,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Monitoring />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/environmental/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <EnvironmentalManagementPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>
@@ -257,11 +270,35 @@ function Router() {
           </AppLayout>
         </ProtectedRoute>
       </Route>
+
+      <Route path="/health/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <HealthManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/users/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <UserManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
       
       <Route path="/broodstock">
         <ProtectedRoute>
           <AppLayout>
             <Broodstock />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/broodstock/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <BroodstockManagementPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>
@@ -310,6 +347,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <ScenarioPlanning />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/scenario-planning/models">
+        <ProtectedRoute>
+          <AppLayout>
+            <ScenarioModelManagementPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>
