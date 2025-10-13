@@ -48,7 +48,7 @@ Complete testing of all Phase 6 & 7 features.
 **Objective**: Verify user management interface loads and displays correct information.
 
 **Steps**:
-1. Navigate to `/users` or access via main navigation
+1. Navigate to `/users/manage` or click "User Management" in the left sidebar navigation
 2. Verify page title: "User Management"
 3. Verify subtitle: "Manage users, roles, and permissions (Admin only)"
 4. Verify three cards are displayed:
@@ -115,7 +115,7 @@ SELECT COUNT(*) as history_count FROM users_historicaluserprofile;
 **Objective**: Verify TGC model management interface.
 
 **Steps**:
-1. Navigate to `/scenario/models` or access via navigation
+1. Navigate to `/scenario-planning/models` (or from Scenario Planning page)
 2. Verify page title: "Scenario Model Library"
 3. Locate "TGC Models" card
 4. Verify model count displays
@@ -316,7 +316,7 @@ LIMIT 5;
 **Objective**: Verify broodstock fish management interface.
 
 **Steps**:
-1. Navigate to `/broodstock/management` or access via navigation
+1. Navigate to `/broodstock/manage` (or from Broodstock page)
 2. Verify page title: "Broodstock Management"
 3. Locate "Broodstock Fish" card
 4. Verify fish count displays
