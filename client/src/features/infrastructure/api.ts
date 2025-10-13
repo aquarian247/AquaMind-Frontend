@@ -541,12 +541,14 @@ export function useContainers(filters?: {
   hall?: number; 
   area?: number; 
   containerType?: number;
+  container_type__category?: 'TANK' | 'PEN' | 'TRAY' | 'OTHER';
   active?: boolean;
+  exclude_ids?: number[];
 }) {
   return useQuery({
     queryKey: ["containers", filters],
-    queryFn: () =>
-      ApiService.apiV1InfrastructureContainersList(
+    queryFn: async () => {
+      const response = await ApiService.apiV1InfrastructureContainersList(
         filters?.active,
         filters?.area,
         undefined, // areaIn
@@ -555,8 +557,37 @@ export function useContainers(filters?: {
         undefined, // hallIn
         undefined, // name
         undefined, // ordering
-        undefined  // page
-      ),
+        undefined, // page
+        undefined  // search
+      );
+      
+      let filteredResults = response.results || [];
+      
+      // Client-side filtering for category (filter by container_type_name)
+      if (filters?.container_type__category && filteredResults) {
+        // For TRAY category, filter by name containing "Tray" or "Egg"
+        if (filters.container_type__category === 'TRAY') {
+          filteredResults = filteredResults.filter(
+            c => c.container_type_name?.toLowerCase().includes('tray') || 
+                 c.container_type_name?.toLowerCase().includes('egg')
+          );
+        }
+        // Could add other category filters here if needed
+      }
+      
+      // Client-side filtering for excluded IDs
+      if (filters?.exclude_ids?.length && filteredResults) {
+        filteredResults = filteredResults.filter(
+          c => !filters.exclude_ids?.includes(c.id)
+        );
+      }
+      
+      return {
+        ...response,
+        results: filteredResults,
+      };
+    },
+    enabled: !!filters?.hall || !!filters?.area,
   });
 }
 

@@ -5,9 +5,10 @@
  * All hooks use TanStack Query for caching and state management.
  */
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query'
+import { useQuery, UseQueryResult, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ApiService } from '@/api/generated'
 import { useCrudMutation } from '@/features/shared/hooks/useCrudMutation'
+import { useToast } from '@/hooks/use-toast'
 import type {
   Batch,
   LifeCycleStage,
@@ -23,6 +24,7 @@ import type {
   PaginatedGrowthSampleList,
   PaginatedMortalityEventList,
 } from '@/api/generated'
+import type { BatchCreationFormValues } from '@/lib/validation/batch'
 
 // ========================================
 // SPECIES HOOKS (for FK dropdowns)
@@ -136,6 +138,98 @@ export function useDeleteBatch() {
     description: 'Batch deleted successfully',
     invalidateQueries: ['batches', 'batch/batches'],
     injectAuditReason: (vars, reason) => ({ ...vars, change_reason: reason }),
+  })
+}
+
+/**
+ * Create batch with container assignments atomically.
+ * 
+ * Flow:
+ * 1. Create batch
+ * 2. Create all assignments
+ * 3. If any assignment fails, delete the batch and throw error
+ * 
+ * @returns Mutation hook with rollback logic
+ */
+export function useCreateBatchWithAssignments() {
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  return useMutation({
+    mutationFn: async (data: BatchCreationFormValues) => {
+      let createdBatchId: number | undefined
+
+      try {
+        // Step 1: Create batch
+        const batch = await ApiService.apiV1BatchBatchesCreate({
+          batch_number: data.batch_number,
+          species: data.species,
+          lifecycle_stage: data.lifecycle_stage,
+          status: data.status,
+          batch_type: data.batch_type,
+          start_date: data.start_date,
+          expected_end_date: data.expected_end_date,
+          notes: data.notes,
+        } as Batch)
+
+        createdBatchId = batch.id
+
+        // Step 2: Create assignments
+        const assignmentPromises = data.assignments.map((assignment, index) => {
+          const payload = {
+            batch_id: batch.id,
+            container_id: assignment.container,
+            lifecycle_stage_id: data.lifecycle_stage, // Same as batch
+            population_count: assignment.population_count,
+            avg_weight_g: assignment.avg_weight_g,
+            // biomass_kg is calculated by backend (readonly field)
+            assignment_date: data.start_date,
+            is_active: true,
+            notes: assignment.notes || '',
+          }
+          
+          console.log(`Creating assignment ${index + 1}:`, payload)
+          
+          return ApiService.apiV1BatchContainerAssignmentsCreate(payload as any)
+            .catch(error => {
+              console.error(`Assignment ${index + 1} failed:`, error)
+              console.error(`Assignment ${index + 1} payload:`, payload)
+              console.error(`Assignment ${index + 1} error body:`, error.body)
+              console.error(`Assignment ${index + 1} error status:`, error.status)
+              throw error
+            })
+        })
+
+        await Promise.all(assignmentPromises)
+
+        return batch
+      } catch (error) {
+        // Rollback: Delete batch if created
+        if (createdBatchId) {
+          try {
+            await ApiService.apiV1BatchBatchesDestroy(createdBatchId)
+          } catch (deleteError) {
+            console.error('Failed to rollback batch creation:', deleteError)
+          }
+        }
+        throw error
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['batches'] })
+      queryClient.invalidateQueries({ queryKey: ['batch-container-assignments'] })
+      toast({
+        title: 'Success',
+        description: 'Batch created with container assignments',
+      })
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create batch with assignments',
+        variant: 'destructive',
+      })
+    },
   })
 }
 

@@ -2,16 +2,16 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Fish, TrendingUp, Link as LinkIcon, ArrowRightLeft, LineChart, Skull } from 'lucide-react'
-import { useBatches, useLifecycleStages, useBatchContainerAssignments, useBatchTransfers, useGrowthSamples, useMortalityEvents } from '../api'
+import { Plus, Fish, TrendingUp, ArrowRightLeft, LineChart, Skull } from 'lucide-react'
+import { useBatches, useLifecycleStages, useBatchTransfers, useGrowthSamples, useMortalityEvents } from '../api'
 import { BatchForm } from '../components/BatchForm'
+import { BatchCreationForm } from '../components/BatchCreationForm'
 import { LifecycleStageForm } from '../components/LifecycleStageForm'
-import { BatchContainerAssignmentForm } from '../components/BatchContainerAssignmentForm'
 import { BatchTransferForm } from '../components/BatchTransferForm'
 import { GrowthSampleForm } from '../components/GrowthSampleForm'
 import { MortalityEventForm } from '../components/MortalityEventForm'
 
-type EntityType = 'batch' | 'lifecycleStage' | 'assignment' | 'transfer' | 'growthSample' | 'mortalityEvent' | null
+type EntityType = 'batch' | 'lifecycleStage' | 'transfer' | 'growthSample' | 'mortalityEvent' | null
 
 /**
  * Batch Setup Page with Create Dialogs
@@ -31,7 +31,6 @@ export default function BatchSetupPage() {
   // Load counts for display
   const { data: batchesData } = useBatches()
   const { data: stagesData } = useLifecycleStages()
-  const { data: assignmentsData } = useBatchContainerAssignments()
   const { data: transfersData } = useBatchTransfers()
   const { data: growthSamplesData } = useGrowthSamples()
   const { data: mortalityEventsData } = useMortalityEvents()
@@ -48,7 +47,7 @@ export default function BatchSetupPage() {
     {
       id: 'batch' as const,
       name: 'Batch',
-      description: 'Fish batch with lifecycle tracking',
+      description: 'Fish batch with lifecycle tracking and container assignments',
       icon: Fish,
       count: batchesData?.results?.length || 0,
       color: 'blue'
@@ -60,14 +59,6 @@ export default function BatchSetupPage() {
       icon: TrendingUp,
       count: stagesData?.results?.length || 0,
       color: 'green'
-    },
-    {
-      id: 'assignment' as const,
-      name: 'Container Assignment',
-      description: 'Assign batch to container',
-      icon: LinkIcon,
-      count: assignmentsData?.results?.length || 0,
-      color: 'purple'
     },
     {
       id: 'transfer' as const,
@@ -151,14 +142,14 @@ export default function BatchSetupPage() {
         })}
       </div>
 
-      {/* Batch Create Dialog */}
+      {/* Batch Create Dialog - NEW: Uses BatchCreationForm with inline assignments */}
       <Dialog open={createDialogOpen === 'batch'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
-            <DialogTitle>Create Batch</DialogTitle>
-            <DialogDescription>Create a new fish batch with species, lifecycle stage, and timeline</DialogDescription>
+            <DialogTitle>Create Batch with Container Assignments</DialogTitle>
+            <DialogDescription>Create a new Egg & Alevin batch and assign it to containers in one step</DialogDescription>
           </DialogHeader>
-          <BatchForm onSuccess={handleSuccess} onCancel={handleCancel} />
+          <BatchCreationForm onSuccess={handleSuccess} onCancel={handleCancel} />
         </DialogContent>
       </Dialog>
 
@@ -170,17 +161,6 @@ export default function BatchSetupPage() {
             <DialogDescription>Define a new lifecycle stage for tracking batch progression</DialogDescription>
           </DialogHeader>
           <LifecycleStageForm onSuccess={handleSuccess} onCancel={handleCancel} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Container Assignment Create Dialog */}
-      <Dialog open={createDialogOpen === 'assignment'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Create Container Assignment</DialogTitle>
-            <DialogDescription>Assign a batch to a container for tracking</DialogDescription>
-          </DialogHeader>
-          <BatchContainerAssignmentForm onSuccess={handleSuccess} onCancel={handleCancel} />
         </DialogContent>
       </Dialog>
 
@@ -226,13 +206,14 @@ export default function BatchSetupPage() {
           <div>
             <h3 className="font-semibold mb-2">Batches</h3>
             <p className="text-sm text-muted-foreground">
-              Batches represent groups of fish tracked throughout their lifecycle. Each batch has:
+              Batches represent groups of fish tracked throughout their lifecycle. When creating a batch:
             </p>
             <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 mt-1">
               <li>Unique batch number for identification</li>
-              <li>Species and lifecycle stage assignment</li>
-              <li>Status tracking (Active, Completed, Terminated)</li>
-              <li>Timeline with start and expected end dates</li>
+              <li>Always starts at Egg & Alevin lifecycle stage</li>
+              <li>Assign to one or more Egg & Alevin trays immediately</li>
+              <li>Real-time population and biomass totals</li>
+              <li>Atomic creation - all assignments succeed or none</li>
             </ul>
           </div>
           
@@ -243,22 +224,9 @@ export default function BatchSetupPage() {
             </p>
             <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 mt-1">
               <li>Species-specific stage definitions</li>
-              <li>Sequential ordering (Egg → Fry → Juvenile → Adult)</li>
+              <li>Sequential ordering (Egg&Alevin → Fry → Parr → Smolt → Post-Smolt → Adult)</li>
               <li>Expected weight and length ranges</li>
               <li>Used for batch tracking and reporting</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-2">Container Assignments</h3>
-            <p className="text-sm text-muted-foreground">
-              Container assignments link batches to physical containers. Each assignment tracks:
-            </p>
-            <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 mt-1">
-              <li>Batch-to-container mapping</li>
-              <li>Population count and average weight</li>
-              <li>Assignment and removal dates</li>
-              <li>Current lifecycle stage</li>
             </ul>
           </div>
 
@@ -268,10 +236,24 @@ export default function BatchSetupPage() {
               Batch transfers record movement of fish between containers. Features include:
             </p>
             <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 mt-1">
-              <li>Source and destination tracking</li>
+              <li>Move fish from one container to another</li>
+              <li>Handles lifecycle stage progression</li>
               <li>Population and biomass calculations</li>
               <li>Mortality recording during transfer</li>
               <li>Audit trail for compliance</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 className="font-semibold mb-2">Growth Samples & Mortality</h3>
+            <p className="text-sm text-muted-foreground">
+              Track batch health and development:
+            </p>
+            <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 mt-1">
+              <li>Growth samples: Record weight and length measurements</li>
+              <li>Mortality events: Track fish losses and causes</li>
+              <li>Linked to specific containers and batches</li>
+              <li>Used for performance analysis and FCR calculations</li>
             </ul>
           </div>
         </CardContent>

@@ -161,3 +161,70 @@ export const mortalityEventSchema = z.object({
 })
 
 export type MortalityEventFormValues = z.infer<typeof mortalityEventSchema>
+
+/**
+ * Single container assignment within batch creation.
+ * Used for inline assignment during batch creation.
+ */
+export const batchCreationAssignmentSchema = z.object({
+  // Temporary ID for tracking in form (not sent to API)
+  tempId: z.string(),
+  
+  // Hall selection (filtered by station)
+  hall: z.coerce.number().int().positive('Hall is required'),
+  
+  // Container selection (filtered by hall + TRAY category)
+  container: z.coerce.number().int().positive('Container is required'),
+  
+  // Population and weight
+  population_count: z.coerce.number().int().min(1, 'Population must be at least 1'),
+  avg_weight_g: positiveDecimalString({
+    decimalPlaces: 2,
+    required: true,
+    label: 'Average weight (grams)',
+  }),
+  
+  // Auto-calculated biomass (for display)
+  biomass_kg: z.number().optional(),
+  
+  // Optional notes
+  notes: optionalString,
+})
+
+export type BatchCreationAssignmentFormValues = z.infer<typeof batchCreationAssignmentSchema>
+
+/**
+ * Complete batch creation form including inline container assignments.
+ * Creates batch + assignments atomically.
+ */
+export const batchCreationSchema = z.object({
+  // Basic batch fields
+  batch_number: nonEmptyString.max(50, 'Batch number must be 50 characters or less'),
+  species: z.coerce.number().int().positive('Species is required'),
+  lifecycle_stage: z.coerce.number().int().positive('Lifecycle stage is required'),
+  status: batchStatusEnum.default('ACTIVE'),
+  batch_type: batchTypeEnum.default('STANDARD'),
+  start_date: dateString,
+  expected_end_date: optionalDateString,
+  notes: optionalString,
+  
+  // Shared location context (Geography → Station)
+  geography: z.coerce.number().int().positive('Geography is required'),
+  freshwater_station: z.coerce.number().int().positive('Freshwater station is required'),
+  
+  // Container assignments (minimum 1 required)
+  assignments: z.array(batchCreationAssignmentSchema).min(1, 'At least one container assignment is required'),
+}).refine(
+  (data) => {
+    // Ensure no duplicate containers across assignments
+    const containerIds = data.assignments.map(a => a.container)
+    const uniqueContainerIds = new Set(containerIds)
+    return containerIds.length === uniqueContainerIds.size
+  },
+  {
+    message: 'Cannot assign the same container multiple times',
+    path: ['assignments'],
+  }
+)
+
+export type BatchCreationFormValues = z.infer<typeof batchCreationSchema>

@@ -43,6 +43,9 @@ interface BatchFormProps {
 }
 
 /**
+ * @deprecated For creating NEW batches, use BatchCreationForm instead (includes inline container assignments).
+ * This component is now only used for EDITING existing batches.
+ * 
  * Batch create/edit form component.
  *
  * Features:
@@ -59,10 +62,7 @@ interface BatchFormProps {
  *
  * @example
  * ```tsx
- * // Create mode
- * <BatchForm onSuccess={() => console.log('Created!')} />
- *
- * // Edit mode
+ * // Edit mode (ONLY)
  * <BatchForm batch={existingBatch} onSuccess={() => console.log('Updated!')} />
  * ```
  */

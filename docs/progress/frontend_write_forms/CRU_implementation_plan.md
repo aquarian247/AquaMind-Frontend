@@ -79,9 +79,13 @@
 - Batch feature code (`client/src/features/batch-management`)
 - `docs/CONTRIBUTING.md` sections on server-side aggregation usage
 
-### Task B2.1 – Batch Creation & Lifecycle Stage Maintenance
-- **Scope**: Forms for `batch_batch`, `batch_lifecyclestage`, initial assignment metadata. Include default values and stage selection.
-- **Tests**: Form validations (dates, enums), mutation integration tests.
+### Task B2.1 – Batch Creation with Inline Container Assignments ✅
+- **Status**: COMPLETE (Redesigned 2025-10-13)
+- **Scope**: Multi-step batch creation form with inline container assignments. Atomic all-or-nothing creation. Cascading Geography → Station → Hall → Container(TRAY) filters. Fixed Egg&Alevin lifecycle stage in test data.
+- **Deliverables**: BatchCreationForm, BatchCreationAssignmentRow, atomic creation hook, updated validation schemas, database fix
+- **Tests**: Type-check passing, linting passing, validation schema tests, manual QA for cascading filters
+- **Dependencies**: Database fix (Egg&Alevin lifecycle stage), backend API endpoints
+- **Summary**: See `docs/progress/frontend_write_forms/B2.1_redesign_summary.md`
 
 ### Task B2.2 – Container Assignment & Transfers
 - **Scope**: Manage `batch_batchcontainerassignment` (create/update population/weight) and `batch_batchtransfer`. Provide wizard-like flow for transfers with validation against capacity.
