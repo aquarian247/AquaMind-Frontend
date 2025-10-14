@@ -75,14 +75,10 @@ export function BiologicalConstraintsCreationDialog({
 
   const createConstraintsMutation = useMutation({
     mutationFn: async (data: BiologicalConstraintsFormData) => {
-      return apiRequest({
-        url: "/api/v1/scenario/biological-constraints/",
-        method: "POST",
-        body: {
-          name: data.name,
-          description: data.description || "",
-          is_active: data.isActive,
-        },
+      return apiRequest("POST", "/api/v1/scenario/biological-constraints/", {
+        name: data.name,
+        description: data.description || "",
+        is_active: data.isActive,
       });
     },
     onSuccess: () => {

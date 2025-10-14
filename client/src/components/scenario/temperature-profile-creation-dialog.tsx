@@ -68,12 +68,8 @@ export function TemperatureProfileCreationDialog({
 
   const createProfileMutation = useMutation({
     mutationFn: async (data: TemperatureProfileFormData) => {
-      return apiRequest({
-        url: "/api/v1/scenario/temperature-profiles/",
-        method: "POST",
-        body: {
-          name: data.name,
-        },
+      return apiRequest("POST", "/api/v1/scenario/temperature-profiles/", {
+        name: data.name,
       });
     },
     onSuccess: () => {
