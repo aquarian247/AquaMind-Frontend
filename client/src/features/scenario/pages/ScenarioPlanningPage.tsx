@@ -39,7 +39,7 @@ import { BatchIntegrationDialog } from "@/components/scenario/batch-integration-
 import { TgcModelCreationDialog } from "@/components/scenario/tgc-model-creation-dialog";
 import { FcrModelCreationDialog } from "@/components/scenario/fcr-model-creation-dialog";
 import { MortalityModelCreationDialog } from "@/components/scenario/mortality-model-creation-dialog";
-import { TemperatureProfileCreationDialog } from "@/components/scenario/temperature-profile-creation-dialog";
+import { TemperatureProfileCreationDialogFull } from "@/components/scenario/temperature-profile-creation-dialog-full";
 import { BiologicalConstraintsCreationDialog } from "@/components/scenario/biological-constraints-creation-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -416,12 +416,12 @@ export default function ScenarioPlanningPage() {
         <TabsContent value="temperature" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Temperature Profiles</h2>
-            <TemperatureProfileCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario"] })}>
+            <TemperatureProfileCreationDialogFull onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario"] })}>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Create Profile
               </Button>
-            </TemperatureProfileCreationDialog>
+            </TemperatureProfileCreationDialogFull>
           </div>
           <div className="text-center py-8 text-muted-foreground">
             {temperatureProfiles?.results?.length || 0} temperature profiles configured
