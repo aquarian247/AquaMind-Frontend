@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { 
   LineChart, 
   TrendingUp, 
@@ -67,6 +69,7 @@ export default function ScenarioPlanningPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   // Data & filtering hooks
   const [searchTerm, setSearchTerm] = useState("");
@@ -275,19 +278,28 @@ export default function ScenarioPlanningPage() {
                               Edit Scenario
                             </DropdownMenuItem>
                           </ScenarioEditDialog>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <DropdownMenuItem disabled>
-                                  <Copy className="h-4 w-4 mr-2" />
-                                  Duplicate
-                                </DropdownMenuItem>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Temporarily disabled for UAT. Backend action coming soon.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <DropdownMenuItem 
+                            onClick={async () => {
+                              try {
+                                const response = await apiRequest("POST", `/api/v1/scenario/scenarios/${scenario.id}/duplicate/`, {});
+                                const result = await response.json();
+                                toast({
+                                  title: "Scenario Duplicated",
+                                  description: `Created copy: ${result.name || 'New Scenario'}`,
+                                });
+                                handleSuccess();
+                              } catch (error: any) {
+                                toast({
+                                  title: "Duplication Failed",
+                                  description: error.message || "Failed to duplicate scenario",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="text-destructive"
                             onClick={() => deleteScenario.mutate(scenario.id)}
@@ -331,19 +343,29 @@ export default function ScenarioPlanningPage() {
                           View Details
                         </Button>
                         {scenario.status === 'draft' && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="sm" disabled>
-                                  <Play className="h-4 w-4 mr-2" />
-                                  Run Projection
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Temporarily disabled for UAT. Backend action coming soon.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Button 
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                await apiRequest("POST", `/api/v1/scenario/scenarios/${scenario.id}/run_projection/`, {});
+                                toast({
+                                  title: "Projection Running",
+                                  description: "Calculating growth projections...",
+                                });
+                                // Refresh scenarios after projection completes
+                                setTimeout(() => handleSuccess(), 2000);
+                              } catch (error: any) {
+                                toast({
+                                  title: "Projection Failed",
+                                  description: error.message || "Failed to run projection",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            Run Projection
+                          </Button>
                         )}
                       </div>
                       
