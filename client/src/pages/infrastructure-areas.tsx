@@ -143,9 +143,13 @@ export default function InfrastructureAreas() {
 
   // Parse geography from URL query parameter (e.g., ?geography=faroe-islands)
   const selectedGeography = useMemo(() => {
-    const urlParams = new URLSearchParams(location.split('?')[1] || '');
+    console.log('[Areas] Full location:', location);
+    const queryString = location.includes('?') ? location.split('?')[1] : '';
+    console.log('[Areas] Query string:', queryString);
+    const urlParams = new URLSearchParams(queryString);
     const geo = urlParams.get('geography');
     console.log('[Areas] URL geography param:', geo);
+    console.log('[Areas] All URL params:', Array.from(urlParams.entries()));
     return geo || 'all';
   }, [location]);
 
