@@ -54,12 +54,9 @@ export async function apiRequest(
   // Add JWT authentication token using centralized getAuthToken()
   // Same pattern as OpenAPI.TOKEN = async () => getAuthToken()
   const token = getAuthToken();
-  console.log('[apiRequest] Starting request:', { method, url, fullUrl, hasToken: !!token, hasData: !!data });
   
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
-  } else {
-    console.warn('[apiRequest] No auth token found!');
   }
   
   if (data) {
@@ -67,33 +64,17 @@ export async function apiRequest(
   }
 
   try {
-    console.log('[apiRequest] Calling fetch with:', { fullUrl, method, headers, bodyPreview: data ? JSON.stringify(data).substring(0, 100) : 'none' });
-    
-    const fetchPromise = fetch(fullUrl, {
+    const res = await fetch(fullUrl, {
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
       credentials: "include",
     });
-    
-    console.log('[apiRequest] Fetch promise created, awaiting response...');
-    const res = await fetchPromise;
-    console.log('[apiRequest] ✅ Response received!');
-
-    console.log('[apiRequest] Response details:', {
-      status: res.status,
-      statusText: res.statusText,
-      ok: res.ok,
-      url: res.url,
-      type: res.type,
-      redirected: res.redirected
-    });
 
     await throwIfResNotOk(res);
     return res;
   } catch (error) {
-    console.error('[apiRequest] ❌ Request failed with error:', error);
-    console.error('[apiRequest] Error type:', error instanceof TypeError ? 'TypeError (Network/CORS)' : error?.constructor?.name);
+    console.error('[apiRequest] Request failed:', { method, url, error });
     throw error;
   }
 }

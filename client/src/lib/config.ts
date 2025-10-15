@@ -3,13 +3,6 @@
 import { authConfig } from '../config/auth.config';
 import { apiConfig } from '../config/api.config';
 
-// Debug: Log environment variables at module load
-console.log('[Config] Environment variables:', {
-  VITE_USE_DJANGO_API: import.meta.env.VITE_USE_DJANGO_API,
-  VITE_DJANGO_API_URL: import.meta.env.VITE_DJANGO_API_URL,
-  authConfigBaseUrl: authConfig.baseUrl,
-});
-
 export const API_CONFIG = {
   // Backend configuration - now uses centralized config
   DJANGO_API_URL: authConfig.baseUrl,
@@ -67,10 +60,6 @@ OpenAPI.BASE = API_CONFIG.DJANGO_API_URL;
  */
 OpenAPI.TOKEN = async () => getAuthToken();
 
-console.log('[Config] API_CONFIG.USE_DJANGO_API =', API_CONFIG.USE_DJANGO_API);
-console.log('[Config] API_CONFIG.DJANGO_API_URL =', API_CONFIG.DJANGO_API_URL);
-console.log('[Config] OpenAPI.BASE =', OpenAPI.BASE);
-
 /**
  * Get full API URL for an endpoint
  * Uses the same base URL as OpenAPI.BASE for consistency
@@ -86,10 +75,7 @@ export const getApiUrl = (endpoint: string): string => {
     ? endpoint 
     : `/api/${API_CONFIG.API_VERSION}${endpoint}`;
   
-  const fullUrl = `${baseUrl}${versionedEndpoint}`;
-  console.log('[getApiUrl] Endpoint:', endpoint, '→ Full URL:', fullUrl);
-  
-  return fullUrl;
+  return `${baseUrl}${versionedEndpoint}`;
 };
 
 // Django API endpoint mappings

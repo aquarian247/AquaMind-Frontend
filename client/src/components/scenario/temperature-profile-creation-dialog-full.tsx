@@ -174,8 +174,6 @@ export function TemperatureProfileCreationDialogFull({
   // Date Range Bulk Mutation
   const bulkDateRangeMutation = useMutation({
     mutationFn: async (data: DateRangeBulkFormData) => {
-      console.log('[TempProfile] Mutation starting with data:', data);
-      
       // Backend expects dates (start_date, end_date) in YYYY-MM-DD format
       // The backend service converts them to day numbers internally
       const payload = {
@@ -190,24 +188,10 @@ export function TemperatureProfileCreationDialogFull({
         interpolation_method: data.interpolationMethod,
       };
       
-      console.log('[TempProfile] Sending payload to API:', payload);
-      
-      try {
-        const response = await apiRequest("POST", "/api/v1/scenario/temperature-profiles/bulk_date_ranges/", payload);
-        console.log('[TempProfile] Response object:', response);
-        console.log('[TempProfile] Response ok:', response.ok);
-        console.log('[TempProfile] Response status:', response.status);
-        
-        const result = await response.json();
-        console.log('[TempProfile] Parsed JSON result:', result);
-        return result;
-      } catch (error) {
-        console.error('[TempProfile] Error in API call or JSON parsing:', error);
-        throw error;
-      }
+      const response = await apiRequest("POST", "/api/v1/scenario/temperature-profiles/bulk_date_ranges/", payload);
+      return await response.json();
     },
-    onSuccess: (result) => {
-      console.log('[TempProfile] ✅ Success! Result:', result);
+    onSuccess: () => {
       toast({
         title: "Temperature Profile Created",
         description: "Profile created successfully from date ranges.",
@@ -220,7 +204,6 @@ export function TemperatureProfileCreationDialogFull({
       onSuccess?.();
     },
     onError: (error: any) => {
-      console.error('[TempProfile] ❌ Error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create profile",
@@ -261,19 +244,11 @@ export function TemperatureProfileCreationDialogFull({
   };
 
   const handleAddRange = () => {
-    console.log('[TempProfile] Add Range clicked. Current range:', currentRange);
     if (currentRange.startDate && currentRange.endDate && currentRange.value !== undefined) {
       const newRanges = [...ranges, currentRange as DateRangeFormData];
-      console.log('[TempProfile] Adding range. New ranges:', newRanges);
       setRanges(newRanges);
       rangeForm.setValue('ranges', newRanges);
       setCurrentRange({ value: currentRange.value }); // Keep value, reset dates
-    } else {
-      console.warn('[TempProfile] Cannot add range - missing required fields:', {
-        hasStartDate: !!currentRange.startDate,
-        hasEndDate: !!currentRange.endDate,
-        hasValue: currentRange.value !== undefined
-      });
     }
   };
 
@@ -284,12 +259,6 @@ export function TemperatureProfileCreationDialogFull({
   };
 
   const handleSubmitDateRanges = (data: DateRangeBulkFormData) => {
-    console.log('[TempProfile] handleSubmitDateRanges called with:', data);
-    console.log('[TempProfile] Mutation state:', {
-      isPending: bulkDateRangeMutation.isPending,
-      isError: bulkDateRangeMutation.isError,
-      error: bulkDateRangeMutation.error
-    });
     bulkDateRangeMutation.mutate(data);
   };
 
@@ -412,12 +381,7 @@ export function TemperatureProfileCreationDialogFull({
             </Alert>
 
             <Form {...rangeForm}>
-              <form onSubmit={(e) => {
-                console.log('[TempProfile] Form submit event triggered');
-                console.log('[TempProfile] Current ranges:', ranges);
-                console.log('[TempProfile] Form values:', rangeForm.getValues());
-                rangeForm.handleSubmit(handleSubmitDateRanges)(e);
-              }} className="space-y-4">
+              <form onSubmit={rangeForm.handleSubmit(handleSubmitDateRanges)} className="space-y-4">
                 <FormField
                   control={rangeForm.control}
                   name="profileName"
