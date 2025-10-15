@@ -145,10 +145,30 @@ export default function InfrastructureAreas() {
   // ✅ No longer needed - we'll use geography summary instead
   // Removed hardcoded fallback values (70 containers, 3500 biomass)
 
-  // Fetch areas using generated API client
+  // Fetch areas using generated API client with pagination handling
   const { data: rawAreasData, isLoading: areasLoading } = useQuery({
     queryKey: ["infrastructure", "areas", selectedGeography],
-    queryFn: async () => ApiService.apiV1InfrastructureAreasList(),
+    queryFn: async () => {
+      // Fetch all pages of areas
+      let allAreas: any[] = [];
+      let page = 1;
+      let hasMore = true;
+      
+      while (hasMore) {
+        const response = await ApiService.apiV1InfrastructureAreasList(
+          undefined, // active
+          undefined, // geography
+          undefined, // ordering
+          page
+        );
+        
+        allAreas = allAreas.concat(response.results || []);
+        hasMore = response.next !== null;
+        page++;
+      }
+      
+      return { results: allAreas, count: allAreas.length };
+    },
   });
 
   // Get area IDs for summary fetching

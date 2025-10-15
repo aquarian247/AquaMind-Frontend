@@ -137,7 +137,7 @@ export default function Infrastructure() {
       utilizationPercent: summary?.capacity_kg && summary?.active_biomass_kg
         ? (summary.active_biomass_kg / summary.capacity_kg) * 100
         : 0,
-      seaAreas: summary?.ring_count ?? 0,
+      seaAreas: summary?.area_count ?? 0,
       freshwaterStations: summary?.station_count ?? 0,
       status: (geo.active ?? true) ? 'active' as const : 'inactive' as const,
       lastUpdate: geo.updated_at || new Date().toISOString()
