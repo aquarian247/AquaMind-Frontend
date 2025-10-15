@@ -192,11 +192,19 @@ export function TemperatureProfileCreationDialogFull({
       
       console.log('[TempProfile] Sending payload to API:', payload);
       
-      const response = await apiRequest("POST", "/api/v1/scenario/temperature-profiles/bulk_date_ranges/", payload);
-      const result = await response.json();
-      
-      console.log('[TempProfile] API response:', result);
-      return result;
+      try {
+        const response = await apiRequest("POST", "/api/v1/scenario/temperature-profiles/bulk_date_ranges/", payload);
+        console.log('[TempProfile] Response object:', response);
+        console.log('[TempProfile] Response ok:', response.ok);
+        console.log('[TempProfile] Response status:', response.status);
+        
+        const result = await response.json();
+        console.log('[TempProfile] Parsed JSON result:', result);
+        return result;
+      } catch (error) {
+        console.error('[TempProfile] Error in API call or JSON parsing:', error);
+        throw error;
+      }
     },
     onSuccess: (result) => {
       console.log('[TempProfile] ✅ Success! Result:', result);
