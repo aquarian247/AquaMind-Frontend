@@ -3,6 +3,13 @@
 import { authConfig } from '../config/auth.config';
 import { apiConfig } from '../config/api.config';
 
+// Debug: Log environment variables at module load
+console.log('[Config] Environment variables:', {
+  VITE_USE_DJANGO_API: import.meta.env.VITE_USE_DJANGO_API,
+  VITE_DJANGO_API_URL: import.meta.env.VITE_DJANGO_API_URL,
+  authConfigBaseUrl: authConfig.baseUrl,
+});
+
 export const API_CONFIG = {
   // Backend configuration - now uses centralized config
   DJANGO_API_URL: authConfig.baseUrl,
@@ -60,14 +67,22 @@ OpenAPI.BASE = API_CONFIG.DJANGO_API_URL;
  */
 OpenAPI.TOKEN = async () => getAuthToken();
 
+console.log('[Config] API_CONFIG.USE_DJANGO_API =', API_CONFIG.USE_DJANGO_API);
+console.log('[Config] API_CONFIG.DJANGO_API_URL =', API_CONFIG.DJANGO_API_URL);
+
 export const getApiUrl = (endpoint: string): string => {
+  console.log('[getApiUrl] Called with endpoint:', endpoint, 'USE_DJANGO_API:', API_CONFIG.USE_DJANGO_API);
+  
   if (API_CONFIG.USE_DJANGO_API) {
     const baseUrl = API_CONFIG.DJANGO_API_URL;
     const versionedEndpoint = endpoint.startsWith('/api/v1') 
       ? endpoint 
       : `/api/${API_CONFIG.API_VERSION}${endpoint}`;
-    return `${baseUrl}${versionedEndpoint}`;
+    const fullUrl = `${baseUrl}${versionedEndpoint}`;
+    console.log('[getApiUrl] Returning Django URL:', fullUrl);
+    return fullUrl;
   }
+  console.log('[getApiUrl] Returning relative URL (mock API):', endpoint);
   return endpoint; // Use local Express server
 };
 
