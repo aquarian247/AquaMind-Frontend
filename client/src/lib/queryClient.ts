@@ -22,7 +22,21 @@ async function throwIfResNotOk(res: Response) {
 
 /**
  * Centralized API request function with JWT authentication
- * Uses the same auth pattern as the generated ApiService (OpenAPI.TOKEN)
+ * 
+ * ⚠️ IMPORTANT: Only use this for endpoints NOT in the generated ApiService!
+ * 
+ * For 95% of API calls, use the generated client:
+ *   import { ApiService } from '@/api/generated';
+ *   await ApiService.apiV1SomeEndpoint();
+ * 
+ * This function is ONLY for:
+ *   - Bulk endpoints not in OpenAPI spec
+ *   - Custom action endpoints (duplicate, run_projection, etc.)
+ * 
+ * Authentication & Configuration:
+ *   - Uses OpenAPI.BASE (same as generated client) - ensures consistency
+ *   - Uses getAuthToken() (same as generated client) - centralized auth
+ *   - If infrastructure pages work, this will work too (same config)
  * 
  * @param method - HTTP method (GET, POST, PUT, PATCH, DELETE)
  * @param url - API endpoint URL (e.g., "/api/v1/scenario/temperature-profiles/bulk_date_ranges/")

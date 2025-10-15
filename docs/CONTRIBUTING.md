@@ -178,9 +178,40 @@ For testing the DMZ/Protected VLAN architecture locally, see `docs/LOCAL_VLAN_SE
 - Follow Shadcn/ui patterns for UI components
 
 ### API Integration
-- **Always** use the generated client in `client/src/api/generated`. Do **not** hand-craft `fetch`/Axios calls.
-- Wrap calls in TanStack Query hooks (e.g. `useBatches()`), handle loading/error states via Suspense & Error Boundaries.
-- Mutations must call `queryClient.invalidateQueries(...)` to refresh stale data.
+
+#### ✅ Primary Rule: Always Use Generated ApiService
+
+- **ALWAYS** use the generated client in `client/src/api/generated` for all CRUD operations
+- The generated client is configured with `OpenAPI.BASE` and `OpenAPI.TOKEN` - authentication is automatic
+- Do **NOT** hand-craft `fetch`/Axios calls for endpoints that exist in the generated client
+
+#### ⚠️ Exception: Custom Bulk/Action Endpoints Only
+
+For endpoints **NOT in the generated client** (bulk operations, custom actions):
+- Use `apiRequest()` from `lib/queryClient.ts`
+- `apiRequest()` automatically uses `OpenAPI.BASE` (same as generated client)
+- `apiRequest()` automatically uses `getAuthToken()` (same as generated client)
+- This ensures consistency with the generated client
+
+**Example:**
+```typescript
+// ✅ CORRECT: Use generated client for standard CRUD
+import { ApiService } from '@/api/generated';
+const profiles = await ApiService.apiV1ScenarioTemperatureProfilesList();
+
+// ✅ CORRECT: Use apiRequest for custom bulk endpoint
+import { apiRequest } from '@/lib/queryClient';
+const result = await apiRequest("POST", "/api/v1/scenario/temperature-profiles/bulk_date_ranges/", data);
+
+// ❌ WRONG: Don't use fetch() directly or create custom wrappers
+const result = await fetch("http://localhost:8000/api/v1/...", { headers: {...} });
+```
+
+#### 🔧 Integration Pattern
+
+- Wrap API calls in TanStack Query hooks (e.g. `useBatches()`)
+- Handle loading/error states via Suspense & Error Boundaries
+- Mutations must call `queryClient.invalidateQueries(...)` to refresh stale data
 
 ### File Organization
 ```
