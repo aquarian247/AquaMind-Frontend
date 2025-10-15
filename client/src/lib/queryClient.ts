@@ -36,17 +36,18 @@ export async function apiRequest(
   const fullUrl = getApiUrl(url);
   const headers: Record<string, string> = {};
   
+  // Add JWT authentication token (required for all API calls)
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
   if (data) {
     headers["Content-Type"] = "application/json";
   }
   
-  // Add CSRF token for Django requests
-  if (API_CONFIG.USE_DJANGO_API && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
-    const csrfToken = await getCsrfToken();
-    if (csrfToken) {
-      headers[API_CONFIG.CSRF_HEADER_NAME] = csrfToken;
-    }
-  }
+  // Note: CSRF tokens not needed for JWT authentication
+  // Django REST Framework with JWT doesn't require CSRF tokens
 
   const res = await fetch(fullUrl, {
     method,
