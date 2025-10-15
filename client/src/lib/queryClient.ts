@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { API_CONFIG, getApiUrl } from "./config";
+import { API_CONFIG, getApiUrl, getAuthToken } from "./config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -8,6 +8,15 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+/**
+ * Centralized API request function with JWT authentication
+ * Uses the same auth pattern as the generated ApiService (OpenAPI.TOKEN)
+ * 
+ * @param method - HTTP method (GET, POST, PUT, PATCH, DELETE)
+ * @param url - API endpoint URL (e.g., "/api/v1/scenario/temperature-profiles/bulk_date_ranges/")
+ * @param data - Request body data (will be JSON stringified)
+ * @returns Response object
+ */
 export async function apiRequest(
   method: string,
   url: string,
@@ -16,8 +25,9 @@ export async function apiRequest(
   const fullUrl = getApiUrl(url);
   const headers: Record<string, string> = {};
   
-  // Add JWT authentication token (required for all API calls)
-  const token = localStorage.getItem('auth_token');
+  // Add JWT authentication token using centralized getAuthToken()
+  // Same pattern as OpenAPI.TOKEN = async () => getAuthToken()
+  const token = getAuthToken();
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -25,9 +35,6 @@ export async function apiRequest(
   if (data) {
     headers["Content-Type"] = "application/json";
   }
-  
-  // Note: CSRF tokens not needed for JWT authentication
-  // Django REST Framework with JWT doesn't require CSRF tokens
 
   const res = await fetch(fullUrl, {
     method,
