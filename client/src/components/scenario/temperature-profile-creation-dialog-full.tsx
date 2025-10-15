@@ -174,9 +174,11 @@ export function TemperatureProfileCreationDialogFull({
   // Date Range Bulk Mutation
   const bulkDateRangeMutation = useMutation({
     mutationFn: async (data: DateRangeBulkFormData) => {
+      console.log('[TempProfile] Mutation starting with data:', data);
+      
       // Backend expects dates (start_date, end_date) in YYYY-MM-DD format
       // The backend service converts them to day numbers internally
-      return apiRequest("POST", "/api/v1/scenario/temperature-profiles/bulk_date_ranges/", {
+      const payload = {
         profile_name: data.profileName,
         ranges: data.ranges.map(r => ({
           start_date: r.startDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
@@ -186,9 +188,18 @@ export function TemperatureProfileCreationDialogFull({
         merge_adjacent: data.mergeAdjacent,
         fill_gaps: data.fillGaps,
         interpolation_method: data.interpolationMethod,
-      });
+      };
+      
+      console.log('[TempProfile] Sending payload to API:', payload);
+      
+      const response = await apiRequest("POST", "/api/v1/scenario/temperature-profiles/bulk_date_ranges/", payload);
+      const result = await response.json();
+      
+      console.log('[TempProfile] API response:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      console.log('[TempProfile] ✅ Success! Result:', result);
       toast({
         title: "Temperature Profile Created",
         description: "Profile created successfully from date ranges.",
@@ -201,6 +212,7 @@ export function TemperatureProfileCreationDialogFull({
       onSuccess?.();
     },
     onError: (error: any) => {
+      console.error('[TempProfile] ❌ Error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create profile",
@@ -241,10 +253,19 @@ export function TemperatureProfileCreationDialogFull({
   };
 
   const handleAddRange = () => {
+    console.log('[TempProfile] Add Range clicked. Current range:', currentRange);
     if (currentRange.startDate && currentRange.endDate && currentRange.value !== undefined) {
-      setRanges([...ranges, currentRange as DateRangeFormData]);
-      rangeForm.setValue('ranges', [...ranges, currentRange as DateRangeFormData]);
+      const newRanges = [...ranges, currentRange as DateRangeFormData];
+      console.log('[TempProfile] Adding range. New ranges:', newRanges);
+      setRanges(newRanges);
+      rangeForm.setValue('ranges', newRanges);
       setCurrentRange({ value: currentRange.value }); // Keep value, reset dates
+    } else {
+      console.warn('[TempProfile] Cannot add range - missing required fields:', {
+        hasStartDate: !!currentRange.startDate,
+        hasEndDate: !!currentRange.endDate,
+        hasValue: currentRange.value !== undefined
+      });
     }
   };
 
@@ -255,6 +276,12 @@ export function TemperatureProfileCreationDialogFull({
   };
 
   const handleSubmitDateRanges = (data: DateRangeBulkFormData) => {
+    console.log('[TempProfile] handleSubmitDateRanges called with:', data);
+    console.log('[TempProfile] Mutation state:', {
+      isPending: bulkDateRangeMutation.isPending,
+      isError: bulkDateRangeMutation.isError,
+      error: bulkDateRangeMutation.error
+    });
     bulkDateRangeMutation.mutate(data);
   };
 
@@ -377,7 +404,12 @@ export function TemperatureProfileCreationDialogFull({
             </Alert>
 
             <Form {...rangeForm}>
-              <form onSubmit={rangeForm.handleSubmit(handleSubmitDateRanges)} className="space-y-4">
+              <form onSubmit={(e) => {
+                console.log('[TempProfile] Form submit event triggered');
+                console.log('[TempProfile] Current ranges:', ranges);
+                console.log('[TempProfile] Form values:', rangeForm.getValues());
+                rangeForm.handleSubmit(handleSubmitDateRanges)(e);
+              }} className="space-y-4">
                 <FormField
                   control={rangeForm.control}
                   name="profileName"
