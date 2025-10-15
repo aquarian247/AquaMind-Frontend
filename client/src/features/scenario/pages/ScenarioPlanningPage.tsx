@@ -445,9 +445,56 @@ export default function ScenarioPlanningPage() {
               </Button>
             </TemperatureProfileCreationDialogFull>
           </div>
-          <div className="text-center py-8 text-muted-foreground">
-            {temperatureProfiles?.results?.length || 0} temperature profiles configured
-          </div>
+
+          {temperatureProfiles?.results && temperatureProfiles.results.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {temperatureProfiles.results.map((profile: any) => (
+                <Card key={profile.profile_id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Thermometer className="h-5 w-5 text-blue-600" />
+                        {profile.name}
+                      </span>
+                    </CardTitle>
+                    <CardDescription>
+                      {profile.date_range?.days || profile.readings?.length || 0} days configured
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Temperature Range:</span>
+                        <span className="font-medium">
+                          {profile.temperature_summary?.min?.toFixed(1) || 'N/A'}°C - {profile.temperature_summary?.max?.toFixed(1) || 'N/A'}°C
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Average:</span>
+                        <span className="font-medium">
+                          {profile.temperature_summary?.avg?.toFixed(1) || 'N/A'}°C
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Created:</span>
+                        <span className="font-medium">
+                          {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Thermometer className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Temperature Profiles</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first temperature profile to use in TGC models
+              </p>
+            </div>
+          )}
         </TabsContent>
 
         {/* Constraints Tab */}
