@@ -145,31 +145,79 @@ export default function InfrastructureAreas() {
   // ✅ No longer needed - we'll use geography summary instead
   // Removed hardcoded fallback values (70 containers, 3500 biomass)
 
-  // Fetch areas using generated API client with pagination handling
-  const { data: rawAreasData, isLoading: areasLoading } = useQuery({
+  // Fetch ALL areas using pagination (handles >20 areas per geography)
+  const { data: rawAreasData, isLoading: areasLoading, error: areasError } = useQuery({
     queryKey: ["infrastructure", "areas", selectedGeography],
     queryFn: async () => {
-      // Fetch all pages of areas
-      let allAreas: any[] = [];
+      console.log('[Areas] Starting to fetch all pages...');
+      const allAreas: any[] = [];
       let page = 1;
-      let hasMore = true;
+      let totalCount = 0;
       
-      while (hasMore) {
-        const response = await ApiService.apiV1InfrastructureAreasList(
+      try {
+        // Fetch first page to get total count
+        const firstResponse = await ApiService.apiV1InfrastructureAreasList(
           undefined, // active
           undefined, // geography
+          undefined, // geographyIn
+          undefined, // name
+          undefined, // nameIcontains
           undefined, // ordering
-          page
+          page,      // page
+          undefined  // search
         );
         
-        allAreas = allAreas.concat(response.results || []);
-        hasMore = response.next !== null;
-        page++;
+        console.log('[Areas] First page response:', {
+          count: firstResponse.count,
+          resultsLength: firstResponse.results?.length,
+          next: firstResponse.next
+        });
+        
+        if (!firstResponse.results) {
+          console.error('[Areas] No results in first page response');
+          return { results: [], count: 0 };
+        }
+        
+        allAreas.push(...firstResponse.results);
+        totalCount = firstResponse.count || 0;
+        
+        // Fetch remaining pages if there are more
+        let hasNextPage = !!firstResponse.next;
+        while (hasNextPage && page < 10) { // Safety limit of 10 pages (200 items)
+          page++;
+          console.log(`[Areas] Fetching page ${page}...`);
+          
+          const response = await ApiService.apiV1InfrastructureAreasList(
+            undefined, undefined, undefined, undefined, undefined, undefined, page, undefined
+          );
+          
+          if (response.results) {
+            allAreas.push(...response.results);
+            console.log(`[Areas] Page ${page} fetched: ${response.results.length} items`);
+          }
+          
+          // Update hasNextPage for next iteration
+          hasNextPage = !!response.next;
+        }
+        
+        console.log(`[Areas] ✅ Fetched ${allAreas.length} total areas (expected: ${totalCount})`);
+        return { 
+          results: allAreas, 
+          count: allAreas.length,
+          next: null,
+          previous: null 
+        };
+      } catch (error) {
+        console.error('[Areas] ❌ Error fetching areas:', error);
+        throw error;
       }
-      
-      return { results: allAreas, count: allAreas.length };
     },
   });
+  
+  // Log any query errors
+  if (areasError) {
+    console.error('[Areas] Query error:', areasError);
+  }
 
   // Get area IDs for summary fetching
   const areaIds = useMemo(
