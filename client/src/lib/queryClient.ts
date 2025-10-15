@@ -8,26 +8,6 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
-// Get CSRF token for Django requests
-async function getCsrfToken(): Promise<string | null> {
-  if (!API_CONFIG.USE_DJANGO_API) return null;
-  
-  const cookies = document.cookie.split(';');
-  const csrfCookie = cookies.find(cookie => 
-    cookie.trim().startsWith(API_CONFIG.CSRF_COOKIE_NAME + '=')
-  );
-  
-  if (csrfCookie) {
-    return csrfCookie.split('=')[1];
-  }
-  
-  // No CSRF cookie present and we no longer attempt to fetch it from
-  // a non-existent endpoint; simply return null so the request proceeds
-  // without a CSRF header. Authentication-protected endpoints will still
-  // be guarded by the standard auth token mechanism.
-  return null;
-}
-
 export async function apiRequest(
   method: string,
   url: string,
