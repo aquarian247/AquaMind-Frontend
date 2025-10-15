@@ -174,22 +174,15 @@ export function TemperatureProfileCreationDialogFull({
   // Date Range Bulk Mutation
   const bulkDateRangeMutation = useMutation({
     mutationFn: async (data: DateRangeBulkFormData) => {
-      // Convert date ranges to day numbers (Day 1 = earliest date)
-      const allDates = data.ranges.flatMap(r => [r.startDate, r.endDate]);
-      const earliestDate = new Date(Math.min(...allDates.map(d => d.getTime())));
-
+      // Backend expects dates (start_date, end_date) in YYYY-MM-DD format
+      // The backend service converts them to day numbers internally
       return apiRequest("POST", "/api/v1/scenario/temperature-profiles/bulk_date_ranges/", {
         profile_name: data.profileName,
-        ranges: data.ranges.map(r => {
-          // Convert dates to day numbers relative to earliest date
-          const startDay = Math.floor((r.startDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-          const endDay = Math.floor((r.endDate.getTime() - earliestDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-          return {
-            start_day: startDay,
-            end_day: endDay,
-            value: r.value,
-          };
-        }),
+        ranges: data.ranges.map(r => ({
+          start_date: r.startDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
+          end_date: r.endDate.toISOString().split('T')[0],     // Format: YYYY-MM-DD
+          value: r.value,
+        })),
         merge_adjacent: data.mergeAdjacent,
         fill_gaps: data.fillGaps,
         interpolation_method: data.interpolationMethod,
