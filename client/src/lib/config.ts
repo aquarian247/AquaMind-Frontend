@@ -69,21 +69,27 @@ OpenAPI.TOKEN = async () => getAuthToken();
 
 console.log('[Config] API_CONFIG.USE_DJANGO_API =', API_CONFIG.USE_DJANGO_API);
 console.log('[Config] API_CONFIG.DJANGO_API_URL =', API_CONFIG.DJANGO_API_URL);
+console.log('[Config] OpenAPI.BASE =', OpenAPI.BASE);
 
+/**
+ * Get full API URL for an endpoint
+ * Uses the same base URL as OpenAPI.BASE for consistency
+ * 
+ * Note: Always returns absolute URLs to match generated ApiService behavior
+ */
 export const getApiUrl = (endpoint: string): string => {
-  console.log('[getApiUrl] Called with endpoint:', endpoint, 'USE_DJANGO_API:', API_CONFIG.USE_DJANGO_API);
+  // Use the same base URL as the generated client (OpenAPI.BASE)
+  // This ensures consistency - if generated client works, this will too
+  const baseUrl = OpenAPI.BASE || API_CONFIG.DJANGO_API_URL;
   
-  if (API_CONFIG.USE_DJANGO_API) {
-    const baseUrl = API_CONFIG.DJANGO_API_URL;
-    const versionedEndpoint = endpoint.startsWith('/api/v1') 
-      ? endpoint 
-      : `/api/${API_CONFIG.API_VERSION}${endpoint}`;
-    const fullUrl = `${baseUrl}${versionedEndpoint}`;
-    console.log('[getApiUrl] Returning Django URL:', fullUrl);
-    return fullUrl;
-  }
-  console.log('[getApiUrl] Returning relative URL (mock API):', endpoint);
-  return endpoint; // Use local Express server
+  const versionedEndpoint = endpoint.startsWith('/api/v1') 
+    ? endpoint 
+    : `/api/${API_CONFIG.API_VERSION}${endpoint}`;
+  
+  const fullUrl = `${baseUrl}${versionedEndpoint}`;
+  console.log('[getApiUrl] Endpoint:', endpoint, '→ Full URL:', fullUrl);
+  
+  return fullUrl;
 };
 
 // Django API endpoint mappings
