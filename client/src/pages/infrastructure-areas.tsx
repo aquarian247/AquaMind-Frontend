@@ -145,11 +145,8 @@ export default function InfrastructureAreas() {
   // Note: Wouter's location doesn't include query params, use window.location.search
   const selectedGeography = useMemo(() => {
     const queryString = window.location.search.substring(1); // Remove leading '?'
-    console.log('[Areas] Full URL:', window.location.href);
-    console.log('[Areas] Query string:', queryString);
     const urlParams = new URLSearchParams(queryString);
     const geo = urlParams.get('geography');
-    console.log('[Areas] URL geography param:', geo);
     return geo || 'all';
   }, [location]); // Still depend on location to trigger re-render on navigation
 
@@ -175,24 +172,15 @@ export default function InfrastructureAreas() {
       return normalizedGeoName === normalizedSelection;
     });
     
-    console.log('[Areas] Geography ID lookup:', { 
-      selectedGeography, 
-      normalizedSelection, 
-      foundGeo: geo?.name, 
-      geoId: geo?.id 
-    });
-    
     return geo?.id;
   }, [selectedGeography, geographiesData]);
 
   // Fetch ALL areas using pagination (handles >20 areas per geography)
-  const { data: rawAreasData, isLoading: areasLoading, error: areasError } = useQuery({
+  const { data: rawAreasData, isLoading: areasLoading } = useQuery({
     queryKey: ["infrastructure", "areas", selectedGeography, selectedGeographyId],
     queryFn: async () => {
-      console.log('[Areas] Starting to fetch all pages...', { selectedGeography, selectedGeographyId });
       const allAreas: any[] = [];
       let page = 1;
-      let totalCount = 0;
       
       try {
         // Fetch first page to get total count
@@ -207,25 +195,16 @@ export default function InfrastructureAreas() {
           undefined            // search
         );
         
-        console.log('[Areas] First page response:', {
-          count: firstResponse.count,
-          resultsLength: firstResponse.results?.length,
-          next: firstResponse.next
-        });
-        
         if (!firstResponse.results) {
-          console.error('[Areas] No results in first page response');
           return { results: [], count: 0 };
         }
         
         allAreas.push(...firstResponse.results);
-        totalCount = firstResponse.count || 0;
         
         // Fetch remaining pages if there are more
         let hasNextPage = !!firstResponse.next;
         while (hasNextPage && page < 10) { // Safety limit of 10 pages (200 items)
           page++;
-          console.log(`[Areas] Fetching page ${page}...`);
           
           const response = await ApiService.apiV1InfrastructureAreasList(
             undefined,           // active
@@ -240,14 +219,12 @@ export default function InfrastructureAreas() {
           
           if (response.results) {
             allAreas.push(...response.results);
-            console.log(`[Areas] Page ${page} fetched: ${response.results.length} items`);
           }
           
           // Update hasNextPage for next iteration
           hasNextPage = !!response.next;
         }
         
-        console.log(`[Areas] ✅ Fetched ${allAreas.length} total areas (expected: ${totalCount})`);
         return { 
           results: allAreas, 
           count: allAreas.length,
@@ -255,16 +232,11 @@ export default function InfrastructureAreas() {
           previous: null 
         };
       } catch (error) {
-        console.error('[Areas] ❌ Error fetching areas:', error);
+        console.error('[Areas] Error fetching areas:', error);
         throw error;
       }
     },
   });
-  
-  // Log any query errors
-  if (areasError) {
-    console.error('[Areas] Query error:', areasError);
-  }
 
   // Get area IDs for summary fetching
   const areaIds = useMemo(
