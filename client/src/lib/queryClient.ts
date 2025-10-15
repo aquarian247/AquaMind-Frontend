@@ -3,8 +3,20 @@ import { API_CONFIG, getApiUrl, getAuthToken } from "./config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = res.statusText;
+    try {
+      const text = await res.text();
+      errorMessage = text || res.statusText;
+    } catch (e) {
+      console.error('[apiRequest] Failed to read error response body:', e);
+    }
+    console.error('[apiRequest] HTTP Error:', {
+      status: res.status,
+      statusText: res.statusText,
+      message: errorMessage,
+      url: res.url
+    });
+    throw new Error(`${res.status}: ${errorMessage}`);
   }
 }
 
@@ -28,23 +40,40 @@ export async function apiRequest(
   // Add JWT authentication token using centralized getAuthToken()
   // Same pattern as OpenAPI.TOKEN = async () => getAuthToken()
   const token = getAuthToken();
+  console.log('[apiRequest] Starting request:', { method, url, fullUrl, hasToken: !!token, hasData: !!data });
+  
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  } else {
+    console.warn('[apiRequest] No auth token found!');
   }
   
   if (data) {
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(fullUrl, {
-    method,
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  try {
+    const res = await fetch(fullUrl, {
+      method,
+      headers,
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    console.log('[apiRequest] Response received:', {
+      status: res.status,
+      statusText: res.statusText,
+      ok: res.ok,
+      url: res.url,
+      headers: Object.fromEntries(res.headers.entries())
+    });
+
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    console.error('[apiRequest] Request failed:', error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
