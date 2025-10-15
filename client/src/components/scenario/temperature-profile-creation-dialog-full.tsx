@@ -149,8 +149,8 @@ export function TemperatureProfileCreationDialogFull({
           title: "Temperature Profile Created",
           description: `Successfully imported ${data.imported_count || 0} readings.`,
         });
-        queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/temperature-profiles/"] });
-        queryClient.invalidateQueries({ queryKey: ["scenario"] });
+        queryClient.invalidateQueries({ queryKey: ['scenario', 'temperature-profiles'] });
+        queryClient.invalidateQueries({ queryKey: ['scenario'] });
         csvForm.reset();
         setOpen(false);
         onSuccess?.();
@@ -196,8 +196,8 @@ export function TemperatureProfileCreationDialogFull({
         title: "Temperature Profile Created",
         description: "Profile created successfully from date ranges.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/v1/scenario/temperature-profiles/"] });
-      queryClient.invalidateQueries({ queryKey: ["scenario"] });
+      queryClient.invalidateQueries({ queryKey: ['scenario', 'temperature-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['scenario'] });
       rangeForm.reset();
       setRanges([]);
       setOpen(false);

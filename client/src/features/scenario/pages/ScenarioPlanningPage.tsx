@@ -34,6 +34,7 @@ import {
   Fish,
   Play,
   Copy,
+  Eye,
 } from "lucide-react";
 import { ScenarioCreationDialog } from "@/components/scenario/scenario-creation-dialog";
 import { ScenarioEditDialog } from "@/components/scenario/scenario-edit-dialog";
@@ -462,24 +463,52 @@ export default function ScenarioPlanningPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Temperature Range:</span>
-                        <span className="font-medium">
-                          {profile.temperature_summary?.min?.toFixed(1) || 'N/A'}°C - {profile.temperature_summary?.max?.toFixed(1) || 'N/A'}°C
-                        </span>
+                    <div className="space-y-4">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Temperature Range:</span>
+                          <span className="font-medium">
+                            {profile.temperature_summary?.min?.toFixed(1) || 'N/A'}°C - {profile.temperature_summary?.max?.toFixed(1) || 'N/A'}°C
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Average:</span>
+                          <span className="font-medium">
+                            {profile.temperature_summary?.avg?.toFixed(1) || 'N/A'}°C
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Created:</span>
+                          <span className="font-medium">
+                            {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Average:</span>
-                        <span className="font-medium">
-                          {profile.temperature_summary?.avg?.toFixed(1) || 'N/A'}°C
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Created:</span>
-                        <span className="font-medium">
-                          {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
-                        </span>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => setLocation(`/scenario-planning/temperature/${profile.profile_id}`)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => {
+                            toast({
+                              title: "Edit Coming Soon",
+                              description: "Temperature profile editing will be available soon",
+                            });
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
