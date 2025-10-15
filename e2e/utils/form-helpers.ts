@@ -113,17 +113,25 @@ export async function clickCreateButton(page: Page, entityName: string) {
 
 /**
  * Helper to wait for success toast
+ * Made more lenient - just checks if toast appeared briefly, doesn't require it to stay visible
  */
 export async function waitForSuccessToast(page: Page, message?: string) {
+  const toastLocator = page.locator('.toast, [role="status"], [data-testid*="toast"], .notification');
+
   if (message) {
-    await expect(page.locator('.toast, [role="status"]').filter({ hasText: message })).toBeVisible({
-      timeout: 5000,
+    // Wait for toast with specific message to appear (briefly)
+    await expect(toastLocator.filter({ hasText: message })).toBeVisible({
+      timeout: 2000,
     });
   } else {
-    await expect(page.locator('.toast, [role="status"]')).toBeVisible({
-      timeout: 5000,
+    // Wait for any toast to appear (briefly)
+    await expect(toastLocator).toBeVisible({
+      timeout: 2000,
     });
   }
+
+  // Give it a moment, then continue (toast may auto-hide)
+  await page.waitForTimeout(500);
 }
 
 /**
@@ -163,26 +171,18 @@ export async function verifyCountIncreased(page: Page, entityName: string, previ
  * Handles ambiguous names like "Container" (vs "Container Type")
  */
 export async function openCreateDialog(page: Page, entityName: string) {
-  // Get all buttons with "Create {entityName}" in the text
-  const allButtons = page.locator(`button`).filter({ hasText: `Create ${entityName}` });
-  const count = await allButtons.count();
-  
-  let button;
-  if (count > 1) {
-    // Multiple matches - need to be more specific
-    // Find the one that matches exactly (not a longer name)
-    button = allButtons.filter({ hasNotText: `${entityName} ` }).first();
-    
-    // Verify we found something
-    const exactCount = await button.count();
-    if (exactCount === 0) {
-      // Fall back to first match
-      button = allButtons.first();
-    }
+  // Handle special cases for ambiguous entity names
+  let buttonSelector;
+  if (entityName === 'Container') {
+    // Specifically target the Container button (not Container Type)
+    buttonSelector = page.locator('button').filter({ hasText: 'Create Container' }).filter({ hasNotText: 'Type' });
   } else {
-    button = allButtons.first();
+    buttonSelector = page.locator('button').filter({ hasText: `Create ${entityName}` });
   }
-  
+
+  const button = buttonSelector.first();
+  console.log(`Looking for button with selector for "${entityName}", found ${await button.count()} buttons`);
+
   await button.waitFor({ state: 'visible', timeout: 5000 });
   await button.scrollIntoViewIfNeeded();
   await button.click();

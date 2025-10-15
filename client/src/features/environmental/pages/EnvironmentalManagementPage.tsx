@@ -1,90 +1,74 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Gauge, Sun } from 'lucide-react';
-import { 
-  useEnvironmentalParameters, 
-  usePhotoperiodData,
-} from '../api';
-import { 
-  EnvironmentalParameterForm, 
-  PhotoperiodDataForm,
-} from '../components';
+import React, { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Plus, Gauge, Sun } from 'lucide-react'
+import { useEnvironmentalParameters, usePhotoperiodData } from '../api'
+import { EnvironmentalParameterForm } from '../components/EnvironmentalParameterForm'
+import { PhotoperiodDataForm } from '../components/PhotoperiodDataForm'
 
-type EntityType = 'parameter' | 'photoperiod' | null;
+type EntityType = 'parameter' | 'photoperiod' | null
 
 /**
  * Environmental Management Page with Create Dialogs
  * 
- * Provides quick access to create environmental entities via modal dialogs.
- * Similar to HealthManagementPage pattern.
- * 
- * Features:
- * - Create new environmental parameters (reference data)
- * - Create photoperiod data records
- * - Display current entry counts
- * - Modal dialogs for forms
+ * Provides quick access to create all environmental entities via modal dialogs.
+ * This is a testing/demo page to access all Phase 5 forms.
  */
 export default function EnvironmentalManagementPage() {
-  const [createDialogOpen, setCreateDialogOpen] = useState<EntityType>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState<EntityType>(null)
 
   // Load counts for display
-  const { data: parametersData } = useEnvironmentalParameters();
-  const { data: photoperiodData } = usePhotoperiodData();
+  const { data: parametersData } = useEnvironmentalParameters()
+  const { data: photoperiodData } = usePhotoperiodData()
 
   const handleSuccess = () => {
-    setCreateDialogOpen(null);
-  };
-
-  const handleCancel = () => {
-    setCreateDialogOpen(null);
-  };
+    setCreateDialogOpen(null)
+  }
 
   const entities = [
     {
-      id: 'parameter' as const,
+      id: 'parameter',
       name: 'Environmental Parameter',
-      description: 'Define water quality parameters and acceptable ranges',
+      description: 'Define environmental monitoring parameters',
+      count: parametersData?.count ?? 0,
       icon: Gauge,
-      count: parametersData?.results?.length || 0,
-      color: 'blue'
+      color: 'green',
     },
     {
-      id: 'photoperiod' as const,
+      id: 'photoperiod',
       name: 'Photoperiod Data',
-      description: 'Record day length and light intensity by area',
+      description: 'Record photoperiod and light intensity data',
+      count: photoperiodData?.count ?? 0,
       icon: Sun,
-      count: photoperiodData?.results?.length || 0,
-      color: 'amber'
+      color: 'yellow',
     },
-  ];
+  ]
 
   const getColorClasses = (color: string) => {
-    const colors: Record<string, { icon: string; text: string; bg: string }> = {
-      blue: { icon: 'text-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
-      amber: { icon: 'text-amber-600', text: 'text-amber-600', bg: 'bg-amber-50' },
+    const colorMap: Record<string, { icon: string; text: string; bg: string }> = {
       green: { icon: 'text-green-600', text: 'text-green-600', bg: 'bg-green-50' },
-    };
-    return colors[color] || colors.blue;
-  };
+      yellow: { icon: 'text-yellow-600', text: 'text-yellow-600', bg: 'bg-yellow-50' },
+    }
+    return colorMap[color] || colorMap.green
+  }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-2">
-        <Gauge className="h-8 w-8 text-blue-600" />
+        <Gauge className="h-8 w-8 text-green-600" />
         <div>
           <h1 className="text-2xl font-bold">Environmental Management</h1>
-          <p className="text-muted-foreground">Manage environmental parameters and photoperiod data</p>
+          <p className="text-muted-foreground">Create and manage environmental monitoring entities</p>
         </div>
       </div>
 
       {/* Entity Cards Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         {entities.map((entity) => {
-          const colors = getColorClasses(entity.color);
-          const Icon = entity.icon;
+          const colors = getColorClasses(entity.color)
+          const Icon = entity.icon
 
           return (
             <Card key={entity.id} className="hover:shadow-lg transition-shadow">
@@ -98,46 +82,62 @@ export default function EnvironmentalManagementPage() {
                 <CardTitle className="text-base">{entity.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">{entity.description}</p>
+                <p className="text-sm text-muted-foreground mb-3">{entity.description}</p>
                 <Button
-                  onClick={() => setCreateDialogOpen(entity.id)}
+                  onClick={() => setCreateDialogOpen(entity.id as EntityType)}
                   className="w-full"
                   size="sm"
                 >
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className="h-4 w-4 mr-2" />
                   Create {entity.name}
                 </Button>
               </CardContent>
             </Card>
-          );
+          )
         })}
       </div>
 
+      {/* Phase 5 Info Card */}
+      <Card className="border-green-200 bg-green-50">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-green-900">
+            Phase 5: Environmental Domain
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-green-700">
+            This page provides quick access to all environmental forms for testing and data entry.
+            Create environmental parameters and photoperiod data records.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Create Dialogs */}
       <Dialog open={createDialogOpen === 'parameter'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
             <DialogTitle>Create Environmental Parameter</DialogTitle>
-            <DialogDescription>
-              Define a new environmental parameter with acceptable and optimal ranges.
-            </DialogDescription>
+            <DialogDescription>Form for creating a new environmental parameter</DialogDescription>
           </DialogHeader>
-          <EnvironmentalParameterForm onSuccess={handleSuccess} onCancel={handleCancel} />
+          <EnvironmentalParameterForm
+            onSuccess={handleSuccess}
+            onCancel={() => setCreateDialogOpen(null)}
+          />
         </DialogContent>
       </Dialog>
 
       <Dialog open={createDialogOpen === 'photoperiod'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
             <DialogTitle>Create Photoperiod Data</DialogTitle>
-            <DialogDescription>
-              Record photoperiod (day length) data for an area.
-            </DialogDescription>
+            <DialogDescription>Form for creating new photoperiod data</DialogDescription>
           </DialogHeader>
-          <PhotoperiodDataForm onSuccess={handleSuccess} onCancel={handleCancel} />
+          <PhotoperiodDataForm
+            onSuccess={handleSuccess}
+            onCancel={() => setCreateDialogOpen(null)}
+          />
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
-

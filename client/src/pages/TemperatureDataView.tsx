@@ -24,7 +24,7 @@ import { formatFallback } from "@/lib/formatFallback";
 interface TemperatureReading {
   id: number;
   profileId: number;
-  readingDate: string;
+  dayNumber: number;
   temperature: string;
   createdAt: string;
 }
@@ -72,11 +72,11 @@ export default function TemperatureDataView() {
 
   // Prepare chart data
   const chartData = readings.results
-    .sort((a, b) => new Date(a.readingDate).getTime() - new Date(b.readingDate).getTime())
+    .sort((a, b) => a.dayNumber - b.dayNumber)
     .map((reading) => ({
-      date: reading.readingDate,
+      day: `Day ${reading.dayNumber}`,
+      dayNumber: reading.dayNumber,
       temperature: parseFloat(reading.temperature),
-      month: new Date(reading.readingDate).toLocaleDateString('en-US', { month: 'short' }),
     }));
 
   // Calculate statistics (client-side processing of loaded data - acceptable for visualization)
@@ -211,8 +211,8 @@ export default function TemperatureDataView() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="day"
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis 
@@ -220,9 +220,9 @@ export default function TemperatureDataView() {
                   tick={{ fontSize: 12 }}
                   label={{ value: 'Temperature (°C)', angle: -90, position: 'insideLeft' }}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number) => [`${value.toFixed(1)}°C`, 'Temperature']}
-                  labelFormatter={(label) => `Month: ${label}`}
+                  labelFormatter={(label) => `${label}`}
                 />
                 <Line 
                   type="monotone" 

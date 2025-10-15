@@ -49,3 +49,4 @@ export type FCRModelFormData = z.infer<typeof fcrModelSchema>;
 export type MortalityModelFormData = z.infer<typeof mortalityModelSchema>;
 export type ScenarioFormData = z.infer<typeof scenarioSchema>;
 
+

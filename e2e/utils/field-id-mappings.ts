@@ -26,9 +26,14 @@ const ENTITY_SPECIFIC_MAP: Record<string, Record<string, string>> = {
   'Sensor': {
     'sensor_type': 'sensor-type',
     'container': 'sensor-container',
+    'filter_station': 'filter-station',
+    'filter_hall': 'filter-hall',
+    'filter_area': 'filter-area',
   },
   'Feed Container': {
+    'feedcontainer_type': 'feedcontainer-type',
     'hall': 'feedcontainer-hall',
+    'filter_station': 'filter-station',
   },
   'Lifecycle Stage': {
     'species': 'lifecycle-stage-species',

@@ -11,10 +11,9 @@ import {
 } from '../utils/form-helpers';
 import { generateVerificationCommand } from '../utils/db-verification';
 
-test.describe.skip('Phase 4: Health Management', () => {
-  // SKIPPED: /health/manage route does not exist yet
-  // TODO: Create HealthManagementPage and wire route in App.tsx
-  // Once route exists, remove .skip() and update beforeEach
+test.describe('Phase 4: Health Management', () => {
+  // Route now exists: /health/manage
+  // HealthManagementPage created with all 7 health entity forms
   
   test.beforeEach(async ({ authenticatedPage }) => {
     await authenticatedPage.goto('/health/manage');

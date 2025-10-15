@@ -5537,6 +5537,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param name
      * @param nameIcontains
      * @param ordering Which field to use when ordering the results.
@@ -5575,6 +5577,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns EnvironmentalParameter
      * @throws ApiError
@@ -5597,6 +5601,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @returns EnvironmentalParameter
      * @throws ApiError
@@ -5620,6 +5626,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @param requestBody
      * @returns EnvironmentalParameter
@@ -5648,6 +5656,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @param requestBody
      * @returns EnvironmentalParameter
@@ -5676,6 +5686,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @returns void
      * @throws ApiError
@@ -5699,6 +5711,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param area
      * @param areaIn Multiple values may be separated by commas.
      * @param date
@@ -5740,6 +5754,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns PhotoperiodData
      * @throws ApiError
@@ -5762,6 +5778,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @returns PhotoperiodData
      * @throws ApiError
@@ -5785,6 +5803,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @param requestBody
      * @returns PhotoperiodData
@@ -5813,6 +5833,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @param requestBody
      * @returns PhotoperiodData
@@ -5841,6 +5863,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @returns void
      * @throws ApiError
@@ -5866,6 +5890,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batch
      * @param batchIn Multiple values may be separated by commas.
      * @param container
@@ -5924,6 +5949,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns EnvironmentalReading
      * @throws ApiError
@@ -5948,6 +5974,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental reading.
      * @returns EnvironmentalReading
      * @throws ApiError
@@ -5973,6 +6000,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental reading.
      * @param requestBody
      * @returns EnvironmentalReading
@@ -6003,6 +6031,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental reading.
      * @param requestBody
      * @returns EnvironmentalReading
@@ -6033,6 +6062,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental reading.
      * @returns void
      * @throws ApiError
@@ -6141,6 +6171,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batchTransfer
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
@@ -6173,6 +6205,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns StageTransitionEnvironmental
      * @throws ApiError
@@ -6195,6 +6229,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @returns StageTransitionEnvironmental
      * @throws ApiError
@@ -6218,6 +6254,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @param requestBody
      * @returns StageTransitionEnvironmental
@@ -6246,6 +6284,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @param requestBody
      * @returns StageTransitionEnvironmental
@@ -6274,6 +6314,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @returns void
      * @throws ApiError
@@ -6299,6 +6341,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param area
      * @param areaIn Multiple values may be separated by commas.
      * @param ordering Which field to use when ordering the results.
@@ -6336,6 +6379,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns WeatherData
      * @throws ApiError
@@ -6360,6 +6404,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this weather data.
      * @returns WeatherData
      * @throws ApiError
@@ -6385,6 +6430,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this weather data.
      * @param requestBody
      * @returns WeatherData
@@ -6415,6 +6461,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this weather data.
      * @param requestBody
      * @returns WeatherData
@@ -6445,6 +6492,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this weather data.
      * @returns void
      * @throws ApiError
@@ -14588,7 +14636,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param isActive
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -14617,7 +14665,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param requestBody
          * @returns BiologicalConstraints
          * @throws ApiError
@@ -14639,7 +14687,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param id A unique integer value identifying this Biological Constraint Set.
          * @returns BiologicalConstraints
          * @throws ApiError
@@ -14662,7 +14710,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param id A unique integer value identifying this Biological Constraint Set.
          * @param requestBody
          * @returns BiologicalConstraints
@@ -14690,7 +14738,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param id A unique integer value identifying this Biological Constraint Set.
          * @param requestBody
          * @returns BiologicalConstraints
@@ -14718,7 +14766,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param id A unique integer value identifying this Biological Constraint Set.
          * @returns void
          * @throws ApiError
@@ -14826,7 +14874,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -14855,7 +14903,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param requestBody
          * @returns FCRModel
          * @throws ApiError
@@ -14877,7 +14925,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param modelId A unique integer value identifying this FCR Model.
          * @returns FCRModel
          * @throws ApiError
@@ -14900,7 +14948,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param modelId A unique integer value identifying this FCR Model.
          * @param requestBody
          * @returns FCRModel
@@ -14928,7 +14976,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param modelId A unique integer value identifying this FCR Model.
          * @param requestBody
          * @returns FCRModel
@@ -14956,7 +15004,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param modelId A unique integer value identifying this FCR Model.
          * @returns void
          * @throws ApiError
@@ -15018,7 +15066,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param frequency Rate application frequency
          *
          * * `daily` - Daily
@@ -15053,7 +15101,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param requestBody
          * @returns MortalityModel
          * @throws ApiError
@@ -15075,7 +15123,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param modelId A unique integer value identifying this Mortality Model.
          * @returns MortalityModel
          * @throws ApiError
@@ -15098,7 +15146,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param modelId A unique integer value identifying this Mortality Model.
          * @param requestBody
          * @returns MortalityModel
@@ -15126,7 +15174,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param modelId A unique integer value identifying this Mortality Model.
          * @param requestBody
          * @returns MortalityModel
@@ -15154,7 +15202,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param modelId A unique integer value identifying this Mortality Model.
          * @returns void
          * @throws ApiError
@@ -15193,7 +15241,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param createdBy
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -15231,7 +15279,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param requestBody
          * @returns Scenario
          * @throws ApiError
@@ -15253,7 +15301,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param scenarioId A unique integer value identifying this Scenario.
          * @returns Scenario
          * @throws ApiError
@@ -15276,7 +15324,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param scenarioId A unique integer value identifying this Scenario.
          * @param requestBody
          * @returns Scenario
@@ -15304,7 +15352,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param scenarioId A unique integer value identifying this Scenario.
          * @param requestBody
          * @returns Scenario
@@ -15332,7 +15380,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param scenarioId A unique integer value identifying this Scenario.
          * @returns void
          * @throws ApiError
@@ -15635,7 +15683,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param ordering Which field to use when ordering the results.
                          * @param page A page number within the paginated result set.
                          * @param search A search term.
@@ -15664,7 +15712,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param requestBody
                          * @returns TemperatureProfile
                          * @throws ApiError
@@ -15686,7 +15734,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param profileId A unique integer value identifying this Temperature Profile.
                          * @returns TemperatureProfile
                          * @throws ApiError
@@ -15709,7 +15757,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param profileId A unique integer value identifying this Temperature Profile.
                          * @param requestBody
                          * @returns TemperatureProfile
@@ -15737,7 +15785,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param profileId A unique integer value identifying this Temperature Profile.
                          * @param requestBody
                          * @returns TemperatureProfile
@@ -15765,7 +15813,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param profileId A unique integer value identifying this Temperature Profile.
                          * @returns void
                          * @throws ApiError
@@ -15888,7 +15936,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param location
                                  * @param ordering Which field to use when ordering the results.
                                  * @param page A page number within the paginated result set.
@@ -15923,7 +15971,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param requestBody
                                  * @returns TGCModel
                                  * @throws ApiError
@@ -15945,7 +15993,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param modelId A unique integer value identifying this TGC Model.
                                  * @returns TGCModel
                                  * @throws ApiError
@@ -15968,7 +16016,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param modelId A unique integer value identifying this TGC Model.
                                  * @param requestBody
                                  * @returns TGCModel
@@ -15996,7 +16044,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param modelId A unique integer value identifying this TGC Model.
                                  * @param requestBody
                                  * @returns TGCModel
@@ -16024,7 +16072,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param modelId A unique integer value identifying this TGC Model.
                                  * @returns void
                                  * @throws ApiError

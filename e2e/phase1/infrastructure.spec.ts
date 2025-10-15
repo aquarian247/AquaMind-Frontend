@@ -152,16 +152,22 @@ test.describe('Phase 1: Infrastructure Management', () => {
   });
 
   test('1.6 Create Container with XOR logic (Hall OR Area)', async ({ authenticatedPage: page }) => {
-
     await openCreateDialog(page, 'Container');
 
+    // Fill all required fields
     await fillInput(page, 'name', 'Test Container T001 E2E');
-    
-    // Select container type (use one that exists)
+
+    // Select container type (required)
     await selectOption(page, 'container_type', 'Fry Tanks');
-    
+
     // Select hall (XOR: cannot select both hall and area)
     await selectOption(page, 'hall', 'Hall A');
+
+    // Fill volume (required)
+    await fillInput(page, 'volume_m3', '100.00');
+
+    // Fill max biomass (required)
+    await fillInput(page, 'max_biomass_kg', '50000.00');
 
     await clickCreateButton(page, 'Container');
     await waitForSuccessToast(page);
@@ -184,14 +190,15 @@ test.describe('Phase 1: Infrastructure Management', () => {
     await fillInput(page, 'name', 'Test Sensor E2E');
     await selectOption(page, 'sensor_type', 'TEMPERATURE');
     await fillInput(page, 'serial_number', 'TEMP-001-E2E');
-    
-    // Note: Container dropdown might be disabled until filters are set
-    // Skipping container selection for now
-    
+
+    // Container is REQUIRED - select an existing container
+    // Use one that exists in the test database
+    await selectOption(page, 'container', 'Hall A-C01');
+
     // Date pickers
     await fillInput(page, 'installation_date', '2025-10-01');
     await fillInput(page, 'last_calibration_date', '2025-10-05');
-    
+
     await fillInput(page, 'manufacturer', 'AquaSense Inc');
 
     await clickCreateButton(page, 'Sensor');
@@ -213,12 +220,13 @@ test.describe('Phase 1: Infrastructure Management', () => {
     await openCreateDialog(page, 'Feed Container');
 
     await fillInput(page, 'name', 'Test Feed Silo 1 E2E');
-    
-    // First need to select station (filter dropdown)
-    // Then select hall
-    // Note: Hall dropdown may be disabled until station selected
-    // Let's try just filling required fields for now
-    
+
+    // Container Type is REQUIRED - use BARGE so it can be in an area
+    await selectOption(page, 'feedcontainer_type', 'BARGE');
+
+    // Select area (barges are in areas, not halls)
+    await selectOption(page, 'area', 'Area in Wales');
+
     await fillInput(page, 'capacity_kg', '10000');
 
     await clickCreateButton(page, 'Feed Container');

@@ -12,10 +12,9 @@ import {
 } from '../utils/form-helpers';
 import { generateVerificationCommand } from '../utils/db-verification';
 
-test.describe.skip('Phase 5: Environmental Management', () => {
-  // SKIPPED: /environmental/manage route does not exist yet
-  // TODO: Create EnvironmentalManagementPage and wire route in App.tsx
-  // Once route exists, remove .skip() and update beforeEach
+test.describe('Phase 5: Environmental Management', () => {
+  // Route now exists: /environmental/manage
+  // EnvironmentalManagementPage created with 2 environmental entity forms
   
   test.beforeEach(async ({ authenticatedPage }) => {
     await authenticatedPage.goto('/environmental/manage');

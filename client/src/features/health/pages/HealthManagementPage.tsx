@@ -2,127 +2,116 @@ import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, FileText, Microscope, Beaker, Syringe, TestTube, Pill } from 'lucide-react'
+import { Plus, Heart, Syringe, FlaskConical, FileText, Activity, Pill, TestTube } from 'lucide-react'
 import { 
+  useSampleTypes, 
+  useVaccinationTypes, 
   useJournalEntries, 
   useHealthSamplingEvents, 
-  useHealthLabSamples,
-  useTreatments,
-  useSampleTypes,
-  useVaccinationTypes,
+  useHealthLabSamples, 
+  useTreatments 
 } from '../api'
-import { 
-  JournalEntryForm, 
-  HealthSamplingEventForm,
-  HealthLabSampleForm,
-  TreatmentForm,
-  SampleTypeForm,
-  VaccinationTypeForm,
-} from '../components'
+import { SampleTypeForm } from '../components/SampleTypeForm'
+import { VaccinationTypeForm } from '../components/VaccinationTypeForm'
+import { JournalEntryForm } from '../components/JournalEntryForm'
+import { HealthSamplingEventForm } from '../components/HealthSamplingEventForm'
+import { HealthLabSampleForm } from '../components/HealthLabSampleForm'
+import { TreatmentForm } from '../components/TreatmentForm'
 
-type EntityType = 'journalEntry' | 'samplingEvent' | 'labSample' | 'treatment' | 'sampleType' | 'vaccinationType' | null
+type EntityType = 'sampleType' | 'vaccinationType' | 'journalEntry' | 'samplingEvent' | 'labSample' | 'treatment' | null
 
 /**
  * Health Management Page with Create Dialogs
  * 
- * Provides quick access to create JournalEntry entities via modal dialogs.
- * Similar to InventoryManagementPage but for health domain entities.
- * 
- * Features:
- * - Create new journal entries for health observations
- * - Display current entry counts
- * - Modal dialogs for forms
+ * Provides quick access to create all health entities via modal dialogs.
+ * This is a testing/demo page to access all Phase 4 forms.
  */
 export default function HealthManagementPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState<EntityType>(null)
 
   // Load counts for display
+  const { data: sampleTypesData } = useSampleTypes()
+  const { data: vaccinationTypesData } = useVaccinationTypes()
   const { data: journalEntriesData } = useJournalEntries()
   const { data: samplingEventsData } = useHealthSamplingEvents()
   const { data: labSamplesData } = useHealthLabSamples()
   const { data: treatmentsData } = useTreatments()
-  const { data: sampleTypesData } = useSampleTypes()
-  const { data: vaccinationTypesData } = useVaccinationTypes()
 
   const handleSuccess = () => {
     setCreateDialogOpen(null)
   }
 
-  const handleCancel = () => {
-    setCreateDialogOpen(null)
-  }
-
   const entities = [
     {
-      id: 'journalEntry' as const,
-      name: 'Journal Entry',
-      description: 'Record health observations, issues, and treatments',
-      icon: FileText,
-      count: journalEntriesData?.results?.length || 0,
-      color: 'blue'
-    },
-    {
-      id: 'samplingEvent' as const,
-      name: 'Sampling Event',
-      description: 'Conduct health sampling with fish measurements',
-      icon: Microscope,
-      count: samplingEventsData?.results?.length || 0,
-      color: 'green'
-    },
-    {
-      id: 'labSample' as const,
-      name: 'Lab Sample',
-      description: 'Track laboratory samples and test results',
-      icon: Beaker,
-      count: labSamplesData?.results?.length || 0,
-      color: 'purple'
-    },
-    {
-      id: 'treatment' as const,
-      name: 'Treatment',
-      description: 'Record treatments and medical interventions',
-      icon: Pill,
-      count: treatmentsData?.results?.length || 0,
-      color: 'orange'
-    },
-    {
-      id: 'sampleType' as const,
+      id: 'sampleType',
       name: 'Sample Type',
-      description: 'Define types of laboratory samples',
+      description: 'Define types of health samples',
+      count: sampleTypesData?.count ?? 0,
       icon: TestTube,
-      count: sampleTypesData?.results?.length || 0,
-      color: 'cyan'
+      color: 'blue',
     },
     {
-      id: 'vaccinationType' as const,
+      id: 'vaccinationType',
       name: 'Vaccination Type',
-      description: 'Define vaccination types and manufacturers',
+      description: 'Manage vaccination types and manufacturers',
+      count: vaccinationTypesData?.count ?? 0,
       icon: Syringe,
-      count: vaccinationTypesData?.results?.length || 0,
-      color: 'pink'
+      color: 'green',
+    },
+    {
+      id: 'journalEntry',
+      name: 'Journal Entry',
+      description: 'Record health observations and events',
+      count: journalEntriesData?.count ?? 0,
+      icon: FileText,
+      color: 'purple',
+    },
+    {
+      id: 'samplingEvent',
+      name: 'Sampling Event',
+      description: 'Create health sampling events',
+      count: samplingEventsData?.count ?? 0,
+      icon: Activity,
+      color: 'orange',
+    },
+    {
+      id: 'labSample',
+      name: 'Lab Sample',
+      description: 'Track lab samples and results',
+      count: labSamplesData?.count ?? 0,
+      icon: FlaskConical,
+      color: 'teal',
+    },
+    {
+      id: 'treatment',
+      name: 'Treatment',
+      description: 'Record treatments and medications',
+      count: treatmentsData?.count ?? 0,
+      icon: Pill,
+      color: 'red',
     },
   ]
 
   const getColorClasses = (color: string) => {
-    const colors: Record<string, { icon: string; text: string; bg: string }> = {
+    const colorMap: Record<string, { icon: string; text: string; bg: string }> = {
       blue: { icon: 'text-blue-600', text: 'text-blue-600', bg: 'bg-blue-50' },
       green: { icon: 'text-green-600', text: 'text-green-600', bg: 'bg-green-50' },
       purple: { icon: 'text-purple-600', text: 'text-purple-600', bg: 'bg-purple-50' },
       orange: { icon: 'text-orange-600', text: 'text-orange-600', bg: 'bg-orange-50' },
-      cyan: { icon: 'text-cyan-600', text: 'text-cyan-600', bg: 'bg-cyan-50' },
-      pink: { icon: 'text-pink-600', text: 'text-pink-600', bg: 'bg-pink-50' },
+      teal: { icon: 'text-teal-600', text: 'text-teal-600', bg: 'bg-teal-50' },
+      red: { icon: 'text-red-600', text: 'text-red-600', bg: 'bg-red-50' },
     }
-    return colors[color] || colors.blue
+    return colorMap[color] || colorMap.blue
   }
 
   return (
     <div className="container mx-auto p-4 space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-2">
-        <FileText className="h-8 w-8 text-blue-600" />
+        <Heart className="h-8 w-8 text-red-600" />
         <div>
           <h1 className="text-2xl font-bold">Health Management</h1>
-          <p className="text-muted-foreground">Create and manage health journal entries</p>
+          <p className="text-muted-foreground">Create and manage all health entities</p>
         </div>
       </div>
 
@@ -144,11 +133,11 @@ export default function HealthManagementPage() {
                 <CardTitle className="text-base">{entity.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">{entity.description}</p>
+                <p className="text-sm text-muted-foreground mb-3">{entity.description}</p>
                 <Button
-                  onClick={() => setCreateDialogOpen(entity.id)}
+                  onClick={() => setCreateDialogOpen(entity.id as EntityType)}
                   className="w-full"
-                  variant="outline"
+                  size="sm"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Create {entity.name}
@@ -159,72 +148,99 @@ export default function HealthManagementPage() {
         })}
       </div>
 
-      {/* Create Journal Entry Dialog */}
-      <Dialog open={createDialogOpen === 'journalEntry'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Create Journal Entry</DialogTitle>
-            <DialogDescription>Record a new health observation, issue, or treatment</DialogDescription>
-          </DialogHeader>
-          <JournalEntryForm onSuccess={handleSuccess} onCancel={handleCancel} />
-        </DialogContent>
-      </Dialog>
+      {/* Phase 4 Info Card */}
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle className="text-sm font-medium text-red-900">
+            Phase 4: Health Domain
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-red-700">
+            This page provides quick access to all health forms for testing and data entry.
+            Create sample types, vaccination types, journal entries, sampling events, lab samples, and treatments.
+          </p>
+        </CardContent>
+      </Card>
 
-      {/* Create Health Sampling Event Dialog */}
-      <Dialog open={createDialogOpen === 'samplingEvent'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Create Health Sampling Event</DialogTitle>
-            <DialogDescription>Record health sampling event with individual fish measurements</DialogDescription>
-          </DialogHeader>
-          <HealthSamplingEventForm onSuccess={handleSuccess} onCancel={handleCancel} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Lab Sample Dialog */}
-      <Dialog open={createDialogOpen === 'labSample'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Record Lab Sample</DialogTitle>
-            <DialogDescription>Record a laboratory sample for testing and analysis</DialogDescription>
-          </DialogHeader>
-          <HealthLabSampleForm onSuccess={handleSuccess} onCancel={handleCancel} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Treatment Dialog */}
-      <Dialog open={createDialogOpen === 'treatment'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Record Treatment</DialogTitle>
-            <DialogDescription>Record a treatment administered to a batch</DialogDescription>
-          </DialogHeader>
-          <TreatmentForm onSuccess={handleSuccess} onCancel={handleCancel} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Sample Type Dialog */}
+      {/* Create Dialogs */}
       <Dialog open={createDialogOpen === 'sampleType'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Sample Type</DialogTitle>
-            <DialogDescription>Define a new type of laboratory sample</DialogDescription>
+            <DialogDescription>Form for creating a new sample type</DialogDescription>
           </DialogHeader>
-          <SampleTypeForm onSuccess={handleSuccess} onCancel={handleCancel} />
+          <SampleTypeForm
+            onSuccess={handleSuccess}
+            onCancel={() => setCreateDialogOpen(null)}
+          />
         </DialogContent>
       </Dialog>
 
-      {/* Create Vaccination Type Dialog */}
       <Dialog open={createDialogOpen === 'vaccinationType'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>Create Vaccination Type</DialogTitle>
-            <DialogDescription>Define a new vaccination type for treatments</DialogDescription>
+            <DialogDescription>Form for creating a new vaccination type</DialogDescription>
           </DialogHeader>
-          <VaccinationTypeForm onSuccess={handleSuccess} onCancel={handleCancel} />
+          <VaccinationTypeForm
+            onSuccess={handleSuccess}
+            onCancel={() => setCreateDialogOpen(null)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createDialogOpen === 'journalEntry'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Journal Entry</DialogTitle>
+            <DialogDescription>Form for creating a new journal entry</DialogDescription>
+          </DialogHeader>
+          <JournalEntryForm
+            onSuccess={handleSuccess}
+            onCancel={() => setCreateDialogOpen(null)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createDialogOpen === 'samplingEvent'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Sampling Event</DialogTitle>
+            <DialogDescription>Form for creating a new sampling event</DialogDescription>
+          </DialogHeader>
+          <HealthSamplingEventForm
+            onSuccess={handleSuccess}
+            onCancel={() => setCreateDialogOpen(null)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createDialogOpen === 'labSample'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Lab Sample</DialogTitle>
+            <DialogDescription>Form for creating a new lab sample</DialogDescription>
+          </DialogHeader>
+          <HealthLabSampleForm
+            onSuccess={handleSuccess}
+            onCancel={() => setCreateDialogOpen(null)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={createDialogOpen === 'treatment'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Create Treatment</DialogTitle>
+            <DialogDescription>Form for creating a new treatment</DialogDescription>
+          </DialogHeader>
+          <TreatmentForm
+            onSuccess={handleSuccess}
+            onCancel={() => setCreateDialogOpen(null)}
+          />
         </DialogContent>
       </Dialog>
     </div>
   )
 }
-
