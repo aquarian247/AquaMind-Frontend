@@ -145,11 +145,26 @@ export default function InfrastructureAreas() {
   // ✅ No longer needed - we'll use geography summary instead
   // Removed hardcoded fallback values (70 containers, 3500 biomass)
 
+  // Fetch geographies first to get IDs for filtering
+  const { data: geographiesData } = useQuery({
+    queryKey: ["geographies"],
+    queryFn: () => ApiService.apiV1InfrastructureGeographiesList(),
+  });
+
+  // Get geography ID from selected geography name
+  const selectedGeographyId = useMemo(() => {
+    if (selectedGeography === "all" || !geographiesData?.results) return undefined;
+    const geo = geographiesData.results.find((g: any) => 
+      g.name.toLowerCase() === selectedGeography.toLowerCase()
+    );
+    return geo?.id;
+  }, [selectedGeography, geographiesData]);
+
   // Fetch ALL areas using pagination (handles >20 areas per geography)
   const { data: rawAreasData, isLoading: areasLoading, error: areasError } = useQuery({
-    queryKey: ["infrastructure", "areas", selectedGeography],
+    queryKey: ["infrastructure", "areas", selectedGeography, selectedGeographyId],
     queryFn: async () => {
-      console.log('[Areas] Starting to fetch all pages...');
+      console.log('[Areas] Starting to fetch all pages...', { selectedGeography, selectedGeographyId });
       const allAreas: any[] = [];
       let page = 1;
       let totalCount = 0;
@@ -157,14 +172,14 @@ export default function InfrastructureAreas() {
       try {
         // Fetch first page to get total count
         const firstResponse = await ApiService.apiV1InfrastructureAreasList(
-          undefined, // active
-          undefined, // geography
-          undefined, // geographyIn
-          undefined, // name
-          undefined, // nameIcontains
-          undefined, // ordering
-          page,      // page
-          undefined  // search
+          undefined,           // active
+          selectedGeographyId, // geography - FILTER BY SELECTED GEOGRAPHY
+          undefined,           // geographyIn
+          undefined,           // name
+          undefined,           // nameIcontains
+          undefined,           // ordering
+          page,                // page
+          undefined            // search
         );
         
         console.log('[Areas] First page response:', {
@@ -188,7 +203,14 @@ export default function InfrastructureAreas() {
           console.log(`[Areas] Fetching page ${page}...`);
           
           const response = await ApiService.apiV1InfrastructureAreasList(
-            undefined, undefined, undefined, undefined, undefined, undefined, page, undefined
+            undefined,           // active
+            selectedGeographyId, // geography - FILTER BY SELECTED GEOGRAPHY
+            undefined,           // geographyIn
+            undefined,           // name
+            undefined,           // nameIcontains
+            undefined,           // ordering
+            page,                // page
+            undefined            // search
           );
           
           if (response.results) {
@@ -247,6 +269,8 @@ export default function InfrastructureAreas() {
       return { results: [] };
     }
 
+    // Map API results to UI format - no client-side filtering needed
+    // since API already filters by geography
     const mapped = rawAreasData.results.map((raw: any): Area => {
       const summary = areaSummaryMap.get(raw.id);
 
@@ -268,24 +292,12 @@ export default function InfrastructureAreas() {
       };
     });
 
-    const filtered =
-      selectedGeography === "all"
-        ? mapped
-        : mapped.filter((a: Area) =>
-            a.geography.toLowerCase().includes(selectedGeography.toLowerCase()),
-          );
-
-    return { results: filtered };
+    return { results: mapped };
   }, [rawAreasData, areaSummaryMap, selectedGeography]);
 
   const isLoading = areasLoading || summariesLoading;
 
-  // Fetch geographies for dynamic filter options
-  const { data: geographiesData } = useQuery({
-    queryKey: ["geographies"],
-    queryFn: () => ApiService.apiV1InfrastructureGeographiesList(),
-  });
-
+  // Use geographies data already fetched above for filter dropdown
   const geographies = geographiesData?.results || [];
   const areas: Area[] = processedAreasData.results || [];
 
