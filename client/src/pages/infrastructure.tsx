@@ -543,7 +543,7 @@ export default function Infrastructure() {
                       variant="outline" 
                       size="sm" 
                       className="flex-1"
-                      onClick={() => window.location.href = `/infrastructure/areas?geography=${geo.name.toLowerCase().replace(' ', '-')}`}
+                      onClick={() => setLocation(`/infrastructure/areas?geography=${geo.name.toLowerCase().replace(/\s+/g, '-')}`)}
                     >
                       <Waves className="h-4 w-4 mr-2" />
                       View Areas
@@ -552,7 +552,7 @@ export default function Infrastructure() {
                       variant="outline" 
                       size="sm" 
                       className="flex-1"
-                      onClick={() => window.location.href = `/infrastructure/stations?geography=${geo.name.toLowerCase().replace(' ', '-')}`}
+                      onClick={() => setLocation(`/infrastructure/stations?geography=${geo.name.toLowerCase().replace(/\s+/g, '-')}`)}
                     >
                       <Factory className="h-4 w-4 mr-2" />
                       View Stations
