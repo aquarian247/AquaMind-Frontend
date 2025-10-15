@@ -53,25 +53,33 @@ export async function apiRequest(
   }
 
   try {
-    const res = await fetch(fullUrl, {
+    console.log('[apiRequest] Calling fetch with:', { fullUrl, method, headers, bodyPreview: data ? JSON.stringify(data).substring(0, 100) : 'none' });
+    
+    const fetchPromise = fetch(fullUrl, {
       method,
       headers,
       body: data ? JSON.stringify(data) : undefined,
       credentials: "include",
     });
+    
+    console.log('[apiRequest] Fetch promise created, awaiting response...');
+    const res = await fetchPromise;
+    console.log('[apiRequest] ✅ Response received!');
 
-    console.log('[apiRequest] Response received:', {
+    console.log('[apiRequest] Response details:', {
       status: res.status,
       statusText: res.statusText,
       ok: res.ok,
       url: res.url,
-      headers: Object.fromEntries(res.headers.entries())
+      type: res.type,
+      redirected: res.redirected
     });
 
     await throwIfResNotOk(res);
     return res;
   } catch (error) {
-    console.error('[apiRequest] Request failed:', error);
+    console.error('[apiRequest] ❌ Request failed with error:', error);
+    console.error('[apiRequest] Error type:', error instanceof TypeError ? 'TypeError (Network/CORS)' : error?.constructor?.name);
     throw error;
   }
 }
