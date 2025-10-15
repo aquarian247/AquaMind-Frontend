@@ -142,16 +142,16 @@ export default function InfrastructureAreas() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   // Parse geography from URL query parameter (e.g., ?geography=faroe-islands)
+  // Note: Wouter's location doesn't include query params, use window.location.search
   const selectedGeography = useMemo(() => {
-    console.log('[Areas] Full location:', location);
-    const queryString = location.includes('?') ? location.split('?')[1] : '';
+    const queryString = window.location.search.substring(1); // Remove leading '?'
+    console.log('[Areas] Full URL:', window.location.href);
     console.log('[Areas] Query string:', queryString);
     const urlParams = new URLSearchParams(queryString);
     const geo = urlParams.get('geography');
     console.log('[Areas] URL geography param:', geo);
-    console.log('[Areas] All URL params:', Array.from(urlParams.entries()));
     return geo || 'all';
-  }, [location]);
+  }, [location]); // Still depend on location to trigger re-render on navigation
 
   // ✅ No longer needed - we'll use geography summary instead
   // Removed hardcoded fallback values (70 containers, 3500 biomass)
