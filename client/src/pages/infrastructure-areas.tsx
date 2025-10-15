@@ -136,11 +136,18 @@ const formatNumber = (num: number): string => {
 };
 
 export default function InfrastructureAreas() {
-  const [, setLocation] = useLocation();
-  const [selectedGeography, setSelectedGeography] = useState<string>("all");
+  const [location, setLocation] = useLocation();
   const [selectedArea, setSelectedArea] = useState<Area>();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Parse geography from URL query parameter (e.g., ?geography=faroe-islands)
+  const selectedGeography = useMemo(() => {
+    const urlParams = new URLSearchParams(location.split('?')[1] || '');
+    const geo = urlParams.get('geography');
+    console.log('[Areas] URL geography param:', geo);
+    return geo || 'all';
+  }, [location]);
 
   // ✅ No longer needed - we'll use geography summary instead
   // Removed hardcoded fallback values (70 containers, 3500 biomass)
@@ -152,11 +159,25 @@ export default function InfrastructureAreas() {
   });
 
   // Get geography ID from selected geography name
+  // Handle both "Faroe Islands" and "faroe-islands" formats
   const selectedGeographyId = useMemo(() => {
     if (selectedGeography === "all" || !geographiesData?.results) return undefined;
-    const geo = geographiesData.results.find((g: any) => 
-      g.name.toLowerCase() === selectedGeography.toLowerCase()
-    );
+    
+    // Normalize geography name from URL (e.g., "faroe-islands" -> "faroe islands")
+    const normalizedSelection = selectedGeography.toLowerCase().replace(/-/g, ' ');
+    
+    const geo = geographiesData.results.find((g: any) => {
+      const normalizedGeoName = g.name.toLowerCase().replace(/-/g, ' ');
+      return normalizedGeoName === normalizedSelection;
+    });
+    
+    console.log('[Areas] Geography ID lookup:', { 
+      selectedGeography, 
+      normalizedSelection, 
+      foundGeo: geo?.name, 
+      geoId: geo?.id 
+    });
+    
     return geo?.id;
   }, [selectedGeography, geographiesData]);
 
@@ -357,14 +378,25 @@ export default function InfrastructureAreas() {
         </div>
         
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
+          <Select 
+            value={selectedGeography} 
+            onValueChange={(value) => {
+              // Update URL with new geography parameter
+              const params = new URLSearchParams();
+              if (value !== 'all') {
+                params.set('geography', value.toLowerCase().replace(/\s+/g, '-'));
+              }
+              const newUrl = params.toString() ? `/infrastructure/areas?${params.toString()}` : '/infrastructure/areas';
+              setLocation(newUrl);
+            }}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Geography" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Geographies</SelectItem>
               {geographies.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name}>
+                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(/\s+/g, '-')}>
                   {geo.name}
                 </SelectItem>
               ))}
