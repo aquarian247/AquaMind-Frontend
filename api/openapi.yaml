@@ -22193,7 +22193,7 @@ paths:
   /api/v1/scenario/biological-constraints/:
     get:
       operationId: api_v1_scenario_biological_constraints_list
-      description: ViewSet for biological constraints.
+      description: ViewSet for biological constraints with audit trail support.
       parameters:
       - in: query
         name: is_active
@@ -22235,7 +22235,7 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_biological_constraints_create
-      description: ViewSet for biological constraints.
+      description: ViewSet for biological constraints with audit trail support.
       tags:
       - api
       requestBody:
@@ -22271,7 +22271,7 @@ paths:
   /api/v1/scenario/biological-constraints/{id}/:
     get:
       operationId: api_v1_scenario_biological_constraints_retrieve
-      description: ViewSet for biological constraints.
+      description: ViewSet for biological constraints with audit trail support.
       parameters:
       - in: path
         name: id
@@ -22304,7 +22304,7 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_scenario_biological_constraints_update
-      description: ViewSet for biological constraints.
+      description: ViewSet for biological constraints with audit trail support.
       parameters:
       - in: path
         name: id
@@ -22351,7 +22351,7 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_biological_constraints_partial_update
-      description: ViewSet for biological constraints.
+      description: ViewSet for biological constraints with audit trail support.
       parameters:
       - in: path
         name: id
@@ -22397,7 +22397,7 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_biological_constraints_destroy
-      description: ViewSet for biological constraints.
+      description: ViewSet for biological constraints with audit trail support.
       parameters:
       - in: path
         name: id
@@ -22552,7 +22552,7 @@ paths:
   /api/v1/scenario/fcr-models/:
     get:
       operationId: api_v1_scenario_fcr_models_list
-      description: Enhanced ViewSet for FCR models.
+      description: Enhanced ViewSet for FCR models with audit trail support.
       parameters:
       - name: ordering
         required: false
@@ -22596,7 +22596,7 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_fcr_models_create
-      description: Enhanced ViewSet for FCR models.
+      description: Enhanced ViewSet for FCR models with audit trail support.
       tags:
       - api
       requestBody:
@@ -22632,7 +22632,7 @@ paths:
   /api/v1/scenario/fcr-models/{model_id}/:
     get:
       operationId: api_v1_scenario_fcr_models_retrieve
-      description: Enhanced ViewSet for FCR models.
+      description: Enhanced ViewSet for FCR models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -22664,7 +22664,7 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_scenario_fcr_models_update
-      description: Enhanced ViewSet for FCR models.
+      description: Enhanced ViewSet for FCR models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -22710,7 +22710,7 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_fcr_models_partial_update
-      description: Enhanced ViewSet for FCR models.
+      description: Enhanced ViewSet for FCR models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -22755,7 +22755,7 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_fcr_models_destroy
-      description: Enhanced ViewSet for FCR models.
+      description: Enhanced ViewSet for FCR models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -22839,7 +22839,7 @@ paths:
   /api/v1/scenario/mortality-models/:
     get:
       operationId: api_v1_scenario_mortality_models_list
-      description: Enhanced ViewSet for mortality models.
+      description: Enhanced ViewSet for mortality models with audit trail support.
       parameters:
       - in: query
         name: frequency
@@ -22896,7 +22896,7 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_mortality_models_create
-      description: Enhanced ViewSet for mortality models.
+      description: Enhanced ViewSet for mortality models with audit trail support.
       tags:
       - api
       requestBody:
@@ -22932,7 +22932,7 @@ paths:
   /api/v1/scenario/mortality-models/{model_id}/:
     get:
       operationId: api_v1_scenario_mortality_models_retrieve
-      description: Enhanced ViewSet for mortality models.
+      description: Enhanced ViewSet for mortality models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -22964,7 +22964,7 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_scenario_mortality_models_update
-      description: Enhanced ViewSet for mortality models.
+      description: Enhanced ViewSet for mortality models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -23010,7 +23010,7 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_mortality_models_partial_update
-      description: Enhanced ViewSet for mortality models.
+      description: Enhanced ViewSet for mortality models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -23055,7 +23055,7 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_mortality_models_destroy
-      description: Enhanced ViewSet for mortality models.
+      description: Enhanced ViewSet for mortality models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -23106,7 +23106,7 @@ paths:
   /api/v1/scenario/scenarios/:
     get:
       operationId: api_v1_scenario_scenarios_list
-      description: Enhanced ViewSet for scenarios.
+      description: Enhanced ViewSet for scenarios with audit trail support.
       parameters:
       - in: query
         name: created_by
@@ -23165,7 +23165,7 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_scenarios_create
-      description: Enhanced ViewSet for scenarios.
+      description: Enhanced ViewSet for scenarios with audit trail support.
       tags:
       - api
       requestBody:
@@ -23201,7 +23201,7 @@ paths:
   /api/v1/scenario/scenarios/{scenario_id}/:
     get:
       operationId: api_v1_scenario_scenarios_retrieve
-      description: Enhanced ViewSet for scenarios.
+      description: Enhanced ViewSet for scenarios with audit trail support.
       parameters:
       - in: path
         name: scenario_id
@@ -23233,7 +23233,7 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_scenario_scenarios_update
-      description: Enhanced ViewSet for scenarios.
+      description: Enhanced ViewSet for scenarios with audit trail support.
       parameters:
       - in: path
         name: scenario_id
@@ -23279,7 +23279,7 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_scenarios_partial_update
-      description: Enhanced ViewSet for scenarios.
+      description: Enhanced ViewSet for scenarios with audit trail support.
       parameters:
       - in: path
         name: scenario_id
@@ -23324,7 +23324,7 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_scenarios_destroy
-      description: Enhanced ViewSet for scenarios.
+      description: Enhanced ViewSet for scenarios with audit trail support.
       parameters:
       - in: path
         name: scenario_id
@@ -23801,7 +23801,7 @@ paths:
   /api/v1/scenario/temperature-profiles/:
     get:
       operationId: api_v1_scenario_temperature_profiles_list
-      description: ViewSet for temperature profiles.
+      description: ViewSet for temperature profiles with audit trail support.
       parameters:
       - name: ordering
         required: false
@@ -23845,7 +23845,7 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_temperature_profiles_create
-      description: ViewSet for temperature profiles.
+      description: ViewSet for temperature profiles with audit trail support.
       tags:
       - api
       requestBody:
@@ -23881,7 +23881,7 @@ paths:
   /api/v1/scenario/temperature-profiles/{profile_id}/:
     get:
       operationId: api_v1_scenario_temperature_profiles_retrieve
-      description: ViewSet for temperature profiles.
+      description: ViewSet for temperature profiles with audit trail support.
       parameters:
       - in: path
         name: profile_id
@@ -23913,7 +23913,7 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_scenario_temperature_profiles_update
-      description: ViewSet for temperature profiles.
+      description: ViewSet for temperature profiles with audit trail support.
       parameters:
       - in: path
         name: profile_id
@@ -23959,7 +23959,7 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_temperature_profiles_partial_update
-      description: ViewSet for temperature profiles.
+      description: ViewSet for temperature profiles with audit trail support.
       parameters:
       - in: path
         name: profile_id
@@ -24004,7 +24004,7 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_temperature_profiles_destroy
-      description: ViewSet for temperature profiles.
+      description: ViewSet for temperature profiles with audit trail support.
       parameters:
       - in: path
         name: profile_id
@@ -24176,7 +24176,7 @@ paths:
   /api/v1/scenario/tgc-models/:
     get:
       operationId: api_v1_scenario_tgc_models_list
-      description: Enhanced ViewSet for TGC models.
+      description: Enhanced ViewSet for TGC models with audit trail support.
       parameters:
       - in: query
         name: location
@@ -24228,7 +24228,7 @@ paths:
           description: Bad request (validation error)
     post:
       operationId: api_v1_scenario_tgc_models_create
-      description: Enhanced ViewSet for TGC models.
+      description: Enhanced ViewSet for TGC models with audit trail support.
       tags:
       - api
       requestBody:
@@ -24264,7 +24264,7 @@ paths:
   /api/v1/scenario/tgc-models/{model_id}/:
     get:
       operationId: api_v1_scenario_tgc_models_retrieve
-      description: Enhanced ViewSet for TGC models.
+      description: Enhanced ViewSet for TGC models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -24296,7 +24296,7 @@ paths:
           description: Internal Server Error
     put:
       operationId: api_v1_scenario_tgc_models_update
-      description: Enhanced ViewSet for TGC models.
+      description: Enhanced ViewSet for TGC models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -24342,7 +24342,7 @@ paths:
           description: Bad request (validation error)
     patch:
       operationId: api_v1_scenario_tgc_models_partial_update
-      description: Enhanced ViewSet for TGC models.
+      description: Enhanced ViewSet for TGC models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -24387,7 +24387,7 @@ paths:
           description: Bad request (validation error)
     delete:
       operationId: api_v1_scenario_tgc_models_destroy
-      description: Enhanced ViewSet for TGC models.
+      description: Enhanced ViewSet for TGC models with audit trail support.
       parameters:
       - in: path
         name: model_id
@@ -36671,7 +36671,7 @@ components:
           type: object
           additionalProperties: {}
           nullable: true
-          description: Get the date range of readings.
+          description: Get the day range of readings.
           readOnly: true
         temperature_summary:
           type: object
@@ -37857,7 +37857,7 @@ components:
           type: object
           additionalProperties: {}
           nullable: true
-          description: Get the date range of readings.
+          description: Get the day range of readings.
           readOnly: true
         temperature_summary:
           type: object
@@ -37891,16 +37891,17 @@ components:
           readOnly: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
-        reading_date:
-          type: string
-          format: date
-          description: Date of the temperature reading
+        day_number:
+          type: integer
+          maximum: 2147483647
+          minimum: 1
+          description: Relative day number (1-900) in the temperature profile
         temperature:
           type: number
           format: double
           description: Temperature value in degrees Celsius (e.g., 12.5)
       required:
-      - reading_date
+      - day_number
       - reading_id
       - temperature
     TokenObtainPair:

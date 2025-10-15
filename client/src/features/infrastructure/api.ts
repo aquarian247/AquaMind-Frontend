@@ -129,17 +129,16 @@ export function useGeographySummary(geographyId: number | undefined): UseQueryRe
 /**
  * Hook to fetch multiple area summaries
  * Useful for listing pages that need summaries for multiple areas
- * Note: Backend does not have summary endpoint for areas yet.
- * Returns base area data without aggregated metrics.
+ * Uses the /areas/{id}/summary/ endpoint to get aggregated metrics.
  * @param areaIds - Array of area IDs to fetch summaries for
- * @returns Array of query results
+ * @returns Array of query results with ring_count, biomass, population
  */
 export function useAreaSummaries(areaIds: number[]): UseQueryResult<AreaSummary[], Error> {
   return useQuery({
     queryKey: ["infrastructure", "area-summaries", areaIds],
     queryFn: async () => {
       const summaries = await Promise.all(
-        areaIds.map(id => ApiService.apiV1InfrastructureAreasRetrieve(id))
+        areaIds.map(id => ApiService.areaSummary(id))
       );
       return summaries;
     },
