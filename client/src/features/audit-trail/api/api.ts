@@ -75,11 +75,9 @@ export const APP_MODELS = {
     { value: 'treatment', label: 'Treatments' }
   ],
   [APP_DOMAINS.SCENARIO]: [
-    { value: 'scenario', label: 'Scenarios' },
-    { value: 'fcr-model', label: 'FCR Models' },
-    { value: 'mortality-model', label: 'Mortality Models' },
-    { value: 'scenario-model-change', label: 'Model Changes' },
-    { value: 'tgc-model', label: 'TGC Models' }
+    // Note: History endpoints not yet exposed in backend API
+    // Backend has HistoryReasonMixin on viewsets but routes not in OpenAPI spec
+    // Available once backend adds: temperature-profile, biological-constraints, tgc-model, fcr-model, mortality-model
   ],
   [APP_DOMAINS.USERS]: [
     { value: 'user-profile', label: 'User Profiles' }
@@ -545,7 +543,13 @@ export function useHistoryList(
 
       const modelMethod = domainMethods[model as keyof typeof domainMethods];
       if (!modelMethod || !modelMethod.list) {
-        throw new Error(`Unknown model: ${model} for domain: ${appDomain}`);
+        // Return empty result set instead of throwing for domains with no exposed history endpoints
+        return {
+          count: 0,
+          next: null,
+          previous: null,
+          results: []
+        };
       }
 
       return await modelMethod.list(filters);
@@ -571,7 +575,8 @@ export function useHistoryDetail(
 
       const modelMethod = domainMethods[model as keyof typeof domainMethods];
       if (!modelMethod || !modelMethod.detail) {
-        throw new Error(`Unknown model: ${model} for domain: ${appDomain}`);
+        // Return null for domains with no exposed history endpoints
+        return null;
       }
 
       return await modelMethod.detail(historyId);

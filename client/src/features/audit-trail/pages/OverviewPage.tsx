@@ -34,7 +34,7 @@ export function OverviewPage() {
   useEffect(() => {
     if (!filters.selectedModel) {
       const availableModels = getAvailableModels(selectedTab);
-      if (availableModels.length > 0) {
+      if (availableModels.length > 0 && availableModels[0]) {
         updateFilters({ selectedModel: availableModels[0].value });
       }
     }
