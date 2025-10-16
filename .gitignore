@@ -99,6 +99,9 @@ public
 # Temporary folders
 tmp/
 temp/
+# Exception: OpenAPI spec needs to be in git for CI
+!tmp/openapi/
+!tmp/openapi/openapi.yaml
 
 # Vite
 vite.config.ts.*
