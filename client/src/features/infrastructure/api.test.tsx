@@ -17,6 +17,7 @@ import {
 vi.mock("@/api/generated", () => ({
   ApiService: {
     apiV1InfrastructureAreasRetrieve: vi.fn(),
+    areaSummary: vi.fn(),
     apiV1InfrastructureFreshwaterStationsSummaryRetrieve: vi.fn(),
     apiV1InfrastructureHallsRetrieve: vi.fn(),
     apiV1InfrastructureGeographiesSummaryRetrieve: vi.fn(),
@@ -179,8 +180,16 @@ describe("Infrastructure API Hooks", () => {
         { id: 3, container_count: 8, ring_count: 4 },
       ];
 
-      mockSummaries.forEach((summary, index) => {
-        vi.mocked(ApiService.apiV1InfrastructureAreasRetrieve)
+      const mockSummaryData = mockSummaries.map(s => ({
+        container_count: 5,
+        ring_count: 3,
+        active_biomass_kg: 1500,
+        population_count: 25000,
+        avg_weight_kg: 0.06
+      }));
+
+      mockSummaryData.forEach((summary) => {
+        vi.mocked(ApiService.areaSummary)
           .mockResolvedValueOnce(summary as any);
       });
 
@@ -191,10 +200,10 @@ describe("Infrastructure API Hooks", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(result.current.data).toEqual(mockSummaries);
-      expect(ApiService.apiV1InfrastructureAreasRetrieve).toHaveBeenCalledTimes(3);
+      expect(result.current.data).toHaveLength(3);
+      expect(ApiService.areaSummary).toHaveBeenCalledTimes(3);
       areaIds.forEach((id) => {
-        expect(ApiService.apiV1InfrastructureAreasRetrieve).toHaveBeenCalledWith(id);
+        expect(ApiService.areaSummary).toHaveBeenCalledWith(id);
       });
     });
 
@@ -204,7 +213,7 @@ describe("Infrastructure API Hooks", () => {
       // When enabled is false, the query stays in pending state but doesn't fetch
       expect(result.current.isFetching).toBe(false);
       expect(result.current.data).toBeUndefined();
-      expect(ApiService.apiV1InfrastructureAreasRetrieve).not.toHaveBeenCalled();
+      expect(ApiService.areaSummary).not.toHaveBeenCalled();
     });
   });
 

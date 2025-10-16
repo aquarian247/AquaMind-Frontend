@@ -35,14 +35,15 @@ npm run dev
 ---
 
 ### Test 2: Audit Trail (30 seconds)
-**What Changed**: Removed FeedStock and Scenario model histories
+**What Changed**: Removed FeedStock, graceful handling for domains with no exposed history endpoints
 
 1. Navigate to **Audit Trail**
 2. Change domain dropdown to **Inventory**
 3. **✅ Verify**: Only "Feeding Events" option (no "Feed Stock")
 4. Change domain to **Scenario**
-5. **✅ Verify**: Empty models list (all scenario histories removed)
-6. **✅ Verify**: No console errors
+5. **✅ Verify**: Shows "No models available for this domain" message (endpoints not yet exposed)
+6. **✅ Verify**: No error messages or crashes
+7. **✅ Verify**: No console errors
 
 ---
 
