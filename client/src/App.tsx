@@ -367,7 +367,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/temperature-data/:id">
+      <Route path="/scenario-planning/temperature/:id">
         <ProtectedRoute>
           <AppLayout>
             <Suspense fallback={<div>Loading...</div>}>
