@@ -260,9 +260,8 @@ export default function TemperatureDataView() {
               <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2 font-medium">Date</th>
+                  <th className="text-left p-2 font-medium">Day</th>
                   <th className="text-left p-2 font-medium">Temperature</th>
-                  <th className="text-left p-2 font-medium">Month</th>
                   <th className="text-left p-2 font-medium">Relative Change</th>
                 </tr>
               </thead>
@@ -279,10 +278,9 @@ export default function TemperatureDataView() {
                   );
 
                   return (
-                    <tr key={reading.date} className="border-b hover:bg-muted/50">
-                      <td className="p-2">{new Date(reading.date).toLocaleDateString()}</td>
+                    <tr key={reading.dayNumber} className="border-b hover:bg-muted/50">
+                      <td className="p-2">{reading.day}</td>
                       <td className="p-2 font-mono">{reading.temperature.toFixed(1)}°C</td>
-                      <td className="p-2">{reading.month}</td>
                       <td className="p-2">
                         <div className="flex items-center gap-2">
                           {changeIcon}

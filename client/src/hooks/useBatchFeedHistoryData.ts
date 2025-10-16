@@ -142,6 +142,8 @@ export function useBatchFeedHistoryData(
         const response = await ApiService.apiV1InventoryFeedingEventsList(
           undefined,  // amountMax
           undefined,  // amountMin
+          undefined,  // area
+          undefined,  // areaIn
           batchId,    // batch - filter by specific batch
           undefined,  // batchIn
           undefined,  // batchNumber
@@ -149,11 +151,30 @@ export function useBatchFeedHistoryData(
           undefined,  // containerIn
           containerFilter !== "all" ? containerFilter : undefined,  // containerName - SERVER-SIDE filter
           undefined,  // feed
+          undefined,  // feedBrand
+          undefined,  // feedBrandIcontains
+          undefined,  // feedBrandIn
+          undefined,  // feedCarbohydratePercentageGte
+          undefined,  // feedCarbohydratePercentageLte
+          undefined,  // feedFatPercentageGte
+          undefined,  // feedFatPercentageLte
           undefined,  // feedIn
+          undefined,  // feedProteinPercentageGte
+          undefined,  // feedProteinPercentageLte
+          undefined,  // feedSizeCategory
+          undefined,  // feedSizeCategoryIn
+          undefined,  // feedCostGte
+          undefined,  // feedCostLte
           feedTypeFilter !== "all" ? feedTypeFilter : undefined,  // feedName - SERVER-SIDE filter
           undefined,  // feedingDate
           feedingDateAfter,  // feedingDateAfter - date range filter START
           feedingDateBefore, // feedingDateBefore - date range filter END
+          undefined,  // freshwaterStation
+          undefined,  // freshwaterStationIn
+          undefined,  // geography
+          undefined,  // geographyIn
+          undefined,  // hall
+          undefined,  // hallIn
           undefined,  // method
           undefined,  // methodIn
           undefined,  // ordering
@@ -309,6 +330,8 @@ export function useBatchFeedHistoryData(
           const response = await ApiService.apiV1InventoryFeedingEventsList(
             undefined,  // amountMax
             undefined,  // amountMin
+            undefined,  // area
+            undefined,  // areaIn
             batchId,    // batch - filter by specific batch
             undefined,  // batchIn
             undefined,  // batchNumber
@@ -316,11 +339,30 @@ export function useBatchFeedHistoryData(
             undefined,  // containerIn
             undefined,  // containerName
             undefined,  // feed
+            undefined,  // feedBrand
+            undefined,  // feedBrandIcontains
+            undefined,  // feedBrandIn
+            undefined,  // feedCarbohydratePercentageGte
+            undefined,  // feedCarbohydratePercentageLte
+            undefined,  // feedFatPercentageGte
+            undefined,  // feedFatPercentageLte
             undefined,  // feedIn
+            undefined,  // feedProteinPercentageGte
+            undefined,  // feedProteinPercentageLte
+            undefined,  // feedSizeCategory
+            undefined,  // feedSizeCategoryIn
+            undefined,  // feedCostGte
+            undefined,  // feedCostLte
             undefined,  // feedName
             undefined,  // feedingDate
             undefined,  // feedingDateAfter - no date filter for container list
             undefined,  // feedingDateBefore
+            undefined,  // freshwaterStation
+            undefined,  // freshwaterStationIn
+            undefined,  // geography
+            undefined,  // geographyIn
+            undefined,  // hall
+            undefined,  // hallIn
             undefined,  // method
             undefined,  // methodIn
             undefined,  // ordering

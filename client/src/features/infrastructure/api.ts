@@ -127,13 +127,24 @@ export function useGeographySummary(geographyId: number | undefined): UseQueryRe
 }
 
 /**
+ * Area summary data structure (from /areas/{id}/summary/ endpoint)
+ */
+export type AreaSummaryData = {
+  container_count: number;
+  ring_count: number;
+  active_biomass_kg: number;
+  population_count: number;
+  avg_weight_kg: number;
+};
+
+/**
  * Hook to fetch multiple area summaries
  * Useful for listing pages that need summaries for multiple areas
  * Uses the /areas/{id}/summary/ endpoint to get aggregated metrics.
  * @param areaIds - Array of area IDs to fetch summaries for
  * @returns Array of query results with ring_count, biomass, population
  */
-export function useAreaSummaries(areaIds: number[]): UseQueryResult<AreaSummary[], Error> {
+export function useAreaSummaries(areaIds: number[]): UseQueryResult<AreaSummaryData[], Error> {
   return useQuery({
     queryKey: ["infrastructure", "area-summaries", areaIds],
     queryFn: async () => {

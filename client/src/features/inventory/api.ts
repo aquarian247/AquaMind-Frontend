@@ -489,6 +489,8 @@ export function useFeedingEvents(filters?: {
       ApiService.apiV1InventoryFeedingEventsList(
         undefined, // amountMax
         undefined, // amountMin
+        undefined, // area
+        undefined, // areaIn
         filters?.batch,
         undefined, // batchIn
         undefined, // batchNumber
@@ -496,11 +498,30 @@ export function useFeedingEvents(filters?: {
         undefined, // containerIn
         undefined, // containerName
         filters?.feed,
+        undefined, // feedBrand
+        undefined, // feedBrandIcontains
+        undefined, // feedBrandIn
+        undefined, // feedCarbohydratePercentageGte
+        undefined, // feedCarbohydratePercentageLte
+        undefined, // feedFatPercentageGte
+        undefined, // feedFatPercentageLte
         undefined, // feedIn
+        undefined, // feedProteinPercentageGte
+        undefined, // feedProteinPercentageLte
+        undefined, // feedSizeCategory
+        undefined, // feedSizeCategoryIn
+        undefined, // feedCostGte
+        undefined, // feedCostLte
         undefined, // feedName
         undefined, // feedingDate
         filters?.feedingDateAfter,
         filters?.feedingDateBefore,
+        undefined, // freshwaterStation
+        undefined, // freshwaterStationIn
+        undefined, // geography
+        undefined, // geographyIn
+        undefined, // hall
+        undefined, // hallIn
         filters?.method,
         undefined, // methodIn
         filters?.ordering,

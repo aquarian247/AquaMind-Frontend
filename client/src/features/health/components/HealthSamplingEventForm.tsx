@@ -106,7 +106,11 @@ export function HealthSamplingEventForm({
         sampling_date: samplingEvent.sampling_date?.split('T')[0] || new Date().toISOString().split('T')[0],
         number_of_fish_sampled: samplingEvent.number_of_fish_sampled,
         notes: samplingEvent.notes || '',
-        individual_fish_observations: samplingEvent.individual_fish_observations || [],
+        individual_fish_observations: (samplingEvent.individual_fish_observations || []).map(obs => ({
+          ...obs,
+          weight_g: obs.weight_g ?? undefined,
+          length_cm: obs.length_cm ?? undefined,
+        })),
       })
     }
   }, [samplingEvent, form])
@@ -126,8 +130,12 @@ export function HealthSamplingEventForm({
         assignment: values.assignment,
         sampling_date: values.sampling_date,
         number_of_fish_sampled: values.number_of_fish_sampled,
-        notes: values.notes,
-        individual_fish_observations: values.individual_fish_observations as any,
+        notes: values.notes || undefined,
+        individual_fish_observations: values.individual_fish_observations.map(obs => ({
+          ...obs,
+          weight_g: obs.weight_g ?? undefined,
+          length_cm: obs.length_cm ?? undefined,
+        })),
       }
 
       if (isEditMode) {
