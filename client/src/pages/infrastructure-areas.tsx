@@ -136,19 +136,106 @@ const formatNumber = (num: number): string => {
 };
 
 export default function InfrastructureAreas() {
-  const [, setLocation] = useLocation();
-  const [selectedGeography, setSelectedGeography] = useState<string>("all");
+  const [location, setLocation] = useLocation();
   const [selectedArea, setSelectedArea] = useState<Area>();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Parse geography from URL query parameter (e.g., ?geography=faroe-islands)
+  // Note: Wouter's location doesn't include query params, use window.location.search
+  const selectedGeography = useMemo(() => {
+    const queryString = window.location.search.substring(1); // Remove leading '?'
+    const urlParams = new URLSearchParams(queryString);
+    const geo = urlParams.get('geography');
+    return geo || 'all';
+  }, [location]); // Still depend on location to trigger re-render on navigation
+
   // ✅ No longer needed - we'll use geography summary instead
   // Removed hardcoded fallback values (70 containers, 3500 biomass)
 
-  // Fetch areas using generated API client
+  // Fetch geographies first to get IDs for filtering
+  const { data: geographiesData } = useQuery({
+    queryKey: ["geographies"],
+    queryFn: () => ApiService.apiV1InfrastructureGeographiesList(),
+  });
+
+  // Get geography ID from selected geography name
+  // Handle both "Faroe Islands" and "faroe-islands" formats
+  const selectedGeographyId = useMemo(() => {
+    if (selectedGeography === "all" || !geographiesData?.results) return undefined;
+    
+    // Normalize geography name from URL (e.g., "faroe-islands" -> "faroe islands")
+    const normalizedSelection = selectedGeography.toLowerCase().replace(/-/g, ' ');
+    
+    const geo = geographiesData.results.find((g: any) => {
+      const normalizedGeoName = g.name.toLowerCase().replace(/-/g, ' ');
+      return normalizedGeoName === normalizedSelection;
+    });
+    
+    return geo?.id;
+  }, [selectedGeography, geographiesData]);
+
+  // Fetch ALL areas using pagination (handles >20 areas per geography)
   const { data: rawAreasData, isLoading: areasLoading } = useQuery({
-    queryKey: ["infrastructure", "areas", selectedGeography],
-    queryFn: async () => ApiService.apiV1InfrastructureAreasList(),
+    queryKey: ["infrastructure", "areas", selectedGeography, selectedGeographyId],
+    queryFn: async () => {
+      const allAreas: any[] = [];
+      let page = 1;
+      
+      try {
+        // Fetch first page to get total count
+        const firstResponse = await ApiService.apiV1InfrastructureAreasList(
+          undefined,           // active
+          selectedGeographyId, // geography - FILTER BY SELECTED GEOGRAPHY
+          undefined,           // geographyIn
+          undefined,           // name
+          undefined,           // nameIcontains
+          undefined,           // ordering
+          page,                // page
+          undefined            // search
+        );
+        
+        if (!firstResponse.results) {
+          return { results: [], count: 0 };
+        }
+        
+        allAreas.push(...firstResponse.results);
+        
+        // Fetch remaining pages if there are more
+        let hasNextPage = !!firstResponse.next;
+        while (hasNextPage && page < 10) { // Safety limit of 10 pages (200 items)
+          page++;
+          
+          const response = await ApiService.apiV1InfrastructureAreasList(
+            undefined,           // active
+            selectedGeographyId, // geography - FILTER BY SELECTED GEOGRAPHY
+            undefined,           // geographyIn
+            undefined,           // name
+            undefined,           // nameIcontains
+            undefined,           // ordering
+            page,                // page
+            undefined            // search
+          );
+          
+          if (response.results) {
+            allAreas.push(...response.results);
+          }
+          
+          // Update hasNextPage for next iteration
+          hasNextPage = !!response.next;
+        }
+        
+        return { 
+          results: allAreas, 
+          count: allAreas.length,
+          next: null,
+          previous: null 
+        };
+      } catch (error) {
+        console.error('[Areas] Error fetching areas:', error);
+        throw error;
+      }
+    },
   });
 
   // Get area IDs for summary fetching
@@ -179,6 +266,8 @@ export default function InfrastructureAreas() {
       return { results: [] };
     }
 
+    // Map API results to UI format - no client-side filtering needed
+    // since API already filters by geography
     const mapped = rawAreasData.results.map((raw: any): Area => {
       const summary = areaSummaryMap.get(raw.id);
 
@@ -200,24 +289,12 @@ export default function InfrastructureAreas() {
       };
     });
 
-    const filtered =
-      selectedGeography === "all"
-        ? mapped
-        : mapped.filter((a: Area) =>
-            a.geography.toLowerCase().includes(selectedGeography.toLowerCase()),
-          );
-
-    return { results: filtered };
+    return { results: mapped };
   }, [rawAreasData, areaSummaryMap, selectedGeography]);
 
   const isLoading = areasLoading || summariesLoading;
 
-  // Fetch geographies for dynamic filter options
-  const { data: geographiesData } = useQuery({
-    queryKey: ["geographies"],
-    queryFn: () => ApiService.apiV1InfrastructureGeographiesList(),
-  });
-
+  // Use geographies data already fetched above for filter dropdown
   const geographies = geographiesData?.results || [];
   const areas: Area[] = processedAreasData.results || [];
 
@@ -277,14 +354,25 @@ export default function InfrastructureAreas() {
         </div>
         
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
+          <Select 
+            value={selectedGeography} 
+            onValueChange={(value) => {
+              // Update URL with new geography parameter
+              const params = new URLSearchParams();
+              if (value !== 'all') {
+                params.set('geography', value.toLowerCase().replace(/\s+/g, '-'));
+              }
+              const newUrl = params.toString() ? `/infrastructure/areas?${params.toString()}` : '/infrastructure/areas';
+              setLocation(newUrl);
+            }}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Geography" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Geographies</SelectItem>
               {geographies.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name}>
+                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(/\s+/g, '-')}>
                   {geo.name}
                 </SelectItem>
               ))}

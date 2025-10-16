@@ -20,37 +20,21 @@ import { Badge } from "@/components/ui/badge";
 import { Thermometer, ArrowLeft, Calendar, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { formatFallback } from "@/lib/formatFallback";
-
-interface TemperatureReading {
-  id: number;
-  profileId: number;
-  readingDate: string;
-  temperature: string;
-  createdAt: string;
-}
-
-interface TemperatureProfile {
-  id: number;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { ApiService } from "@/api/generated";
+import type { TemperatureProfile } from "@/api/generated";
 
 export default function TemperatureDataView() {
   const { id } = useParams();
   const [, setLocation] = useLocation();
+  const profileId = id ? parseInt(id, 10) : undefined;
 
-  const { data: profile } = useQuery<TemperatureProfile>({
-    queryKey: [`/api/v1/scenario/temperature-profiles/${id}/`],
-    enabled: !!id,
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["scenario", "temperature-profile", profileId],
+    queryFn: () => ApiService.apiV1ScenarioTemperatureProfilesRetrieve(profileId!),
+    enabled: !!profileId,
   });
 
-  const { data: readings } = useQuery<{ results: TemperatureReading[] }>({
-    queryKey: [`/api/v1/scenario/temperature-profiles/${id}/readings/`],
-    enabled: !!id,
-  });
-
-  if (!profile || !readings) {
+  if (isLoading || !profile) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-4">
@@ -70,13 +54,13 @@ export default function TemperatureDataView() {
     );
   }
 
-  // Prepare chart data
-  const chartData = readings.results
-    .sort((a, b) => new Date(a.readingDate).getTime() - new Date(b.readingDate).getTime())
+  // Prepare chart data from nested readings (included in profile response)
+  const chartData = (profile.readings || [])
+    .sort((a, b) => a.day_number - b.day_number)
     .map((reading) => ({
-      date: reading.readingDate,
-      temperature: parseFloat(reading.temperature),
-      month: new Date(reading.readingDate).toLocaleDateString('en-US', { month: 'short' }),
+      day: `Day ${reading.day_number}`,
+      dayNumber: reading.day_number,
+      temperature: reading.temperature,
     }));
 
   // Calculate statistics (client-side processing of loaded data - acceptable for visualization)
@@ -98,33 +82,34 @@ export default function TemperatureDataView() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setLocation("/scenario-planning")}
+            className="self-start"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Scenario Planning
+            Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Thermometer className="h-8 w-8" />
+            <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
+              <Thermometer className="h-6 w-6 sm:h-8 sm:w-8" />
               {profile.name}
             </h1>
-            <p className="text-muted-foreground">Temperature data visualization and analysis</p>
+            <p className="text-sm text-muted-foreground">Temperature data visualization and analysis</p>
           </div>
         </div>
-        <Badge variant="outline" className="flex items-center gap-2">
+        <Badge variant="outline" className="flex items-center gap-2 self-start sm:self-auto">
           <Calendar className="h-4 w-4" />
-          {readings.results.length} readings
+          {profile.reading_count || 0} readings
         </Badge>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Statistics Cards - Responsive Grid */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Temperature</CardTitle>
@@ -211,8 +196,8 @@ export default function TemperatureDataView() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="day"
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis 
@@ -220,9 +205,9 @@ export default function TemperatureDataView() {
                   tick={{ fontSize: 12 }}
                   label={{ value: 'Temperature (°C)', angle: -90, position: 'insideLeft' }}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value: number) => [`${value.toFixed(1)}°C`, 'Temperature']}
-                  labelFormatter={(label) => `Month: ${label}`}
+                  labelFormatter={(label) => `${label}`}
                 />
                 <Line 
                   type="monotone" 
@@ -260,9 +245,8 @@ export default function TemperatureDataView() {
               <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2 font-medium">Date</th>
+                  <th className="text-left p-2 font-medium">Day</th>
                   <th className="text-left p-2 font-medium">Temperature</th>
-                  <th className="text-left p-2 font-medium">Month</th>
                   <th className="text-left p-2 font-medium">Relative Change</th>
                 </tr>
               </thead>
@@ -279,10 +263,9 @@ export default function TemperatureDataView() {
                   );
 
                   return (
-                    <tr key={reading.date} className="border-b hover:bg-muted/50">
-                      <td className="p-2">{new Date(reading.date).toLocaleDateString()}</td>
+                    <tr key={reading.dayNumber} className="border-b hover:bg-muted/50">
+                      <td className="p-2">{reading.day}</td>
                       <td className="p-2 font-mono">{reading.temperature.toFixed(1)}°C</td>
-                      <td className="p-2">{reading.month}</td>
                       <td className="p-2">
                         <div className="flex items-center gap-2">
                           {changeIcon}

@@ -15,7 +15,14 @@ import Dashboard from "@/pages/dashboard";
 import Monitoring from "@/pages/monitoring";
 import FarmManagement from "@/pages/farm-management";
 import Infrastructure from "@/pages/infrastructure";
+import InfrastructureManagementPage from "@/features/infrastructure/pages/InfrastructureManagementPage";
 import InfrastructureAreas from "@/pages/infrastructure-areas";
+import InventoryManagementPage from "@/features/inventory/pages/InventoryManagementPage";
+import HealthManagementPage from "@/features/health/pages/HealthManagementPage";
+import EnvironmentalManagementPage from "@/features/environmental/pages/EnvironmentalManagementPage";
+import UserManagementPage from "@/features/users/pages/UserManagementPage";
+import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModelManagementPage";
+import BroodstockManagementPage from "@/features/broodstock/pages/BroodstockManagementPage";
 import InfrastructureStations from "@/pages/infrastructure-stations";
 import AreaDetail from "@/pages/area-detail";
 import StationDetail from "@/pages/station-detail";
@@ -31,6 +38,7 @@ import Analytics from "@/pages/analytics";
 import MortalityReporting from "@/pages/mortality-reporting";
 import BatchManagement from "@/pages/batch-management";
 import BatchDetails from "@/pages/batch-details";
+import BatchSetupPage from "@/features/batch-management/pages/BatchSetupPage";
 import Health from "@/pages/health";
 import Broodstock from "@/pages/broodstock";
 import BroodstockPrograms from "@/pages/broodstock-programs";
@@ -96,6 +104,14 @@ function Router() {
           </AppLayout>
         </ProtectedRoute>
       </Route>
+
+      <Route path="/environmental/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <EnvironmentalManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
       
       <Route path="/farm-management">
         <ProtectedRoute>
@@ -109,6 +125,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Infrastructure />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/infrastructure/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <InfrastructureManagementPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>
@@ -223,6 +247,14 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/batch-setup">
+        <ProtectedRoute>
+          <AppLayout>
+            <BatchSetupPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/batch-details/:id">
         <ProtectedRoute>
           <AppLayout>
@@ -238,11 +270,35 @@ function Router() {
           </AppLayout>
         </ProtectedRoute>
       </Route>
+
+      <Route path="/health/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <HealthManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/users/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <UserManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
       
       <Route path="/broodstock">
         <ProtectedRoute>
           <AppLayout>
             <Broodstock />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/broodstock/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <BroodstockManagementPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>
@@ -294,6 +350,14 @@ function Router() {
           </AppLayout>
         </ProtectedRoute>
       </Route>
+
+      <Route path="/scenario-planning/models">
+        <ProtectedRoute>
+          <AppLayout>
+            <ScenarioModelManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
       
       <Route path="/scenario-planning/scenarios/:id">
         <ProtectedRoute>
@@ -303,7 +367,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/temperature-data/:id">
+      <Route path="/scenario-planning/temperature/:id">
         <ProtectedRoute>
           <AppLayout>
             <Suspense fallback={<div>Loading...</div>}>
@@ -313,6 +377,13 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/inventory/manage">
+        <ProtectedRoute>
+          <AppLayout>
+            <InventoryManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
       <Route path="/inventory">
         <ProtectedRoute>
           <AppLayout>

@@ -8,7 +8,7 @@
  * - Environmental data integration with area filtering
  */
 
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import { ApiService } from "@/api/generated";
 import { FcrService, TrendsService } from "@/api/generated";
 import type { 
@@ -18,7 +18,11 @@ import type {
   PaginatedFCRTrendsList,
   PhotoperiodData,
   WeatherData,
+  TGCModel,
+  MortalityModel,
+  TemperatureProfile,
 } from "@/api/generated";
+import { toast } from 'sonner';
 
 // Common query options for scenario operations
 const SCENARIO_QUERY_OPTIONS = {
@@ -347,4 +351,120 @@ export function getScenarioQueryKeys() {
     photoperiod: (areaIds?: number[]) => ["scenario", "photoperiod", { areaIds }] as const,
     weather: (areaIds?: number[]) => ["scenario", "weather", { areaIds }] as const,
   };
+}
+
+// ============================================================================
+// Mutation Hooks for CRUD Operations (Phase 7)
+// ============================================================================
+
+export function useTGCModels() {
+  return useQuery({
+    queryKey: ['scenario', 'tgc-models'],
+    queryFn: () => ApiService.apiV1ScenarioTgcModelsList(),
+  });
+}
+
+export function useCreateTGCModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => ApiService.apiV1ScenarioTgcModelsCreate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scenario', 'tgc-models'] });
+      toast.success('TGC model created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.body?.detail || 'Failed to create TGC model');
+    },
+  });
+}
+
+export function useUpdateTGCModel(modelId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => ApiService.apiV1ScenarioTgcModelsPartialUpdate(modelId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scenario', 'tgc-models'] });
+      toast.success('TGC model updated successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.body?.detail || 'Failed to update TGC model');
+    },
+  });
+}
+
+export function useDeleteTGCModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (modelId: number) => ApiService.apiV1ScenarioTgcModelsDestroy(modelId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scenario', 'tgc-models'] });
+      toast.success('TGC model deleted successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.body?.detail || 'Failed to delete TGC model');
+    },
+  });
+}
+
+export function useFCRModels() {
+  return useQuery({
+    queryKey: ['scenario', 'fcr-models'],
+    queryFn: () => ApiService.apiV1ScenarioFcrModelsList(),
+  });
+}
+
+export function useCreateFCRModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => ApiService.apiV1ScenarioFcrModelsCreate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scenario', 'fcr-models'] });
+      toast.success('FCR model created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.body?.detail || 'Failed to create FCR model');
+    },
+  });
+}
+
+export function useMortalityModels() {
+  return useQuery({
+    queryKey: ['scenario', 'mortality-models'],
+    queryFn: () => ApiService.apiV1ScenarioMortalityModelsList(),
+  });
+}
+
+export function useCreateMortalityModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => ApiService.apiV1ScenarioMortalityModelsCreate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scenario', 'mortality-models'] });
+      toast.success('Mortality model created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.body?.detail || 'Failed to create mortality model');
+    },
+  });
+}
+
+export function useCreateScenario() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: any) => ApiService.apiV1ScenarioScenariosCreate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scenario', 'scenarios'] });
+      toast.success('Scenario created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.body?.detail || 'Failed to create scenario');
+    },
+  });
+}
+
+export function useTemperatureProfiles() {
+  return useQuery({
+    queryKey: ['scenario', 'temperature-profiles'],
+    queryFn: () => ApiService.apiV1ScenarioTemperatureProfilesList(),
+  });
 }

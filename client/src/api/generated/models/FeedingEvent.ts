@@ -26,10 +26,6 @@ export type FeedingEvent = {
      */
     feed: number;
     readonly feed_name: string;
-    /**
-     * Stock source for this feed
-     */
-    feed_stock?: number | null;
     feeding_date: string;
     feeding_time: string;
     /**

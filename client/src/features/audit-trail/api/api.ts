@@ -65,7 +65,6 @@ export const APP_MODELS = {
     { value: 'sensor', label: 'Sensors' }
   ],
   [APP_DOMAINS.INVENTORY]: [
-    { value: 'feed-stock', label: 'Feed Stock' },
     { value: 'feeding-event', label: 'Feeding Events' }
   ],
   [APP_DOMAINS.HEALTH]: [
@@ -76,11 +75,9 @@ export const APP_MODELS = {
     { value: 'treatment', label: 'Treatments' }
   ],
   [APP_DOMAINS.SCENARIO]: [
-    { value: 'scenario', label: 'Scenarios' },
-    { value: 'fcr-model', label: 'FCR Models' },
-    { value: 'mortality-model', label: 'Mortality Models' },
-    { value: 'scenario-model-change', label: 'Model Changes' },
-    { value: 'tgc-model', label: 'TGC Models' }
+    // Note: History endpoints not yet exposed in backend API
+    // Backend has HistoryReasonMixin on viewsets but routes not in OpenAPI spec
+    // Available once backend adds: temperature-profile, biological-constraints, tgc-model, fcr-model, mortality-model
   ],
   [APP_DOMAINS.USERS]: [
     { value: 'user-profile', label: 'User Profiles' }
@@ -412,20 +409,6 @@ const HISTORY_METHODS: Record<AppDomain, Record<string, HistoryMethodMapping>> =
     }
   },
   [APP_DOMAINS.INVENTORY]: {
-    'feed-stock': {
-      list: async (filters?: HistoryFilters) => await ApiService.listInventoryFeedStockHistory(
-        filters?.dateFrom,
-        filters?.dateTo,
-        undefined, // feed
-        undefined, // feedContainer
-        filters?.historyType,
-        filters?.historyUser,
-        undefined, // ordering
-        filters?.page,
-        undefined  // search
-      ),
-      detail: async (id: number) => await ApiService.retrieveInventoryFeedStockHistoryDetail(id)
-    },
     'feeding-event': {
       list: async (filters?: HistoryFilters) => await ApiService.listInventoryFeedingEventHistory(
         undefined, // batch
@@ -521,80 +504,8 @@ const HISTORY_METHODS: Record<AppDomain, Record<string, HistoryMethodMapping>> =
     }
   },
   [APP_DOMAINS.SCENARIO]: {
-    'scenario': {
-      list: async (filters?: HistoryFilters) => await ApiService.listScenarioScenarioHistory(
-        undefined, // createdBy
-        filters?.dateFrom,
-        filters?.dateTo,
-        filters?.historyType,
-        filters?.historyUser,
-        undefined, // name
-        undefined, // ordering
-        filters?.page,
-        undefined, // search
-        undefined  // startDate
-      ),
-      detail: async (id: number) => await ApiService.retrieveScenarioScenarioHistoryDetail(id)
-    },
-    'fcr-model': {
-      list: async (filters?: HistoryFilters) => await ApiService.listScenarioFcrModelHistory(
-        filters?.dateFrom,
-        filters?.dateTo,
-        filters?.historyType,
-        filters?.historyUser,
-        undefined, // name
-        undefined, // ordering
-        filters?.page,
-        undefined  // search
-      ),
-      detail: async (id: number) => await ApiService.retrieveScenarioFcrModelHistoryDetail(id)
-    },
-    'mortality-model': {
-      list: async (filters?: HistoryFilters) => await ApiService.listScenarioMortalityModelHistory(
-        filters?.dateFrom,
-        filters?.dateTo,
-        undefined, // frequency
-        filters?.historyType,
-        filters?.historyUser,
-        undefined, // name
-        undefined, // ordering
-        filters?.page,
-        undefined  // search
-      ),
-      detail: async (id: number) => await ApiService.retrieveScenarioMortalityModelHistoryDetail(id)
-    },
-    'scenario-model-change': {
-      list: async (filters?: HistoryFilters) => await ApiService.listScenarioScenarioModelChangeHistory(
-        undefined, // changeDay
-        filters?.dateFrom,
-        filters?.dateTo,
-        filters?.historyType,
-        filters?.historyUser,
-        undefined, // newFcrModel
-        undefined, // newMortalityModel
-        undefined, // newTgcModel
-        undefined, // ordering
-        filters?.page,
-        undefined, // scenario
-        undefined  // search
-      ),
-      detail: async (id: number) => await ApiService.retrieveScenarioScenarioModelChangeHistoryDetail(id)
-    },
-    'tgc-model': {
-      list: async (filters?: HistoryFilters) => await ApiService.listScenarioTgcModelHistory(
-        filters?.dateFrom,
-        filters?.dateTo,
-        filters?.historyType,
-        filters?.historyUser,
-        undefined, // location
-        undefined, // name
-        undefined, // ordering
-        filters?.page,
-        undefined, // releasePeriod
-        undefined  // search
-      ),
-      detail: async (id: number) => await ApiService.retrieveScenarioTgcModelHistoryDetail(id)
-    }
+    // Note: Scenario model history intentionally excluded (Phase 7 - prevents 50GB table bloat)
+    // Note: TGC, FCR, Mortality model history endpoints not exposed in backend API
   },
   [APP_DOMAINS.USERS]: {
     'user-profile': {
@@ -632,7 +543,13 @@ export function useHistoryList(
 
       const modelMethod = domainMethods[model as keyof typeof domainMethods];
       if (!modelMethod || !modelMethod.list) {
-        throw new Error(`Unknown model: ${model} for domain: ${appDomain}`);
+        // Return empty result set instead of throwing for domains with no exposed history endpoints
+        return {
+          count: 0,
+          next: null,
+          previous: null,
+          results: []
+        };
       }
 
       return await modelMethod.list(filters);
@@ -658,7 +575,8 @@ export function useHistoryDetail(
 
       const modelMethod = domainMethods[model as keyof typeof domainMethods];
       if (!modelMethod || !modelMethod.detail) {
-        throw new Error(`Unknown model: ${model} for domain: ${appDomain}`);
+        // Return null for domains with no exposed history endpoints
+        return null;
       }
 
       return await modelMethod.detail(historyId);

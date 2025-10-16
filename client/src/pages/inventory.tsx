@@ -1,5 +1,6 @@
 import { useState } from "react";
 import * as React from "react";
+import { useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -249,25 +250,7 @@ const api = {
     }
   },
 
-  async getFeedStock(): Promise<{ results: FeedStock[] }> {
-    try {
-      const response = await ApiService.apiV1InventoryFeedStocksList();
-      const list: any[] = (response as any)?.results ?? [];
-      const mapped: FeedStock[] = list.map((s: any) => ({
-        id: s.id ?? s.feed_stock_id,
-        feed: s.feed,
-        feedContainer: s.feed_container ?? s.container ?? 0,
-        currentQuantityKg: String(s.current_quantity_kg ?? s.quantity_kg ?? s.quantity ?? "0"),
-        reorderThresholdKg: String(s.reorder_threshold_kg ?? s.reorder_threshold ?? "0"),
-        updatedAt: s.updated_at ?? new Date().toISOString(),
-        notes: s.notes ?? undefined,
-      }));
-      return { results: mapped };
-    } catch (error) {
-      console.error("Failed to fetch feed stock:", error);
-      throw new Error("Failed to fetch feed stock");
-    }
-  },
+  // Note: FeedStock model removed in backend migration 0014 (deprecated in favor of FIFO via FeedContainerStock)
 
   async getFeedingEvents(): Promise<{ results: FeedingEvent[] }> {
     try {
@@ -349,6 +332,7 @@ const api = {
 export default function Inventory() {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
   const [selectedGeography, setSelectedGeography] = useState("all");
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -370,10 +354,7 @@ export default function Inventory() {
     queryFn: api.getFeedContainers,
   });
 
-  const { data: stockData, isLoading: stockLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-stocks/"],
-    queryFn: api.getFeedStock,
-  });
+  // Note: FeedStock model removed in backend migration 0014 (deprecated in favor of FIFO via FeedContainerStock)
 
   const { data: feedingEventsData, isLoading: feedingEventsLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feeding-events/"],
@@ -412,7 +393,7 @@ export default function Inventory() {
   const feedTypes = feedTypesData?.results || [];
   const purchases = purchasesData?.results || [];
   const containers = containersData?.results || [];
-  const feedStock = stockData?.results || [];
+  // Note: feedStock removed (model deprecated in backend)
   const feedingEvents = feedingEventsData?.results || [];
   const containerStock = containerStockData?.results || [];
   const summaries = summariesData?.results || [];
@@ -442,11 +423,11 @@ export default function Inventory() {
   // Feed container capacity utilization (inventory focus, not infrastructure containers)
   // Calculates: (total feed currently in stock) / (total feed container capacity) * 100
   // - totalFeedCapacity: Sum of all infrastructure_feedcontainer.capacity_kg
-  // - totalFeedStock: Sum of all inventory_feedstock.current_quantity_kg
+  // - totalFeedStock: Sum of all inventory_feedcontainerstock.quantity_kg (FIFO inventory)
   // - Result: Percentage showing how full feed containers are across all locations
-  // - If no feed test data exists, feedStock.length === 0, so utilization = 0%
-  const totalFeedCapacity = containers.reduce((sum, c) => sum + parseFloat(c.capacity), 0);
-  const totalFeedStock = feedStock.reduce((sum, s) => sum + parseFloat(s.currentQuantityKg), 0);
+  // - Note: FeedStock model deprecated, now using FeedContainerStock (FIFO)
+  const totalFeedCapacity = containers.reduce((sum: number, c: any) => sum + parseFloat(c.capacity), 0);
+  const totalFeedStock = containerStock.reduce((sum: number, s: any) => sum + parseFloat(s.quantity_kg || s.currentQuantityKg || '0'), 0);
   const capacityUtilization = totalFeedCapacity > 0 
     ? Math.round((totalFeedStock / totalFeedCapacity) * 100) 
     : 0;
@@ -540,7 +521,7 @@ export default function Inventory() {
 
   // Check if any data is still loading
   const isLoading = feedTypesLoading || purchasesLoading || containersLoading ||
-                   stockLoading || feedingEventsLoading || feedingEventsSummaryLoading ||
+                   feedingEventsLoading || feedingEventsSummaryLoading ||
                    containerStockLoading || summariesLoading;
 
   if (isLoading) {
@@ -582,9 +563,12 @@ export default function Inventory() {
               ))}
             </SelectContent>
           </Select>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            className="bg-green-600 hover:bg-green-700"
+            onClick={() => setLocation('/inventory/manage')}
+          >
             <Plus className="h-4 w-4 mr-2" />
-            Add Feed
+            Manage Inventory
           </Button>
         </div>
       </div>

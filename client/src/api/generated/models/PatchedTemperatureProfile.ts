@@ -15,7 +15,7 @@ export type PatchedTemperatureProfile = {
     readonly readings?: Array<TemperatureReading>;
     readonly reading_count?: number;
     /**
-     * Get the date range of readings.
+     * Get the day range of readings.
      */
     readonly date_range?: Record<string, any> | null;
     /**

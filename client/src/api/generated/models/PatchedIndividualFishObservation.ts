@@ -15,7 +15,7 @@ export type PatchedIndividualFishObservation = {
     /**
      * The sampling event this fish observation belongs to.
      */
-    sampling_event?: number;
+    sampling_event?: number | null;
     /**
      * Unique identifier for the individual fish within this sampling event.
      */
@@ -23,11 +23,11 @@ export type PatchedIndividualFishObservation = {
     /**
      * Weight of the fish in grams.
      */
-    weight_g?: string;
+    weight_g?: string | null;
     /**
      * Length of the fish in centimeters.
      */
-    length_cm?: string;
+    length_cm?: string | null;
     /**
      * List of parameter scores for this fish observation.
      */

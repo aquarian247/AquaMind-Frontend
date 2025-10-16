@@ -137,7 +137,7 @@ export default function Infrastructure() {
       utilizationPercent: summary?.capacity_kg && summary?.active_biomass_kg
         ? (summary.active_biomass_kg / summary.capacity_kg) * 100
         : 0,
-      seaAreas: summary?.ring_count ?? 0,
+      seaAreas: summary?.area_count ?? 0,
       freshwaterStations: summary?.station_count ?? 0,
       status: (geo.active ?? true) ? 'active' as const : 'inactive' as const,
       lastUpdate: geo.updated_at || new Date().toISOString()
@@ -248,9 +248,12 @@ export default function Infrastructure() {
               ))}
             </SelectContent>
           </Select>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            className="bg-green-600 hover:bg-green-700"
+            onClick={() => setLocation('/infrastructure/manage')}
+          >
             <Plus className="h-4 w-4 mr-2" />
-            Add Container
+            Create Infrastructure
           </Button>
         </div>
       </div>
@@ -540,7 +543,7 @@ export default function Infrastructure() {
                       variant="outline" 
                       size="sm" 
                       className="flex-1"
-                      onClick={() => window.location.href = `/infrastructure/areas?geography=${geo.name.toLowerCase().replace(' ', '-')}`}
+                      onClick={() => setLocation(`/infrastructure/areas?geography=${geo.name.toLowerCase().replace(/\s+/g, '-')}`)}
                     >
                       <Waves className="h-4 w-4 mr-2" />
                       View Areas
@@ -549,7 +552,7 @@ export default function Infrastructure() {
                       variant="outline" 
                       size="sm" 
                       className="flex-1"
-                      onClick={() => window.location.href = `/infrastructure/stations?geography=${geo.name.toLowerCase().replace(' ', '-')}`}
+                      onClick={() => setLocation(`/infrastructure/stations?geography=${geo.name.toLowerCase().replace(/\s+/g, '-')}`)}
                     >
                       <Factory className="h-4 w-4 mr-2" />
                       View Stations

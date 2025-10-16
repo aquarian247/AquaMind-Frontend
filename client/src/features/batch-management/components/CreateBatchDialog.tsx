@@ -1,77 +1,22 @@
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Form } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useBatchCreation } from "../hooks/useBatchCreation";
+import { Settings } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useLocation } from 'wouter'
 
 /**
- * CreateBatchDialog Component
- * Dialog for creating new fish batches with form validation
+ * Manage Batches Button
+ * Navigates to the Batch Setup page for creating/managing batches,
+ * lifecycle stages, assignments, and transfers.
  * 
- * Integrates with useBatchCreation hook for state management
- * Responsive design with mobile-optimized layout
- * 
- * TODO: Expand form fields for full batch creation functionality
- * Current implementation is minimal placeholder matching existing code
+ * Replaces the old CreateBatchDialog with a navigation approach.
  */
 export function CreateBatchDialog() {
-  const isMobile = useIsMobile();
-  const { isOpen, setIsOpen, form, onSubmit, isLoading } = useBatchCreation();
+  const [, setLocation] = useLocation()
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          New Batch
-        </Button>
-      </DialogTrigger>
-      <DialogContent className={cn("max-w-2xl", isMobile && "max-w-[95vw]")}>
-        <DialogHeader>
-          <DialogTitle>Create New Batch</DialogTitle>
-          <DialogDescription>
-            Add a new fish batch to the system
-          </DialogDescription>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* TODO: Add form fields for batch creation
-                - Batch name/number
-                - Species selection
-                - Lifecycle stage
-                - Initial count & biomass
-                - Container assignment
-                - Broodstock traceability (egg source)
-                - Expected harvest date
-                - Notes
-            */}
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Batch"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
-  );
+    <Button onClick={() => setLocation('/batch-setup')}>
+      <Settings className="h-4 w-4 mr-2" />
+      Manage Batches
+    </Button>
+  )
 }
 

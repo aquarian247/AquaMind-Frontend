@@ -34,8 +34,8 @@ import type { EggSupplier } from '../models/EggSupplier';
 import type { EnvironmentalParameter } from '../models/EnvironmentalParameter';
 import type { EnvironmentalReading } from '../models/EnvironmentalReading';
 import type { ExternalEggBatch } from '../models/ExternalEggBatch';
+import type { FactHarvest } from '../models/FactHarvest';
 import type { FCRModel } from '../models/FCRModel';
-import type { FCRModelHistory } from '../models/FCRModelHistory';
 import type { FCRTrends } from '../models/FCRTrends';
 import type { Feed } from '../models/Feed';
 import type { FeedContainer } from '../models/FeedContainer';
@@ -45,8 +45,6 @@ import type { FeedContainerStockCreate } from '../models/FeedContainerStockCreat
 import type { FeedingEvent } from '../models/FeedingEvent';
 import type { FeedingEventHistory } from '../models/FeedingEventHistory';
 import type { FeedPurchase } from '../models/FeedPurchase';
-import type { FeedStock } from '../models/FeedStock';
-import type { FeedStockHistory } from '../models/FeedStockHistory';
 import type { FishMovement } from '../models/FishMovement';
 import type { FishMovementHistory } from '../models/FishMovementHistory';
 import type { FishParameterScore } from '../models/FishParameterScore';
@@ -58,11 +56,14 @@ import type { GrowthSample } from '../models/GrowthSample';
 import type { GrowthSampleHistory } from '../models/GrowthSampleHistory';
 import type { Hall } from '../models/Hall';
 import type { HallHistory } from '../models/HallHistory';
+import type { HarvestEvent } from '../models/HarvestEvent';
+import type { HarvestLot } from '../models/HarvestLot';
 import type { HealthLabSample } from '../models/HealthLabSample';
 import type { HealthLabSampleHistory } from '../models/HealthLabSampleHistory';
 import type { HealthParameter } from '../models/HealthParameter';
 import type { HealthSamplingEvent } from '../models/HealthSamplingEvent';
 import type { IndividualFishObservation } from '../models/IndividualFishObservation';
+import type { IntercompanyTransaction } from '../models/IntercompanyTransaction';
 import type { JournalEntry } from '../models/JournalEntry';
 import type { JournalEntryHistory } from '../models/JournalEntryHistory';
 import type { LiceCount } from '../models/LiceCount';
@@ -72,10 +73,11 @@ import type { MaintenanceTask } from '../models/MaintenanceTask';
 import type { MortalityEvent } from '../models/MortalityEvent';
 import type { MortalityEventHistory } from '../models/MortalityEventHistory';
 import type { MortalityModel } from '../models/MortalityModel';
-import type { MortalityModelHistory } from '../models/MortalityModelHistory';
 import type { MortalityReason } from '../models/MortalityReason';
 import type { MortalityRecord } from '../models/MortalityRecord';
 import type { MortalityRecordHistory } from '../models/MortalityRecordHistory';
+import type { NavExportBatch } from '../models/NavExportBatch';
+import type { NavExportBatchCreate } from '../models/NavExportBatchCreate';
 import type { PaginatedAreaHistoryList } from '../models/PaginatedAreaHistoryList';
 import type { PaginatedAreaList } from '../models/PaginatedAreaList';
 import type { PaginatedBatchCompositionList } from '../models/PaginatedBatchCompositionList';
@@ -105,7 +107,7 @@ import type { PaginatedEggSupplierList } from '../models/PaginatedEggSupplierLis
 import type { PaginatedEnvironmentalParameterList } from '../models/PaginatedEnvironmentalParameterList';
 import type { PaginatedEnvironmentalReadingList } from '../models/PaginatedEnvironmentalReadingList';
 import type { PaginatedExternalEggBatchList } from '../models/PaginatedExternalEggBatchList';
-import type { PaginatedFCRModelHistoryList } from '../models/PaginatedFCRModelHistoryList';
+import type { PaginatedFactHarvestList } from '../models/PaginatedFactHarvestList';
 import type { PaginatedFCRModelList } from '../models/PaginatedFCRModelList';
 import type { PaginatedFeedContainerHistoryList } from '../models/PaginatedFeedContainerHistoryList';
 import type { PaginatedFeedContainerList } from '../models/PaginatedFeedContainerList';
@@ -114,8 +116,6 @@ import type { PaginatedFeedingEventHistoryList } from '../models/PaginatedFeedin
 import type { PaginatedFeedingEventList } from '../models/PaginatedFeedingEventList';
 import type { PaginatedFeedList } from '../models/PaginatedFeedList';
 import type { PaginatedFeedPurchaseList } from '../models/PaginatedFeedPurchaseList';
-import type { PaginatedFeedStockHistoryList } from '../models/PaginatedFeedStockHistoryList';
-import type { PaginatedFeedStockList } from '../models/PaginatedFeedStockList';
 import type { PaginatedFishMovementHistoryList } from '../models/PaginatedFishMovementHistoryList';
 import type { PaginatedFishMovementList } from '../models/PaginatedFishMovementList';
 import type { PaginatedFishParameterScoreList } from '../models/PaginatedFishParameterScoreList';
@@ -127,11 +127,14 @@ import type { PaginatedGrowthSampleHistoryList } from '../models/PaginatedGrowth
 import type { PaginatedGrowthSampleList } from '../models/PaginatedGrowthSampleList';
 import type { PaginatedHallHistoryList } from '../models/PaginatedHallHistoryList';
 import type { PaginatedHallList } from '../models/PaginatedHallList';
+import type { PaginatedHarvestEventList } from '../models/PaginatedHarvestEventList';
+import type { PaginatedHarvestLotList } from '../models/PaginatedHarvestLotList';
 import type { PaginatedHealthLabSampleHistoryList } from '../models/PaginatedHealthLabSampleHistoryList';
 import type { PaginatedHealthLabSampleList } from '../models/PaginatedHealthLabSampleList';
 import type { PaginatedHealthParameterList } from '../models/PaginatedHealthParameterList';
 import type { PaginatedHealthSamplingEventList } from '../models/PaginatedHealthSamplingEventList';
 import type { PaginatedIndividualFishObservationList } from '../models/PaginatedIndividualFishObservationList';
+import type { PaginatedIntercompanyTransactionList } from '../models/PaginatedIntercompanyTransactionList';
 import type { PaginatedJournalEntryHistoryList } from '../models/PaginatedJournalEntryHistoryList';
 import type { PaginatedJournalEntryList } from '../models/PaginatedJournalEntryList';
 import type { PaginatedLiceCountHistoryList } from '../models/PaginatedLiceCountHistoryList';
@@ -140,23 +143,19 @@ import type { PaginatedLifeCycleStageList } from '../models/PaginatedLifeCycleSt
 import type { PaginatedMaintenanceTaskList } from '../models/PaginatedMaintenanceTaskList';
 import type { PaginatedMortalityEventHistoryList } from '../models/PaginatedMortalityEventHistoryList';
 import type { PaginatedMortalityEventList } from '../models/PaginatedMortalityEventList';
-import type { PaginatedMortalityModelHistoryList } from '../models/PaginatedMortalityModelHistoryList';
 import type { PaginatedMortalityModelList } from '../models/PaginatedMortalityModelList';
 import type { PaginatedMortalityReasonList } from '../models/PaginatedMortalityReasonList';
 import type { PaginatedMortalityRecordHistoryList } from '../models/PaginatedMortalityRecordHistoryList';
 import type { PaginatedMortalityRecordList } from '../models/PaginatedMortalityRecordList';
 import type { PaginatedPhotoperiodDataList } from '../models/PaginatedPhotoperiodDataList';
 import type { PaginatedSampleTypeList } from '../models/PaginatedSampleTypeList';
-import type { PaginatedScenarioHistoryList } from '../models/PaginatedScenarioHistoryList';
 import type { PaginatedScenarioList } from '../models/PaginatedScenarioList';
-import type { PaginatedScenarioModelChangeHistoryList } from '../models/PaginatedScenarioModelChangeHistoryList';
 import type { PaginatedScenarioProjectionList } from '../models/PaginatedScenarioProjectionList';
 import type { PaginatedSensorHistoryList } from '../models/PaginatedSensorHistoryList';
 import type { PaginatedSensorList } from '../models/PaginatedSensorList';
 import type { PaginatedSpeciesList } from '../models/PaginatedSpeciesList';
 import type { PaginatedStageTransitionEnvironmentalList } from '../models/PaginatedStageTransitionEnvironmentalList';
 import type { PaginatedTemperatureProfileList } from '../models/PaginatedTemperatureProfileList';
-import type { PaginatedTGCModelHistoryList } from '../models/PaginatedTGCModelHistoryList';
 import type { PaginatedTGCModelList } from '../models/PaginatedTGCModelList';
 import type { PaginatedTreatmentHistoryList } from '../models/PaginatedTreatmentHistoryList';
 import type { PaginatedTreatmentList } from '../models/PaginatedTreatmentList';
@@ -188,7 +187,6 @@ import type { PatchedFeedContainer } from '../models/PatchedFeedContainer';
 import type { PatchedFeedContainerStock } from '../models/PatchedFeedContainerStock';
 import type { PatchedFeedingEvent } from '../models/PatchedFeedingEvent';
 import type { PatchedFeedPurchase } from '../models/PatchedFeedPurchase';
-import type { PatchedFeedStock } from '../models/PatchedFeedStock';
 import type { PatchedFishMovement } from '../models/PatchedFishMovement';
 import type { PatchedFishParameterScore } from '../models/PatchedFishParameterScore';
 import type { PatchedFreshwaterStation } from '../models/PatchedFreshwaterStation';
@@ -223,15 +221,12 @@ import type { PatchedWeatherData } from '../models/PatchedWeatherData';
 import type { PhotoperiodData } from '../models/PhotoperiodData';
 import type { SampleType } from '../models/SampleType';
 import type { Scenario } from '../models/Scenario';
-import type { ScenarioHistory } from '../models/ScenarioHistory';
-import type { ScenarioModelChangeHistory } from '../models/ScenarioModelChangeHistory';
 import type { Sensor } from '../models/Sensor';
 import type { SensorHistory } from '../models/SensorHistory';
 import type { Species } from '../models/Species';
 import type { StageTransitionEnvironmental } from '../models/StageTransitionEnvironmental';
 import type { TemperatureProfile } from '../models/TemperatureProfile';
 import type { TGCModel } from '../models/TGCModel';
-import type { TGCModelHistory } from '../models/TGCModelHistory';
 import type { TokenObtainPair } from '../models/TokenObtainPair';
 import type { TokenRefresh } from '../models/TokenRefresh';
 import type { Treatment } from '../models/Treatment';
@@ -313,7 +308,8 @@ export class ApiService {
      * This endpoint defines the composition of a 'mixed' batch, detailing what
      * percentage and quantity (population/biomass) of it comes from various
      * 'source' batches. This is crucial for traceability when batches are merged.
-     * Provides full CRUD operations for batch composition records.
+     * Provides full CRUD operations for batch composition records. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `mixed_batch`: ID of the resulting mixed batch.
@@ -392,7 +388,8 @@ export class ApiService {
      * This endpoint defines the composition of a 'mixed' batch, detailing what
      * percentage and quantity (population/biomass) of it comes from various
      * 'source' batches. This is crucial for traceability when batches are merged.
-     * Provides full CRUD operations for batch composition records.
+     * Provides full CRUD operations for batch composition records. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `mixed_batch`: ID of the resulting mixed batch.
@@ -434,7 +431,8 @@ export class ApiService {
      * This endpoint defines the composition of a 'mixed' batch, detailing what
      * percentage and quantity (population/biomass) of it comes from various
      * 'source' batches. This is crucial for traceability when batches are merged.
-     * Provides full CRUD operations for batch composition records.
+     * Provides full CRUD operations for batch composition records. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `mixed_batch`: ID of the resulting mixed batch.
@@ -477,7 +475,8 @@ export class ApiService {
      * This endpoint defines the composition of a 'mixed' batch, detailing what
      * percentage and quantity (population/biomass) of it comes from various
      * 'source' batches. This is crucial for traceability when batches are merged.
-     * Provides full CRUD operations for batch composition records.
+     * Provides full CRUD operations for batch composition records. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `mixed_batch`: ID of the resulting mixed batch.
@@ -525,7 +524,8 @@ export class ApiService {
      * This endpoint defines the composition of a 'mixed' batch, detailing what
      * percentage and quantity (population/biomass) of it comes from various
      * 'source' batches. This is crucial for traceability when batches are merged.
-     * Provides full CRUD operations for batch composition records.
+     * Provides full CRUD operations for batch composition records. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `mixed_batch`: ID of the resulting mixed batch.
@@ -573,7 +573,8 @@ export class ApiService {
      * This endpoint defines the composition of a 'mixed' batch, detailing what
      * percentage and quantity (population/biomass) of it comes from various
      * 'source' batches. This is crucial for traceability when batches are merged.
-     * Provides full CRUD operations for batch composition records.
+     * Provides full CRUD operations for batch composition records. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `mixed_batch`: ID of the resulting mixed batch.
@@ -733,7 +734,8 @@ export class ApiService {
      *
      * Provides full CRUD operations for batches, including detailed filtering,
      * searching, and ordering capabilities. Batches represent groups of aquatic
-     * organisms managed together through their lifecycle.
+     * organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+     * capture audit change reasons.
      *
      * **Filtering:**
      * - `batch_number`: Exact match.
@@ -783,7 +785,8 @@ export class ApiService {
      *
      * Provides full CRUD operations for batches, including detailed filtering,
      * searching, and ordering capabilities. Batches represent groups of aquatic
-     * organisms managed together through their lifecycle.
+     * organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+     * capture audit change reasons.
      *
      * **Filtering:**
      * - `batch_number`: Exact match.
@@ -838,7 +841,8 @@ export class ApiService {
      *
      * Provides full CRUD operations for batches, including detailed filtering,
      * searching, and ordering capabilities. Batches represent groups of aquatic
-     * organisms managed together through their lifecycle.
+     * organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+     * capture audit change reasons.
      *
      * **Filtering:**
      * - `batch_number`: Exact match.
@@ -893,7 +897,8 @@ export class ApiService {
      *
      * Provides full CRUD operations for batches, including detailed filtering,
      * searching, and ordering capabilities. Batches represent groups of aquatic
-     * organisms managed together through their lifecycle.
+     * organisms managed together through their lifecycle. Uses HistoryReasonMixin to
+     * capture audit change reasons.
      *
      * **Filtering:**
      * - `batch_number`: Exact match.
@@ -1038,7 +1043,8 @@ export class ApiService {
      * This endpoint handles the assignment of batches (or parts of batches)
      * to specific containers (e.g., tanks, ponds, cages) at a given point in time.
      * It records the population count and biomass within that container.
-     * Provides full CRUD operations for these assignments.
+     * Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * An assignment can be marked as inactive when a batch is moved out of a container.
      *
@@ -1144,7 +1150,8 @@ export class ApiService {
      * This endpoint handles the assignment of batches (or parts of batches)
      * to specific containers (e.g., tanks, ponds, cages) at a given point in time.
      * It records the population count and biomass within that container.
-     * Provides full CRUD operations for these assignments.
+     * Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * An assignment can be marked as inactive when a batch is moved out of a container.
      *
@@ -1192,7 +1199,8 @@ export class ApiService {
      * This endpoint handles the assignment of batches (or parts of batches)
      * to specific containers (e.g., tanks, ponds, cages) at a given point in time.
      * It records the population count and biomass within that container.
-     * Provides full CRUD operations for these assignments.
+     * Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * An assignment can be marked as inactive when a batch is moved out of a container.
      *
@@ -1241,7 +1249,8 @@ export class ApiService {
      * This endpoint handles the assignment of batches (or parts of batches)
      * to specific containers (e.g., tanks, ponds, cages) at a given point in time.
      * It records the population count and biomass within that container.
-     * Provides full CRUD operations for these assignments.
+     * Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * An assignment can be marked as inactive when a batch is moved out of a container.
      *
@@ -1295,7 +1304,8 @@ export class ApiService {
      * This endpoint handles the assignment of batches (or parts of batches)
      * to specific containers (e.g., tanks, ponds, cages) at a given point in time.
      * It records the population count and biomass within that container.
-     * Provides full CRUD operations for these assignments.
+     * Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * An assignment can be marked as inactive when a batch is moved out of a container.
      *
@@ -1349,7 +1359,8 @@ export class ApiService {
      * This endpoint handles the assignment of batches (or parts of batches)
      * to specific containers (e.g., tanks, ponds, cages) at a given point in time.
      * It records the population count and biomass within that container.
-     * Provides full CRUD operations for these assignments.
+     * Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * An assignment can be marked as inactive when a batch is moved out of a container.
      *
@@ -1445,7 +1456,8 @@ export class ApiService {
      * Growth samples record the average weight of organisms in a batch (or a specific
      * container assignment of a batch) on a particular date. This data is essential
      * for tracking growth, calculating feed conversion ratios, and making management decisions.
-     * This endpoint provides full CRUD operations for growth samples.
+     * This endpoint provides full CRUD operations for growth samples. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -1539,7 +1551,8 @@ export class ApiService {
      * Growth samples record the average weight of organisms in a batch (or a specific
      * container assignment of a batch) on a particular date. This data is essential
      * for tracking growth, calculating feed conversion ratios, and making management decisions.
-     * This endpoint provides full CRUD operations for growth samples.
+     * This endpoint provides full CRUD operations for growth samples. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -1581,7 +1594,8 @@ export class ApiService {
      * Growth samples record the average weight of organisms in a batch (or a specific
      * container assignment of a batch) on a particular date. This data is essential
      * for tracking growth, calculating feed conversion ratios, and making management decisions.
-     * This endpoint provides full CRUD operations for growth samples.
+     * This endpoint provides full CRUD operations for growth samples. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -1624,7 +1638,8 @@ export class ApiService {
      * Growth samples record the average weight of organisms in a batch (or a specific
      * container assignment of a batch) on a particular date. This data is essential
      * for tracking growth, calculating feed conversion ratios, and making management decisions.
-     * This endpoint provides full CRUD operations for growth samples.
+     * This endpoint provides full CRUD operations for growth samples. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -1672,7 +1687,8 @@ export class ApiService {
      * Growth samples record the average weight of organisms in a batch (or a specific
      * container assignment of a batch) on a particular date. This data is essential
      * for tracking growth, calculating feed conversion ratios, and making management decisions.
-     * This endpoint provides full CRUD operations for growth samples.
+     * This endpoint provides full CRUD operations for growth samples. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -1720,7 +1736,8 @@ export class ApiService {
      * Growth samples record the average weight of organisms in a batch (or a specific
      * container assignment of a batch) on a particular date. This data is essential
      * for tracking growth, calculating feed conversion ratios, and making management decisions.
-     * This endpoint provides full CRUD operations for growth samples.
+     * This endpoint provides full CRUD operations for growth samples. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
@@ -2160,7 +2177,8 @@ export class ApiService {
      * Provides CRUD operations for life cycle stages, specific to a species.
      * Allows filtering by name, species, and order.
      * Supports searching across name, description, and species name.
-     * Ordering can be done by species name, order, name, or creation date.
+     * Ordering can be done by species name, order, name, or creation date. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      * @param name
      * @param nameContains
      * @param order
@@ -2215,7 +2233,8 @@ export class ApiService {
      * Provides CRUD operations for life cycle stages, specific to a species.
      * Allows filtering by name, species, and order.
      * Supports searching across name, description, and species name.
-     * Ordering can be done by species name, order, name, or creation date.
+     * Ordering can be done by species name, order, name, or creation date. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      * @param requestBody
      * @returns LifeCycleStage
      * @throws ApiError
@@ -2242,7 +2261,8 @@ export class ApiService {
      * Provides CRUD operations for life cycle stages, specific to a species.
      * Allows filtering by name, species, and order.
      * Supports searching across name, description, and species name.
-     * Ordering can be done by species name, order, name, or creation date.
+     * Ordering can be done by species name, order, name, or creation date. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this life cycle stage.
      * @returns LifeCycleStage
      * @throws ApiError
@@ -2270,7 +2290,8 @@ export class ApiService {
      * Provides CRUD operations for life cycle stages, specific to a species.
      * Allows filtering by name, species, and order.
      * Supports searching across name, description, and species name.
-     * Ordering can be done by species name, order, name, or creation date.
+     * Ordering can be done by species name, order, name, or creation date. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this life cycle stage.
      * @param requestBody
      * @returns LifeCycleStage
@@ -2303,7 +2324,8 @@ export class ApiService {
      * Provides CRUD operations for life cycle stages, specific to a species.
      * Allows filtering by name, species, and order.
      * Supports searching across name, description, and species name.
-     * Ordering can be done by species name, order, name, or creation date.
+     * Ordering can be done by species name, order, name, or creation date. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this life cycle stage.
      * @param requestBody
      * @returns LifeCycleStage
@@ -2336,7 +2358,8 @@ export class ApiService {
      * Provides CRUD operations for life cycle stages, specific to a species.
      * Allows filtering by name, species, and order.
      * Supports searching across name, description, and species name.
-     * Ordering can be done by species name, order, name, or creation date.
+     * Ordering can be done by species name, order, name, or creation date. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this life cycle stage.
      * @returns void
      * @throws ApiError
@@ -2363,7 +2386,8 @@ export class ApiService {
      *
      * Mortality events record the number of deaths in a batch on a specific date,
      * along with the suspected cause and any relevant notes. This endpoint
-     * provides full CRUD operations for mortality events.
+     * provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * **Filtering:**
      * - `batch`: ID of the batch associated with the mortality event.
@@ -2458,7 +2482,8 @@ export class ApiService {
      *
      * Mortality events record the number of deaths in a batch on a specific date,
      * along with the suspected cause and any relevant notes. This endpoint
-     * provides full CRUD operations for mortality events.
+     * provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * **Filtering:**
      * - `batch`: ID of the batch associated with the mortality event.
@@ -2500,7 +2525,8 @@ export class ApiService {
      *
      * Mortality events record the number of deaths in a batch on a specific date,
      * along with the suspected cause and any relevant notes. This endpoint
-     * provides full CRUD operations for mortality events.
+     * provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * **Filtering:**
      * - `batch`: ID of the batch associated with the mortality event.
@@ -2543,7 +2569,8 @@ export class ApiService {
      *
      * Mortality events record the number of deaths in a batch on a specific date,
      * along with the suspected cause and any relevant notes. This endpoint
-     * provides full CRUD operations for mortality events.
+     * provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * **Filtering:**
      * - `batch`: ID of the batch associated with the mortality event.
@@ -2591,7 +2618,8 @@ export class ApiService {
      *
      * Mortality events record the number of deaths in a batch on a specific date,
      * along with the suspected cause and any relevant notes. This endpoint
-     * provides full CRUD operations for mortality events.
+     * provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * **Filtering:**
      * - `batch`: ID of the batch associated with the mortality event.
@@ -2639,7 +2667,8 @@ export class ApiService {
      *
      * Mortality events record the number of deaths in a batch on a specific date,
      * along with the suspected cause and any relevant notes. This endpoint
-     * provides full CRUD operations for mortality events.
+     * provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      *
      * **Filtering:**
      * - `batch`: ID of the batch associated with the mortality event.
@@ -2682,7 +2711,8 @@ export class ApiService {
      *
      * Provides CRUD operations for species, including filtering by name
      * and scientific name, searching across name, scientific name, and description,
-     * and ordering by name, scientific name, or creation date.
+     * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      * @param descriptionContains
      * @param name
      * @param nameContains
@@ -2730,7 +2760,8 @@ export class ApiService {
      *
      * Provides CRUD operations for species, including filtering by name
      * and scientific name, searching across name, scientific name, and description,
-     * and ordering by name, scientific name, or creation date.
+     * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      * @param requestBody
      * @returns Species
      * @throws ApiError
@@ -2756,7 +2787,8 @@ export class ApiService {
      *
      * Provides CRUD operations for species, including filtering by name
      * and scientific name, searching across name, scientific name, and description,
-     * and ordering by name, scientific name, or creation date.
+     * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      * @param id A unique integer value identifying this species.
      * @returns Species
      * @throws ApiError
@@ -2783,7 +2815,8 @@ export class ApiService {
      *
      * Provides CRUD operations for species, including filtering by name
      * and scientific name, searching across name, scientific name, and description,
-     * and ordering by name, scientific name, or creation date.
+     * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      * @param id A unique integer value identifying this species.
      * @param requestBody
      * @returns Species
@@ -2815,7 +2848,8 @@ export class ApiService {
      *
      * Provides CRUD operations for species, including filtering by name
      * and scientific name, searching across name, scientific name, and description,
-     * and ordering by name, scientific name, or creation date.
+     * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      * @param id A unique integer value identifying this species.
      * @param requestBody
      * @returns Species
@@ -2847,7 +2881,8 @@ export class ApiService {
      *
      * Provides CRUD operations for species, including filtering by name
      * and scientific name, searching across name, scientific name, and description,
-     * and ordering by name, scientific name, or creation date.
+     * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      * @param id A unique integer value identifying this species.
      * @returns void
      * @throws ApiError
@@ -2874,7 +2909,8 @@ export class ApiService {
      *
      * Batch transfers record the movement of organisms between batches or changes
      * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers.
+     * This endpoint provides full CRUD operations for batch transfers. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `source_batch`: ID of the source batch.
@@ -2983,7 +3019,8 @@ export class ApiService {
      *
      * Batch transfers record the movement of organisms between batches or changes
      * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers.
+     * This endpoint provides full CRUD operations for batch transfers. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `source_batch`: ID of the source batch.
@@ -3029,7 +3066,8 @@ export class ApiService {
      *
      * Batch transfers record the movement of organisms between batches or changes
      * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers.
+     * This endpoint provides full CRUD operations for batch transfers. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `source_batch`: ID of the source batch.
@@ -3076,7 +3114,8 @@ export class ApiService {
      *
      * Batch transfers record the movement of organisms between batches or changes
      * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers.
+     * This endpoint provides full CRUD operations for batch transfers. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `source_batch`: ID of the source batch.
@@ -3128,7 +3167,8 @@ export class ApiService {
      *
      * Batch transfers record the movement of organisms between batches or changes
      * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers.
+     * This endpoint provides full CRUD operations for batch transfers. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `source_batch`: ID of the source batch.
@@ -3180,7 +3220,8 @@ export class ApiService {
      *
      * Batch transfers record the movement of organisms between batches or changes
      * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers.
+     * This endpoint provides full CRUD operations for batch transfers. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `source_batch`: ID of the source batch.
@@ -3223,7 +3264,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for batch parentage.
+     * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
      * @param assignmentDate
      * @param batch
      * @param eggProduction
@@ -3258,7 +3299,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for batch parentage.
+     * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
      * @param requestBody
      * @returns BatchParentage
      * @throws ApiError
@@ -3280,7 +3321,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for batch parentage.
+     * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
      * @param id A unique integer value identifying this Batch Parentage.
      * @returns BatchParentage
      * @throws ApiError
@@ -3303,7 +3344,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for batch parentage.
+     * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
      * @param id A unique integer value identifying this Batch Parentage.
      * @param requestBody
      * @returns BatchParentage
@@ -3331,7 +3372,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for batch parentage.
+     * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
      * @param id A unique integer value identifying this Batch Parentage.
      * @param requestBody
      * @returns BatchParentage
@@ -3359,7 +3400,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for batch parentage.
+     * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
      * @param id A unique integer value identifying this Batch Parentage.
      * @returns void
      * @throws ApiError
@@ -3420,7 +3461,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding pairs.
+     * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
      * @param femaleFish
      * @param maleFish
      * @param ordering Which field to use when ordering the results.
@@ -3461,7 +3502,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding pairs.
+     * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
      * @param requestBody
      * @returns BreedingPair
      * @throws ApiError
@@ -3483,7 +3524,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding pairs.
+     * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this Breeding Pair.
      * @returns BreedingPair
      * @throws ApiError
@@ -3506,7 +3547,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding pairs.
+     * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this Breeding Pair.
      * @param requestBody
      * @returns BreedingPair
@@ -3534,7 +3575,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding pairs.
+     * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this Breeding Pair.
      * @param requestBody
      * @returns BreedingPair
@@ -3562,7 +3603,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding pairs.
+     * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this Breeding Pair.
      * @returns void
      * @throws ApiError
@@ -3613,7 +3654,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding plans.
+     * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
      * @param endDate
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
@@ -3648,7 +3689,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding plans.
+     * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
      * @param requestBody
      * @returns BreedingPlan
      * @throws ApiError
@@ -3670,7 +3711,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding plans.
+     * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
      * @param id A unique integer value identifying this Breeding Plan.
      * @returns BreedingPlan
      * @throws ApiError
@@ -3693,7 +3734,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding plans.
+     * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
      * @param id A unique integer value identifying this Breeding Plan.
      * @param requestBody
      * @returns BreedingPlan
@@ -3721,7 +3762,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding plans.
+     * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
      * @param id A unique integer value identifying this Breeding Plan.
      * @param requestBody
      * @returns BreedingPlan
@@ -3749,7 +3790,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding plans.
+     * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
      * @param id A unique integer value identifying this Breeding Plan.
      * @returns void
      * @throws ApiError
@@ -3788,7 +3829,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg production.
+     * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
      * @param destinationStation
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
@@ -3832,7 +3873,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg production.
+     * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
      * @param requestBody
      * @returns EggProduction
      * @throws ApiError
@@ -3854,7 +3895,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg production.
+     * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
      * @param id A unique integer value identifying this Egg Production.
      * @returns EggProductionDetail
      * @throws ApiError
@@ -3877,7 +3918,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg production.
+     * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
      * @param id A unique integer value identifying this Egg Production.
      * @param requestBody
      * @returns EggProduction
@@ -3905,7 +3946,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg production.
+     * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
      * @param id A unique integer value identifying this Egg Production.
      * @param requestBody
      * @returns EggProduction
@@ -3933,7 +3974,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg production.
+     * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
      * @param id A unique integer value identifying this Egg Production.
      * @returns void
      * @throws ApiError
@@ -4011,7 +4052,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg suppliers.
+     * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
      * @param search A search term.
@@ -4040,7 +4081,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg suppliers.
+     * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
      * @param requestBody
      * @returns EggSupplier
      * @throws ApiError
@@ -4062,7 +4103,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg suppliers.
+     * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this Egg Supplier.
      * @returns EggSupplier
      * @throws ApiError
@@ -4085,7 +4126,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg suppliers.
+     * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this Egg Supplier.
      * @param requestBody
      * @returns EggSupplier
@@ -4113,7 +4154,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg suppliers.
+     * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this Egg Supplier.
      * @param requestBody
      * @returns EggSupplier
@@ -4141,7 +4182,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for egg suppliers.
+     * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this Egg Supplier.
      * @returns void
      * @throws ApiError
@@ -4164,7 +4205,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for external egg batches.
+     * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
      * @param eggProduction
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
@@ -4199,7 +4240,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for external egg batches.
+     * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
      * @param requestBody
      * @returns ExternalEggBatch
      * @throws ApiError
@@ -4221,7 +4262,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for external egg batches.
+     * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this External Egg Batch.
      * @returns ExternalEggBatch
      * @throws ApiError
@@ -4244,7 +4285,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for external egg batches.
+     * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this External Egg Batch.
      * @param requestBody
      * @returns ExternalEggBatch
@@ -4272,7 +4313,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for external egg batches.
+     * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this External Egg Batch.
      * @param requestBody
      * @returns ExternalEggBatch
@@ -4300,7 +4341,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for external egg batches.
+     * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this External Egg Batch.
      * @returns void
      * @throws ApiError
@@ -4323,7 +4364,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for broodstock fish.
+     * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
      * @param container
      * @param healthStatus Current health status
      *
@@ -4363,7 +4404,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for broodstock fish.
+     * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
      * @param requestBody
      * @returns BroodstockFish
      * @throws ApiError
@@ -4385,7 +4426,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for fish movements.
+     * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
      * @param fish
      * @param fromContainer
      * @param movementDate
@@ -4426,7 +4467,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for fish movements.
+     * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
      * @param requestBody
      * @returns FishMovement
      * @throws ApiError
@@ -4448,7 +4489,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for fish movements.
+     * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this Fish Movement.
      * @returns FishMovement
      * @throws ApiError
@@ -4471,7 +4512,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for fish movements.
+     * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this Fish Movement.
      * @param requestBody
      * @returns FishMovement
@@ -4499,7 +4540,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for fish movements.
+     * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this Fish Movement.
      * @param requestBody
      * @returns FishMovement
@@ -4527,7 +4568,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for fish movements.
+     * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
      * @param id A unique integer value identifying this Fish Movement.
      * @returns void
      * @throws ApiError
@@ -4572,7 +4613,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for broodstock fish.
+     * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
      * @param id A unique integer value identifying this Broodstock Fish.
      * @returns BroodstockFish
      * @throws ApiError
@@ -4595,7 +4636,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for broodstock fish.
+     * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
      * @param id A unique integer value identifying this Broodstock Fish.
      * @param requestBody
      * @returns BroodstockFish
@@ -4623,7 +4664,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for broodstock fish.
+     * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
      * @param id A unique integer value identifying this Broodstock Fish.
      * @param requestBody
      * @returns BroodstockFish
@@ -4651,7 +4692,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for broodstock fish.
+     * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
      * @param id A unique integer value identifying this Broodstock Fish.
      * @returns void
      * @throws ApiError
@@ -5123,7 +5164,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for maintenance tasks.
+     * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
      * @param completedDate
      * @param container
      * @param ordering Which field to use when ordering the results.
@@ -5166,7 +5207,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for maintenance tasks.
+     * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
      * @param requestBody
      * @returns MaintenanceTask
      * @throws ApiError
@@ -5188,7 +5229,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for maintenance tasks.
+     * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this Maintenance Task.
      * @returns MaintenanceTask
      * @throws ApiError
@@ -5211,7 +5252,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for maintenance tasks.
+     * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this Maintenance Task.
      * @param requestBody
      * @returns MaintenanceTask
@@ -5239,7 +5280,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for maintenance tasks.
+     * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this Maintenance Task.
      * @param requestBody
      * @returns MaintenanceTask
@@ -5267,7 +5308,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for maintenance tasks.
+     * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this Maintenance Task.
      * @returns void
      * @throws ApiError
@@ -5334,7 +5375,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding trait priorities.
+     * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
      * @param plan
@@ -5371,7 +5412,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding trait priorities.
+     * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
      * @param requestBody
      * @returns BreedingTraitPriority
      * @throws ApiError
@@ -5393,7 +5434,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding trait priorities.
+     * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
      * @param id A unique integer value identifying this Breeding Trait Priority.
      * @returns BreedingTraitPriority
      * @throws ApiError
@@ -5416,7 +5457,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding trait priorities.
+     * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
      * @param id A unique integer value identifying this Breeding Trait Priority.
      * @param requestBody
      * @returns BreedingTraitPriority
@@ -5444,7 +5485,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding trait priorities.
+     * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
      * @param id A unique integer value identifying this Breeding Trait Priority.
      * @param requestBody
      * @returns BreedingTraitPriority
@@ -5472,7 +5513,7 @@ export class ApiService {
         });
     }
     /**
-     * ViewSet for breeding trait priorities.
+     * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
      * @param id A unique integer value identifying this Breeding Trait Priority.
      * @returns void
      * @throws ApiError
@@ -5496,6 +5537,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param name
      * @param nameIcontains
      * @param ordering Which field to use when ordering the results.
@@ -5534,6 +5577,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns EnvironmentalParameter
      * @throws ApiError
@@ -5556,6 +5601,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @returns EnvironmentalParameter
      * @throws ApiError
@@ -5579,6 +5626,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @param requestBody
      * @returns EnvironmentalParameter
@@ -5607,6 +5656,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @param requestBody
      * @returns EnvironmentalParameter
@@ -5635,6 +5686,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @returns void
      * @throws ApiError
@@ -5658,6 +5711,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param area
      * @param areaIn Multiple values may be separated by commas.
      * @param date
@@ -5699,6 +5754,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns PhotoperiodData
      * @throws ApiError
@@ -5721,6 +5778,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @returns PhotoperiodData
      * @throws ApiError
@@ -5744,6 +5803,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @param requestBody
      * @returns PhotoperiodData
@@ -5772,6 +5833,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @param requestBody
      * @returns PhotoperiodData
@@ -5800,6 +5863,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @returns void
      * @throws ApiError
@@ -5825,6 +5890,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batch
      * @param batchIn Multiple values may be separated by commas.
      * @param container
@@ -5883,6 +5949,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns EnvironmentalReading
      * @throws ApiError
@@ -5907,6 +5974,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental reading.
      * @returns EnvironmentalReading
      * @throws ApiError
@@ -5932,6 +6000,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental reading.
      * @param requestBody
      * @returns EnvironmentalReading
@@ -5962,6 +6031,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental reading.
      * @param requestBody
      * @returns EnvironmentalReading
@@ -5992,6 +6062,7 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalReading instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental reading.
      * @returns void
      * @throws ApiError
@@ -6057,9 +6128,8 @@ export class ApiService {
     /**
      * Return the most recent readings for each parameter-container combo.
      *
-     * Optimized using PostgreSQL's DISTINCT ON to get latest reading
-     * for each unique parameter-container pair in a single query.
-     * Avoids N+1 query problem by using select_related for FKs.
+     * Uses PostgreSQL DISTINCT ON when available, falls back to
+     * iteration for SQLite. Optimized with select_related to avoid N+1.
      * @returns EnvironmentalReading
      * @throws ApiError
      */
@@ -6101,6 +6171,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batchTransfer
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
@@ -6133,6 +6205,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns StageTransitionEnvironmental
      * @throws ApiError
@@ -6155,6 +6229,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @returns StageTransitionEnvironmental
      * @throws ApiError
@@ -6178,6 +6254,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @param requestBody
      * @returns StageTransitionEnvironmental
@@ -6206,6 +6284,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @param requestBody
      * @returns StageTransitionEnvironmental
@@ -6234,6 +6314,8 @@ export class ApiService {
     }
     /**
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @returns void
      * @throws ApiError
@@ -6259,6 +6341,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param area
      * @param areaIn Multiple values may be separated by commas.
      * @param ordering Which field to use when ordering the results.
@@ -6296,6 +6379,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns WeatherData
      * @throws ApiError
@@ -6320,6 +6404,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this weather data.
      * @returns WeatherData
      * @throws ApiError
@@ -6345,6 +6430,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this weather data.
      * @param requestBody
      * @returns WeatherData
@@ -6375,6 +6461,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this weather data.
      * @param requestBody
      * @returns WeatherData
@@ -6405,6 +6492,7 @@ export class ApiService {
      * ViewSet for viewing and editing WeatherData instances.
      *
      * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this weather data.
      * @returns void
      * @throws ApiError
@@ -6466,8 +6554,8 @@ export class ApiService {
     /**
      * Return the most recent weather data for each area.
      *
-     * Optimized using PostgreSQL's DISTINCT ON to get latest data
-     * for each area in a single query. Avoids N+1 query problem.
+     * Uses PostgreSQL DISTINCT ON when available, falls back to
+     * iteration for SQLite. Optimized with select_related.
      * @returns WeatherData
      * @throws ApiError
      */
@@ -6483,9 +6571,199 @@ export class ApiService {
         });
     }
     /**
+     * List finance harvest facts
+     * Retrieve projected harvest facts with optional filters.
+     * @param batch Filter by originating batch ID.
+     * @param company Filter by finance company ID.
+     * @param dateFrom Inclusive lower bound for event date.
+     * @param dateTo Inclusive upper bound for event date.
+     * @param grade Filter by product grade code (case insensitive).
+     * @param ordering Ordering fields, e.g. '-event_date' or 'event_date'.
+     * @param page A page number within the paginated result set.
+     * @param pageSize Number of results to return per page.
+     * @param site Filter by finance site ID.
+     * @returns PaginatedFactHarvestList
+     * @throws ApiError
+     */
+    public static apiV1FinanceFactsHarvestsList(
+        batch?: number,
+        company?: number,
+        dateFrom?: string,
+        dateTo?: string,
+        grade?: string,
+        ordering?: string,
+        page?: number,
+        pageSize?: number,
+        site?: number,
+    ): CancelablePromise<PaginatedFactHarvestList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/finance/facts/harvests/',
+            query: {
+                'batch': batch,
+                'company': company,
+                'date_from': dateFrom,
+                'date_to': dateTo,
+                'grade': grade,
+                'ordering': ordering,
+                'page': page,
+                'page_size': pageSize,
+                'site': site,
+            },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Read-only access to finance harvest facts.
+     * @param factId Unique finance fact identifier.
+     * @returns FactHarvest
+     * @throws ApiError
+     */
+    public static apiV1FinanceFactsHarvestsRetrieve(
+        factId: number,
+    ): CancelablePromise<FactHarvest> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/finance/facts/harvests/{fact_id}/',
+            path: {
+                'fact_id': factId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * List intercompany transactions
+     * Retrieve detected intercompany transactions with optional filters.
+     * @param company Filter by finance company ID participating in the policy.
+     * @param dateFrom Inclusive lower bound for posting date.
+     * @param dateTo Inclusive upper bound for posting date.
+     * @param ordering Ordering fields, e.g. '-posting_date'.
+     * @param page A page number within the paginated result set.
+     * @param pageSize Number of results to return per page.
+     * @param state Filter by transaction state (pending, exported, posted).
+     * @returns PaginatedIntercompanyTransactionList
+     * @throws ApiError
+     */
+    public static apiV1FinanceIntercompanyTransactionsList(
+        company?: number,
+        dateFrom?: string,
+        dateTo?: string,
+        ordering?: string,
+        page?: number,
+        pageSize?: number,
+        state?: string,
+    ): CancelablePromise<PaginatedIntercompanyTransactionList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/finance/intercompany/transactions/',
+            query: {
+                'company': company,
+                'date_from': dateFrom,
+                'date_to': dateTo,
+                'ordering': ordering,
+                'page': page,
+                'page_size': pageSize,
+                'state': state,
+            },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Read-only access to intercompany transactions.
+     * @param txId Unique intercompany transaction identifier.
+     * @returns IntercompanyTransaction
+     * @throws ApiError
+     */
+    public static apiV1FinanceIntercompanyTransactionsRetrieve(
+        txId: number,
+    ): CancelablePromise<IntercompanyTransaction> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/finance/intercompany/transactions/{tx_id}/',
+            path: {
+                'tx_id': txId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Create NAV export batch
+     * Batch pending intercompany transactions into a NAV journal.
+     * @param requestBody
+     * @param force Set true to regenerate an existing batch for the same filters.
+     * @returns NavExportBatch
+     * @throws ApiError
+     */
+    public static apiV1FinanceNavExportsCreate(
+        requestBody: NavExportBatchCreate,
+        force?: boolean,
+    ): CancelablePromise<NavExportBatch> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/finance/nav-exports/',
+            query: {
+                'force': force,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Download NAV export batch
+     * Create NAV export batches and stream journal files.
+     * @param batchId A unique integer value identifying this nav export batch.
+     * @returns binary CSV journal file
+     * @throws ApiError
+     */
+    public static apiV1FinanceNavExportsDownloadRetrieve(
+        batchId: number,
+    ): CancelablePromise<Blob> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/finance/nav-exports/{batch_id}/download/',
+            path: {
+                'batch_id': batchId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
      * API endpoint for managing Fish Parameter Scores.
      *
      * Provides CRUD operations for parameter scores assigned to individual fish observations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param individualFishObservationId
      * @param page A page number within the paginated result set.
      * @param parameterId
@@ -6529,6 +6807,8 @@ export class ApiService {
      * API endpoint for managing Fish Parameter Scores.
      *
      * Provides CRUD operations for parameter scores assigned to individual fish observations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns FishParameterScore
      * @throws ApiError
@@ -6553,6 +6833,8 @@ export class ApiService {
      * API endpoint for managing Fish Parameter Scores.
      *
      * Provides CRUD operations for parameter scores assigned to individual fish observations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Fish Parameter Score.
      * @returns FishParameterScore
      * @throws ApiError
@@ -6578,6 +6860,8 @@ export class ApiService {
      * API endpoint for managing Fish Parameter Scores.
      *
      * Provides CRUD operations for parameter scores assigned to individual fish observations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Fish Parameter Score.
      * @param requestBody
      * @returns FishParameterScore
@@ -6608,6 +6892,8 @@ export class ApiService {
      * API endpoint for managing Fish Parameter Scores.
      *
      * Provides CRUD operations for parameter scores assigned to individual fish observations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Fish Parameter Score.
      * @param requestBody
      * @returns FishParameterScore
@@ -6638,6 +6924,8 @@ export class ApiService {
      * API endpoint for managing Fish Parameter Scores.
      *
      * Provides CRUD operations for parameter scores assigned to individual fish observations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Fish Parameter Score.
      * @returns void
      * @throws ApiError
@@ -6664,6 +6952,8 @@ export class ApiService {
      *
      * Provides CRUD operations and filtering for lab samples. Handles creation
      * with historical batch-container assignment lookup based on the sample date.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batchContainerAssignmentBatchId
      * @param batchContainerAssignmentContainerId
      * @param labReferenceId
@@ -6720,6 +7010,8 @@ export class ApiService {
      *
      * Provides CRUD operations and filtering for lab samples. Handles creation
      * with historical batch-container assignment lookup based on the sample date.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param formData
      * @returns HealthLabSample
      * @throws ApiError
@@ -6745,6 +7037,8 @@ export class ApiService {
      *
      * Provides CRUD operations and filtering for lab samples. Handles creation
      * with historical batch-container assignment lookup based on the sample date.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Health Lab Sample.
      * @returns HealthLabSample
      * @throws ApiError
@@ -6771,6 +7065,8 @@ export class ApiService {
      *
      * Provides CRUD operations and filtering for lab samples. Handles creation
      * with historical batch-container assignment lookup based on the sample date.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Health Lab Sample.
      * @param formData
      * @returns HealthLabSample
@@ -6802,6 +7098,8 @@ export class ApiService {
      *
      * Provides CRUD operations and filtering for lab samples. Handles creation
      * with historical batch-container assignment lookup based on the sample date.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Health Lab Sample.
      * @param formData
      * @returns HealthLabSample
@@ -6833,6 +7131,8 @@ export class ApiService {
      *
      * Provides CRUD operations and filtering for lab samples. Handles creation
      * with historical batch-container assignment lookup based on the sample date.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Health Lab Sample.
      * @returns void
      * @throws ApiError
@@ -6858,6 +7158,8 @@ export class ApiService {
      * API endpoint for managing Health Parameters.
      *
      * Provides CRUD operations for health parameters used in fish health assessments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param isActive
      * @param name
      * @param nameIcontains
@@ -6895,6 +7197,8 @@ export class ApiService {
      * API endpoint for managing Health Parameters.
      *
      * Provides CRUD operations for health parameters used in fish health assessments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns HealthParameter
      * @throws ApiError
@@ -6919,6 +7223,8 @@ export class ApiService {
      * API endpoint for managing Health Parameters.
      *
      * Provides CRUD operations for health parameters used in fish health assessments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this health parameter.
      * @returns HealthParameter
      * @throws ApiError
@@ -6944,6 +7250,8 @@ export class ApiService {
      * API endpoint for managing Health Parameters.
      *
      * Provides CRUD operations for health parameters used in fish health assessments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this health parameter.
      * @param requestBody
      * @returns HealthParameter
@@ -6974,6 +7282,8 @@ export class ApiService {
      * API endpoint for managing Health Parameters.
      *
      * Provides CRUD operations for health parameters used in fish health assessments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this health parameter.
      * @param requestBody
      * @returns HealthParameter
@@ -7004,6 +7314,8 @@ export class ApiService {
      * API endpoint for managing Health Parameters.
      *
      * Provides CRUD operations for health parameters used in fish health assessments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this health parameter.
      * @returns void
      * @throws ApiError
@@ -7031,6 +7343,8 @@ export class ApiService {
      * Provides CRUD operations for health sampling events, including nested
      * individual fish observations and parameter scores. Also provides an
      * action to calculate aggregate metrics.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param assignmentBatchId
      * @param assignmentContainerId
      * @param page A page number within the paginated result set.
@@ -7079,6 +7393,8 @@ export class ApiService {
      * Provides CRUD operations for health sampling events, including nested
      * individual fish observations and parameter scores. Also provides an
      * action to calculate aggregate metrics.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns HealthSamplingEvent
      * @throws ApiError
@@ -7105,6 +7421,8 @@ export class ApiService {
      * Provides CRUD operations for health sampling events, including nested
      * individual fish observations and parameter scores. Also provides an
      * action to calculate aggregate metrics.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Health Sampling Event.
      * @returns HealthSamplingEvent
      * @throws ApiError
@@ -7132,6 +7450,8 @@ export class ApiService {
      * Provides CRUD operations for health sampling events, including nested
      * individual fish observations and parameter scores. Also provides an
      * action to calculate aggregate metrics.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Health Sampling Event.
      * @param requestBody
      * @returns HealthSamplingEvent
@@ -7164,6 +7484,8 @@ export class ApiService {
      * Provides CRUD operations for health sampling events, including nested
      * individual fish observations and parameter scores. Also provides an
      * action to calculate aggregate metrics.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Health Sampling Event.
      * @param requestBody
      * @returns HealthSamplingEvent
@@ -7196,6 +7518,8 @@ export class ApiService {
      * Provides CRUD operations for health sampling events, including nested
      * individual fish observations and parameter scores. Also provides an
      * action to calculate aggregate metrics.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Health Sampling Event.
      * @returns void
      * @throws ApiError
@@ -7657,6 +7981,8 @@ export class ApiService {
      * API endpoint for managing Individual Fish Observations.
      *
      * Provides CRUD operations for individual fish observations within a health sampling event.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param fishIdentifier
      * @param fishIdentifierIcontains
      * @param page A page number within the paginated result set.
@@ -7694,6 +8020,8 @@ export class ApiService {
      * API endpoint for managing Individual Fish Observations.
      *
      * Provides CRUD operations for individual fish observations within a health sampling event.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns IndividualFishObservation
      * @throws ApiError
@@ -7718,6 +8046,8 @@ export class ApiService {
      * API endpoint for managing Individual Fish Observations.
      *
      * Provides CRUD operations for individual fish observations within a health sampling event.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Individual Fish Observation.
      * @returns IndividualFishObservation
      * @throws ApiError
@@ -7743,6 +8073,8 @@ export class ApiService {
      * API endpoint for managing Individual Fish Observations.
      *
      * Provides CRUD operations for individual fish observations within a health sampling event.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Individual Fish Observation.
      * @param requestBody
      * @returns IndividualFishObservation
@@ -7773,6 +8105,8 @@ export class ApiService {
      * API endpoint for managing Individual Fish Observations.
      *
      * Provides CRUD operations for individual fish observations within a health sampling event.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Individual Fish Observation.
      * @param requestBody
      * @returns IndividualFishObservation
@@ -7803,6 +8137,8 @@ export class ApiService {
      * API endpoint for managing Individual Fish Observations.
      *
      * Provides CRUD operations for individual fish observations within a health sampling event.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this Individual Fish Observation.
      * @returns void
      * @throws ApiError
@@ -7829,6 +8165,8 @@ export class ApiService {
      *
      * Provides CRUD operations for journal entries, which track observations
      * and notes about fish health.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batchId
      * @param category * `observation` - Observation
      * * `issue` - Issue
@@ -7885,6 +8223,8 @@ export class ApiService {
      *
      * Provides CRUD operations for journal entries, which track observations
      * and notes about fish health.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns JournalEntry
      * @throws ApiError
@@ -7910,6 +8250,8 @@ export class ApiService {
      *
      * Provides CRUD operations for journal entries, which track observations
      * and notes about fish health.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this journal entry.
      * @returns JournalEntry
      * @throws ApiError
@@ -7936,6 +8278,8 @@ export class ApiService {
      *
      * Provides CRUD operations for journal entries, which track observations
      * and notes about fish health.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this journal entry.
      * @param requestBody
      * @returns JournalEntry
@@ -7967,6 +8311,8 @@ export class ApiService {
      *
      * Provides CRUD operations for journal entries, which track observations
      * and notes about fish health.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this journal entry.
      * @param requestBody
      * @returns JournalEntry
@@ -7998,6 +8344,8 @@ export class ApiService {
      *
      * Provides CRUD operations for journal entries, which track observations
      * and notes about fish health.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this journal entry.
      * @returns void
      * @throws ApiError
@@ -8026,6 +8374,7 @@ export class ApiService {
      * in fish populations.
      *
      * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param adultFemaleCount
      * @param adultFemaleCountGte
      * @param adultFemaleCountLte
@@ -8111,6 +8460,7 @@ export class ApiService {
      * in fish populations.
      *
      * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns LiceCount
      * @throws ApiError
@@ -8138,6 +8488,7 @@ export class ApiService {
      * in fish populations.
      *
      * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this lice count.
      * @returns LiceCount
      * @throws ApiError
@@ -8166,6 +8517,7 @@ export class ApiService {
      * in fish populations.
      *
      * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this lice count.
      * @param requestBody
      * @returns LiceCount
@@ -8199,6 +8551,7 @@ export class ApiService {
      * in fish populations.
      *
      * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this lice count.
      * @param requestBody
      * @returns LiceCount
@@ -8232,6 +8585,7 @@ export class ApiService {
      * in fish populations.
      *
      * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this lice count.
      * @returns void
      * @throws ApiError
@@ -8257,6 +8611,8 @@ export class ApiService {
      * API endpoint for managing Mortality Reasons.
      *
      * Provides CRUD operations for mortality reasons used in mortality records.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param name
      * @param nameIcontains
      * @param page A page number within the paginated result set.
@@ -8291,6 +8647,8 @@ export class ApiService {
      * API endpoint for managing Mortality Reasons.
      *
      * Provides CRUD operations for mortality reasons used in mortality records.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns MortalityReason
      * @throws ApiError
@@ -8315,6 +8673,8 @@ export class ApiService {
      * API endpoint for managing Mortality Reasons.
      *
      * Provides CRUD operations for mortality reasons used in mortality records.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality reason.
      * @returns MortalityReason
      * @throws ApiError
@@ -8340,6 +8700,8 @@ export class ApiService {
      * API endpoint for managing Mortality Reasons.
      *
      * Provides CRUD operations for mortality reasons used in mortality records.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality reason.
      * @param requestBody
      * @returns MortalityReason
@@ -8370,6 +8732,8 @@ export class ApiService {
      * API endpoint for managing Mortality Reasons.
      *
      * Provides CRUD operations for mortality reasons used in mortality records.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality reason.
      * @param requestBody
      * @returns MortalityReason
@@ -8400,6 +8764,8 @@ export class ApiService {
      * API endpoint for managing Mortality Reasons.
      *
      * Provides CRUD operations for mortality reasons used in mortality records.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality reason.
      * @returns void
      * @throws ApiError
@@ -8428,6 +8794,7 @@ export class ApiService {
      * and their causes.
      *
      * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batch
      * @param container
      * @param count
@@ -8486,6 +8853,7 @@ export class ApiService {
      * and their causes.
      *
      * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns MortalityRecord
      * @throws ApiError
@@ -8513,6 +8881,7 @@ export class ApiService {
      * and their causes.
      *
      * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality record.
      * @returns MortalityRecord
      * @throws ApiError
@@ -8541,6 +8910,7 @@ export class ApiService {
      * and their causes.
      *
      * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality record.
      * @param requestBody
      * @returns MortalityRecord
@@ -8574,6 +8944,7 @@ export class ApiService {
      * and their causes.
      *
      * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality record.
      * @param requestBody
      * @returns MortalityRecord
@@ -8607,6 +8978,7 @@ export class ApiService {
      * and their causes.
      *
      * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality record.
      * @returns void
      * @throws ApiError
@@ -8632,6 +9004,8 @@ export class ApiService {
      * API endpoint for managing Sample Types.
      *
      * Provides CRUD operations for sample types used in lab testing.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param name
      * @param nameIcontains
      * @param page A page number within the paginated result set.
@@ -8666,6 +9040,8 @@ export class ApiService {
      * API endpoint for managing Sample Types.
      *
      * Provides CRUD operations for sample types used in lab testing.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns SampleType
      * @throws ApiError
@@ -8690,6 +9066,8 @@ export class ApiService {
      * API endpoint for managing Sample Types.
      *
      * Provides CRUD operations for sample types used in lab testing.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this sample type.
      * @returns SampleType
      * @throws ApiError
@@ -8715,6 +9093,8 @@ export class ApiService {
      * API endpoint for managing Sample Types.
      *
      * Provides CRUD operations for sample types used in lab testing.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this sample type.
      * @param requestBody
      * @returns SampleType
@@ -8745,6 +9125,8 @@ export class ApiService {
      * API endpoint for managing Sample Types.
      *
      * Provides CRUD operations for sample types used in lab testing.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this sample type.
      * @param requestBody
      * @returns SampleType
@@ -8775,6 +9157,8 @@ export class ApiService {
      * API endpoint for managing Sample Types.
      *
      * Provides CRUD operations for sample types used in lab testing.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this sample type.
      * @returns void
      * @throws ApiError
@@ -8801,6 +9185,8 @@ export class ApiService {
      *
      * Provides CRUD operations for treatments, which track medical interventions
      * for fish populations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batchId
      * @param batchAssignmentId
      * @param containerId
@@ -8882,6 +9268,8 @@ export class ApiService {
      *
      * Provides CRUD operations for treatments, which track medical interventions
      * for fish populations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns Treatment
      * @throws ApiError
@@ -8907,6 +9295,8 @@ export class ApiService {
      *
      * Provides CRUD operations for treatments, which track medical interventions
      * for fish populations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this treatment.
      * @returns Treatment
      * @throws ApiError
@@ -8933,6 +9323,8 @@ export class ApiService {
      *
      * Provides CRUD operations for treatments, which track medical interventions
      * for fish populations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this treatment.
      * @param requestBody
      * @returns Treatment
@@ -8964,6 +9356,8 @@ export class ApiService {
      *
      * Provides CRUD operations for treatments, which track medical interventions
      * for fish populations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this treatment.
      * @param requestBody
      * @returns Treatment
@@ -8995,6 +9389,8 @@ export class ApiService {
      *
      * Provides CRUD operations for treatments, which track medical interventions
      * for fish populations.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this treatment.
      * @returns void
      * @throws ApiError
@@ -9020,6 +9416,8 @@ export class ApiService {
      * API endpoint for managing Vaccination Types.
      *
      * Provides CRUD operations for vaccination types used in treatments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param manufacturer
      * @param manufacturerIcontains
      * @param name
@@ -9060,6 +9458,8 @@ export class ApiService {
      * API endpoint for managing Vaccination Types.
      *
      * Provides CRUD operations for vaccination types used in treatments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns VaccinationType
      * @throws ApiError
@@ -9084,6 +9484,8 @@ export class ApiService {
      * API endpoint for managing Vaccination Types.
      *
      * Provides CRUD operations for vaccination types used in treatments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this vaccination type.
      * @returns VaccinationType
      * @throws ApiError
@@ -9109,6 +9511,8 @@ export class ApiService {
      * API endpoint for managing Vaccination Types.
      *
      * Provides CRUD operations for vaccination types used in treatments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this vaccination type.
      * @param requestBody
      * @returns VaccinationType
@@ -9139,6 +9543,8 @@ export class ApiService {
      * API endpoint for managing Vaccination Types.
      *
      * Provides CRUD operations for vaccination types used in treatments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this vaccination type.
      * @param requestBody
      * @returns VaccinationType
@@ -9169,6 +9575,8 @@ export class ApiService {
      * API endpoint for managing Vaccination Types.
      *
      * Provides CRUD operations for vaccination types used in treatments.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this vaccination type.
      * @returns void
      * @throws ApiError
@@ -9195,7 +9603,7 @@ export class ApiService {
      *
      * Areas represent distinct geographical or functional zones within a larger geography
      * (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-     * on Area instances.
+     * on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the area.
@@ -9258,7 +9666,7 @@ export class ApiService {
      *
      * Areas represent distinct geographical or functional zones within a larger geography
      * (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-     * on Area instances.
+     * on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the area.
@@ -9299,7 +9707,7 @@ export class ApiService {
      *
      * Areas represent distinct geographical or functional zones within a larger geography
      * (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-     * on Area instances.
+     * on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the area.
@@ -9341,7 +9749,7 @@ export class ApiService {
      *
      * Areas represent distinct geographical or functional zones within a larger geography
      * (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-     * on Area instances.
+     * on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the area.
@@ -9388,7 +9796,7 @@ export class ApiService {
      *
      * Areas represent distinct geographical or functional zones within a larger geography
      * (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-     * on Area instances.
+     * on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the area.
@@ -9435,7 +9843,7 @@ export class ApiService {
      *
      * Areas represent distinct geographical or functional zones within a larger geography
      * (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-     * on Area instances.
+     * on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the area.
@@ -9526,7 +9934,8 @@ export class ApiService {
      *
      * Container Types define the characteristics and categories of different containers
      * used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-     * This endpoint allows for full CRUD operations on ContainerType instances.
+     * This endpoint allows for full CRUD operations on ContainerType instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container type.
@@ -9581,7 +9990,8 @@ export class ApiService {
      *
      * Container Types define the characteristics and categories of different containers
      * used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-     * This endpoint allows for full CRUD operations on ContainerType instances.
+     * This endpoint allows for full CRUD operations on ContainerType instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container type.
@@ -9620,7 +10030,8 @@ export class ApiService {
      *
      * Container Types define the characteristics and categories of different containers
      * used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-     * This endpoint allows for full CRUD operations on ContainerType instances.
+     * This endpoint allows for full CRUD operations on ContainerType instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container type.
@@ -9660,7 +10071,8 @@ export class ApiService {
      *
      * Container Types define the characteristics and categories of different containers
      * used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-     * This endpoint allows for full CRUD operations on ContainerType instances.
+     * This endpoint allows for full CRUD operations on ContainerType instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container type.
@@ -9705,7 +10117,8 @@ export class ApiService {
      *
      * Container Types define the characteristics and categories of different containers
      * used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-     * This endpoint allows for full CRUD operations on ContainerType instances.
+     * This endpoint allows for full CRUD operations on ContainerType instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container type.
@@ -9750,7 +10163,8 @@ export class ApiService {
      *
      * Container Types define the characteristics and categories of different containers
      * used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-     * This endpoint allows for full CRUD operations on ContainerType instances.
+     * This endpoint allows for full CRUD operations on ContainerType instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container type.
@@ -9791,7 +10205,8 @@ export class ApiService {
      * Containers represent physical units (e.g., tanks, ponds, cages) used for
      * holding aquatic organisms. They are associated with a specific container type,
      * and can be located within a Hall and an Area. This endpoint allows for
-     * full CRUD operations on Container instances.
+     * full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container.
@@ -9866,7 +10281,8 @@ export class ApiService {
      * Containers represent physical units (e.g., tanks, ponds, cages) used for
      * holding aquatic organisms. They are associated with a specific container type,
      * and can be located within a Hall and an Area. This endpoint allows for
-     * full CRUD operations on Container instances.
+     * full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container.
@@ -9913,7 +10329,8 @@ export class ApiService {
      * Containers represent physical units (e.g., tanks, ponds, cages) used for
      * holding aquatic organisms. They are associated with a specific container type,
      * and can be located within a Hall and an Area. This endpoint allows for
-     * full CRUD operations on Container instances.
+     * full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container.
@@ -9961,7 +10378,8 @@ export class ApiService {
      * Containers represent physical units (e.g., tanks, ponds, cages) used for
      * holding aquatic organisms. They are associated with a specific container type,
      * and can be located within a Hall and an Area. This endpoint allows for
-     * full CRUD operations on Container instances.
+     * full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container.
@@ -10014,7 +10432,8 @@ export class ApiService {
      * Containers represent physical units (e.g., tanks, ponds, cages) used for
      * holding aquatic organisms. They are associated with a specific container type,
      * and can be located within a Hall and an Area. This endpoint allows for
-     * full CRUD operations on Container instances.
+     * full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container.
@@ -10067,7 +10486,8 @@ export class ApiService {
      * Containers represent physical units (e.g., tanks, ponds, cages) used for
      * holding aquatic organisms. They are associated with a specific container type,
      * and can be located within a Hall and an Area. This endpoint allows for
-     * full CRUD operations on Container instances.
+     * full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the container.
@@ -10115,7 +10535,8 @@ export class ApiService {
      * Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
      * storing feed. They can be associated with a specific container type (defining
      * its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-     * This endpoint allows for full CRUD operations on FeedContainer instances.
+     * This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the feed container.
@@ -10196,7 +10617,8 @@ export class ApiService {
      * Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
      * storing feed. They can be associated with a specific container type (defining
      * its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-     * This endpoint allows for full CRUD operations on FeedContainer instances.
+     * This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the feed container.
@@ -10243,7 +10665,8 @@ export class ApiService {
      * Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
      * storing feed. They can be associated with a specific container type (defining
      * its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-     * This endpoint allows for full CRUD operations on FeedContainer instances.
+     * This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the feed container.
@@ -10291,7 +10714,8 @@ export class ApiService {
      * Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
      * storing feed. They can be associated with a specific container type (defining
      * its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-     * This endpoint allows for full CRUD operations on FeedContainer instances.
+     * This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the feed container.
@@ -10344,7 +10768,8 @@ export class ApiService {
      * Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
      * storing feed. They can be associated with a specific container type (defining
      * its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-     * This endpoint allows for full CRUD operations on FeedContainer instances.
+     * This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the feed container.
@@ -10397,7 +10822,8 @@ export class ApiService {
      * Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
      * storing feed. They can be associated with a specific container type (defining
      * its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-     * This endpoint allows for full CRUD operations on FeedContainer instances.
+     * This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the feed container.
@@ -10446,6 +10872,7 @@ export class ApiService {
      * such as wells, boreholes, or municipal supplies. They can be categorized by type
      * and associated with a specific geographical location.
      * This endpoint allows for full CRUD operations on FreshwaterStation instances.
+     * Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the freshwater station.
@@ -10517,6 +10944,7 @@ export class ApiService {
      * such as wells, boreholes, or municipal supplies. They can be categorized by type
      * and associated with a specific geographical location.
      * This endpoint allows for full CRUD operations on FreshwaterStation instances.
+     * Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the freshwater station.
@@ -10562,6 +10990,7 @@ export class ApiService {
      * such as wells, boreholes, or municipal supplies. They can be categorized by type
      * and associated with a specific geographical location.
      * This endpoint allows for full CRUD operations on FreshwaterStation instances.
+     * Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the freshwater station.
@@ -10608,6 +11037,7 @@ export class ApiService {
      * such as wells, boreholes, or municipal supplies. They can be categorized by type
      * and associated with a specific geographical location.
      * This endpoint allows for full CRUD operations on FreshwaterStation instances.
+     * Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the freshwater station.
@@ -10659,6 +11089,7 @@ export class ApiService {
      * such as wells, boreholes, or municipal supplies. They can be categorized by type
      * and associated with a specific geographical location.
      * This endpoint allows for full CRUD operations on FreshwaterStation instances.
+     * Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the freshwater station.
@@ -10710,6 +11141,7 @@ export class ApiService {
      * such as wells, boreholes, or municipal supplies. They can be categorized by type
      * and associated with a specific geographical location.
      * This endpoint allows for full CRUD operations on FreshwaterStation instances.
+     * Uses HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the freshwater station.
@@ -10788,7 +11220,8 @@ export class ApiService {
      * operations, such as countries, regions, specific water bodies, or custom zones.
      * These can be used to associate other entities (like facilities or environmental
      * readings) with a spatial context.
-     * This endpoint allows for full CRUD operations on Geography instances.
+     * This endpoint allows for full CRUD operations on Geography instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the geography.
@@ -10837,7 +11270,8 @@ export class ApiService {
      * operations, such as countries, regions, specific water bodies, or custom zones.
      * These can be used to associate other entities (like facilities or environmental
      * readings) with a spatial context.
-     * This endpoint allows for full CRUD operations on Geography instances.
+     * This endpoint allows for full CRUD operations on Geography instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the geography.
@@ -10876,7 +11310,8 @@ export class ApiService {
      * operations, such as countries, regions, specific water bodies, or custom zones.
      * These can be used to associate other entities (like facilities or environmental
      * readings) with a spatial context.
-     * This endpoint allows for full CRUD operations on Geography instances.
+     * This endpoint allows for full CRUD operations on Geography instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the geography.
@@ -10916,7 +11351,8 @@ export class ApiService {
      * operations, such as countries, regions, specific water bodies, or custom zones.
      * These can be used to associate other entities (like facilities or environmental
      * readings) with a spatial context.
-     * This endpoint allows for full CRUD operations on Geography instances.
+     * This endpoint allows for full CRUD operations on Geography instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the geography.
@@ -10961,7 +11397,8 @@ export class ApiService {
      * operations, such as countries, regions, specific water bodies, or custom zones.
      * These can be used to associate other entities (like facilities or environmental
      * readings) with a spatial context.
-     * This endpoint allows for full CRUD operations on Geography instances.
+     * This endpoint allows for full CRUD operations on Geography instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the geography.
@@ -11006,7 +11443,8 @@ export class ApiService {
      * operations, such as countries, regions, specific water bodies, or custom zones.
      * These can be used to associate other entities (like facilities or environmental
      * readings) with a spatial context.
-     * This endpoint allows for full CRUD operations on Geography instances.
+     * This endpoint allows for full CRUD operations on Geography instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the geography.
@@ -11071,7 +11509,8 @@ export class ApiService {
      * Halls represent distinct buildings or sections within the facility,
      * often containing multiple containers or systems. They can be associated
      * with a Freshwater Station.
-     * This endpoint allows for full CRUD operations on Hall instances.
+     * This endpoint allows for full CRUD operations on Hall instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the hall.
@@ -11133,7 +11572,8 @@ export class ApiService {
      * Halls represent distinct buildings or sections within the facility,
      * often containing multiple containers or systems. They can be associated
      * with a Freshwater Station.
-     * This endpoint allows for full CRUD operations on Hall instances.
+     * This endpoint allows for full CRUD operations on Hall instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the hall.
@@ -11176,7 +11616,8 @@ export class ApiService {
      * Halls represent distinct buildings or sections within the facility,
      * often containing multiple containers or systems. They can be associated
      * with a Freshwater Station.
-     * This endpoint allows for full CRUD operations on Hall instances.
+     * This endpoint allows for full CRUD operations on Hall instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the hall.
@@ -11220,7 +11661,8 @@ export class ApiService {
      * Halls represent distinct buildings or sections within the facility,
      * often containing multiple containers or systems. They can be associated
      * with a Freshwater Station.
-     * This endpoint allows for full CRUD operations on Hall instances.
+     * This endpoint allows for full CRUD operations on Hall instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the hall.
@@ -11269,7 +11711,8 @@ export class ApiService {
      * Halls represent distinct buildings or sections within the facility,
      * often containing multiple containers or systems. They can be associated
      * with a Freshwater Station.
-     * This endpoint allows for full CRUD operations on Hall instances.
+     * This endpoint allows for full CRUD operations on Hall instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the hall.
@@ -11318,7 +11761,8 @@ export class ApiService {
      * Halls represent distinct buildings or sections within the facility,
      * often containing multiple containers or systems. They can be associated
      * with a Freshwater Station.
-     * This endpoint allows for full CRUD operations on Hall instances.
+     * This endpoint allows for full CRUD operations on Hall instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the hall.
@@ -12002,7 +12446,8 @@ export class ApiService {
      * Sensors are devices used to monitor various environmental parameters (e.g., temperature,
      * pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
      * type, have a unique serial number, and be associated with a manufacturer.
-     * This endpoint allows for full CRUD operations on Sensor instances.
+     * This endpoint allows for full CRUD operations on Sensor instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the sensor.
@@ -12078,7 +12523,8 @@ export class ApiService {
      * Sensors are devices used to monitor various environmental parameters (e.g., temperature,
      * pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
      * type, have a unique serial number, and be associated with a manufacturer.
-     * This endpoint allows for full CRUD operations on Sensor instances.
+     * This endpoint allows for full CRUD operations on Sensor instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the sensor.
@@ -12124,7 +12570,8 @@ export class ApiService {
      * Sensors are devices used to monitor various environmental parameters (e.g., temperature,
      * pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
      * type, have a unique serial number, and be associated with a manufacturer.
-     * This endpoint allows for full CRUD operations on Sensor instances.
+     * This endpoint allows for full CRUD operations on Sensor instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the sensor.
@@ -12171,7 +12618,8 @@ export class ApiService {
      * Sensors are devices used to monitor various environmental parameters (e.g., temperature,
      * pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
      * type, have a unique serial number, and be associated with a manufacturer.
-     * This endpoint allows for full CRUD operations on Sensor instances.
+     * This endpoint allows for full CRUD operations on Sensor instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the sensor.
@@ -12223,7 +12671,8 @@ export class ApiService {
      * Sensors are devices used to monitor various environmental parameters (e.g., temperature,
      * pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
      * type, have a unique serial number, and be associated with a manufacturer.
-     * This endpoint allows for full CRUD operations on Sensor instances.
+     * This endpoint allows for full CRUD operations on Sensor instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the sensor.
@@ -12275,7 +12724,8 @@ export class ApiService {
      * Sensors are devices used to monitor various environmental parameters (e.g., temperature,
      * pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
      * type, have a unique serial number, and be associated with a manufacturer.
-     * This endpoint allows for full CRUD operations on Sensor instances.
+     * This endpoint allows for full CRUD operations on Sensor instances. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      *
      * **Filtering:**
      * - `name`: Filter by the exact name of the sensor.
@@ -12428,7 +12878,8 @@ export class ApiService {
      * API endpoint for managing Feed Container Stock.
      *
      * Provides CRUD operations for feed container stock entries,
-     * supporting FIFO inventory tracking.
+     * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      * @param entryDate
      * @param entryDateGte
      * @param entryDateLte
@@ -12484,7 +12935,8 @@ export class ApiService {
      * API endpoint for managing Feed Container Stock.
      *
      * Provides CRUD operations for feed container stock entries,
-     * supporting FIFO inventory tracking.
+     * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      * @param requestBody
      * @returns FeedContainerStockCreate
      * @throws ApiError
@@ -12509,7 +12961,8 @@ export class ApiService {
      * API endpoint for managing Feed Container Stock.
      *
      * Provides CRUD operations for feed container stock entries,
-     * supporting FIFO inventory tracking.
+     * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      * @param id A unique integer value identifying this Feed Container Stock.
      * @returns FeedContainerStock
      * @throws ApiError
@@ -12535,7 +12988,8 @@ export class ApiService {
      * API endpoint for managing Feed Container Stock.
      *
      * Provides CRUD operations for feed container stock entries,
-     * supporting FIFO inventory tracking.
+     * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      * @param id A unique integer value identifying this Feed Container Stock.
      * @param requestBody
      * @returns FeedContainerStock
@@ -12566,7 +13020,8 @@ export class ApiService {
      * API endpoint for managing Feed Container Stock.
      *
      * Provides CRUD operations for feed container stock entries,
-     * supporting FIFO inventory tracking.
+     * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      * @param id A unique integer value identifying this Feed Container Stock.
      * @param requestBody
      * @returns FeedContainerStock
@@ -12597,7 +13052,8 @@ export class ApiService {
      * API endpoint for managing Feed Container Stock.
      *
      * Provides CRUD operations for feed container stock entries,
-     * supporting FIFO inventory tracking.
+     * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+     * audit change reasons.
      * @param id A unique integer value identifying this Feed Container Stock.
      * @returns void
      * @throws ApiError
@@ -12699,9 +13155,75 @@ export class ApiService {
             });
         }
         /**
+         * Get comprehensive stock summary with aggregations.
+         *
+         * Provides:
+         * - Total quantity and value across all stock
+         * - Breakdown by feed type
+         * - Breakdown by container
+         *
+         * Query parameters:
+         * - feed_container_id: Filter by specific container
+         * - feed_type_id: Filter by specific feed type
+         * @param feedContainerId Filter by specific feed container ID
+         * @param feedTypeId Filter by specific feed type ID
+         * @returns any
+         * @throws ApiError
+         */
+        public static apiV1InventoryFeedContainerStockSummaryRetrieve(
+            feedContainerId?: number,
+            feedTypeId?: number,
+        ): CancelablePromise<{
+            /**
+             * Total feed quantity in kg
+             */
+            total_quantity_kg?: number;
+            /**
+             * Total value of feed stock
+             */
+            total_value?: number;
+            /**
+             * Number of different feed types in stock
+             */
+            unique_feed_types?: number;
+            /**
+             * Number of containers with stock
+             */
+            unique_containers?: number;
+            by_feed_type?: Array<{
+                feed_id?: number;
+                feed_name?: string;
+                total_quantity_kg?: number;
+                total_value?: number;
+                container_count?: number;
+            }>;
+            by_container?: Array<{
+                container_id?: number;
+                container_name?: string;
+                total_quantity_kg?: number;
+                total_value?: number;
+                feed_type_count?: number;
+            }>;
+        }> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/inventory/feed-container-stock/summary/',
+                query: {
+                    'feed_container_id': feedContainerId,
+                    'feed_type_id': feedTypeId,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
          * ViewSet for FeedPurchase model.
          *
-         * Provides CRUD operations for feed purchase records.
+         * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+         * to capture audit change reasons.
          * @param feed
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -12741,7 +13263,8 @@ export class ApiService {
         /**
          * ViewSet for FeedPurchase model.
          *
-         * Provides CRUD operations for feed purchase records.
+         * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+         * to capture audit change reasons.
          * @param requestBody
          * @returns FeedPurchase
          * @throws ApiError
@@ -12765,7 +13288,8 @@ export class ApiService {
         /**
          * ViewSet for FeedPurchase model.
          *
-         * Provides CRUD operations for feed purchase records.
+         * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+         * to capture audit change reasons.
          * @param id A unique integer value identifying this feed purchase.
          * @returns FeedPurchase
          * @throws ApiError
@@ -12790,7 +13314,8 @@ export class ApiService {
         /**
          * ViewSet for FeedPurchase model.
          *
-         * Provides CRUD operations for feed purchase records.
+         * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+         * to capture audit change reasons.
          * @param id A unique integer value identifying this feed purchase.
          * @param requestBody
          * @returns FeedPurchase
@@ -12820,7 +13345,8 @@ export class ApiService {
         /**
          * ViewSet for FeedPurchase model.
          *
-         * Provides CRUD operations for feed purchase records.
+         * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+         * to capture audit change reasons.
          * @param id A unique integer value identifying this feed purchase.
          * @param requestBody
          * @returns FeedPurchase
@@ -12850,7 +13376,8 @@ export class ApiService {
         /**
          * ViewSet for FeedPurchase model.
          *
-         * Provides CRUD operations for feed purchase records.
+         * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+         * to capture audit change reasons.
          * @param id A unique integer value identifying this feed purchase.
          * @returns void
          * @throws ApiError
@@ -12873,194 +13400,11 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for FeedStock model.
-         *
-         * Provides CRUD operations for feed stock levels in feed containers.
-         * @param feed
-         * @param feedContainer
-         * @param ordering Which field to use when ordering the results.
-         * @param page A page number within the paginated result set.
-         * @returns PaginatedFeedStockList
-         * @throws ApiError
-         */
-        public static apiV1InventoryFeedStocksList(
-            feed?: number,
-            feedContainer?: number,
-            ordering?: string,
-            page?: number,
-        ): CancelablePromise<PaginatedFeedStockList> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/inventory/feed-stocks/',
-                query: {
-                    'feed': feed,
-                    'feed_container': feedContainer,
-                    'ordering': ordering,
-                    'page': page,
-                },
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for FeedStock model.
-         *
-         * Provides CRUD operations for feed stock levels in feed containers.
-         * @param requestBody
-         * @returns FeedStock
-         * @throws ApiError
-         */
-        public static apiV1InventoryFeedStocksCreate(
-            requestBody: FeedStock,
-        ): CancelablePromise<FeedStock> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/inventory/feed-stocks/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for FeedStock model.
-         *
-         * Provides CRUD operations for feed stock levels in feed containers.
-         * @param id A unique integer value identifying this feed stock.
-         * @returns FeedStock
-         * @throws ApiError
-         */
-        public static apiV1InventoryFeedStocksRetrieve(
-            id: number,
-        ): CancelablePromise<FeedStock> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/inventory/feed-stocks/{id}/',
-                path: {
-                    'id': id,
-                },
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for FeedStock model.
-         *
-         * Provides CRUD operations for feed stock levels in feed containers.
-         * @param id A unique integer value identifying this feed stock.
-         * @param requestBody
-         * @returns FeedStock
-         * @throws ApiError
-         */
-        public static apiV1InventoryFeedStocksUpdate(
-            id: number,
-            requestBody: FeedStock,
-        ): CancelablePromise<FeedStock> {
-            return __request(OpenAPI, {
-                method: 'PUT',
-                url: '/api/v1/inventory/feed-stocks/{id}/',
-                path: {
-                    'id': id,
-                },
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for FeedStock model.
-         *
-         * Provides CRUD operations for feed stock levels in feed containers.
-         * @param id A unique integer value identifying this feed stock.
-         * @param requestBody
-         * @returns FeedStock
-         * @throws ApiError
-         */
-        public static apiV1InventoryFeedStocksPartialUpdate(
-            id: number,
-            requestBody?: PatchedFeedStock,
-        ): CancelablePromise<FeedStock> {
-            return __request(OpenAPI, {
-                method: 'PATCH',
-                url: '/api/v1/inventory/feed-stocks/{id}/',
-                path: {
-                    'id': id,
-                },
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for FeedStock model.
-         *
-         * Provides CRUD operations for feed stock levels in feed containers.
-         * @param id A unique integer value identifying this feed stock.
-         * @returns void
-         * @throws ApiError
-         */
-        public static apiV1InventoryFeedStocksDestroy(
-            id: number,
-        ): CancelablePromise<void> {
-            return __request(OpenAPI, {
-                method: 'DELETE',
-                url: '/api/v1/inventory/feed-stocks/{id}/',
-                path: {
-                    'id': id,
-                },
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * Return feed stocks that are below reorder threshold.
-         * @returns FeedStock
-         * @throws ApiError
-         */
-        public static apiV1InventoryFeedStocksLowStockRetrieve(): CancelablePromise<Array<FeedStock>> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/inventory/feed-stocks/low_stock/',
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
          * API endpoint for managing Feeding Events in aquaculture operations.
          *
          * Feeding events record the amount of feed given to batches in specific containers
-         * on particular dates. This endpoint provides full CRUD operations for feeding events.
+         * on particular dates. This endpoint provides full CRUD operations for feeding events
+         * and uses HistoryReasonMixin to capture audit change reasons.
          *
          * **Filtering:**
          * - `batch`: ID of the batch being fed.
@@ -13079,8 +13423,10 @@ export class ApiService {
          * - `feeding_date` (default: descending)
          * - `feeding_time`
          * - `amount_kg`
-         * @param amountMax
-         * @param amountMin
+         * @param amountMax Maximum feed amount in kg
+         * @param amountMin Minimum feed amount in kg
+         * @param area Filter by area ID (via container → area)
+         * @param areaIn Filter by multiple area IDs (comma-separated)
          * @param batch
          * @param batchIn Multiple values may be separated by commas.
          * @param batchNumber
@@ -13088,11 +13434,40 @@ export class ApiService {
          * @param containerIn Multiple values may be separated by commas.
          * @param containerName
          * @param feed
+         * @param feedBrand Filter by exact feed brand (case-insensitive)
+         * @param feedBrandIcontains Filter by partial brand name (case-insensitive)
+         * @param feedBrandIn Filter by multiple brands (comma-separated)
+         * @param feedCarbohydratePercentageGte Minimum carbohydrate percentage (0-100)
+         * @param feedCarbohydratePercentageLte Maximum carbohydrate percentage (0-100)
+         * @param feedFatPercentageGte Minimum fat percentage (0-100)
+         * @param feedFatPercentageLte Maximum fat percentage (0-100)
          * @param feedIn Multiple values may be separated by commas.
+         * @param feedProteinPercentageGte Minimum protein percentage (0-100)
+         * @param feedProteinPercentageLte Maximum protein percentage (0-100)
+         * @param feedSizeCategory Filter by feed size category
+         *
+         * * `MICRO` - Micro
+         * * `SMALL` - Small
+         * * `MEDIUM` - Medium
+         * * `LARGE` - Large
+         * @param feedSizeCategoryIn Filter by multiple size categories
+         *
+         * * `MICRO` - Micro
+         * * `SMALL` - Small
+         * * `MEDIUM` - Medium
+         * * `LARGE` - Large
+         * @param feedCostGte Minimum feed cost for the event
+         * @param feedCostLte Maximum feed cost for the event
          * @param feedName
          * @param feedingDate
-         * @param feedingDateAfter
-         * @param feedingDateBefore
+         * @param feedingDateAfter Filter feeding events on or after this date (YYYY-MM-DD)
+         * @param feedingDateBefore Filter feeding events on or before this date (YYYY-MM-DD)
+         * @param freshwaterStation Filter by freshwater station ID (via container → hall → station)
+         * @param freshwaterStationIn Filter by multiple freshwater station IDs (comma-separated)
+         * @param geography Filter by geography ID (via container → area → geography)
+         * @param geographyIn Filter by multiple geography IDs (comma-separated)
+         * @param hall Filter by hall ID (via container → hall)
+         * @param hallIn Filter by multiple hall IDs (comma-separated)
          * @param method * `MANUAL` - Manual
          * * `AUTOMATIC` - Automatic Feeder
          * * `BROADCAST` - Broadcast
@@ -13108,6 +13483,8 @@ export class ApiService {
         public static apiV1InventoryFeedingEventsList(
             amountMax?: number,
             amountMin?: number,
+            area?: number,
+            areaIn?: Array<number>,
             batch?: number,
             batchIn?: Array<number>,
             batchNumber?: string,
@@ -13115,11 +13492,30 @@ export class ApiService {
             containerIn?: Array<number>,
             containerName?: string,
             feed?: number,
+            feedBrand?: string,
+            feedBrandIcontains?: string,
+            feedBrandIn?: Array<string>,
+            feedCarbohydratePercentageGte?: number,
+            feedCarbohydratePercentageLte?: number,
+            feedFatPercentageGte?: number,
+            feedFatPercentageLte?: number,
             feedIn?: Array<number>,
+            feedProteinPercentageGte?: number,
+            feedProteinPercentageLte?: number,
+            feedSizeCategory?: 'LARGE' | 'MEDIUM' | 'MICRO' | 'SMALL',
+            feedSizeCategoryIn?: Array<'LARGE' | 'MEDIUM' | 'MICRO' | 'SMALL'>,
+            feedCostGte?: number,
+            feedCostLte?: number,
             feedName?: string,
             feedingDate?: string,
             feedingDateAfter?: string,
             feedingDateBefore?: string,
+            freshwaterStation?: number,
+            freshwaterStationIn?: Array<number>,
+            geography?: number,
+            geographyIn?: Array<number>,
+            hall?: number,
+            hallIn?: Array<number>,
             method?: 'AUTOMATIC' | 'BROADCAST' | 'MANUAL',
             methodIn?: Array<'AUTOMATIC' | 'BROADCAST' | 'MANUAL'>,
             ordering?: string,
@@ -13132,6 +13528,8 @@ export class ApiService {
                 query: {
                     'amount_max': amountMax,
                     'amount_min': amountMin,
+                    'area': area,
+                    'area__in': areaIn,
                     'batch': batch,
                     'batch__in': batchIn,
                     'batch_number': batchNumber,
@@ -13139,11 +13537,30 @@ export class ApiService {
                     'container__in': containerIn,
                     'container_name': containerName,
                     'feed': feed,
+                    'feed__brand': feedBrand,
+                    'feed__brand__icontains': feedBrandIcontains,
+                    'feed__brand__in': feedBrandIn,
+                    'feed__carbohydrate_percentage__gte': feedCarbohydratePercentageGte,
+                    'feed__carbohydrate_percentage__lte': feedCarbohydratePercentageLte,
+                    'feed__fat_percentage__gte': feedFatPercentageGte,
+                    'feed__fat_percentage__lte': feedFatPercentageLte,
                     'feed__in': feedIn,
+                    'feed__protein_percentage__gte': feedProteinPercentageGte,
+                    'feed__protein_percentage__lte': feedProteinPercentageLte,
+                    'feed__size_category': feedSizeCategory,
+                    'feed__size_category__in': feedSizeCategoryIn,
+                    'feed_cost__gte': feedCostGte,
+                    'feed_cost__lte': feedCostLte,
                     'feed_name': feedName,
                     'feeding_date': feedingDate,
                     'feeding_date_after': feedingDateAfter,
                     'feeding_date_before': feedingDateBefore,
+                    'freshwater_station': freshwaterStation,
+                    'freshwater_station__in': freshwaterStationIn,
+                    'geography': geography,
+                    'geography__in': geographyIn,
+                    'hall': hall,
+                    'hall__in': hallIn,
                     'method': method,
                     'method_in': methodIn,
                     'ordering': ordering,
@@ -13162,7 +13579,8 @@ export class ApiService {
          * API endpoint for managing Feeding Events in aquaculture operations.
          *
          * Feeding events record the amount of feed given to batches in specific containers
-         * on particular dates. This endpoint provides full CRUD operations for feeding events.
+         * on particular dates. This endpoint provides full CRUD operations for feeding events
+         * and uses HistoryReasonMixin to capture audit change reasons.
          *
          * **Filtering:**
          * - `batch`: ID of the batch being fed.
@@ -13205,7 +13623,8 @@ export class ApiService {
          * API endpoint for managing Feeding Events in aquaculture operations.
          *
          * Feeding events record the amount of feed given to batches in specific containers
-         * on particular dates. This endpoint provides full CRUD operations for feeding events.
+         * on particular dates. This endpoint provides full CRUD operations for feeding events
+         * and uses HistoryReasonMixin to capture audit change reasons.
          *
          * **Filtering:**
          * - `batch`: ID of the batch being fed.
@@ -13249,7 +13668,8 @@ export class ApiService {
          * API endpoint for managing Feeding Events in aquaculture operations.
          *
          * Feeding events record the amount of feed given to batches in specific containers
-         * on particular dates. This endpoint provides full CRUD operations for feeding events.
+         * on particular dates. This endpoint provides full CRUD operations for feeding events
+         * and uses HistoryReasonMixin to capture audit change reasons.
          *
          * **Filtering:**
          * - `batch`: ID of the batch being fed.
@@ -13298,7 +13718,8 @@ export class ApiService {
          * API endpoint for managing Feeding Events in aquaculture operations.
          *
          * Feeding events record the amount of feed given to batches in specific containers
-         * on particular dates. This endpoint provides full CRUD operations for feeding events.
+         * on particular dates. This endpoint provides full CRUD operations for feeding events
+         * and uses HistoryReasonMixin to capture audit change reasons.
          *
          * **Filtering:**
          * - `batch`: ID of the batch being fed.
@@ -13347,7 +13768,8 @@ export class ApiService {
          * API endpoint for managing Feeding Events in aquaculture operations.
          *
          * Feeding events record the amount of feed given to batches in specific containers
-         * on particular dates. This endpoint provides full CRUD operations for feeding events.
+         * on particular dates. This endpoint provides full CRUD operations for feeding events
+         * and uses HistoryReasonMixin to capture audit change reasons.
          *
          * **Filtering:**
          * - `batch`: ID of the batch being fed.
@@ -13390,8 +13812,10 @@ export class ApiService {
         /**
          * Get feeding events for a specific batch.
          * @param batchId ID of the batch to fetch feeding events for.
-         * @param amountMax
-         * @param amountMin
+         * @param amountMax Maximum feed amount in kg
+         * @param amountMin Minimum feed amount in kg
+         * @param area Filter by area ID (via container → area)
+         * @param areaIn Filter by multiple area IDs (comma-separated)
          * @param batch
          * @param batchIn Multiple values may be separated by commas.
          * @param batchNumber
@@ -13399,11 +13823,40 @@ export class ApiService {
          * @param containerIn Multiple values may be separated by commas.
          * @param containerName
          * @param feed
+         * @param feedBrand Filter by exact feed brand (case-insensitive)
+         * @param feedBrandIcontains Filter by partial brand name (case-insensitive)
+         * @param feedBrandIn Filter by multiple brands (comma-separated)
+         * @param feedCarbohydratePercentageGte Minimum carbohydrate percentage (0-100)
+         * @param feedCarbohydratePercentageLte Maximum carbohydrate percentage (0-100)
+         * @param feedFatPercentageGte Minimum fat percentage (0-100)
+         * @param feedFatPercentageLte Maximum fat percentage (0-100)
          * @param feedIn Multiple values may be separated by commas.
+         * @param feedProteinPercentageGte Minimum protein percentage (0-100)
+         * @param feedProteinPercentageLte Maximum protein percentage (0-100)
+         * @param feedSizeCategory Filter by feed size category
+         *
+         * * `MICRO` - Micro
+         * * `SMALL` - Small
+         * * `MEDIUM` - Medium
+         * * `LARGE` - Large
+         * @param feedSizeCategoryIn Filter by multiple size categories
+         *
+         * * `MICRO` - Micro
+         * * `SMALL` - Small
+         * * `MEDIUM` - Medium
+         * * `LARGE` - Large
+         * @param feedCostGte Minimum feed cost for the event
+         * @param feedCostLte Maximum feed cost for the event
          * @param feedName
          * @param feedingDate
-         * @param feedingDateAfter
-         * @param feedingDateBefore
+         * @param feedingDateAfter Filter feeding events on or after this date (YYYY-MM-DD)
+         * @param feedingDateBefore Filter feeding events on or before this date (YYYY-MM-DD)
+         * @param freshwaterStation Filter by freshwater station ID (via container → hall → station)
+         * @param freshwaterStationIn Filter by multiple freshwater station IDs (comma-separated)
+         * @param geography Filter by geography ID (via container → area → geography)
+         * @param geographyIn Filter by multiple geography IDs (comma-separated)
+         * @param hall Filter by hall ID (via container → hall)
+         * @param hallIn Filter by multiple hall IDs (comma-separated)
          * @param method * `MANUAL` - Manual
          * * `AUTOMATIC` - Automatic Feeder
          * * `BROADCAST` - Broadcast
@@ -13420,6 +13873,8 @@ export class ApiService {
             batchId: number,
             amountMax?: number,
             amountMin?: number,
+            area?: number,
+            areaIn?: Array<number>,
             batch?: number,
             batchIn?: Array<number>,
             batchNumber?: string,
@@ -13427,11 +13882,30 @@ export class ApiService {
             containerIn?: Array<number>,
             containerName?: string,
             feed?: number,
+            feedBrand?: string,
+            feedBrandIcontains?: string,
+            feedBrandIn?: Array<string>,
+            feedCarbohydratePercentageGte?: number,
+            feedCarbohydratePercentageLte?: number,
+            feedFatPercentageGte?: number,
+            feedFatPercentageLte?: number,
             feedIn?: Array<number>,
+            feedProteinPercentageGte?: number,
+            feedProteinPercentageLte?: number,
+            feedSizeCategory?: 'LARGE' | 'MEDIUM' | 'MICRO' | 'SMALL',
+            feedSizeCategoryIn?: Array<'LARGE' | 'MEDIUM' | 'MICRO' | 'SMALL'>,
+            feedCostGte?: number,
+            feedCostLte?: number,
             feedName?: string,
             feedingDate?: string,
             feedingDateAfter?: string,
             feedingDateBefore?: string,
+            freshwaterStation?: number,
+            freshwaterStationIn?: Array<number>,
+            geography?: number,
+            geographyIn?: Array<number>,
+            hall?: number,
+            hallIn?: Array<number>,
             method?: 'AUTOMATIC' | 'BROADCAST' | 'MANUAL',
             methodIn?: Array<'AUTOMATIC' | 'BROADCAST' | 'MANUAL'>,
             ordering?: string,
@@ -13444,6 +13918,8 @@ export class ApiService {
                 query: {
                     'amount_max': amountMax,
                     'amount_min': amountMin,
+                    'area': area,
+                    'area__in': areaIn,
                     'batch': batch,
                     'batch__in': batchIn,
                     'batch_id': batchId,
@@ -13452,11 +13928,30 @@ export class ApiService {
                     'container__in': containerIn,
                     'container_name': containerName,
                     'feed': feed,
+                    'feed__brand': feedBrand,
+                    'feed__brand__icontains': feedBrandIcontains,
+                    'feed__brand__in': feedBrandIn,
+                    'feed__carbohydrate_percentage__gte': feedCarbohydratePercentageGte,
+                    'feed__carbohydrate_percentage__lte': feedCarbohydratePercentageLte,
+                    'feed__fat_percentage__gte': feedFatPercentageGte,
+                    'feed__fat_percentage__lte': feedFatPercentageLte,
                     'feed__in': feedIn,
+                    'feed__protein_percentage__gte': feedProteinPercentageGte,
+                    'feed__protein_percentage__lte': feedProteinPercentageLte,
+                    'feed__size_category': feedSizeCategory,
+                    'feed__size_category__in': feedSizeCategoryIn,
+                    'feed_cost__gte': feedCostGte,
+                    'feed_cost__lte': feedCostLte,
                     'feed_name': feedName,
                     'feeding_date': feedingDate,
                     'feeding_date_after': feedingDateAfter,
                     'feeding_date_before': feedingDateBefore,
+                    'freshwater_station': freshwaterStation,
+                    'freshwater_station__in': freshwaterStationIn,
+                    'geography': geography,
+                    'geography__in': geographyIn,
+                    'hall': hall,
+                    'hall__in': hallIn,
                     'method': method,
                     'method_in': methodIn,
                     'ordering': ordering,
@@ -13468,6 +13963,124 @@ export class ApiService {
                     401: `Unauthorized`,
                     403: `Forbidden`,
                     500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Comprehensive finance report with flexible filtering and aggregations
+         *
+         * Provides detailed feed usage and cost analysis with multi-dimensional filtering.
+         *
+         * Supports filtering by:
+         * - Time periods (date ranges via feeding_date_after/before)
+         * - Geography (geography, area, freshwater_station, hall, container)
+         * - Feed properties (protein %, fat %, carb %, brand, size category)
+         * - Cost ranges (feed_cost)
+         * - Feed types (feed, feed__in)
+         *
+         * Returns aggregated totals and optional breakdowns by selected dimensions.
+         * All filters from FeedingEventFilter are supported.
+         *
+         * @param endDate End date for report period (YYYY-MM-DD) - REQUIRED
+         * @param startDate Start date for report period (YYYY-MM-DD) - REQUIRED
+         * @param area Filter by area ID
+         * @param areaIn Filter by multiple area IDs (comma-separated)
+         * @param feed Filter by feed type ID
+         * @param feedBrand Filter by exact brand name (case-insensitive)
+         * @param feedBrandIcontains Filter by partial brand name (case-insensitive)
+         * @param feedFatPercentageGte Minimum fat percentage (0-100)
+         * @param feedFatPercentageLte Maximum fat percentage (0-100)
+         * @param feedIn Filter by multiple feed type IDs (comma-separated)
+         * @param feedProteinPercentageGte Minimum protein percentage (0-100)
+         * @param feedProteinPercentageLte Maximum protein percentage (0-100)
+         * @param feedSizeCategory Filter by size category (MICRO, SMALL, MEDIUM, LARGE)
+         * @param feedCostGte Minimum feed cost per event
+         * @param feedCostLte Maximum feed cost per event
+         * @param freshwaterStation Filter by freshwater station ID
+         * @param geography Filter by geography ID (e.g., 1=Scotland, 2=Faroe Islands)
+         * @param geographyIn Filter by multiple geography IDs (comma-separated)
+         * @param groupBy Primary grouping for time series: 'day', 'week', or 'month'
+         * @param includeBreakdowns Include dimensional breakdowns (default: true)
+         * @param includeTimeSeries Include time series data (default: false)
+         * @returns any
+         * @throws ApiError
+         */
+        public static feedingEventsFinanceReport(
+            endDate: string,
+            startDate: string,
+            area?: number,
+            areaIn?: Array<number>,
+            feed?: number,
+            feedBrand?: string,
+            feedBrandIcontains?: string,
+            feedFatPercentageGte?: number,
+            feedFatPercentageLte?: number,
+            feedIn?: Array<number>,
+            feedProteinPercentageGte?: number,
+            feedProteinPercentageLte?: number,
+            feedSizeCategory?: string,
+            feedCostGte?: number,
+            feedCostLte?: number,
+            freshwaterStation?: number,
+            geography?: number,
+            geographyIn?: Array<number>,
+            groupBy?: string,
+            includeBreakdowns?: boolean,
+            includeTimeSeries?: boolean,
+        ): CancelablePromise<{
+            summary?: {
+                total_feed_kg?: number;
+                total_feed_cost?: number;
+                events_count?: number;
+                date_range?: {
+                    start?: string;
+                    end?: string;
+                };
+            };
+            by_feed_type?: Array<{
+                feed_id?: number;
+                feed_name?: string;
+                brand?: string;
+                protein_percentage?: number;
+                fat_percentage?: number;
+                total_kg?: number;
+                total_cost?: number;
+                events_count?: number;
+            }>;
+            by_geography?: any[];
+            by_area?: any[];
+            by_container?: any[];
+            time_series?: any[];
+        }> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/inventory/feeding-events/finance_report/',
+                query: {
+                    'area': area,
+                    'area__in': areaIn,
+                    'end_date': endDate,
+                    'feed': feed,
+                    'feed__brand': feedBrand,
+                    'feed__brand__icontains': feedBrandIcontains,
+                    'feed__fat_percentage__gte': feedFatPercentageGte,
+                    'feed__fat_percentage__lte': feedFatPercentageLte,
+                    'feed__in': feedIn,
+                    'feed__protein_percentage__gte': feedProteinPercentageGte,
+                    'feed__protein_percentage__lte': feedProteinPercentageLte,
+                    'feed__size_category': feedSizeCategory,
+                    'feed_cost__gte': feedCostGte,
+                    'feed_cost__lte': feedCostLte,
+                    'freshwater_station': freshwaterStation,
+                    'geography': geography,
+                    'geography__in': geographyIn,
+                    'group_by': groupBy,
+                    'include_breakdowns': includeBreakdowns,
+                    'include_time_series': includeTimeSeries,
+                    'start_date': startDate,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
                 },
             });
         }
@@ -13497,6 +14110,10 @@ export class ApiService {
              * Total feed amount in kg
              */
             total_feed_kg: number;
+            /**
+             * Total feed cost
+             */
+            total_feed_cost: number;
         }> {
             return __request(OpenAPI, {
                 method: 'GET',
@@ -13518,7 +14135,8 @@ export class ApiService {
         /**
          * ViewSet for Feed model.
          *
-         * Provides CRUD operations for feed types used in aquaculture operations.
+         * Provides CRUD operations for feed types used in aquaculture operations. Uses
+         * HistoryReasonMixin to capture audit change reasons.
          * @param brand
          * @param isActive
          * @param ordering Which field to use when ordering the results.
@@ -13555,7 +14173,8 @@ export class ApiService {
         /**
          * ViewSet for Feed model.
          *
-         * Provides CRUD operations for feed types used in aquaculture operations.
+         * Provides CRUD operations for feed types used in aquaculture operations. Uses
+         * HistoryReasonMixin to capture audit change reasons.
          * @param requestBody
          * @returns Feed
          * @throws ApiError
@@ -13579,7 +14198,8 @@ export class ApiService {
         /**
          * ViewSet for Feed model.
          *
-         * Provides CRUD operations for feed types used in aquaculture operations.
+         * Provides CRUD operations for feed types used in aquaculture operations. Uses
+         * HistoryReasonMixin to capture audit change reasons.
          * @param id A unique integer value identifying this feed.
          * @returns Feed
          * @throws ApiError
@@ -13604,7 +14224,8 @@ export class ApiService {
         /**
          * ViewSet for Feed model.
          *
-         * Provides CRUD operations for feed types used in aquaculture operations.
+         * Provides CRUD operations for feed types used in aquaculture operations. Uses
+         * HistoryReasonMixin to capture audit change reasons.
          * @param id A unique integer value identifying this feed.
          * @param requestBody
          * @returns Feed
@@ -13634,7 +14255,8 @@ export class ApiService {
         /**
          * ViewSet for Feed model.
          *
-         * Provides CRUD operations for feed types used in aquaculture operations.
+         * Provides CRUD operations for feed types used in aquaculture operations. Uses
+         * HistoryReasonMixin to capture audit change reasons.
          * @param id A unique integer value identifying this feed.
          * @param requestBody
          * @returns Feed
@@ -13664,7 +14286,8 @@ export class ApiService {
         /**
          * ViewSet for Feed model.
          *
-         * Provides CRUD operations for feed types used in aquaculture operations.
+         * Provides CRUD operations for feed types used in aquaculture operations. Uses
+         * HistoryReasonMixin to capture audit change reasons.
          * @param id A unique integer value identifying this feed.
          * @returns void
          * @throws ApiError
@@ -13677,80 +14300,6 @@ export class ApiService {
                 url: '/api/v1/inventory/feeds/{id}/',
                 path: {
                     'id': id,
-                },
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * List historical records with enhanced OpenAPI documentation.
-         * @param dateFrom Filter records from this date onwards (inclusive)
-         * @param dateTo Filter records up to this date (inclusive)
-         * @param feed
-         * @param feedContainer
-         * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-         *
-         * * `+` - Created
-         * * `~` - Updated
-         * * `-` - Deleted
-         * @param historyUser Filter by username of the user who made the change
-         * @param ordering Which field to use when ordering the results.
-         * @param page A page number within the paginated result set.
-         * @param search A search term.
-         * @returns PaginatedFeedStockHistoryList
-         * @throws ApiError
-         */
-        public static listInventoryFeedStockHistory(
-            dateFrom?: string,
-            dateTo?: string,
-            feed?: number,
-            feedContainer?: number,
-            historyType?: '+' | '-' | '~',
-            historyUser?: string,
-            ordering?: string,
-            page?: number,
-            search?: string,
-        ): CancelablePromise<PaginatedFeedStockHistoryList> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/inventory/history/feed-stocks/',
-                query: {
-                    'date_from': dateFrom,
-                    'date_to': dateTo,
-                    'feed': feed,
-                    'feed_container': feedContainer,
-                    'history_type': historyType,
-                    'history_user': historyUser,
-                    'ordering': ordering,
-                    'page': page,
-                    'search': search,
-                },
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for FeedStock historical records.
-         * @param historyId A unique integer value identifying this historical feed stock.
-         * @returns FeedStockHistory
-         * @throws ApiError
-         */
-        public static retrieveInventoryFeedStockHistoryDetail(
-            historyId: number,
-        ): CancelablePromise<FeedStockHistory> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/inventory/history/feed-stocks/{history_id}/',
-                path: {
-                    'history_id': historyId,
                 },
                 errors: {
                     401: `Unauthorized`,
@@ -13951,7 +14500,143 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * List harvest events
+         * Retrieve harvest events with optional filtering by batch, assignment, destination, date range, or document reference.
+         * @param assignment Filter events by assignment ID.
+         * @param batch Filter events by batch ID.
+         * @param dateFrom Include events on or after this ISO 8601 timestamp.
+         * @param dateTo Include events on or before this ISO 8601 timestamp.
+         * @param destGeography Filter events by destination geography ID.
+         * @param destSubsidiary Filter events by destination subsidiary code.
+         * @param documentRef Filter events whose document reference contains this value (case-insensitive).
+         * @param ordering Which field to use when ordering the results.
+         * @param page A page number within the paginated result set.
+         * @param search A search term.
+         * @returns PaginatedHarvestEventList
+         * @throws ApiError
+         */
+        public static apiV1OperationalHarvestEventsList(
+            assignment?: number,
+            batch?: number,
+            dateFrom?: string,
+            dateTo?: string,
+            destGeography?: number,
+            destSubsidiary?: string,
+            documentRef?: string,
+            ordering?: string,
+            page?: number,
+            search?: string,
+        ): CancelablePromise<PaginatedHarvestEventList> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/operational/harvest-events/',
+                query: {
+                    'assignment': assignment,
+                    'batch': batch,
+                    'date_from': dateFrom,
+                    'date_to': dateTo,
+                    'dest_geography': destGeography,
+                    'dest_subsidiary': destSubsidiary,
+                    'document_ref': documentRef,
+                    'ordering': ordering,
+                    'page': page,
+                    'search': search,
+                },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Read-only access to harvest events.
+         * @param id A unique integer value identifying this harvest event.
+         * @returns HarvestEvent
+         * @throws ApiError
+         */
+        public static apiV1OperationalHarvestEventsRetrieve(
+            id: number,
+        ): CancelablePromise<HarvestEvent> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/operational/harvest-events/{id}/',
+                path: {
+                    'id': id,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * List harvest lots
+         * Retrieve harvest lots with optional filtering by event or product grade.
+         * @param event Filter lots by harvest event ID.
+         * @param grade Filter lots by product grade code (case insensitive).
+         * @param ordering Which field to use when ordering the results.
+         * @param page A page number within the paginated result set.
+         * @param productGrade Filter lots by product grade ID.
+         * @param search A search term.
+         * @returns PaginatedHarvestLotList
+         * @throws ApiError
+         */
+        public static apiV1OperationalHarvestLotsList(
+            event?: number,
+            grade?: string,
+            ordering?: string,
+            page?: number,
+            productGrade?: number,
+            search?: string,
+        ): CancelablePromise<PaginatedHarvestLotList> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/operational/harvest-lots/',
+                query: {
+                    'event': event,
+                    'grade': grade,
+                    'ordering': ordering,
+                    'page': page,
+                    'product_grade': productGrade,
+                    'search': search,
+                },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Read-only access to harvest lots.
+         * @param id A unique integer value identifying this harvest lot.
+         * @returns HarvestLot
+         * @throws ApiError
+         */
+        public static apiV1OperationalHarvestLotsRetrieve(
+            id: number,
+        ): CancelablePromise<HarvestLot> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/operational/harvest-lots/{id}/',
+                path: {
+                    'id': id,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for biological constraints with audit trail support.
          * @param isActive
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -13980,7 +14665,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param requestBody
          * @returns BiologicalConstraints
          * @throws ApiError
@@ -14002,7 +14687,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param id A unique integer value identifying this Biological Constraint Set.
          * @returns BiologicalConstraints
          * @throws ApiError
@@ -14025,7 +14710,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param id A unique integer value identifying this Biological Constraint Set.
          * @param requestBody
          * @returns BiologicalConstraints
@@ -14053,7 +14738,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param id A unique integer value identifying this Biological Constraint Set.
          * @param requestBody
          * @returns BiologicalConstraints
@@ -14081,7 +14766,7 @@ export class ApiService {
             });
         }
         /**
-         * ViewSet for biological constraints.
+         * ViewSet for biological constraints with audit trail support.
          * @param id A unique integer value identifying this Biological Constraint Set.
          * @returns void
          * @throws ApiError
@@ -14189,7 +14874,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -14218,7 +14903,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param requestBody
          * @returns FCRModel
          * @throws ApiError
@@ -14240,7 +14925,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param modelId A unique integer value identifying this FCR Model.
          * @returns FCRModel
          * @throws ApiError
@@ -14263,7 +14948,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param modelId A unique integer value identifying this FCR Model.
          * @param requestBody
          * @returns FCRModel
@@ -14291,7 +14976,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param modelId A unique integer value identifying this FCR Model.
          * @param requestBody
          * @returns FCRModel
@@ -14319,7 +15004,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for FCR models.
+         * Enhanced ViewSet for FCR models with audit trail support.
          * @param modelId A unique integer value identifying this FCR Model.
          * @returns void
          * @throws ApiError
@@ -14381,392 +15066,7 @@ export class ApiService {
             });
         }
         /**
-         * List historical records with enhanced OpenAPI documentation.
-         * @param dateFrom Filter records from this date onwards (inclusive)
-         * @param dateTo Filter records up to this date (inclusive)
-         * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-         *
-         * * `+` - Created
-         * * `~` - Updated
-         * * `-` - Deleted
-         * @param historyUser Filter by username of the user who made the change
-         * @param name
-         * @param ordering Which field to use when ordering the results.
-         * @param page A page number within the paginated result set.
-         * @param search A search term.
-         * @returns PaginatedFCRModelHistoryList
-         * @throws ApiError
-         */
-        public static listScenarioFcrModelHistory(
-            dateFrom?: string,
-            dateTo?: string,
-            historyType?: '+' | '-' | '~',
-            historyUser?: string,
-            name?: string,
-            ordering?: string,
-            page?: number,
-            search?: string,
-        ): CancelablePromise<PaginatedFCRModelHistoryList> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/fcr-models/',
-                query: {
-                    'date_from': dateFrom,
-                    'date_to': dateTo,
-                    'history_type': historyType,
-                    'history_user': historyUser,
-                    'name': name,
-                    'ordering': ordering,
-                    'page': page,
-                    'search': search,
-                },
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for FCRModel historical records.
-         * @param historyId A unique integer value identifying this historical FCR Model.
-         * @returns FCRModelHistory
-         * @throws ApiError
-         */
-        public static retrieveScenarioFcrModelHistoryDetail(
-            historyId: number,
-        ): CancelablePromise<FCRModelHistory> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/fcr-models/{history_id}/',
-                path: {
-                    'history_id': historyId,
-                },
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * List historical records with enhanced OpenAPI documentation.
-         * @param dateFrom Filter records from this date onwards (inclusive)
-         * @param dateTo Filter records up to this date (inclusive)
-         * @param frequency Rate application frequency
-         *
-         * * `daily` - Daily
-         * * `weekly` - Weekly
-         * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-         *
-         * * `+` - Created
-         * * `~` - Updated
-         * * `-` - Deleted
-         * @param historyUser Filter by username of the user who made the change
-         * @param name
-         * @param ordering Which field to use when ordering the results.
-         * @param page A page number within the paginated result set.
-         * @param search A search term.
-         * @returns PaginatedMortalityModelHistoryList
-         * @throws ApiError
-         */
-        public static listScenarioMortalityModelHistory(
-            dateFrom?: string,
-            dateTo?: string,
-            frequency?: 'daily' | 'weekly',
-            historyType?: '+' | '-' | '~',
-            historyUser?: string,
-            name?: string,
-            ordering?: string,
-            page?: number,
-            search?: string,
-        ): CancelablePromise<PaginatedMortalityModelHistoryList> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/mortality-models/',
-                query: {
-                    'date_from': dateFrom,
-                    'date_to': dateTo,
-                    'frequency': frequency,
-                    'history_type': historyType,
-                    'history_user': historyUser,
-                    'name': name,
-                    'ordering': ordering,
-                    'page': page,
-                    'search': search,
-                },
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for MortalityModel historical records.
-         * @param historyId A unique integer value identifying this historical Mortality Model.
-         * @returns MortalityModelHistory
-         * @throws ApiError
-         */
-        public static retrieveScenarioMortalityModelHistoryDetail(
-            historyId: number,
-        ): CancelablePromise<MortalityModelHistory> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/mortality-models/{history_id}/',
-                path: {
-                    'history_id': historyId,
-                },
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * List historical records with enhanced OpenAPI documentation.
-         * @param changeDay
-         * @param dateFrom Filter records from this date onwards (inclusive)
-         * @param dateTo Filter records up to this date (inclusive)
-         * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-         *
-         * * `+` - Created
-         * * `~` - Updated
-         * * `-` - Deleted
-         * @param historyUser Filter by username of the user who made the change
-         * @param newFcrModel
-         * @param newMortalityModel
-         * @param newTgcModel
-         * @param ordering Which field to use when ordering the results.
-         * @param page A page number within the paginated result set.
-         * @param scenario
-         * @param search A search term.
-         * @returns PaginatedScenarioModelChangeHistoryList
-         * @throws ApiError
-         */
-        public static listScenarioScenarioModelChangeHistory(
-            changeDay?: number,
-            dateFrom?: string,
-            dateTo?: string,
-            historyType?: '+' | '-' | '~',
-            historyUser?: string,
-            newFcrModel?: number,
-            newMortalityModel?: number,
-            newTgcModel?: number,
-            ordering?: string,
-            page?: number,
-            scenario?: number,
-            search?: string,
-        ): CancelablePromise<PaginatedScenarioModelChangeHistoryList> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/scenario-model-changes/',
-                query: {
-                    'change_day': changeDay,
-                    'date_from': dateFrom,
-                    'date_to': dateTo,
-                    'history_type': historyType,
-                    'history_user': historyUser,
-                    'new_fcr_model': newFcrModel,
-                    'new_mortality_model': newMortalityModel,
-                    'new_tgc_model': newTgcModel,
-                    'ordering': ordering,
-                    'page': page,
-                    'scenario': scenario,
-                    'search': search,
-                },
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for ScenarioModelChange historical records.
-         * @param historyId A unique integer value identifying this historical Scenario Model Change.
-         * @returns ScenarioModelChangeHistory
-         * @throws ApiError
-         */
-        public static retrieveScenarioScenarioModelChangeHistoryDetail(
-            historyId: number,
-        ): CancelablePromise<ScenarioModelChangeHistory> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/scenario-model-changes/{history_id}/',
-                path: {
-                    'history_id': historyId,
-                },
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * List historical records with enhanced OpenAPI documentation.
-         * @param createdBy
-         * @param dateFrom Filter records from this date onwards (inclusive)
-         * @param dateTo Filter records up to this date (inclusive)
-         * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-         *
-         * * `+` - Created
-         * * `~` - Updated
-         * * `-` - Deleted
-         * @param historyUser Filter by username of the user who made the change
-         * @param name
-         * @param ordering Which field to use when ordering the results.
-         * @param page A page number within the paginated result set.
-         * @param search A search term.
-         * @param startDate
-         * @returns PaginatedScenarioHistoryList
-         * @throws ApiError
-         */
-        public static listScenarioScenarioHistory(
-            createdBy?: number,
-            dateFrom?: string,
-            dateTo?: string,
-            historyType?: '+' | '-' | '~',
-            historyUser?: string,
-            name?: string,
-            ordering?: string,
-            page?: number,
-            search?: string,
-            startDate?: string,
-        ): CancelablePromise<PaginatedScenarioHistoryList> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/scenarios/',
-                query: {
-                    'created_by': createdBy,
-                    'date_from': dateFrom,
-                    'date_to': dateTo,
-                    'history_type': historyType,
-                    'history_user': historyUser,
-                    'name': name,
-                    'ordering': ordering,
-                    'page': page,
-                    'search': search,
-                    'start_date': startDate,
-                },
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for Scenario historical records.
-         * @param historyId A unique integer value identifying this historical Scenario.
-         * @returns ScenarioHistory
-         * @throws ApiError
-         */
-        public static retrieveScenarioScenarioHistoryDetail(
-            historyId: number,
-        ): CancelablePromise<ScenarioHistory> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/scenarios/{history_id}/',
-                path: {
-                    'history_id': historyId,
-                },
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * List historical records with enhanced OpenAPI documentation.
-         * @param dateFrom Filter records from this date onwards (inclusive)
-         * @param dateTo Filter records up to this date (inclusive)
-         * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-         *
-         * * `+` - Created
-         * * `~` - Updated
-         * * `-` - Deleted
-         * @param historyUser Filter by username of the user who made the change
-         * @param location
-         * @param name
-         * @param ordering Which field to use when ordering the results.
-         * @param page A page number within the paginated result set.
-         * @param releasePeriod
-         * @param search A search term.
-         * @returns PaginatedTGCModelHistoryList
-         * @throws ApiError
-         */
-        public static listScenarioTgcModelHistory(
-            dateFrom?: string,
-            dateTo?: string,
-            historyType?: '+' | '-' | '~',
-            historyUser?: string,
-            location?: string,
-            name?: string,
-            ordering?: string,
-            page?: number,
-            releasePeriod?: string,
-            search?: string,
-        ): CancelablePromise<PaginatedTGCModelHistoryList> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/tgc-models/',
-                query: {
-                    'date_from': dateFrom,
-                    'date_to': dateTo,
-                    'history_type': historyType,
-                    'history_user': historyUser,
-                    'location': location,
-                    'name': name,
-                    'ordering': ordering,
-                    'page': page,
-                    'release_period': releasePeriod,
-                    'search': search,
-                },
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for TGCModel historical records.
-         * @param historyId A unique integer value identifying this historical TGC Model.
-         * @returns TGCModelHistory
-         * @throws ApiError
-         */
-        public static retrieveScenarioTgcModelHistoryDetail(
-            historyId: number,
-        ): CancelablePromise<TGCModelHistory> {
-            return __request(OpenAPI, {
-                method: 'GET',
-                url: '/api/v1/scenario/history/tgc-models/{history_id}/',
-                path: {
-                    'history_id': historyId,
-                },
-                errors: {
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param frequency Rate application frequency
          *
          * * `daily` - Daily
@@ -14801,7 +15101,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param requestBody
          * @returns MortalityModel
          * @throws ApiError
@@ -14823,7 +15123,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param modelId A unique integer value identifying this Mortality Model.
          * @returns MortalityModel
          * @throws ApiError
@@ -14846,7 +15146,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param modelId A unique integer value identifying this Mortality Model.
          * @param requestBody
          * @returns MortalityModel
@@ -14874,7 +15174,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param modelId A unique integer value identifying this Mortality Model.
          * @param requestBody
          * @returns MortalityModel
@@ -14902,7 +15202,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for mortality models.
+         * Enhanced ViewSet for mortality models with audit trail support.
          * @param modelId A unique integer value identifying this Mortality Model.
          * @returns void
          * @throws ApiError
@@ -14941,7 +15241,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param createdBy
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -14979,7 +15279,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param requestBody
          * @returns Scenario
          * @throws ApiError
@@ -15001,7 +15301,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param scenarioId A unique integer value identifying this Scenario.
          * @returns Scenario
          * @throws ApiError
@@ -15024,7 +15324,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param scenarioId A unique integer value identifying this Scenario.
          * @param requestBody
          * @returns Scenario
@@ -15052,7 +15352,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param scenarioId A unique integer value identifying this Scenario.
          * @param requestBody
          * @returns Scenario
@@ -15080,7 +15380,7 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios.
+         * Enhanced ViewSet for scenarios with audit trail support.
          * @param scenarioId A unique integer value identifying this Scenario.
          * @returns void
          * @throws ApiError
@@ -15383,7 +15683,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param ordering Which field to use when ordering the results.
                          * @param page A page number within the paginated result set.
                          * @param search A search term.
@@ -15412,7 +15712,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param requestBody
                          * @returns TemperatureProfile
                          * @throws ApiError
@@ -15434,7 +15734,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param profileId A unique integer value identifying this Temperature Profile.
                          * @returns TemperatureProfile
                          * @throws ApiError
@@ -15457,7 +15757,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param profileId A unique integer value identifying this Temperature Profile.
                          * @param requestBody
                          * @returns TemperatureProfile
@@ -15485,7 +15785,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param profileId A unique integer value identifying this Temperature Profile.
                          * @param requestBody
                          * @returns TemperatureProfile
@@ -15513,7 +15813,7 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles.
+                         * ViewSet for temperature profiles with audit trail support.
                          * @param profileId A unique integer value identifying this Temperature Profile.
                          * @returns void
                          * @throws ApiError
@@ -15636,7 +15936,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param location
                                  * @param ordering Which field to use when ordering the results.
                                  * @param page A page number within the paginated result set.
@@ -15671,7 +15971,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param requestBody
                                  * @returns TGCModel
                                  * @throws ApiError
@@ -15693,7 +15993,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param modelId A unique integer value identifying this TGC Model.
                                  * @returns TGCModel
                                  * @throws ApiError
@@ -15716,7 +16016,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param modelId A unique integer value identifying this TGC Model.
                                  * @param requestBody
                                  * @returns TGCModel
@@ -15744,7 +16044,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param modelId A unique integer value identifying this TGC Model.
                                  * @param requestBody
                                  * @returns TGCModel
@@ -15772,7 +16072,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models.
+                                 * Enhanced ViewSet for TGC models with audit trail support.
                                  * @param modelId A unique integer value identifying this TGC Model.
                                  * @returns void
                                  * @throws ApiError
@@ -15839,7 +16139,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint to view and update the user's profile.
+                                 * API endpoint to view and update the user's profile with audit change reasons.
                                  *
                                  * Allows users to view and update their own profile information.
                                  * @returns UserProfile
@@ -15857,7 +16157,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint to view and update the user's profile.
+                                 * API endpoint to view and update the user's profile with audit change reasons.
                                  *
                                  * Allows users to view and update their own profile information.
                                  * @param requestBody
@@ -15881,7 +16181,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint to view and update the user's profile.
+                                 * API endpoint to view and update the user's profile with audit change reasons.
                                  *
                                  * Allows users to view and update their own profile information.
                                  * @param requestBody
@@ -16051,7 +16351,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted.
+                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
                                  *
                                  * Provides CRUD operations for users with appropriate permission checks.
                                  * @param ordering Which field to use when ordering the results.
@@ -16082,7 +16382,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted.
+                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
                                  *
                                  * Provides CRUD operations for users with appropriate permission checks.
                                  * @param requestBody
@@ -16106,7 +16406,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted.
+                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
                                  *
                                  * Provides CRUD operations for users with appropriate permission checks.
                                  * @param id A unique integer value identifying this user.
@@ -16131,7 +16431,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted.
+                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
                                  *
                                  * Provides CRUD operations for users with appropriate permission checks.
                                  * @param id A unique integer value identifying this user.
@@ -16161,7 +16461,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted.
+                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
                                  *
                                  * Provides CRUD operations for users with appropriate permission checks.
                                  * @param id A unique integer value identifying this user.
@@ -16191,7 +16491,7 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted.
+                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
                                  *
                                  * Provides CRUD operations for users with appropriate permission checks.
                                  * @param id A unique integer value identifying this user.

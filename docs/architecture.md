@@ -384,4 +384,69 @@ const calculateProjection = (baseValue: number, sliderValue: number) => {
 
 **Status:** Accepted | **Date:** 2025-09-18 | **Owner:** Full Stack Team
 
+---
+
+### **ADR: Unified API Client Configuration - Single Source of Truth**
+
+**Context:**
+The frontend has two types of API calls:
+1. **Standard CRUD** - Handled by generated ApiService (auto-generated from OpenAPI spec)
+2. **Custom Bulk/Actions** - Not in OpenAPI spec, need custom wrappers (e.g., `apiRequest()`)
+
+Both must use **identical authentication and base URL configuration** to prevent inconsistencies.
+
+**Decision:**
+All API calls (generated and custom) **MUST** use `OpenAPI.BASE` as the single source of truth for base URL configuration.
+
+**Implementation:**
+```typescript
+// lib/config.ts - Configuration happens ONCE at module load
+import { OpenAPI } from '@/api/generated';
+
+// 1. Configure generated client
+OpenAPI.BASE = import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000';
+OpenAPI.TOKEN = async () => getAuthToken();
+
+// 2. Custom apiRequest() uses the SAME config
+export const getApiUrl = (endpoint: string): string => {
+  return `${OpenAPI.BASE}${endpoint}`; // Always uses OpenAPI.BASE
+};
+```
+
+**Usage Pattern:**
+```typescript
+// ✅ PREFERRED: Use generated client (95% of cases)
+const profiles = await ApiService.apiV1ScenarioTemperatureProfilesList();
+
+// ✅ ACCEPTABLE: Use apiRequest for endpoints NOT in generated client
+// (automatically uses OpenAPI.BASE and getAuthToken())
+const result = await apiRequest("POST", "/api/v1/scenario/profiles/bulk_ranges/", data);
+
+// ❌ NEVER: Create separate fetch wrappers with different config
+const result = await fetch(`${SOME_OTHER_BASE_URL}/api/...`); // WRONG!
+```
+
+**Benefits:**
+- ✅ Single source of truth for API configuration
+- ✅ Consistent authentication across all API calls
+- ✅ If infrastructure pages work, scenario bulk endpoints will too
+- ✅ Environment changes (dev/prod) affect all API calls uniformly
+- ✅ Easy to debug - one config to check
+
+**Anti-Pattern to Avoid:**
+```typescript
+// ❌ WRONG: Using different config flags
+if (USE_DJANGO_API) {
+  return `${DJANGO_API_URL}${endpoint}`;
+}
+return endpoint; // This creates inconsistency!
+```
+
+**Rationale:**
+This prevents configuration drift where some API calls work (using OpenAPI.BASE) while others fail (using separate config flags).
+
+**Status:** Accepted | **Date:** 2025-10-15 | **Owner:** Full Stack Team
+
+---
+
 For additional architectural decisions, refer to the Architecture Decision Records (ADRs) in the `/docs/adr` directory.

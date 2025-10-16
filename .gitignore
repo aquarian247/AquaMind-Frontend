@@ -99,6 +99,9 @@ public
 # Temporary folders
 tmp/
 temp/
+# Exception: OpenAPI spec needs to be in git for CI
+!tmp/openapi/
+!tmp/openapi/openapi.yaml
 
 # Vite
 vite.config.ts.*
@@ -126,3 +129,11 @@ next_session_prompt.md
 
 # TypeScript cache
 *.tsbuildinfo
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+e2e-results.json
+e2e/artifacts/*.png
+e2e/artifacts/*.log
+e2e/artifacts/*.txt

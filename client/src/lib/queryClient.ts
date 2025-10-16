@@ -1,33 +1,48 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { API_CONFIG, getApiUrl } from "./config";
+import { API_CONFIG, getApiUrl, getAuthToken } from "./config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = res.statusText;
+    try {
+      const text = await res.text();
+      errorMessage = text || res.statusText;
+    } catch (e) {
+      console.error('[apiRequest] Failed to read error response body:', e);
+    }
+    console.error('[apiRequest] HTTP Error:', {
+      status: res.status,
+      statusText: res.statusText,
+      message: errorMessage,
+      url: res.url
+    });
+    throw new Error(`${res.status}: ${errorMessage}`);
   }
 }
 
-// Get CSRF token for Django requests
-async function getCsrfToken(): Promise<string | null> {
-  if (!API_CONFIG.USE_DJANGO_API) return null;
-  
-  const cookies = document.cookie.split(';');
-  const csrfCookie = cookies.find(cookie => 
-    cookie.trim().startsWith(API_CONFIG.CSRF_COOKIE_NAME + '=')
-  );
-  
-  if (csrfCookie) {
-    return csrfCookie.split('=')[1];
-  }
-  
-  // No CSRF cookie present and we no longer attempt to fetch it from
-  // a non-existent endpoint; simply return null so the request proceeds
-  // without a CSRF header. Authentication-protected endpoints will still
-  // be guarded by the standard auth token mechanism.
-  return null;
-}
-
+/**
+ * Centralized API request function with JWT authentication
+ * 
+ * ⚠️ IMPORTANT: Only use this for endpoints NOT in the generated ApiService!
+ * 
+ * For 95% of API calls, use the generated client:
+ *   import { ApiService } from '@/api/generated';
+ *   await ApiService.apiV1SomeEndpoint();
+ * 
+ * This function is ONLY for:
+ *   - Bulk endpoints not in OpenAPI spec
+ *   - Custom action endpoints (duplicate, run_projection, etc.)
+ * 
+ * Authentication & Configuration:
+ *   - Uses OpenAPI.BASE (same as generated client) - ensures consistency
+ *   - Uses getAuthToken() (same as generated client) - centralized auth
+ *   - If infrastructure pages work, this will work too (same config)
+ * 
+ * @param method - HTTP method (GET, POST, PUT, PATCH, DELETE)
+ * @param url - API endpoint URL (e.g., "/api/v1/scenario/temperature-profiles/bulk_date_ranges/")
+ * @param data - Request body data (will be JSON stringified)
+ * @returns Response object
+ */
 export async function apiRequest(
   method: string,
   url: string,
@@ -36,27 +51,32 @@ export async function apiRequest(
   const fullUrl = getApiUrl(url);
   const headers: Record<string, string> = {};
   
+  // Add JWT authentication token using centralized getAuthToken()
+  // Same pattern as OpenAPI.TOKEN = async () => getAuthToken()
+  const token = getAuthToken();
+  
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  
   if (data) {
     headers["Content-Type"] = "application/json";
   }
-  
-  // Add CSRF token for Django requests
-  if (API_CONFIG.USE_DJANGO_API && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
-    const csrfToken = await getCsrfToken();
-    if (csrfToken) {
-      headers[API_CONFIG.CSRF_HEADER_NAME] = csrfToken;
-    }
+
+  try {
+    const res = await fetch(fullUrl, {
+      method,
+      headers,
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    console.error('[apiRequest] Request failed:', { method, url, error });
+    throw error;
   }
-
-  const res = await fetch(fullUrl, {
-    method,
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

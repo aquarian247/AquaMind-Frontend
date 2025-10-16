@@ -8,9 +8,9 @@
 export type TemperatureReading = {
     readonly reading_id: number;
     /**
-     * Date of the temperature reading
+     * Relative day number (1-900) in the temperature profile
      */
-    reading_date: string;
+    day_number: number;
     /**
      * Temperature value in degrees Celsius (e.g., 12.5)
      */

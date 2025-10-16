@@ -904,10 +904,6 @@ export const api = {
       return ApiService.apiV1InventoryFeedsList();
     },
 
-    async getFeedStock(filters?: any) {
-      return ApiService.apiV1InventoryFeedStocksList();
-    },
-
     async getFeedingEvents(filters?: any) {
       return ApiService.apiV1InventoryFeedingEventsList();
     },

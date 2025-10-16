@@ -64,10 +64,6 @@ export type FeedingEventHistory = {
      * Feed type used
      */
     feed?: number | null;
-    /**
-     * Stock source for this feed
-     */
-    feed_stock?: number | null;
     recorded_by?: number | null;
 };
 

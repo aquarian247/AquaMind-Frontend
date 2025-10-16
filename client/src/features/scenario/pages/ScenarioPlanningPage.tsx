@@ -10,12 +10,14 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { 
   LineChart, 
   TrendingUp, 
@@ -32,6 +34,7 @@ import {
   Fish,
   Play,
   Copy,
+  Eye,
 } from "lucide-react";
 import { ScenarioCreationDialog } from "@/components/scenario/scenario-creation-dialog";
 import { ScenarioEditDialog } from "@/components/scenario/scenario-edit-dialog";
@@ -39,6 +42,8 @@ import { BatchIntegrationDialog } from "@/components/scenario/batch-integration-
 import { TgcModelCreationDialog } from "@/components/scenario/tgc-model-creation-dialog";
 import { FcrModelCreationDialog } from "@/components/scenario/fcr-model-creation-dialog";
 import { MortalityModelCreationDialog } from "@/components/scenario/mortality-model-creation-dialog";
+import { TemperatureProfileCreationDialogFull } from "@/components/scenario/temperature-profile-creation-dialog-full";
+import { BiologicalConstraintsCreationDialog } from "@/components/scenario/biological-constraints-creation-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ScenarioKPIs } from "@/features/scenario/components/ScenarioKPIs";
@@ -65,6 +70,7 @@ export default function ScenarioPlanningPage() {
   const [activeTab, setActiveTab] = useState("overview");
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   // Data & filtering hooks
   const [searchTerm, setSearchTerm] = useState("");
@@ -273,19 +279,28 @@ export default function ScenarioPlanningPage() {
                               Edit Scenario
                             </DropdownMenuItem>
                           </ScenarioEditDialog>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <DropdownMenuItem disabled>
-                                  <Copy className="h-4 w-4 mr-2" />
-                                  Duplicate
-                                </DropdownMenuItem>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Temporarily disabled for UAT. Backend action coming soon.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <DropdownMenuItem 
+                            onClick={async () => {
+                              try {
+                                const response = await apiRequest("POST", `/api/v1/scenario/scenarios/${scenario.id}/duplicate/`, {});
+                                const result = await response.json();
+                                toast({
+                                  title: "Scenario Duplicated",
+                                  description: `Created copy: ${result.name || 'New Scenario'}`,
+                                });
+                                handleSuccess();
+                              } catch (error: any) {
+                                toast({
+                                  title: "Duplication Failed",
+                                  description: error.message || "Failed to duplicate scenario",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="text-destructive"
                             onClick={() => deleteScenario.mutate(scenario.id)}
@@ -329,19 +344,29 @@ export default function ScenarioPlanningPage() {
                           View Details
                         </Button>
                         {scenario.status === 'draft' && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button size="sm" disabled>
-                                  <Play className="h-4 w-4 mr-2" />
-                                  Run Projection
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Temporarily disabled for UAT. Backend action coming soon.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <Button 
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                await apiRequest("POST", `/api/v1/scenario/scenarios/${scenario.id}/run_projection/`, {});
+                                toast({
+                                  title: "Projection Running",
+                                  description: "Calculating growth projections...",
+                                });
+                                // Refresh scenarios after projection completes
+                                setTimeout(() => handleSuccess(), 2000);
+                              } catch (error: any) {
+                                toast({
+                                  title: "Projection Failed",
+                                  description: error.message || "Failed to run projection",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                          >
+                            <Play className="h-4 w-4 mr-2" />
+                            Run Projection
+                          </Button>
                         )}
                       </div>
                       
@@ -410,28 +435,107 @@ export default function ScenarioPlanningPage() {
           </Tabs>
         </TabsContent>
 
-        {/* Temperature Tab - Placeholder */}
+        {/* Temperature Tab */}
         <TabsContent value="temperature" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Temperature Profiles</h2>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Profile
-            </Button>
+            <TemperatureProfileCreationDialogFull onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario"] })}>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Profile
+              </Button>
+            </TemperatureProfileCreationDialogFull>
           </div>
-          <div className="text-center py-8 text-muted-foreground">
-            {temperatureProfiles?.results?.length || 0} temperature profiles configured
-          </div>
+
+          {temperatureProfiles?.results && temperatureProfiles.results.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {temperatureProfiles.results.map((profile: any) => (
+                <Card key={profile.profile_id}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <Thermometer className="h-5 w-5 text-blue-600" />
+                        {profile.name}
+                      </span>
+                    </CardTitle>
+                    <CardDescription>
+                      {profile.date_range?.days || profile.readings?.length || 0} days configured
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Temperature Range:</span>
+                          <span className="font-medium">
+                            {profile.temperature_summary?.min?.toFixed(1) || 'N/A'}°C - {profile.temperature_summary?.max?.toFixed(1) || 'N/A'}°C
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Average:</span>
+                          <span className="font-medium">
+                            {profile.temperature_summary?.avg?.toFixed(1) || 'N/A'}°C
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Created:</span>
+                          <span className="font-medium">
+                            {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => setLocation(`/scenario-planning/temperature/${profile.profile_id}`)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => {
+                            toast({
+                              title: "Edit Coming Soon",
+                              description: "Temperature profile editing will be available soon",
+                            });
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Thermometer className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">No Temperature Profiles</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first temperature profile to use in TGC models
+              </p>
+            </div>
+          )}
         </TabsContent>
 
-        {/* Constraints Tab - Placeholder */}
+        {/* Constraints Tab */}
         <TabsContent value="constraints" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Biological Constraints</h2>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Constraint
-            </Button>
+            <BiologicalConstraintsCreationDialog onSuccess={() => queryClient.invalidateQueries({ queryKey: ["scenario"] })}>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Constraint
+              </Button>
+            </BiologicalConstraintsCreationDialog>
           </div>
           <div className="text-center py-8 text-muted-foreground">
             {biologicalConstraints?.results?.length || 0} constraints active
