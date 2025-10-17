@@ -467,7 +467,7 @@ const HISTORY_METHODS: Record<AppDomain, Record<string, HistoryMethodMapping>> =
         filters?.historyType,
         filters?.historyUser,
         undefined, // ordering
-        filters?.page,
+        filters?.page?.toString(),
         undefined  // search
       ),
       detail: async (id: number) => await ApiService.retrieveHealthLiceCountHistoryDetail(id)
