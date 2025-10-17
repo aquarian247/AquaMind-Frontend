@@ -69,6 +69,7 @@ import type { JournalEntryHistory } from '../models/JournalEntryHistory';
 import type { LiceCount } from '../models/LiceCount';
 import type { LiceCountHistory } from '../models/LiceCountHistory';
 import type { LiceType } from '../models/LiceType';
+import type { LiceTypeHistory } from '../models/LiceTypeHistory';
 import type { LifeCycleStage } from '../models/LifeCycleStage';
 import type { MaintenanceTask } from '../models/MaintenanceTask';
 import type { MortalityEvent } from '../models/MortalityEvent';
@@ -140,6 +141,7 @@ import type { PaginatedJournalEntryHistoryList } from '../models/PaginatedJourna
 import type { PaginatedJournalEntryList } from '../models/PaginatedJournalEntryList';
 import type { PaginatedLiceCountHistoryList } from '../models/PaginatedLiceCountHistoryList';
 import type { PaginatedLiceCountList } from '../models/PaginatedLiceCountList';
+import type { PaginatedLiceTypeHistoryList } from '../models/PaginatedLiceTypeHistoryList';
 import type { PaginatedLiceTypeList } from '../models/PaginatedLiceTypeList';
 import type { PaginatedLifeCycleStageList } from '../models/PaginatedLifeCycleStageList';
 import type { PaginatedMaintenanceTaskList } from '../models/PaginatedMaintenanceTaskList';
@@ -7758,6 +7760,7 @@ export class ApiService {
      * * `~` - Updated
      * * `-` - Deleted
      * @param historyUser Filter by username of the user who made the change
+     * @param liceType
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
      * @param search A search term.
@@ -7771,6 +7774,7 @@ export class ApiService {
         dateTo?: string,
         historyType?: '+' | '-' | '~',
         historyUser?: string,
+        liceType?: number,
         ordering?: string,
         page?: number,
         search?: string,
@@ -7785,6 +7789,7 @@ export class ApiService {
                 'date_to': dateTo,
                 'history_type': historyType,
                 'history_user': historyUser,
+                'lice_type': liceType,
                 'ordering': ordering,
                 'page': page,
                 'search': search,
@@ -7809,6 +7814,90 @@ export class ApiService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/health/history/lice-counts/{history_id}/',
+            path: {
+                'history_id': historyId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * List historical records with enhanced OpenAPI documentation.
+     * @param dateFrom Filter records from this date onwards (inclusive)
+     * @param dateTo Filter records up to this date (inclusive)
+     * @param developmentStage
+     * @param gender Gender classification of the lice.
+     *
+     * * `male` - Male
+     * * `female` - Female
+     * * `unknown` - Unknown
+     * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
+     *
+     * * `+` - Created
+     * * `~` - Updated
+     * * `-` - Deleted
+     * @param historyUser Filter by username of the user who made the change
+     * @param isActive
+     * @param ordering Which field to use when ordering the results.
+     * @param page A page number within the paginated result set.
+     * @param search A search term.
+     * @param species
+     * @returns PaginatedLiceTypeHistoryList
+     * @throws ApiError
+     */
+    public static apiV1HealthHistoryLiceTypesList(
+        dateFrom?: string,
+        dateTo?: string,
+        developmentStage?: string,
+        gender?: 'female' | 'male' | 'unknown',
+        historyType?: '+' | '-' | '~',
+        historyUser?: string,
+        isActive?: boolean,
+        ordering?: string,
+        page?: number,
+        search?: string,
+        species?: string,
+    ): CancelablePromise<PaginatedLiceTypeHistoryList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/health/history/lice-types/',
+            query: {
+                'date_from': dateFrom,
+                'date_to': dateTo,
+                'development_stage': developmentStage,
+                'gender': gender,
+                'history_type': historyType,
+                'history_user': historyUser,
+                'is_active': isActive,
+                'ordering': ordering,
+                'page': page,
+                'search': search,
+                'species': species,
+            },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * ViewSet for LiceType historical records.
+     * @param historyId A unique integer value identifying this historical Lice Type.
+     * @returns LiceTypeHistory
+     * @throws ApiError
+     */
+    public static apiV1HealthHistoryLiceTypesRetrieve(
+        historyId: number,
+    ): CancelablePromise<LiceTypeHistory> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/health/history/lice-types/{history_id}/',
             path: {
                 'history_id': historyId,
             },
