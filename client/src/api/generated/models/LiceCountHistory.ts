@@ -26,17 +26,34 @@ export type LiceCountHistory = {
     id?: number;
     count_date?: string;
     /**
-     * Number of adult female lice counted.
+     * [LEGACY] Adult female lice counted. Use lice_type_counts for new data.
      */
-    adult_female_count: number;
+    adult_female_count?: number;
     /**
-     * Number of adult male lice counted.
+     * [LEGACY] Adult male lice counted. Use lice_type_counts for new data.
      */
-    adult_male_count: number;
+    adult_male_count?: number;
     /**
-     * Number of juvenile lice counted.
+     * [LEGACY] Juvenile lice counted. Use lice_type_counts for new data.
      */
-    juvenile_count: number;
+    juvenile_count?: number;
+    /**
+     * Count for lice type. Use with lice_type field.
+     */
+    count_value?: number | null;
+    /**
+     * Method used to detect and count lice.
+     *
+     * * `automated` - Automated Detection
+     * * `manual` - Manual Visual Count
+     * * `visual` - Visual Estimation
+     * * `camera` - Camera-based Detection
+     */
+    detection_method?: 'automated' | 'manual' | 'visual' | 'camera' | '' | null;
+    /**
+     * Confidence level (0.00-1.00), where 1.00 is highest confidence.
+     */
+    confidence_level?: string | null;
     /**
      * Number of fish sampled for the count.
      */
@@ -57,5 +74,9 @@ export type LiceCountHistory = {
      * User who performed the count.
      */
     user?: number | null;
+    /**
+     * Normalized lice type classification (species, gender, development stage).
+     */
+    lice_type?: number | null;
 };
 

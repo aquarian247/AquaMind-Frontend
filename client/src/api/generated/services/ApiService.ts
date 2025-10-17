@@ -68,6 +68,7 @@ import type { JournalEntry } from '../models/JournalEntry';
 import type { JournalEntryHistory } from '../models/JournalEntryHistory';
 import type { LiceCount } from '../models/LiceCount';
 import type { LiceCountHistory } from '../models/LiceCountHistory';
+import type { LiceType } from '../models/LiceType';
 import type { LifeCycleStage } from '../models/LifeCycleStage';
 import type { MaintenanceTask } from '../models/MaintenanceTask';
 import type { MortalityEvent } from '../models/MortalityEvent';
@@ -139,6 +140,7 @@ import type { PaginatedJournalEntryHistoryList } from '../models/PaginatedJourna
 import type { PaginatedJournalEntryList } from '../models/PaginatedJournalEntryList';
 import type { PaginatedLiceCountHistoryList } from '../models/PaginatedLiceCountHistoryList';
 import type { PaginatedLiceCountList } from '../models/PaginatedLiceCountList';
+import type { PaginatedLiceTypeList } from '../models/PaginatedLiceTypeList';
 import type { PaginatedLifeCycleStageList } from '../models/PaginatedLifeCycleStageList';
 import type { PaginatedMaintenanceTaskList } from '../models/PaginatedMaintenanceTaskList';
 import type { PaginatedMortalityEventHistoryList } from '../models/PaginatedMortalityEventHistoryList';
@@ -8370,11 +8372,12 @@ export class ApiService {
     /**
      * API endpoint for managing Lice Counts.
      *
-     * Provides CRUD operations for lice counts, which track sea lice infestations
-     * in fish populations.
+     * Provides CRUD operations for lice counts, which track sea
+     * lice infestations in fish populations.
      *
-     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin is appropriate here as LiceCount
+     * has a user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param adultFemaleCount
      * @param adultFemaleCountGte
      * @param adultFemaleCountLte
@@ -8386,12 +8389,16 @@ export class ApiService {
      * @param countDate
      * @param countDateGte
      * @param countDateLte
+     * @param countValue
+     * @param countValueGte
+     * @param countValueLte
      * @param fishSampled
      * @param fishSampledGte
      * @param fishSampledLte
      * @param juvenileCount
      * @param juvenileCountGte
      * @param juvenileCountLte
+     * @param liceType
      * @param page A page number within the paginated result set.
      * @param search A search term.
      * @param user
@@ -8410,12 +8417,16 @@ export class ApiService {
         countDate?: string,
         countDateGte?: string,
         countDateLte?: string,
+        countValue?: number,
+        countValueGte?: number,
+        countValueLte?: number,
         fishSampled?: number,
         fishSampledGte?: number,
         fishSampledLte?: number,
         juvenileCount?: number,
         juvenileCountGte?: number,
         juvenileCountLte?: number,
+        liceType?: number,
         page?: number,
         search?: string,
         user?: number,
@@ -8435,12 +8446,16 @@ export class ApiService {
                 'count_date': countDate,
                 'count_date__gte': countDateGte,
                 'count_date__lte': countDateLte,
+                'count_value': countValue,
+                'count_value__gte': countValueGte,
+                'count_value__lte': countValueLte,
                 'fish_sampled': fishSampled,
                 'fish_sampled__gte': fishSampledGte,
                 'fish_sampled__lte': fishSampledLte,
                 'juvenile_count': juvenileCount,
                 'juvenile_count__gte': juvenileCountGte,
                 'juvenile_count__lte': juvenileCountLte,
+                'lice_type': liceType,
                 'page': page,
                 'search': search,
                 'user': user,
@@ -8456,11 +8471,12 @@ export class ApiService {
     /**
      * API endpoint for managing Lice Counts.
      *
-     * Provides CRUD operations for lice counts, which track sea lice infestations
-     * in fish populations.
+     * Provides CRUD operations for lice counts, which track sea
+     * lice infestations in fish populations.
      *
-     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin is appropriate here as LiceCount
+     * has a user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param requestBody
      * @returns LiceCount
      * @throws ApiError
@@ -8484,11 +8500,12 @@ export class ApiService {
     /**
      * API endpoint for managing Lice Counts.
      *
-     * Provides CRUD operations for lice counts, which track sea lice infestations
-     * in fish populations.
+     * Provides CRUD operations for lice counts, which track sea
+     * lice infestations in fish populations.
      *
-     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin is appropriate here as LiceCount
+     * has a user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param id A unique integer value identifying this lice count.
      * @returns LiceCount
      * @throws ApiError
@@ -8513,11 +8530,12 @@ export class ApiService {
     /**
      * API endpoint for managing Lice Counts.
      *
-     * Provides CRUD operations for lice counts, which track sea lice infestations
-     * in fish populations.
+     * Provides CRUD operations for lice counts, which track sea
+     * lice infestations in fish populations.
      *
-     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin is appropriate here as LiceCount
+     * has a user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param id A unique integer value identifying this lice count.
      * @param requestBody
      * @returns LiceCount
@@ -8547,11 +8565,12 @@ export class ApiService {
     /**
      * API endpoint for managing Lice Counts.
      *
-     * Provides CRUD operations for lice counts, which track sea lice infestations
-     * in fish populations.
+     * Provides CRUD operations for lice counts, which track sea
+     * lice infestations in fish populations.
      *
-     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin is appropriate here as LiceCount
+     * has a user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param id A unique integer value identifying this lice count.
      * @param requestBody
      * @returns LiceCount
@@ -8581,11 +8600,12 @@ export class ApiService {
     /**
      * API endpoint for managing Lice Counts.
      *
-     * Provides CRUD operations for lice counts, which track sea lice infestations
-     * in fish populations.
+     * Provides CRUD operations for lice counts, which track sea
+     * lice infestations in fish populations.
      *
-     * Note: UserAssignmentMixin is appropriate here as LiceCount has a user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin is appropriate here as LiceCount
+     * has a user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param id A unique integer value identifying this lice count.
      * @returns void
      * @throws ApiError
@@ -8608,11 +8628,194 @@ export class ApiService {
         });
     }
     /**
+     * Get aggregated lice summary with optional geography, area, and date filtering.
+     * @param area Filter by area ID
+     * @param endDate End date for filtering (YYYY-MM-DD)
+     * @param geography Filter by geography ID
+     * @param startDate Start date for filtering (YYYY-MM-DD)
+     * @returns any
+     * @throws ApiError
+     */
+    public static apiV1HealthLiceCountsSummaryRetrieve(
+        area?: number,
+        endDate?: string,
+        geography?: number,
+        startDate?: string,
+    ): CancelablePromise<{
+        /**
+         * Total lice counted
+         */
+        total_counts?: number;
+        /**
+         * Average lice per fish
+         */
+        average_per_fish?: number;
+        /**
+         * Total fish sampled
+         */
+        fish_sampled?: number;
+        /**
+         * Counts grouped by species
+         */
+        by_species?: Record<string, number>;
+        /**
+         * Counts by development stage
+         */
+        by_development_stage?: Record<string, number>;
+        /**
+         * Alert level by thresholds
+         */
+        alert_level?: 'good' | 'warning' | 'critical';
+    }> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/health/lice-counts/summary/',
+            query: {
+                'area': area,
+                'end_date': endDate,
+                'geography': geography,
+                'start_date': startDate,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Get lice count trends over time with weekly or monthly aggregation.
+     * @param area Filter by area ID
+     * @param endDate End date for trends (YYYY-MM-DD). Defaults to today.
+     * @param geography Filter by geography ID
+     * @param interval Interval: weekly or monthly
+     * @param startDate Start date for trends (YYYY-MM-DD). Defaults to 1 year ago.
+     * @returns any
+     * @throws ApiError
+     */
+    public static apiV1HealthLiceCountsTrendsRetrieve(
+        area?: number,
+        endDate?: string,
+        geography?: number,
+        interval?: 'monthly' | 'weekly',
+        startDate?: string,
+    ): CancelablePromise<{
+        trends?: Array<{
+            /**
+             * Week or month identifier
+             */
+            period?: string;
+            average_per_fish?: number;
+            total_counts?: number;
+            fish_sampled?: number;
+        }>;
+    }> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/health/lice-counts/trends/',
+            query: {
+                'area': area,
+                'end_date': endDate,
+                'geography': geography,
+                'interval': interval,
+                'start_date': startDate,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for Lice Type classifications (Read-Only).
+     *
+     * Provides access to normalized lice type lookup table with
+     * species, gender, and development stage classifications. This
+     * is a read-only endpoint; new lice types are managed by
+     * administrators through Django admin.
+     * @param developmentStage
+     * @param developmentStageIcontains
+     * @param gender Gender classification of the lice.
+     *
+     * * `male` - Male
+     * * `female` - Female
+     * * `unknown` - Unknown
+     * @param isActive
+     * @param page A page number within the paginated result set.
+     * @param search A search term.
+     * @param species
+     * @param speciesIcontains
+     * @returns PaginatedLiceTypeList
+     * @throws ApiError
+     */
+    public static apiV1HealthLiceTypesList(
+        developmentStage?: string,
+        developmentStageIcontains?: string,
+        gender?: 'female' | 'male' | 'unknown',
+        isActive?: boolean,
+        page?: number,
+        search?: string,
+        species?: string,
+        speciesIcontains?: string,
+    ): CancelablePromise<PaginatedLiceTypeList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/health/lice-types/',
+            query: {
+                'development_stage': developmentStage,
+                'development_stage__icontains': developmentStageIcontains,
+                'gender': gender,
+                'is_active': isActive,
+                'page': page,
+                'search': search,
+                'species': species,
+                'species__icontains': speciesIcontains,
+            },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for Lice Type classifications (Read-Only).
+     *
+     * Provides access to normalized lice type lookup table with
+     * species, gender, and development stage classifications. This
+     * is a read-only endpoint; new lice types are managed by
+     * administrators through Django admin.
+     * @param id A unique integer value identifying this Lice Type.
+     * @returns LiceType
+     * @throws ApiError
+     */
+    public static apiV1HealthLiceTypesRetrieve(
+        id: number,
+    ): CancelablePromise<LiceType> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/health/lice-types/{id}/',
+            path: {
+                'id': id,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
      * API endpoint for managing Mortality Reasons.
      *
-     * Provides CRUD operations for mortality reasons used in mortality records.
+     * Provides CRUD operations for mortality reasons used in
+     * mortality records.
      *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Uses HistoryReasonMixin to automatically capture change
+     * reasons for audit trails.
      * @param name
      * @param nameIcontains
      * @param page A page number within the paginated result set.
@@ -8646,9 +8849,11 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Reasons.
      *
-     * Provides CRUD operations for mortality reasons used in mortality records.
+     * Provides CRUD operations for mortality reasons used in
+     * mortality records.
      *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Uses HistoryReasonMixin to automatically capture change
+     * reasons for audit trails.
      * @param requestBody
      * @returns MortalityReason
      * @throws ApiError
@@ -8672,9 +8877,11 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Reasons.
      *
-     * Provides CRUD operations for mortality reasons used in mortality records.
+     * Provides CRUD operations for mortality reasons used in
+     * mortality records.
      *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Uses HistoryReasonMixin to automatically capture change
+     * reasons for audit trails.
      * @param id A unique integer value identifying this mortality reason.
      * @returns MortalityReason
      * @throws ApiError
@@ -8699,9 +8906,11 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Reasons.
      *
-     * Provides CRUD operations for mortality reasons used in mortality records.
+     * Provides CRUD operations for mortality reasons used in
+     * mortality records.
      *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Uses HistoryReasonMixin to automatically capture change
+     * reasons for audit trails.
      * @param id A unique integer value identifying this mortality reason.
      * @param requestBody
      * @returns MortalityReason
@@ -8731,9 +8940,11 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Reasons.
      *
-     * Provides CRUD operations for mortality reasons used in mortality records.
+     * Provides CRUD operations for mortality reasons used in
+     * mortality records.
      *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Uses HistoryReasonMixin to automatically capture change
+     * reasons for audit trails.
      * @param id A unique integer value identifying this mortality reason.
      * @param requestBody
      * @returns MortalityReason
@@ -8763,9 +8974,11 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Reasons.
      *
-     * Provides CRUD operations for mortality reasons used in mortality records.
+     * Provides CRUD operations for mortality reasons used in
+     * mortality records.
      *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Uses HistoryReasonMixin to automatically capture change
+     * reasons for audit trails.
      * @param id A unique integer value identifying this mortality reason.
      * @returns void
      * @throws ApiError
@@ -8790,11 +9003,12 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Records.
      *
-     * Provides CRUD operations for mortality records, which track fish deaths
-     * and their causes.
+     * Provides CRUD operations for mortality records, which track
+     * fish deaths and their causes.
      *
-     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin removed as MortalityRecord has
+     * no user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param batch
      * @param container
      * @param count
@@ -8849,11 +9063,12 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Records.
      *
-     * Provides CRUD operations for mortality records, which track fish deaths
-     * and their causes.
+     * Provides CRUD operations for mortality records, which track
+     * fish deaths and their causes.
      *
-     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin removed as MortalityRecord has
+     * no user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param requestBody
      * @returns MortalityRecord
      * @throws ApiError
@@ -8877,11 +9092,12 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Records.
      *
-     * Provides CRUD operations for mortality records, which track fish deaths
-     * and their causes.
+     * Provides CRUD operations for mortality records, which track
+     * fish deaths and their causes.
      *
-     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin removed as MortalityRecord has
+     * no user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality record.
      * @returns MortalityRecord
      * @throws ApiError
@@ -8906,11 +9122,12 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Records.
      *
-     * Provides CRUD operations for mortality records, which track fish deaths
-     * and their causes.
+     * Provides CRUD operations for mortality records, which track
+     * fish deaths and their causes.
      *
-     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin removed as MortalityRecord has
+     * no user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality record.
      * @param requestBody
      * @returns MortalityRecord
@@ -8940,11 +9157,12 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Records.
      *
-     * Provides CRUD operations for mortality records, which track fish deaths
-     * and their causes.
+     * Provides CRUD operations for mortality records, which track
+     * fish deaths and their causes.
      *
-     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin removed as MortalityRecord has
+     * no user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality record.
      * @param requestBody
      * @returns MortalityRecord
@@ -8974,11 +9192,12 @@ export class ApiService {
     /**
      * API endpoint for managing Mortality Records.
      *
-     * Provides CRUD operations for mortality records, which track fish deaths
-     * and their causes.
+     * Provides CRUD operations for mortality records, which track
+     * fish deaths and their causes.
      *
-     * Note: UserAssignmentMixin removed as MortalityRecord has no user field.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * Note: UserAssignmentMixin removed as MortalityRecord has
+     * no user field. Uses HistoryReasonMixin to automatically
+     * capture change reasons for audit trails.
      * @param id A unique integer value identifying this mortality record.
      * @returns void
      * @throws ApiError

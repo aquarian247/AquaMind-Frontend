@@ -84,6 +84,7 @@ export type { JournalEntry } from './models/JournalEntry';
 export type { JournalEntryHistory } from './models/JournalEntryHistory';
 export type { LiceCount } from './models/LiceCount';
 export type { LiceCountHistory } from './models/LiceCountHistory';
+export type { LiceType } from './models/LiceType';
 export type { LifeCycleStage } from './models/LifeCycleStage';
 export type { MaintenanceTask } from './models/MaintenanceTask';
 export type { MortalityEvent } from './models/MortalityEvent';
@@ -159,6 +160,7 @@ export type { PaginatedJournalEntryHistoryList } from './models/PaginatedJournal
 export type { PaginatedJournalEntryList } from './models/PaginatedJournalEntryList';
 export type { PaginatedLiceCountHistoryList } from './models/PaginatedLiceCountHistoryList';
 export type { PaginatedLiceCountList } from './models/PaginatedLiceCountList';
+export type { PaginatedLiceTypeList } from './models/PaginatedLiceTypeList';
 export type { PaginatedLifeCycleStageList } from './models/PaginatedLifeCycleStageList';
 export type { PaginatedMaintenanceTaskList } from './models/PaginatedMaintenanceTaskList';
 export type { PaginatedMortalityEventHistoryList } from './models/PaginatedMortalityEventHistoryList';

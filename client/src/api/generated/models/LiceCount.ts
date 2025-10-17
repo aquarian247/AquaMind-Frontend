@@ -2,11 +2,14 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { LiceType } from './LiceType';
 /**
- * Serializer for the LiceCount model.
+ * Serializer for LiceCount model.
  *
- * Uses HealthBaseSerializer for consistent error handling and field management.
- * Records sea lice counts for monitoring parasite loads in fish populations.
+ * Records sea lice counts for monitoring parasite loads.
+ *
+ * Supports legacy format (adult_female_count, adult_male_count,
+ * juvenile_count) and new normalized format (lice_type + count_value).
  */
 export type LiceCount = {
     readonly id: number;
@@ -27,17 +30,42 @@ export type LiceCount = {
      */
     readonly count_date: string;
     /**
-     * Number of adult female lice counted across all sampled fish.
+     * [LEGACY] Adult female lice count. Use lice_type + count_value for new records.
      */
-    adult_female_count: number;
+    adult_female_count?: number;
     /**
-     * Number of adult male lice counted across all sampled fish.
+     * [LEGACY] Adult male lice count. Use lice_type + count_value for new records.
      */
-    adult_male_count: number;
+    adult_male_count?: number;
     /**
-     * Number of juvenile lice counted across all sampled fish.
+     * [LEGACY] Juvenile lice count. Use lice_type + count_value for new records.
      */
-    juvenile_count: number;
+    juvenile_count?: number;
+    /**
+     * Normalized lice type (species + gender + development stage).
+     */
+    lice_type?: number | null;
+    /**
+     * Detailed lice type classification information.
+     */
+    readonly lice_type_details: LiceType;
+    /**
+     * Count for the specific lice type.
+     */
+    count_value?: number | null;
+    /**
+     * Method used to detect and count lice.
+     *
+     * * `automated` - Automated Detection
+     * * `manual` - Manual Visual Count
+     * * `visual` - Visual Estimation
+     * * `camera` - Camera-based Detection
+     */
+    detection_method?: 'automated' | 'manual' | 'visual' | 'camera' | null;
+    /**
+     * Confidence level (0.00-1.00, where 1.00 is highest confidence).
+     */
+    confidence_level?: string | null;
     /**
      * Number of fish examined during this lice count.
      */
@@ -50,5 +78,9 @@ export type LiceCount = {
      * Calculated average number of lice per fish (total count / fish sampled).
      */
     readonly average_per_fish: number;
+    /**
+     * Total lice count regardless of tracking format.
+     */
+    readonly total_count: number;
 };
 
