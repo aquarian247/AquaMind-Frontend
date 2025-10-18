@@ -210,7 +210,7 @@ describe('BatchContainerView', () => {
     renderWithQueryClient(<BatchContainerView selectedBatch={mockBatch} />);
 
     // Verify empty state message for no assignments
-    const emptyMessage = await screen.findByText(/No active container assignments for this batch/i);
+    const emptyMessage = await screen.findByText(/No Active Containers/i);
     expect(emptyMessage).toBeInTheDocument();
   });
 });
