@@ -24,9 +24,10 @@ import { FeedEfficiencyTab } from "./FeedEfficiencyTab";
 interface BatchFeedHistoryViewProps {
   batchId: number;
   batchName: string;
+  batchStartDate?: string; // Add start_date to props
 }
 
-export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryViewProps) {
+export function BatchFeedHistoryView({ batchId, batchName, batchStartDate }: BatchFeedHistoryViewProps) {
   const [activeTab, setActiveTab] = useState("events");
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [periodFilter, setPeriodFilter] = useState("30");
@@ -38,9 +39,9 @@ export function BatchFeedHistoryView({ batchId, batchName }: BatchFeedHistoryVie
   // Calculate date range based on period filter
   const currentDateRange = getDateRangeFromPeriod(periodFilter, dateRange);
 
-  // Calculate days since batch start for accurate daily average
-  const batchStartDate = new Date('2023-05-08'); // From batch data
-  const daysSinceStart = getDaysSinceStart(batchStartDate);
+  // Calculate days since batch start for accurate daily average (from props)
+  const startDate = batchStartDate ? new Date(batchStartDate) : new Date();
+  const daysSinceStart = getDaysSinceStart(startDate);
 
   // Fetch all feed history data via custom hook (with server-side filtering)
   const {

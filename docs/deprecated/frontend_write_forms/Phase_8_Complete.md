@@ -442,3 +442,5 @@ The AquaMind frontend now has **complete CRUD capabilities** across all applicat
 
 
 
+
+

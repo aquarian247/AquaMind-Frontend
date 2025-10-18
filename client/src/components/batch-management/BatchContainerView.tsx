@@ -74,31 +74,18 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
         return { assignments: allAssignments, pages: page - 1 };
       };
 
-      // Try active assignments first
+      // Always fetch ONLY active assignments for the Containers tab
+      // Historical assignments belong in the History tab
       const { assignments: activeAssignments, pages: activePages } = await fetchAllPages(true);
-      
-      // If no active assignments, fetch all assignments (including inactive)
-      if (activeAssignments.length === 0) {
-        console.log(`📦 No active assignments found for batch ${selectedBatch.id}, fetching ALL assignments...`);
-        const { assignments: allAssignments, pages: allPages } = await fetchAllPages(undefined);
-        
-        console.log(`📦 Fetched ${allAssignments.length} total container assignments (including inactive) for batch ${selectedBatch.id}`, {
-          batchId: selectedBatch.id,
-          batchNumber: selectedBatch.batch_number,
-          totalAssignments: allAssignments.length,
-          pagesFetched: allPages,
-          sampleAssignment: allAssignments[0],
-        });
-        return allAssignments;
-      }
       
       console.log(`📦 Fetched ${activeAssignments.length} active container assignments for batch ${selectedBatch.id}`, {
         batchId: selectedBatch.id,
         batchNumber: selectedBatch.batch_number,
-        totalAssignments: activeAssignments.length,
+        activeAssignments: activeAssignments.length,
         pagesFetched: activePages,
         sampleAssignment: activeAssignments[0],
       });
+      
       return activeAssignments;
     },
     enabled: !!selectedBatch?.id,
@@ -139,8 +126,14 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
           <Card className="col-span-full">
             <CardContent className="p-8 text-center">
               <MapPin className="h-8 w-8 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                No active container assignments for this batch.
+              <h3 className="text-lg font-medium mb-2">No Active Containers</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                This batch has no active container assignments.
+                {selectedBatch?.status === 'COMPLETED' && (
+                  <span className="block mt-3 text-sm">
+                    This batch has been <strong>completed</strong>. View the <strong>History</strong> tab to see all past container assignments and lifecycle progression.
+                  </span>
+                )}
               </p>
             </CardContent>
           </Card>

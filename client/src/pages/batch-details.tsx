@@ -73,9 +73,15 @@ export default function BatchDetails() {
     queryFn: async () => (await api.batch.getLifecycleStages()).results,
   });
 
+  // Fetch ONLY active assignments for the Containers tab
+  // Historical assignments are shown in the History tab
   const { data: assignments } = useQuery({
-    queryKey: ["batch/assignments", batchId],
-    queryFn: async () => (await api.batch.getAssignments(batchId)).results,
+    queryKey: ["batch/assignments/active", batchId],
+    queryFn: async () => {
+      const response = await api.batch.getAssignments(batchId);
+      // Filter to only active assignments
+      return (response.results || []).filter((a: any) => a.is_active === true);
+    },
   });
 
   const { data: transfers } = useQuery({
@@ -89,11 +95,23 @@ export default function BatchDetails() {
     queryFn: async () => {
       try {
         const response = await ApiService.apiV1BatchGrowthSamplesList(
-          batchId,
+          batchId,   // assignmentBatch (filters by assignment__batch)
           undefined, // assignmentBatchIn
+          undefined, // avgLengthMax
+          undefined, // avgLengthMin
+          undefined, // avgWeightMax
+          undefined, // avgWeightMin
+          undefined, // batchNumber
+          undefined, // conditionFactorMax
+          undefined, // conditionFactorMin
+          undefined, // containerName
           undefined, // ordering
           undefined, // page
           undefined, // sampleDate
+          undefined, // sampleDateAfter
+          undefined, // sampleDateBefore
+          undefined, // sampleSizeMax
+          undefined, // sampleSizeMin
           undefined  // search
         );
         return response.results || [];
@@ -155,6 +173,25 @@ export default function BatchDetails() {
         const latest = feedingSummaries[feedingSummaries.length - 1];
         return latest.weighted_avg_fcr ? parseFloat(latest.weighted_avg_fcr) : null;
       })()
+    : null;
+
+  // ✅ Fetch performance metrics for accurate survival rate
+  const { data: performanceMetrics } = useQuery<any>({
+    queryKey: ["batch/performance-metrics", batchId],
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1BatchBatchesPerformanceMetricsRetrieve(batchId) as any;
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch performance metrics:", error);
+        return null;
+      }
+    },
+  });
+
+  // Calculate survival rate from mortality rate (complementary relationship)
+  const survivalRate = performanceMetrics?.mortality_metrics?.mortality_rate 
+    ? 100 - performanceMetrics.mortality_metrics.mortality_rate
     : null;
 
   if (isLoading) {
@@ -252,10 +289,14 @@ export default function BatchDetails() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              100.0%
+              {survivalRate !== null 
+                ? `${survivalRate.toFixed(2)}%`
+                : formatFallback(null)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Initial population not available
+              {survivalRate !== null
+                ? `Calculated from mortality data`
+                : 'Mortality data not available'}
             </p>
           </CardContent>
         </Card>
@@ -522,28 +563,23 @@ export default function BatchDetails() {
                             </div>
                           </div>
                           <div>
-                            <span className="text-muted-foreground">Environment</span>
-                            <Badge variant="outline" className="border-green-500 text-green-700">
-                              optimal
+                            <span className="text-muted-foreground">Lifecycle Stage</span>
+                            <Badge variant="outline">
+                              {(assignment as any).lifecycle_stage_name || lifecycleStageName}
                             </Badge>
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Capacity Utilization</span>
-                            <span>0%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div className="bg-blue-600 h-2 rounded-full transition-all" style={{ width: '0%' }}></div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
                           <span className="flex items-center">
                             <Calendar className="h-3 w-3 mr-1" />
-                            Inspected {new Date().toLocaleDateString()}
+                            Assigned {assignment.assignment_date ? new Date(assignment.assignment_date).toLocaleDateString() : 'Unknown'}
                           </span>
+                          {assignment.departure_date && (
+                            <span className="flex items-center">
+                              Departed {new Date(assignment.departure_date).toLocaleDateString()}
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex space-x-2">
@@ -599,7 +635,11 @@ export default function BatchDetails() {
         </TabsContent>
 
         <TabsContent value="feed-history" className="space-y-6">
-          <BatchFeedHistoryView batchId={batch.id} batchName={batch.batch_number} />
+          <BatchFeedHistoryView 
+            batchId={batch.id} 
+            batchName={batch.batch_number} 
+            batchStartDate={batch.start_date}
+          />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
@@ -607,7 +647,12 @@ export default function BatchDetails() {
         </TabsContent>
 
         <TabsContent value="traceability">
-          <BatchTraceabilityView batchId={batch.id} batchName={batch.batch_number} />
+          <BatchTraceabilityView 
+            batchId={batch.id} 
+            batchName={batch.batch_number}
+            stages={stages || []}
+            containers={containers || []}
+          />
         </TabsContent>
       </Tabs>
     </div>
