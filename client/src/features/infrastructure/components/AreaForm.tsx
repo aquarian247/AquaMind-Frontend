@@ -48,7 +48,7 @@ export function AreaForm({ area, onSuccess, onCancel }: AreaFormProps) {
     resolver: zodResolver(areaSchema),
     defaultValues: {
       name: area?.name || '',
-      geography: area?.geography || ('' as any),
+      geography: area?.geography ?? undefined,
       latitude: area?.latitude || '',
       longitude: area?.longitude || '',
       max_biomass: area?.max_biomass || '',

@@ -151,7 +151,7 @@ export const mortalityEventSchema = z.object({
   container: z.coerce.number().int().positive('Container is required'),
   event_date: dateString,
   mortality_count: z.coerce.number().int().positive('Mortality count must be positive'),
-  mortality_reason: z.coerce.number().int().positive().optional(),
+  mortality_reason: z.enum(['DISEASE', 'HANDLING', 'PREDATION', 'ENVIRONMENTAL', 'UNKNOWN', 'OTHER']).optional(),
   avg_weight_g: optionalDecimalString({
     min: 0,
     decimalPlaces: 2,

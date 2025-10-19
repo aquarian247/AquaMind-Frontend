@@ -253,12 +253,12 @@ describe('Batch Schemas', () => {
         container: '1',
         event_date: '2024-10-15',
         mortality_count: '10',
-        mortality_reason: '1',
+        mortality_reason: 'DISEASE',
         avg_weight_g: '150.00',
         notes: 'Natural causes',
       })
       expect(result.mortality_count).toBe(10)
-      expect(result.mortality_reason).toBe(1)
+      expect(result.mortality_reason).toBe('DISEASE')
     })
 
     it('handles optional reason and weight fields', () => {

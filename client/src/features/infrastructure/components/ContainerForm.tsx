@@ -71,17 +71,12 @@ export function ContainerForm({ container, onSuccess, onCancel }: ContainerFormP
   const { data: hallsData, isLoading: hallsLoading } = useHalls()
   const { data: areasData, isLoading: areasLoading } = useAreas()
 
-  // Watch hall and area fields for mutual exclusion
+  // Watch hall and area fields for mutual exclusion (used for UI state only)
   const hallValue = form.watch('hall')
   const areaValue = form.watch('area')
 
-  // Implement mutual exclusion: if one is set, clear the other
-  useEffect(() => {
-    if (hallValue && areaValue) {
-      // Both are set, clear area (hall was selected last)
-      form.setValue('area', null)
-    }
-  }, [hallValue, areaValue, form])
+  // Note: Mutual exclusion is handled in onValueChange handlers (lines 224, 267)
+  // No useEffect needed - each Select clears the other field when selected
 
   const onSubmit = async (values: ContainerFormValues) => {
     try {

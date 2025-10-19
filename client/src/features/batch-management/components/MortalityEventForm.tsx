@@ -64,11 +64,11 @@ export function MortalityEventForm({
   const form = useForm<MortalityEventFormValues>({
     resolver: zodResolver(mortalityEventSchema),
     defaultValues: {
-      batch: mortalityEvent?.batch || ('' as any),
-      container: ('' as any), // Not used by API, but required by schema
+      batch: mortalityEvent?.batch ?? undefined,
+      container: undefined, // Not used by API, but required by schema
       event_date: mortalityEvent?.event_date || new Date().toISOString().split('T')[0],
-      mortality_count: mortalityEvent?.count || ('' as any),
-      mortality_reason: ('' as any),
+      mortality_count: mortalityEvent?.count ?? undefined,
+      mortality_reason: mortalityEvent?.cause || 'UNKNOWN',
       avg_weight_g: '',
       notes: mortalityEvent?.description || '',
     },
@@ -87,7 +87,7 @@ export function MortalityEventForm({
         batch: values.batch,
         event_date: values.event_date,
         count: values.mortality_count,
-        cause: form.watch('notes')?.includes('DISEASE') ? 'DISEASE' : 'OTHER', // Simplified mapping
+        cause: values.mortality_reason || 'UNKNOWN',
         description: values.notes,
         biomass_kg: '0.00', // Would need calculation
       }
@@ -158,7 +158,7 @@ export function MortalityEventForm({
               >
                 <Select
                   onValueChange={(value) =>
-                    field.onChange(value ? parseInt(value, 10) : ('' as any))
+                    field.onChange(value ? parseInt(value, 10) : undefined)
                   }
                   value={field.value?.toString() || ''}
                   disabled={batchesLoading}
@@ -234,6 +234,43 @@ export function MortalityEventForm({
                 </FormControl>
               </WriteGate>
               <FormDescription>Number of fish mortalities</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="mortality_reason"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel htmlFor="mortality-cause">Cause</FormLabel>
+              <WriteGate
+                fallback={
+                  <div className="text-sm text-muted-foreground">
+                    {field.value || 'N/A'}
+                  </div>
+                }
+              >
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value || ''}
+                >
+                  <FormControl>
+                    <SelectTrigger id="mortality-cause" aria-label="Mortality Cause">
+                      <SelectValue placeholder="Select cause" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {mortalityCauseEnum.map((cause) => (
+                      <SelectItem key={cause} value={cause}>
+                        {cause}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </WriteGate>
+              <FormDescription>Primary cause of mortality</FormDescription>
               <FormMessage />
             </FormItem>
           )}

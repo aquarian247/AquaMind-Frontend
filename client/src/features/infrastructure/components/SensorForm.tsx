@@ -58,7 +58,7 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
     defaultValues: {
       name: sensor?.name || '',
       sensor_type: sensor?.sensor_type || 'TEMPERATURE',
-      container: sensor?.container || ('' as any),
+      container: sensor?.container ?? undefined,
       serial_number: sensor?.serial_number || '',
       manufacturer: sensor?.manufacturer || '',
       installation_date: sensor?.installation_date || '',
@@ -353,7 +353,7 @@ export function SensorForm({ sensor, onSuccess, onCancel }: SensorFormProps) {
                 </div>
               }>
                 <Select
-                  onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : ('' as any))}
+                  onValueChange={(value) => field.onChange(value ? parseInt(value, 10) : undefined)}
                   value={field.value?.toString() || ''}
                   disabled={containersLoading}
                 >

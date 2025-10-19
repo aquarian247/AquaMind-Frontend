@@ -102,9 +102,12 @@ export function LifecycleStageForm({
   const onSubmit = async (values: LifeCycleStageFormValues) => {
     try {
       // Client-side validation: Check for duplicate order for this species
-      if (!isEditMode && selectedSpecies && values.order) {
+      if (selectedSpecies && values.order) {
         const duplicateOrder = existingStagesData?.results?.find(
-          (stage) => stage.species === Number(selectedSpecies) && stage.order === values.order
+          (stage) => 
+            stage.species === Number(selectedSpecies) && 
+            stage.order === values.order &&
+            stage.id !== lifecycleStage?.id  // Exclude current record in edit mode
         )
         
         if (duplicateOrder) {
