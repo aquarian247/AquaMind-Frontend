@@ -237,3 +237,5 @@ After fixes:
 ✅ Survival rate shows real data (or "Not Available" if can't calculate)  
 ✅ Clean separation: Containers = current, History = all time
 
+
+

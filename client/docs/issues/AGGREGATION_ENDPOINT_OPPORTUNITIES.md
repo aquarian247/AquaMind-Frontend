@@ -270,3 +270,5 @@ const { data: recentMortalityEvents } = useQuery({
 
 **Should I implement this optimization now?** It will reduce load time from 20 seconds to <1 second! 🚀
 
+
+

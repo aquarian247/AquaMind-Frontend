@@ -517,5 +517,94 @@ const canViewExecutiveDashboard = user?.role in ['ceo', 'cfo', 'executive'];
 
 ---
 
+## Optional Follow-Up Tasks
+
+### Task 11 (Optional): Batch Management Analytics Optimization
+**Scope:** Replace client-side aggregation with server-side aggregation endpoints  
+**Priority:** ⚡ High Impact, Low Effort (Immediate Win)  
+**Type:** Performance Optimization (Frontend Only)
+
+**Current Problem:**
+- Batch History tab fetches 690 growth samples (~35 paginated API calls)
+- Fetches 5720 mortality events (~286 paginated API calls)
+- Total: ~376 API calls, ~20 second load time
+
+**Solution:**
+- Use `/api/v1/batch/batches/{id}/growth_analysis/` (1 call, replaces 35)
+- Use `/api/v1/batch/batches/{id}/performance_metrics/` (1 call, replaces 286)
+
+**Impact:**
+- 🚀 Load time: 20s → <1s (95% faster)
+- 📉 API calls: 376 → 2 (99% reduction)
+- 💾 Browser memory: 90% reduction
+- ✅ No backend changes required
+
+**Files to Modify:**
+- `client/src/hooks/useBatchAnalyticsData.ts`
+- `client/src/hooks/use-analytics-data.ts`
+- `client/src/components/batch-management/BatchAnalyticsView.tsx`
+
+**Estimated Effort:** 2-3 hours
+
+---
+
+### Task 12 (Optional): Geography-Level Growth & Mortality KPIs
+**Scope:** Enable real TGC, SGR, Mortality data in Executive Dashboard  
+**Priority:** 🎯 Medium Impact, Requires Backend Work  
+**Type:** Feature Enhancement (Backend + Frontend)
+
+**Current State:**
+- Executive Dashboard shows "N/A" for TGC, SGR, Feed This Week, Mortality metrics
+- These metrics exist per-batch but need geography-level aggregation
+
+**Solution:**
+Create new backend endpoint:
+```
+GET /api/v1/batch/batches/geography-summary/
+  ?geography={id}
+  &start_date={date}
+  &end_date={date}
+```
+
+Returns:
+```json
+{
+  "geography_id": 1,
+  "growth_metrics": {
+    "avg_tgc": 0.42,
+    "avg_sgr": 1.8,
+    "avg_growth_rate": 2.5
+  },
+  "mortality_metrics": {
+    "total_count": 50000,
+    "avg_mortality_rate": 12.5,
+    "by_cause": [...]
+  },
+  "feed_metrics": {
+    "total_feed_kg": 250000,
+    "avg_fcr": 1.15
+  }
+}
+```
+
+**Backend Work:**
+- Create geography-level aggregation endpoint (following aggregation playbook)
+- Aggregate data across all batches in geography
+- Add filters: geography, start_date, end_date
+- Write tests
+- Update OpenAPI spec
+
+**Frontend Work:**
+- Add `useGeographyPerformanceMetrics` hook
+- Update `OverviewTab` to use real metrics
+- Replace N/A placeholders with actual data
+- Add tests
+
+**Estimated Effort:** 4-6 hours (3h backend, 1-2h frontend)
+
+**See:** Backend GitHub issue (to be created)
+
+---
+
 **Plan Ready for Execution**
 

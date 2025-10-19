@@ -23,6 +23,7 @@ import EnvironmentalManagementPage from "@/features/environmental/pages/Environm
 import UserManagementPage from "@/features/users/pages/UserManagementPage";
 import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModelManagementPage";
 import BroodstockManagementPage from "@/features/broodstock/pages/BroodstockManagementPage";
+import ExecutiveDashboardPage from "@/features/executive/pages/ExecutiveDashboardPage";
 import InfrastructureStations from "@/pages/infrastructure-stations";
 import AreaDetail from "@/pages/area-detail";
 import StationDetail from "@/pages/station-detail";
@@ -93,6 +94,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Dashboard />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/executive">
+        <ProtectedRoute>
+          <AppLayout>
+            <ExecutiveDashboardPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

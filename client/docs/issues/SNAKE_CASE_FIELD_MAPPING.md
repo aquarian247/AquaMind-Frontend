@@ -174,3 +174,5 @@ Console logs now show:
 
 **Refresh browser now - History tab should be fully functional!** 🚀
 
+
+
