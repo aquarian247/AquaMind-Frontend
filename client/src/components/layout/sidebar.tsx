@@ -14,6 +14,12 @@ const navigationItems = [
     path: "/",
   },
   {
+    id: 16,
+    label: "Executive Dashboard",
+    icon: "fas fa-chart-pie",
+    path: "/executive",
+  },
+  {
     id: 2,
     label: "Monitoring",
     icon: "fas fa-heart",
