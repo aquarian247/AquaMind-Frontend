@@ -98,9 +98,12 @@ export function CreateWorkflowWizard({
   const form = useForm<WorkflowFormData>({
     resolver: zodResolver(workflowFormSchema),
     defaultValues: {
-      batch: batchId,
+      batch: batchId || undefined,
       workflow_type: 'LIFECYCLE_TRANSITION',
+      source_lifecycle_stage: undefined,
+      dest_lifecycle_stage: undefined,
       planned_start_date: new Date(),
+      planned_completion_date: undefined,
       notes: '',
     },
   });
@@ -134,7 +137,9 @@ export function CreateWorkflowWizard({
         notes: data.notes || '',
       };
 
-      await createWorkflow.mutateAsync(payload);
+      console.log('Creating workflow with payload:', payload);
+      const result = await createWorkflow.mutateAsync(payload);
+      console.log('Workflow created:', result);
 
       toast({
         title: 'Workflow Created',
@@ -146,10 +151,22 @@ export function CreateWorkflowWizard({
       form.reset();
       onSuccess?.();
     } catch (error) {
+      console.error('Workflow creation error:', error);
+      
+      // Extract detailed error message
+      let errorMessage = 'Failed to create workflow';
+      if (error && typeof error === 'object') {
+        const apiError = error as any;
+        if (apiError.body) {
+          errorMessage = JSON.stringify(apiError.body);
+        } else if (apiError.message) {
+          errorMessage = apiError.message;
+        }
+      }
+      
       toast({
-        title: 'Error',
-        description:
-          error instanceof Error ? error.message : 'Failed to create workflow',
+        title: 'Error Creating Workflow',
+        description: errorMessage,
         variant: 'destructive',
       });
     }
@@ -196,7 +213,7 @@ export function CreateWorkflowWizard({
                     <FormLabel>Batch *</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value?.toString() || undefined}
+                      value={field.value?.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -359,7 +376,7 @@ export function CreateWorkflowWizard({
                   <FormLabel>Source Lifecycle Stage *</FormLabel>
                   <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
-                    value={field.value?.toString() || undefined}
+                    value={field.value?.toString()}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -389,7 +406,7 @@ export function CreateWorkflowWizard({
                     <FormLabel>Destination Lifecycle Stage *</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value?.toString() || undefined}
+                      value={field.value?.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
