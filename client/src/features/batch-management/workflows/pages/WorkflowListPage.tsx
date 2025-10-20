@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import {
   ArrowRightLeft,
   Calendar,
@@ -38,7 +38,7 @@ import {
 } from '../utils';
 
 export function WorkflowListPage() {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const [filters, setFilters] = useState<WorkflowFilters>({});
   
   const { data, isLoading, error } = useWorkflows(filters);

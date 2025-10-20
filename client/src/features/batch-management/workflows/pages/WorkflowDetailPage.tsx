@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react';
-import { useParams, useNavigate } from 'wouter';
+import { useParams, useLocation } from 'wouter';
 import {
   ArrowLeft,
   ArrowRightLeft,
@@ -51,7 +51,7 @@ import {
 
 export function WorkflowDetailPage() {
   const params = useParams();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const workflowId = params.id ? parseInt(params.id) : undefined;
 
   const { data: workflow, isLoading, error } = useWorkflow(workflowId);
