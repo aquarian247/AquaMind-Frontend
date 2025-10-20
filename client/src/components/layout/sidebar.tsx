@@ -44,6 +44,12 @@ const navigationItems = [
     path: "/batch-management",
   },
   {
+    id: 17,
+    label: "Transfer Workflows",
+    icon: "fas fa-exchange-alt",
+    path: "/transfer-workflows",
+  },
+  {
     id: 6,
     label: "Health",
     icon: "fas fa-heart",

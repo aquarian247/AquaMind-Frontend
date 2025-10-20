@@ -1,0 +1,274 @@
+/**
+ * Workflow List Page - Shows all transfer workflows with filtering.
+ * 
+ * Features:
+ * - Filterable table of workflows
+ * - Status badges
+ * - Progress indicators
+ * - Navigation to detail page
+ */
+
+import { useState } from 'react';
+import { useNavigate } from 'wouter';
+import {
+  ArrowRightLeft,
+  Calendar,
+  CheckCircle,
+  FileText,
+  Loader2,
+  Plus,
+  XCircle,
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+import { useWorkflows } from '../api';
+import type { WorkflowFilters } from '../api';
+import {
+  formatDate,
+  formatPercentage,
+  getWorkflowStatusConfig,
+  type WorkflowStatus,
+} from '../utils';
+
+export function WorkflowListPage() {
+  const navigate = useNavigate();
+  const [filters, setFilters] = useState<WorkflowFilters>({});
+  
+  const { data, isLoading, error } = useWorkflows(filters);
+
+  const updateFilter = (key: keyof WorkflowFilters, value: any) => {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value || undefined,
+    }));
+  };
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Transfer Workflows</h1>
+          <p className="text-muted-foreground">
+            Manage multi-step batch transfer operations
+          </p>
+        </div>
+        <Button onClick={() => navigate('/batches')}>
+          <FileText className="mr-2 h-4 w-4" />
+          View Batches
+        </Button>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select
+                value={filters.status || ''}
+                onValueChange={(v) => updateFilter('status', v)}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="DRAFT">Draft</SelectItem>
+                  <SelectItem value="PLANNED">Planned</SelectItem>
+                  <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="workflow_type">Workflow Type</Label>
+              <Select
+                value={filters.workflow_type || ''}
+                onValueChange={(v) => updateFilter('workflow_type', v)}
+              >
+                <SelectTrigger id="workflow_type">
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="LIFECYCLE_TRANSITION">
+                    Lifecycle Transition
+                  </SelectItem>
+                  <SelectItem value="CONTAINER_REDISTRIBUTION">
+                    Container Redistribution
+                  </SelectItem>
+                  <SelectItem value="EMERGENCY_CASCADE">
+                    Emergency Cascade
+                  </SelectItem>
+                  <SelectItem value="PARTIAL_HARVEST">
+                    Partial Harvest
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="batch">Batch ID</Label>
+              <Input
+                id="batch"
+                type="number"
+                placeholder="Filter by batch..."
+                value={filters.batch || ''}
+                onChange={(e) => updateFilter('batch', e.target.value ? parseInt(e.target.value) : undefined)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Workflows
+            {data?.count !== undefined && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                ({data.count} total)
+              </span>
+            )}
+          </CardTitle>
+          <CardDescription>
+            Click any workflow to view details and execute actions
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : error ? (
+            <div className="text-center p-12">
+              <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <p className="text-lg font-semibold">Failed to load workflows</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {error instanceof Error ? error.message : 'Unknown error'}
+              </p>
+            </div>
+          ) : !data?.results?.length ? (
+            <div className="text-center p-12">
+              <ArrowRightLeft className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-lg font-semibold">No workflows found</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Create a transfer workflow to get started
+              </p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Workflow #</TableHead>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Progress</TableHead>
+                  <TableHead>Started</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.results.map((workflow) => (
+                  <TableRow
+                    key={workflow.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate(`/transfer-workflows/${workflow.id}`)}
+                  >
+                    <TableCell className="font-medium">
+                      {workflow.workflow_number}
+                      {workflow.is_intercompany && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          IC
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>{workflow.batch_number}</TableCell>
+                    <TableCell className="text-sm">
+                      {workflow.workflow_type_display}
+                    </TableCell>
+                    <TableCell>
+                      <StatusBadge status={workflow.status} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1 min-w-[200px]">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            {workflow.actions_completed} / {workflow.total_actions_planned}
+                          </span>
+                          <span className="font-medium">
+                            {formatPercentage(workflow.completion_percentage)}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={parseFloat(workflow.completion_percentage)} 
+                          className="h-2"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {formatDate(workflow.actual_start_date || workflow.planned_start_date)}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/transfer-workflows/${workflow.id}`);
+                        }}
+                      >
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ============================================================================
+// StatusBadge Component (inline for now, can extract to shared later)
+// ============================================================================
+
+function StatusBadge({ status }: { status?: WorkflowStatus }) {
+  const config = getWorkflowStatusConfig(status);
+  
+  const icons = {
+    DRAFT: FileText,
+    PLANNED: Calendar,
+    IN_PROGRESS: Loader2,
+    COMPLETED: CheckCircle,
+    CANCELLED: XCircle,
+  };
+  
+  const Icon = status ? icons[status] : FileText;
+  
+  return (
+    <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
+      <Icon className="h-3 w-3" />
+      {config.label}
+    </Badge>
+  );
+}
+

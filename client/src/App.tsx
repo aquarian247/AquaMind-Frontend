@@ -40,6 +40,8 @@ import MortalityReporting from "@/pages/mortality-reporting";
 import BatchManagement from "@/pages/batch-management";
 import BatchDetails from "@/pages/batch-details";
 import BatchSetupPage from "@/features/batch-management/pages/BatchSetupPage";
+import { WorkflowListPage } from "@/features/batch-management/workflows/pages/WorkflowListPage";
+import { WorkflowDetailPage } from "@/features/batch-management/workflows/pages/WorkflowDetailPage";
 import Health from "@/pages/health";
 import Broodstock from "@/pages/broodstock";
 import BroodstockPrograms from "@/pages/broodstock-programs";
@@ -270,6 +272,24 @@ function Router() {
             <BatchDetails />
           </AppLayout>
         </ProtectedRoute>
+      </Route>
+      
+      <Route path="/transfer-workflows">
+        <ProtectedRoute>
+          <AppLayout>
+            <WorkflowListPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/transfer-workflows/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <WorkflowDetailPage />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
       </Route>
       
       <Route path="/health">
