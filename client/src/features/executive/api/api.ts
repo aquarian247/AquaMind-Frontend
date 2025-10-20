@@ -71,7 +71,8 @@ export function useExecutiveSummary(
 
       // Calculate derived metrics from API response
       const totalBiomassKg = batchSummary.active_biomass_kg || null;
-      const totalPopulation = batchSummary.count || null; // count = number of assignments
+      const totalPopulation = batchSummary.total_population || null; // Total fish count across all assignments
+      const assignmentCount = batchSummary.count || null; // Number of container assignments
       const averageWeightG = calculateAverageWeight(totalBiomassKg, totalPopulation);
 
       // Lice data (using average_per_fish and development stage breakdown)
@@ -123,7 +124,7 @@ export function useExecutiveSummary(
 
         // Infrastructure (limited data from current API)
         total_containers: totalContainers,
-        active_batches: batchSummary.count || null, // Use count as proxy for active batches
+        active_batches: assignmentCount, // Number of active container assignments
         capacity_utilization_percentage: capacityUtilization,
 
         // Freshwater Releases (placeholder)
@@ -188,7 +189,7 @@ export function useFacilitySummaries(
             ]);
 
             const biomassKg = batchSummary.active_biomass_kg || null;
-            const population = batchSummary.count || null;
+            const population = batchSummary.total_population || null; // Total fish count
             const averageWeightG = calculateAverageWeight(biomassKg, population);
 
             const liceAvgPerFish = liceSummary.average_per_fish || null;

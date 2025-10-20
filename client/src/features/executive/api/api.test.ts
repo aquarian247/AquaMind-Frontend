@@ -56,7 +56,8 @@ describe('useExecutiveSummary', () => {
 
     vi.mocked(ApiService.batchContainerAssignmentsSummary).mockResolvedValue({
       active_biomass_kg: 50000,
-      count: 500000,
+      count: 25,  // 25 container assignments
+      total_population: 500000,  // 500k fish
     } as any);
 
     vi.mocked(ApiService.apiV1HealthLiceCountsSummaryRetrieve).mockResolvedValue({
@@ -85,7 +86,8 @@ describe('useExecutiveSummary', () => {
   it('should fetch global summary when geography is "global"', async () => {
     vi.mocked(ApiService.batchContainerAssignmentsSummary).mockResolvedValue({
       active_biomass_kg: 150000,
-      count: 1500000,
+      count: 75,  // 75 container assignments
+      total_population: 1500000,  // 1.5M fish
     } as any);
 
     vi.mocked(ApiService.apiV1HealthLiceCountsSummaryRetrieve).mockResolvedValue({
@@ -130,6 +132,7 @@ describe('useExecutiveSummary', () => {
     vi.mocked(ApiService.batchContainerAssignmentsSummary).mockResolvedValue({
       active_biomass_kg: null,
       count: null,
+      total_population: null,
     } as any);
 
     vi.mocked(ApiService.apiV1HealthLiceCountsSummaryRetrieve).mockResolvedValue({
@@ -164,11 +167,13 @@ describe('useFacilitySummaries', () => {
     vi.mocked(ApiService.batchContainerAssignmentsSummary)
       .mockResolvedValueOnce({
         active_biomass_kg: 25000,
-        count: 250000,
+        count: 15,  // 15 assignments
+        total_population: 250000,  // 250k fish
       } as any)
       .mockResolvedValueOnce({
         active_biomass_kg: 30000,
-        count: 300000,
+        count: 18,  // 18 assignments
+        total_population: 300000,  // 300k fish
       } as any);
 
     vi.mocked(ApiService.apiV1HealthLiceCountsSummaryRetrieve)
@@ -224,7 +229,8 @@ describe('useFacilitySummaries', () => {
     vi.mocked(ApiService.batchContainerAssignmentsSummary)
       .mockResolvedValueOnce({
         active_biomass_kg: 25000,
-        count: 250000,
+        count: 15,
+        total_population: 250000,
       } as any)
       .mockRejectedValueOnce(new Error('Fetch failed'));
 

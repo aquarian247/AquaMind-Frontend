@@ -37,7 +37,7 @@ export function useContainerAssignmentsSummary(filters?: {
   hall?: number;
   containerType?: string;
   isActive?: boolean;
-}): UseQueryResult<{ active_biomass_kg: number; count: number }, Error> {
+}): UseQueryResult<{ active_biomass_kg: number; count: number; total_population: number }, Error> {
   return useQuery({
     queryKey: ["batch", "container-assignments-summary", filters],
     queryFn: async () => {
