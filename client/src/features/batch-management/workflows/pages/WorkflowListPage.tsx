@@ -28,6 +28,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+import { ApiService } from '@/api/generated';
 import { useWorkflows } from '../api';
 import type { WorkflowFilters } from '../api';
 import {
@@ -36,12 +37,19 @@ import {
   getWorkflowStatusConfig,
   type WorkflowStatus,
 } from '../utils';
+import { useQuery } from '@tanstack/react-query';
 
 export function WorkflowListPage() {
   const [, navigate] = useLocation();
   const [filters, setFilters] = useState<WorkflowFilters>({});
   
   const { data, isLoading, error } = useWorkflows(filters);
+  
+  // Fetch batches for dropdown
+  const { data: batchesData } = useQuery({
+    queryKey: ['batches'],
+    queryFn: () => ApiService.apiV1BatchBatchesList(),
+  });
 
   const updateFilter = (key: keyof WorkflowFilters, value: any) => {
     setFilters((prev) => ({
@@ -76,14 +84,14 @@ export function WorkflowListPage() {
             <div>
               <Label htmlFor="status">Status</Label>
               <Select
-                value={filters.status || ''}
-                onValueChange={(v) => updateFilter('status', v)}
+                value={filters.status || 'ALL'}
+                onValueChange={(v) => updateFilter('status', v === 'ALL' ? undefined : v)}
               >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="All statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="ALL">All Statuses</SelectItem>
                   <SelectItem value="DRAFT">Draft</SelectItem>
                   <SelectItem value="PLANNED">Planned</SelectItem>
                   <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
@@ -96,14 +104,14 @@ export function WorkflowListPage() {
             <div>
               <Label htmlFor="workflow_type">Workflow Type</Label>
               <Select
-                value={filters.workflow_type || ''}
-                onValueChange={(v) => updateFilter('workflow_type', v)}
+                value={filters.workflow_type || 'ALL'}
+                onValueChange={(v) => updateFilter('workflow_type', v === 'ALL' ? undefined : v)}
               >
                 <SelectTrigger id="workflow_type">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="ALL">All Types</SelectItem>
                   <SelectItem value="LIFECYCLE_TRANSITION">
                     Lifecycle Transition
                   </SelectItem>
@@ -121,14 +129,23 @@ export function WorkflowListPage() {
             </div>
 
             <div>
-              <Label htmlFor="batch">Batch ID</Label>
-              <Input
-                id="batch"
-                type="number"
-                placeholder="Filter by batch..."
-                value={filters.batch || ''}
-                onChange={(e) => updateFilter('batch', e.target.value ? parseInt(e.target.value) : undefined)}
-              />
+              <Label htmlFor="batch">Batch</Label>
+              <Select
+                value={filters.batch?.toString() || 'ALL'}
+                onValueChange={(v) => updateFilter('batch', v === 'ALL' ? undefined : parseInt(v))}
+              >
+                <SelectTrigger id="batch">
+                  <SelectValue placeholder="All batches" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Batches</SelectItem>
+                  {batchesData?.results?.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id.toString()}>
+                      {batch.batch_number} - {batch.species_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>

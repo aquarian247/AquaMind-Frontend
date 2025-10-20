@@ -13,6 +13,7 @@ import { BatchTraceabilityView } from "../components/batch-management/BatchTrace
 import { BatchHealthView } from "../components/batch-management/BatchHealthView";
 import { BatchFeedHistoryView } from "../components/batch-management/BatchFeedHistoryView";
 import { BatchAnalyticsView } from "../components/batch-management/BatchAnalyticsView";
+import { BatchWorkflowsTab } from "../features/batch-management/workflows/components/BatchWorkflowsTab";
 import { api } from "../lib/api";
 import { ApiService } from "@/api/generated";
 import { formatFallback, formatCount } from "@/lib/formatFallback";
@@ -329,9 +330,10 @@ export default function BatchDetails() {
             </Select>
           </div>
         ) : (
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="containers">Containers</TabsTrigger>
+            <TabsTrigger value="transfers">Transfers</TabsTrigger>
             <TabsTrigger value="health">Health</TabsTrigger>
             <TabsTrigger value="feed-history">Feed History</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -628,6 +630,10 @@ export default function BatchDetails() {
               </Card>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="transfers" className="space-y-6">
+          <BatchWorkflowsTab batchId={batch.id} batchNumber={batch.batch_number} />
         </TabsContent>
 
         <TabsContent value="health" className="space-y-6">
