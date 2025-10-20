@@ -38,6 +38,7 @@ import {
   type WorkflowStatus,
 } from '../utils';
 import { useQuery } from '@tanstack/react-query';
+import { CreateWorkflowWizard } from '../components/CreateWorkflowWizard';
 
 export function WorkflowListPage() {
   const [, navigate] = useLocation();
@@ -68,10 +69,18 @@ export function WorkflowListPage() {
             Manage multi-step batch transfer operations
           </p>
         </div>
-        <Button onClick={() => navigate('/batches')}>
-          <FileText className="mr-2 h-4 w-4" />
-          View Batches
-        </Button>
+        <div className="flex gap-2">
+          <CreateWorkflowWizard>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Workflow
+            </Button>
+          </CreateWorkflowWizard>
+          <Button variant="outline" onClick={() => navigate('/batches')}>
+            <FileText className="mr-2 h-4 w-4" />
+            View Batches
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

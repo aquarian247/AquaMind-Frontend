@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 import { useWorkflows } from '../api';
 import { formatDate, formatPercentage, getWorkflowStatusConfig, type WorkflowStatus } from '../utils';
+import { CreateWorkflowWizard } from './CreateWorkflowWizard';
 
 interface BatchWorkflowsTabProps {
   batchId: number;
@@ -40,10 +41,12 @@ export function BatchWorkflowsTab({ batchId, batchNumber }: BatchWorkflowsTabPro
                 Multi-step transfer operations for {batchNumber}
               </CardDescription>
             </div>
-            <Button onClick={() => navigate('/transfer-workflows')} disabled>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Workflow
-            </Button>
+            <CreateWorkflowWizard batchId={batchId}>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Workflow
+              </Button>
+            </CreateWorkflowWizard>
           </div>
         </CardHeader>
         <CardContent>
@@ -56,11 +59,14 @@ export function BatchWorkflowsTab({ batchId, batchNumber }: BatchWorkflowsTabPro
               <ArrowRightLeft className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-lg font-semibold mb-2">No Transfer Workflows</p>
               <p className="text-sm text-muted-foreground mb-4">
-                This batch has no transfer workflows yet.
+                Create a transfer workflow to get started.
               </p>
-              <p className="text-xs text-muted-foreground">
-                Note: Transfer workflow creation wizard coming soon. For now, use the Transfer Workflows page in the sidebar.
-              </p>
+              <CreateWorkflowWizard batchId={batchId}>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create First Workflow
+                </Button>
+              </CreateWorkflowWizard>
             </div>
           ) : (
             <Table>
