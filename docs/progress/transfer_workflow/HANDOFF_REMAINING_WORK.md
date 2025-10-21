@@ -74,6 +74,85 @@ The Transfer Workflow Finance Integration is **operationally functional** for vi
 
 ## 🚧 Missing Features (Priority Order)
 
+### 0. Harvest Event Recording (SEPARATE FEATURE - HIGH PRIORITY)
+
+**Purpose**: Record harvest events (Farming → Processing/Export)
+
+**Context**:
+Harvest is **NOT a workflow** - it's a single operational event. Most batches in the database have been harvested but there's no UI to record harvest events.
+
+**Business Impact**:
+- Second type of intercompany transaction (Farming → Harvest subsidiary)
+- Required for complete financial reporting
+- Regulatory compliance (traceability)
+- Revenue recognition
+
+**What's Needed**:
+
+```tsx
+// Component: RecordHarvestDialog.tsx
+// Location: client/src/features/harvest/ (NEW feature folder)
+// Pattern: Simple form (like Execute Action), not wizard
+
+Form Fields:
+1. Basic Information:
+   - Event date
+   - Batch (dropdown)
+   - Source container/ring (dropdown)
+   - Destination facility (dropdown or text)
+   - Document reference (weigh-out sheet ID)
+
+2. Harvest Lots (Multi-row):
+   - Product Grade (Superior, Standard, Below Grade)
+   - Live weight (kg)
+   - Gutted weight (kg) - optional
+   - Unit count (fish)
+   - [+ Add Lot] button
+
+3. Waste/By-Products (Multi-row):
+   - Category (bloodwater, trimmings, offal)
+   - Weight (kg)
+   - [+ Add Waste] button
+
+4. Notes
+
+Submit Creates:
+- HarvestEvent record
+- HarvestLot records (per grade)
+- HarvestWaste records
+- IntercompanyTransaction (if Farming → Harvest subsidiary)
+  * Uses grade-based pricing policy
+  * Amount = Σ(lot.weight_kg × policy.price_per_kg)
+  * State: PENDING
+```
+
+**Backend Status**:
+- ✅ Models exist (`HarvestEvent`, `HarvestLot`, `HarvestWaste`)
+- ✅ API exists (`/api/v1/harvest/harvest-events/`)
+- ✅ Polymorphic transactions support HarvestEvent source
+- ✅ Grade-based pricing policies exist
+- ⏳ Need to seed grade-based pricing policies (currently only lifecycle-based)
+
+**Frontend Status**:
+- ❌ No UI exists
+- ❌ No feature folder
+- ❌ No API hooks
+
+**Effort**: 8-10 hours
+**Priority**: HIGH (blocks complete finance testing)
+**Users**: Farming Managers, Harvest Operators
+**Deadline**: Before UAT
+
+**Integration Points**:
+- Add "Record Harvest" button to batch detail page (Adult stage only)
+- Add "Harvest" tab to batch detail page (show harvest history)
+- Finance approval page shows both transfer AND harvest transactions
+- NAV export includes both transaction types
+
+**Reference Design**: See `aquamind/docs/design/finance_harvest_design_spec.md`
+
+---
+
 ### 1. Add Actions Form (HIGH PRIORITY)
 
 **Purpose**: Populate DRAFT workflows with container-to-container movement plans
@@ -468,23 +547,31 @@ POST /api/v1/finance/intercompany-transactions/{id}/approve/
 
 ### **CRITICAL PATH** (Must Have for Production)
 
+**Priority 0: Harvest Event Recording** (SEPARATE FEATURE)
+- **Effort**: 8-10 hours
+- **Blocks**: Second type of finance transaction (Farming → Harvest)
+- **Users**: Farming Managers, Harvest Operators
+- **Deadline**: Before production deployment
+- **Note**: This is NOT part of transfer workflows, but critical for complete finance integration
+
 **Priority 1: Add Actions Form**
 - **Effort**: 6-8 hours
-- **Blocks**: Planning new workflows
+- **Blocks**: Planning new prospective workflows
 - **Users**: Freshwater Managers
 - **Deadline**: Before production deployment
 
 **Priority 2: Plan Workflow Button**
 - **Effort**: 1 hour
-- **Blocks**: Workflow execution
+- **Blocks**: Workflow execution flow
 - **Users**: Freshwater Managers
 - **Deadline**: Same as Priority 1
 
-**Priority 3: Data Generation - Sea Transfer**
-- **Effort**: 4-6 hours
-- **Blocks**: Finance transaction testing
-- **Users**: System testing
-- **Deadline**: Before UAT
+**Priority 3: Grade-Based Pricing Policies** (Backend)
+- **Effort**: 2-3 hours
+- **Blocks**: Harvest finance transactions
+- **Users**: System (for harvest events)
+- **Task**: Create seed command similar to `seed_smolt_policies`
+- **Deadline**: Before Priority 0
 
 ### **IMPORTANT** (Needed for Full Logistics Integration)
 
