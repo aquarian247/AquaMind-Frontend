@@ -37,16 +37,40 @@ export interface WorkflowFilters {
 export function useWorkflows(filters?: WorkflowFilters) {
   return useQuery({
     queryKey: ['transfer-workflows', filters],
-    queryFn: () => ApiService.apiV1BatchTransferWorkflowsList({
-      status: filters?.status,
-      workflowType: filters?.workflow_type,
-      batch: filters?.batch,
-      isIntercompany: filters?.is_intercompany,
-      dateFrom: filters?.date_from,
-      dateTo: filters?.date_to,
-      page: filters?.page,
-      pageSize: filters?.page_size,
-    }),
+    queryFn: async () => {
+      console.log('useWorkflows: Fetching with filters:', filters);
+      
+      // Generated API uses positional parameters, not object
+      const result = await ApiService.apiV1BatchTransferWorkflowsList(
+        undefined, // actualStartAfter
+        undefined, // actualStartBefore
+        filters?.batch, // batch
+        undefined, // batchNumber
+        undefined, // completedBy
+        undefined, // completionMax
+        undefined, // completionMin
+        undefined, // destLifecycleStage
+        undefined, // destSubsidiary
+        undefined, // initiatedBy
+        filters?.is_intercompany, // isIntercompany
+        undefined, // ordering
+        filters?.page, // page
+        undefined, // plannedStartAfter
+        undefined, // plannedStartBefore
+        undefined, // search
+        undefined, // sourceLifecycleStage
+        undefined, // sourceSubsidiary
+        filters?.status, // status
+        undefined, // statusIn
+        filters?.workflow_type, // workflowType
+        undefined, // workflowTypeIn
+      );
+      
+      console.log('useWorkflows: API returned', result.count, 'workflows for batch', filters?.batch);
+      return result;
+    },
+    // Force refetch on mount to avoid stale cache
+    staleTime: 0,
   });
 }
 

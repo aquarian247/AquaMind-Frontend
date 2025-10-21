@@ -28,6 +28,9 @@ export function BatchWorkflowsTab({ batchId, batchNumber }: BatchWorkflowsTabPro
   const { data, isLoading } = useWorkflows({ batch: batchId });
 
   const workflows = data?.results || [];
+  
+  // Debug logging
+  console.log(`BatchWorkflowsTab: batchId=${batchId}, workflows.length=${workflows.length}`);
 
   return (
     <div className="space-y-6">
