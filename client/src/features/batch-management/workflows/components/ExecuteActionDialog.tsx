@@ -17,6 +17,7 @@ import {
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -77,9 +78,9 @@ export function ExecuteActionDialog({
         data: {
           mortality_during_transfer: data.mortality_during_transfer,
           transfer_method: data.transfer_method,
-          water_temp_c: data.water_temp_c || null,
-          oxygen_level: data.oxygen_level || null,
-          execution_duration_minutes: data.execution_duration_minutes || null,
+          water_temp_c: data.water_temp_c || undefined,
+          oxygen_level: data.oxygen_level || undefined,
+          execution_duration_minutes: data.execution_duration_minutes || undefined,
           notes: data.notes || '',
         },
       });

@@ -63,7 +63,7 @@ export function FinanceSummaryCard({
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Status</p>
-                <Badge variant="warning" className="text-xs">
+                <Badge variant="secondary" className="text-xs text-amber-600">
                   <Clock className="h-3 w-3 mr-1" />
                   Pending Approval
                 </Badge>

@@ -352,6 +352,72 @@ POST /api/v1/batch/transfer-actions/{id}/rollback/
 
 ---
 
+## 🔄 Legacy System Cleanup
+
+### Old Batch Transfer Form (batch-setup page)
+
+**Location**: http://localhost:5001/batch-setup → "Batch Transfer" card
+
+**What It Does**:
+- Simple form for single container-to-container transfer
+- Calls: `POST /api/v1/batch/transfers/` (OLD endpoint)
+- Uses: `BatchTransfer` model (legacy)
+- Updates: Source assignment population
+- Creates: Single transfer record
+- **Does NOT**: Create workflows, detect intercompany, create finance transactions
+
+**Status**: ⚠️ **LEGACY - Should be deprecated**
+
+**Backend Code** (`apps/batch/models/transfer.py`):
+```python
+class BatchTransfer(models.Model):
+    # Simple transfer model
+    # On save():
+    #   - Reduces source_assignment.population_count
+    #   - Sets is_active=False if depleted
+    #   - No workflow created
+    #   - No finance transaction
+```
+
+**Issue**: This creates transfers that:
+- ❌ Don't appear in new Transfer Workflows UI
+- ❌ Don't trigger finance transactions
+- ❌ Don't support multi-day operations
+- ❌ Don't have progress tracking
+
+**Recommendation**:
+
+**Option A - Hide Legacy Form** (Quick - 10 min):
+```tsx
+// BatchSetupPage.tsx
+// Remove 'transfer' from entities array
+// Or change to navigate to /transfer-workflows
+```
+
+**Option B - Add Deprecation Warning** (Safe - 30 min):
+```tsx
+<Alert variant="warning">
+  ⚠️ Legacy Form - Use Transfer Workflows for new transfers
+  <Button onClick={() => navigate('/transfer-workflows')}>
+    Go to Transfer Workflows
+  </Button>
+</Alert>
+```
+
+**Option C - Migration Script** (Complete - 8-12 hours):
+```python
+# scripts/migrate_legacy_transfers.py
+# Convert all batch_batchtransfer → workflows
+# Mark as workflow_type='LEGACY_CONVERSION'
+# Delete old records after verification
+```
+
+**Priority**: LOW (doesn't block production, but creates confusion)
+
+**Action Required**: Document in handoff, implement in future session
+
+---
+
 ## 🔄 Data Generation Gaps
 
 ### Current Limitation: No Actual Sea Transfers

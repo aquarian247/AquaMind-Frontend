@@ -245,10 +245,10 @@ export function WorkflowDetailPage() {
                       <ActionStatusBadge status={action.status as ActionStatus} />
                     </TableCell>
                     <TableCell className="text-sm">
-                      {action.source_assignment_info?.container_name || `#${action.source_assignment}`}
+                      {(action as any).source_assignment_info?.container_name || `#${action.source_assignment}`}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {action.dest_assignment_info?.container_name || `#${action.dest_assignment}`}
+                      {(action as any).dest_assignment_info?.container_name || `#${action.dest_assignment}`}
                     </TableCell>
                     <TableCell className="text-sm">
                       {formatCount(action.transferred_count)}

@@ -23,13 +23,13 @@ export const WORKFLOW_STATUS_CONFIG = {
   },
   IN_PROGRESS: {
     label: 'In Progress',
-    variant: 'warning' as const,
+    variant: 'default' as const,
     color: 'text-amber-600',
     bgColor: 'bg-amber-100',
   },
   COMPLETED: {
     label: 'Completed',
-    variant: 'success' as const,
+    variant: 'default' as const,
     color: 'text-green-600',
     bgColor: 'bg-green-100',
   },
@@ -49,12 +49,12 @@ export const ACTION_STATUS_CONFIG = {
   },
   IN_PROGRESS: {
     label: 'In Progress',
-    variant: 'warning' as const,
+    variant: 'default' as const,
     color: 'text-amber-600',
   },
   COMPLETED: {
     label: 'Completed',
-    variant: 'success' as const,
+    variant: 'default' as const,
     color: 'text-green-600',
   },
   FAILED: {

@@ -129,16 +129,16 @@ export function CreateWorkflowWizard({
         batch: data.batch,
         workflow_type: data.workflow_type,
         source_lifecycle_stage: data.source_lifecycle_stage,
-        dest_lifecycle_stage: data.dest_lifecycle_stage || null,
+        dest_lifecycle_stage: data.dest_lifecycle_stage || undefined,
         planned_start_date: format(data.planned_start_date, 'yyyy-MM-dd'),
         planned_completion_date: data.planned_completion_date
           ? format(data.planned_completion_date, 'yyyy-MM-dd')
-          : null,
+          : undefined,
         notes: data.notes || '',
       };
 
       console.log('Creating workflow with payload:', payload);
-      const result = await createWorkflow.mutateAsync(payload);
+      const result = await createWorkflow.mutateAsync(payload as any);
       console.log('Workflow created:', result);
 
       toast({

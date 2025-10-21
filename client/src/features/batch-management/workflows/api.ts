@@ -60,9 +60,9 @@ export function useWorkflows(filters?: WorkflowFilters) {
         undefined, // search
         undefined, // sourceLifecycleStage
         undefined, // sourceSubsidiary
-        filters?.status, // status
+        filters?.status as 'DRAFT' | 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | undefined, // status
         undefined, // statusIn
-        filters?.workflow_type, // workflowType
+        filters?.workflow_type as 'LIFECYCLE_TRANSITION' | 'CONTAINER_REDISTRIBUTION' | 'EMERGENCY_CASCADE' | 'PARTIAL_HARVEST' | undefined, // workflowType
         undefined, // workflowTypeIn
       );
       
@@ -140,7 +140,7 @@ export function useCancelWorkflow() {
 
   return useMutation({
     mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
-      ApiService.apiV1BatchTransferWorkflowsCancelCreate(id, { cancellation_reason: reason }),
+      ApiService.apiV1BatchTransferWorkflowsCancelCreate(id, { reason: reason || '' }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['transfer-workflow', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['transfer-workflows'] });
@@ -196,12 +196,29 @@ export interface ActionFilters {
 export function useActions(filters?: ActionFilters) {
   return useQuery({
     queryKey: ['transfer-actions', filters],
-    queryFn: () => ApiService.apiV1BatchTransferActionsList({
-      workflow: filters?.workflow,
-      status: filters?.status,
-      page: filters?.page,
-      pageSize: filters?.page_size,
-    }),
+    queryFn: () => ApiService.apiV1BatchTransferActionsList(
+      undefined, // biomassMax (1)
+      undefined, // biomassMin (2)
+      undefined, // destAssignment (3)
+      undefined, // destContainer (4)
+      undefined, // executedBy (5)
+      undefined, // executionDateAfter (6)
+      undefined, // executionDateBefore (7)
+      undefined, // ordering (8)
+      filters?.page, // page (9)
+      undefined, // plannedDateAfter (10)
+      undefined, // plannedDateBefore (11)
+      undefined, // search (12)
+      undefined, // sourceAssignment (13)
+      undefined, // sourceContainer (14)
+      filters?.status as 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'SKIPPED' | undefined, // status (15)
+      undefined, // statusIn (16)
+      undefined, // transferMethod (17)
+      undefined, // transferMethodIn (18)
+      undefined, // transferredCountMax (19)
+      undefined, // transferredCountMin (20)
+      filters?.workflow, // workflow (21)
+    ),
   });
 }
 
@@ -262,7 +279,7 @@ export function useRollbackAction() {
 
   return useMutation({
     mutationFn: ({ id, reason }: { id: number; reason?: string }) =>
-      ApiService.apiV1BatchTransferActionsRollbackCreate(id, { notes: reason }),
+      ApiService.apiV1BatchTransferActionsRollbackCreate(id, { reason: reason || '' }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['transfer-action', variables.id] });
       queryClient.invalidateQueries({ queryKey: ['transfer-actions'] });
@@ -290,30 +307,33 @@ export function useRetryAction() {
 // Finance Integration Hooks
 // ============================================================================
 
-/**
- * Get pending intercompany transactions for approval.
- */
-export function usePendingApprovals() {
-  return useQuery({
-    queryKey: ['pending-approvals'],
-    queryFn: () => ApiService.apiV1FinanceIntercompanyTransactionsPendingApprovalsList(),
-  });
-}
+// TODO: These endpoints exist in backend but not yet in generated OpenAPI client
+// Uncomment when OpenAPI spec is regenerated
 
-/**
- * Approve intercompany transaction.
- */
-export function useApproveTransaction() {
-  const queryClient = useQueryClient();
+// /**
+//  * Get pending intercompany transactions for approval.
+//  */
+// export function usePendingApprovals() {
+//   return useQuery({
+//     queryKey: ['pending-approvals'],
+//     queryFn: () => ApiService.apiV1FinanceIntercompanyTransactionsPendingApprovalsList(),
+//   });
+// }
 
-  return useMutation({
-    mutationFn: (txId: number) =>
-      ApiService.apiV1FinanceIntercompanyTransactionsApproveCreate(txId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
-      queryClient.invalidateQueries({ queryKey: ['transfer-workflow'] });
-      queryClient.invalidateQueries({ queryKey: ['intercompany-transactions'] });
-    },
-  });
-}
+// /**
+//  * Approve intercompany transaction.
+//  */
+// export function useApproveTransaction() {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: (txId: number) =>
+//       ApiService.apiV1FinanceIntercompanyTransactionsApproveCreate(txId),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ['pending-approvals'] });
+//       queryClient.invalidateQueries({ queryKey: ['transfer-workflow'] });
+//       queryClient.invalidateQueries({ queryKey: ['intercompany-transactions'] });
+//     },
+//   });
+// }
 
