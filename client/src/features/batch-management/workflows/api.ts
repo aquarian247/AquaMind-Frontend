@@ -303,6 +303,26 @@ export function useRetryAction() {
   });
 }
 
+/**
+ * Create transfer action.
+ */
+export function useCreateAction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: TransferActionDetail) =>
+      ApiService.apiV1BatchTransferActionsCreate(data),
+    onSuccess: (_, variables) => {
+      // Invalidate actions
+      queryClient.invalidateQueries({ queryKey: ['transfer-actions'] });
+      
+      // Invalidate the workflow (total_actions_planned updated)
+      queryClient.invalidateQueries({ queryKey: ['transfer-workflow'] });
+      queryClient.invalidateQueries({ queryKey: ['transfer-workflows'] });
+    },
+  });
+}
+
 // ============================================================================
 // Finance Integration Hooks
 // ============================================================================

@@ -73,16 +73,20 @@ export function ExecuteActionDialog({
 
   const handleExecute = async (data: ExecuteActionFormData) => {
     try {
+      const payload = {
+        mortality_during_transfer: data.mortality_during_transfer,
+        transfer_method: data.transfer_method,
+        water_temp_c: data.water_temp_c || undefined,
+        oxygen_level: data.oxygen_level || undefined,
+        execution_duration_minutes: data.execution_duration_minutes || undefined,
+        notes: data.notes || '',
+      };
+      
+      console.log('[ExecuteAction] Submitting execution data:', payload);
+      
       await executeAction.mutateAsync({
         id: actionId,
-        data: {
-          mortality_during_transfer: data.mortality_during_transfer,
-          transfer_method: data.transfer_method,
-          water_temp_c: data.water_temp_c || undefined,
-          oxygen_level: data.oxygen_level || undefined,
-          execution_duration_minutes: data.execution_duration_minutes || undefined,
-          notes: data.notes || '',
-        },
+        data: payload,
       });
 
       toast({
@@ -93,9 +97,23 @@ export function ExecuteActionDialog({
       form.reset();
       onClose();
     } catch (error) {
+      console.error('[ExecuteAction] Execution failed:', error);
+      
+      // Extract detailed error message
+      let errorMessage = 'Unknown error';
+      if (error && typeof error === 'object') {
+        const apiError = error as any;
+        if (apiError.body) {
+          console.error('[ExecuteAction] API error body:', apiError.body);
+          errorMessage = JSON.stringify(apiError.body);
+        } else if (apiError.message) {
+          errorMessage = apiError.message;
+        }
+      }
+      
       toast({
         title: 'Failed to execute transfer',
-        description: error instanceof Error ? error.message : 'Unknown error',
+        description: errorMessage,
         variant: 'destructive',
       });
     }
@@ -105,6 +123,10 @@ export function ExecuteActionDialog({
     return (
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Loading Transfer Action...</DialogTitle>
+            <DialogDescription>Please wait while we fetch the action details.</DialogDescription>
+          </DialogHeader>
           <div className="flex items-center justify-center p-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>

@@ -15,11 +15,13 @@ import {
   ArrowLeft,
   ArrowRightLeft,
   Calendar,
+  CheckCircle,
   CheckCircle2,
   Clock,
   DollarSign,
   Loader2,
   Play,
+  Plus,
   XCircle,
 } from 'lucide-react';
 
@@ -31,8 +33,10 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
 
-import { useWorkflow, useActions, useCancelWorkflow } from '../api';
+import { useWorkflow, useActions, useCancelWorkflow, usePlanWorkflow } from '../api';
+import { AddActionsDialog } from '../components/AddActionsDialog';
 import { ExecuteActionDialog } from '../components/ExecuteActionDialog';
 import { FinanceSummaryCard } from '../components/FinanceSummaryCard';
 import {
@@ -53,13 +57,16 @@ export function WorkflowDetailPage() {
   const params = useParams();
   const [, navigate] = useLocation();
   const workflowId = params.id ? parseInt(params.id) : undefined;
+  const { toast } = useToast();
 
   const { data: workflow, isLoading, error } = useWorkflow(workflowId);
   const { data: actionsData } = useActions({ workflow: workflowId });
   const cancelWorkflow = useCancelWorkflow();
+  const planWorkflow = usePlanWorkflow();
 
   const [selectedActionId, setSelectedActionId] = useState<number | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showAddActionsDialog, setShowAddActionsDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -95,6 +102,26 @@ export function WorkflowDetailPage() {
     workflow.planned_completion_date
   );
 
+  const canAddActions = workflow.status === 'DRAFT';
+  const canPlanWorkflow = workflow.status === 'DRAFT' && workflow.total_actions_planned > 0;
+
+  const handlePlanWorkflow = async () => {
+    try {
+      await planWorkflow.mutateAsync(workflow.id);
+      toast({
+        title: 'Workflow Planned',
+        description: 'Workflow is now ready for execution',
+      });
+    } catch (error) {
+      console.error('Error planning workflow:', error);
+      toast({
+        title: 'Error Planning Workflow',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -121,15 +148,23 @@ export function WorkflowDetailPage() {
             </p>
           </div>
         </div>
-        {canCancelWorkflow(workflow) && (
-          <Button
-            variant="destructive"
-            onClick={() => setShowCancelDialog(true)}
-          >
-            <XCircle className="mr-2 h-4 w-4" />
-            Cancel Workflow
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {canPlanWorkflow && (
+            <Button onClick={handlePlanWorkflow} disabled={planWorkflow.isPending}>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              {planWorkflow.isPending ? 'Planning...' : 'Plan Workflow'}
+            </Button>
+          )}
+          {canCancelWorkflow(workflow) && (
+            <Button
+              variant="destructive"
+              onClick={() => setShowCancelDialog(true)}
+            >
+              <XCircle className="mr-2 h-4 w-4" />
+              Cancel Workflow
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Progress Overview */}
@@ -211,15 +246,33 @@ export function WorkflowDetailPage() {
       {/* Actions Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Transfer Actions</CardTitle>
-          <CardDescription>
-            Individual container-to-container movements
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Transfer Actions</CardTitle>
+              <CardDescription>
+                Individual container-to-container movements
+              </CardDescription>
+            </div>
+            {canAddActions && (
+              <Button onClick={() => setShowAddActionsDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Actions
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {actions.length === 0 ? (
-            <div className="text-center p-8 text-muted-foreground">
-              No actions planned for this workflow
+            <div className="text-center p-8">
+              <p className="text-muted-foreground mb-4">
+                No actions planned for this workflow
+              </p>
+              {canAddActions && (
+                <Button onClick={() => setShowAddActionsDialog(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Actions to Continue
+                </Button>
+              )}
             </div>
           ) : (
             <Table>
@@ -280,6 +333,19 @@ export function WorkflowDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Add Actions Dialog */}
+      {showAddActionsDialog && (
+        <AddActionsDialog
+          workflow={workflow}
+          open={showAddActionsDialog}
+          onClose={() => setShowAddActionsDialog(false)}
+          onSuccess={() => {
+            setShowAddActionsDialog(false);
+            // Refresh is automatic via React Query invalidation
+          }}
+        />
+      )}
 
       {/* Execute Action Dialog */}
       {selectedActionId && (
