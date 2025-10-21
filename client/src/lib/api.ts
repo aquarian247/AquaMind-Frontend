@@ -258,14 +258,13 @@ export const api = {
     },
 
     async getTransfers(batchId?: number) {
-      const transfers = await ApiService.apiV1BatchTransfersList();
-      if (batchId) {
-        return {
-          ...transfers,
-          results: transfers.results.filter((t: any) => t.source_batch === batchId)
-        };
-      }
-      return transfers;
+      // Legacy transfers removed - use BatchTransferWorkflow instead
+      return {
+        count: 0,
+        next: null,
+        previous: null,
+        results: []
+      };
     },
 
     /**

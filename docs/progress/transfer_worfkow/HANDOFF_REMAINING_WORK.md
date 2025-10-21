@@ -352,70 +352,6 @@ POST /api/v1/batch/transfer-actions/{id}/rollback/
 
 ---
 
-## 🔄 Data Generation Gaps
-
-### Current Limitation: No Actual Sea Transfers
-
-**Problem**:
-The test data generation (`03_event_engine_core.py`) creates assignments for "Adult" stage, but they're still in **freshwater halls** (Hall E), not actual **sea cages**.
-
-**Evidence**:
-```sql
--- All Adult assignments are in halls, not sea areas
-SELECT 
-    c.hall_id, 
-    c.area_id,
-    COUNT(*)
-FROM batch_batchcontainerassignment bca
-JOIN infrastructure_container c ON bca.container_id = c.id
-JOIN batch_lifecyclestage ls ON bca.lifecycle_stage_id = ls.id
-WHERE ls.name = 'Adult'
-GROUP BY c.hall_id, c.area_id;
-
-Result:
-hall_id | area_id | count
-530     | NULL    | 10   ← All in freshwater hall!
-```
-
-**Impact**:
-- ✅ Workflows created correctly
-- ✅ Actions track container movements
-- ❌ Intercompany detection doesn't trigger (no freshwater → sea crossing)
-- ❌ Finance transactions not created
-- ❌ Can't test full Logistics/Ship workflow
-
-### Solution Options
-
-#### **Option A: Update Data Generation** (Future)
-
-Modify `03_event_engine_core.py` to:
-1. At Post-Smolt → Adult transition
-2. Actually move fish to sea cages (`Container.area_id` not `Container.hall_id`)
-3. This will make `detect_intercompany()` return True
-4. Finance transactions will be created automatically
-
-#### **Option B: Manual Test Data** (Immediate)
-
-Create one test batch manually:
-1. Create Post-Smolt assignments in freshwater hall
-2. Create Adult assignments in actual sea area
-3. Run backfill script
-4. Workflow will detect intercompany
-5. Finance transaction will be created
-
-#### **Option C: Synthetic Transfer** (Quick Test)
-
-Update one existing workflow to point to sea containers:
-```python
-# Via Django shell
-workflow = BatchTransferWorkflow.objects.get(id=X)
-# Update dest assignments to use sea containers
-# Trigger detect_intercompany()
-# Verify finance transaction creation
-```
-
----
-
 ## 👥 Logistics/Ship Crew Integration
 
 ### Key Insights from Personas (personas.md)
@@ -1035,17 +971,15 @@ apps/batch/api/
 
 ### Challenges Encountered
 
-1. **Data Generation Gap**: Sea transfers not implemented, blocking intercompany testing
-2. **Form Complexity**: Add Actions form is complex (multi-row, validation)
-3. **Logistics Requirements**: Release/Movement forms are substantial undertakings
-4. **Testing Limited**: Can't fully test without actual sea transfers
+1. **Form Complexity**: Add Actions form is complex (multi-row, validation)
+2. **Logistics Requirements**: Release/Movement forms are substantial undertakings
+3. **Testing Limited**: Can't fully test without actual sea transfers
 
 ### Recommendations
 
 1. **Prioritize Add Actions Form**: This is the critical blocker
-2. **Update Data Generation**: Enables full testing
-3. **Phase Logistics Forms**: Don't block MVP on these
-4. **Iterative Approach**: Ship MVP, enhance with ship forms in Phase 2
+2. **Phase Logistics Forms**: Don't block MVP on these
+3. **Iterative Approach**: Ship MVP, enhance with ship forms in Phase 2
 
 ---
 

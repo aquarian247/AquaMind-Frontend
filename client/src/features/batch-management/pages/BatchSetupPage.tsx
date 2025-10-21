@@ -3,15 +3,14 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Fish, TrendingUp, ArrowRightLeft, LineChart, Skull } from 'lucide-react'
-import { useBatches, useLifecycleStages, useBatchTransfers, useGrowthSamples, useMortalityEvents } from '../api'
+import { useBatches, useLifecycleStages, useGrowthSamples, useMortalityEvents } from '../api'
 import { BatchForm } from '../components/BatchForm'
 import { BatchCreationForm } from '../components/BatchCreationForm'
 import { LifecycleStageForm } from '../components/LifecycleStageForm'
-import { BatchTransferForm } from '../components/BatchTransferForm'
 import { GrowthSampleForm } from '../components/GrowthSampleForm'
 import { MortalityEventForm } from '../components/MortalityEventForm'
 
-type EntityType = 'batch' | 'lifecycleStage' | 'transfer' | 'growthSample' | 'mortalityEvent' | null
+type EntityType = 'batch' | 'lifecycleStage' | 'growthSample' | 'mortalityEvent' | null
 
 /**
  * Batch Setup Page with Create Dialogs
@@ -31,7 +30,6 @@ export default function BatchSetupPage() {
   // Load counts for display
   const { data: batchesData } = useBatches()
   const { data: stagesData } = useLifecycleStages()
-  const { data: transfersData } = useBatchTransfers()
   const { data: growthSamplesData } = useGrowthSamples()
   const { data: mortalityEventsData } = useMortalityEvents()
 
@@ -59,14 +57,6 @@ export default function BatchSetupPage() {
       icon: TrendingUp,
       count: stagesData?.results?.length || 0,
       color: 'green'
-    },
-    {
-      id: 'transfer' as const,
-      name: 'Batch Transfer',
-      description: 'Transfer batch between containers',
-      icon: ArrowRightLeft,
-      count: transfersData?.results?.length || 0,
-      color: 'orange'
     },
     {
       id: 'growthSample' as const,
@@ -164,17 +154,6 @@ export default function BatchSetupPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Batch Transfer Create Dialog */}
-      <Dialog open={createDialogOpen === 'transfer'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Transfer Batch</DialogTitle>
-            <DialogDescription>Move fish from one container to another</DialogDescription>
-          </DialogHeader>
-          <BatchTransferForm onSuccess={handleSuccess} onCancel={handleCancel} />
-        </DialogContent>
-      </Dialog>
-
       {/* Growth Sample Create Dialog */}
       <Dialog open={createDialogOpen === 'growthSample'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -230,20 +209,6 @@ export default function BatchSetupPage() {
             </ul>
           </div>
 
-          <div>
-            <h3 className="font-semibold mb-2">Batch Transfers</h3>
-            <p className="text-sm text-muted-foreground">
-              Batch transfers record movement of fish between containers. Features include:
-            </p>
-            <ul className="list-disc list-inside text-sm text-muted-foreground ml-2 mt-1">
-              <li>Move fish from one container to another</li>
-              <li>Handles lifecycle stage progression</li>
-              <li>Population and biomass calculations</li>
-              <li>Mortality recording during transfer</li>
-              <li>Audit trail for compliance</li>
-            </ul>
-          </div>
-          
           <div>
             <h3 className="font-semibold mb-2">Growth Samples & Mortality</h3>
             <p className="text-sm text-muted-foreground">

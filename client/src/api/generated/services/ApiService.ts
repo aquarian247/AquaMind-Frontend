@@ -12,8 +12,6 @@ import type { BatchFeedingSummary } from '../models/BatchFeedingSummary';
 import type { BatchHistory } from '../models/BatchHistory';
 import type { BatchParentage } from '../models/BatchParentage';
 import type { BatchParentageHistory } from '../models/BatchParentageHistory';
-import type { BatchTransfer } from '../models/BatchTransfer';
-import type { BatchTransferHistory } from '../models/BatchTransferHistory';
 import type { BatchTransferWorkflowCreate } from '../models/BatchTransferWorkflowCreate';
 import type { BatchTransferWorkflowDetail } from '../models/BatchTransferWorkflowDetail';
 import type { BiologicalConstraints } from '../models/BiologicalConstraints';
@@ -92,8 +90,6 @@ import type { PaginatedBatchHistoryList } from '../models/PaginatedBatchHistoryL
 import type { PaginatedBatchList } from '../models/PaginatedBatchList';
 import type { PaginatedBatchParentageHistoryList } from '../models/PaginatedBatchParentageHistoryList';
 import type { PaginatedBatchParentageList } from '../models/PaginatedBatchParentageList';
-import type { PaginatedBatchTransferHistoryList } from '../models/PaginatedBatchTransferHistoryList';
-import type { PaginatedBatchTransferList } from '../models/PaginatedBatchTransferList';
 import type { PaginatedBatchTransferWorkflowListList } from '../models/PaginatedBatchTransferWorkflowListList';
 import type { PaginatedBiologicalConstraintsList } from '../models/PaginatedBiologicalConstraintsList';
 import type { PaginatedBreedingPairHistoryList } from '../models/PaginatedBreedingPairHistoryList';
@@ -176,7 +172,6 @@ import type { PatchedBatch } from '../models/PatchedBatch';
 import type { PatchedBatchComposition } from '../models/PatchedBatchComposition';
 import type { PatchedBatchContainerAssignment } from '../models/PatchedBatchContainerAssignment';
 import type { PatchedBatchParentage } from '../models/PatchedBatchParentage';
-import type { PatchedBatchTransfer } from '../models/PatchedBatchTransfer';
 import type { PatchedBatchTransferWorkflowDetail } from '../models/PatchedBatchTransferWorkflowDetail';
 import type { PatchedBiologicalConstraints } from '../models/PatchedBiologicalConstraints';
 import type { PatchedBreedingPair } from '../models/PatchedBreedingPair';
@@ -274,30 +269,6 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalParameter instances.
      *
      * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-     * @param requestBody
-     * @returns EnvironmentalParameter
-     * @throws ApiError
-     */
-    public static apiV1EnvironmentalParametersCreate(
-        requestBody: EnvironmentalParameter,
-    ): CancelablePromise<EnvironmentalParameter> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/environmental/parameters/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * ViewSet for viewing and editing EnvironmentalParameter instances.
-     *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param name
      * @param nameIcontains
      * @param ordering Which field to use when ordering the results.
@@ -338,17 +309,41 @@ export class ApiService {
      * ViewSet for viewing and editing EnvironmentalParameter instances.
      *
      * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * @param requestBody
+     * @returns EnvironmentalParameter
+     * @throws ApiError
+     */
+    public static apiV1EnvironmentalParametersCreate(
+        requestBody: EnvironmentalParameter,
+    ): CancelablePromise<EnvironmentalParameter> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/environmental/parameters/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * ViewSet for viewing and editing EnvironmentalParameter instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this environmental parameter.
      * @param requestBody
      * @returns EnvironmentalParameter
      * @throws ApiError
      */
-    public static apiV1EnvironmentalParametersUpdate(
+    public static apiV1EnvironmentalParametersPartialUpdate(
         id: number,
-        requestBody: EnvironmentalParameter,
+        requestBody?: PatchedEnvironmentalParameter,
     ): CancelablePromise<EnvironmentalParameter> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/parameters/{id}/',
             path: {
                 'id': id,
@@ -373,12 +368,12 @@ export class ApiService {
      * @returns EnvironmentalParameter
      * @throws ApiError
      */
-    public static apiV1EnvironmentalParametersPartialUpdate(
+    public static apiV1EnvironmentalParametersUpdate(
         id: number,
-        requestBody?: PatchedEnvironmentalParameter,
+        requestBody: EnvironmentalParameter,
     ): CancelablePromise<EnvironmentalParameter> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/parameters/{id}/',
             path: {
                 'id': id,
@@ -449,31 +444,6 @@ export class ApiService {
      *
      * Includes special filtering and aggregation methods for time-series data.
      * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-     * @param requestBody
-     * @returns EnvironmentalReading
-     * @throws ApiError
-     */
-    public static apiV1EnvironmentalReadingsCreate(
-        requestBody: EnvironmentalReading,
-    ): CancelablePromise<EnvironmentalReading> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/environmental/readings/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * ViewSet for viewing and editing EnvironmentalReading instances.
-     *
-     * Includes special filtering and aggregation methods for time-series data.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param batch
      * @param batchIn Multiple values may be separated by commas.
      * @param container
@@ -520,6 +490,31 @@ export class ApiService {
                 'sensor': sensor,
                 'sensor__in': sensorIn,
             },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * ViewSet for viewing and editing EnvironmentalReading instances.
+     *
+     * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * @param requestBody
+     * @returns EnvironmentalReading
+     * @throws ApiError
+     */
+    public static apiV1EnvironmentalReadingsCreate(
+        requestBody: EnvironmentalReading,
+    ): CancelablePromise<EnvironmentalReading> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/environmental/readings/',
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 400: `Bad request (validation error)`,
                 401: `Unauthorized`,
@@ -623,12 +618,12 @@ export class ApiService {
      * @returns EnvironmentalReading
      * @throws ApiError
      */
-    public static apiV1EnvironmentalReadingsUpdate(
+    public static apiV1EnvironmentalReadingsPartialUpdate(
         id: number,
-        requestBody: EnvironmentalReading,
+        requestBody?: PatchedEnvironmentalReading,
     ): CancelablePromise<EnvironmentalReading> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/readings/{id}/',
             path: {
                 'id': id,
@@ -654,12 +649,12 @@ export class ApiService {
      * @returns EnvironmentalReading
      * @throws ApiError
      */
-    public static apiV1EnvironmentalReadingsPartialUpdate(
+    public static apiV1EnvironmentalReadingsUpdate(
         id: number,
-        requestBody?: PatchedEnvironmentalReading,
+        requestBody: EnvironmentalReading,
     ): CancelablePromise<EnvironmentalReading> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/readings/{id}/',
             path: {
                 'id': id,
@@ -731,30 +726,6 @@ export class ApiService {
      * ViewSet for viewing and editing PhotoperiodData instances.
      *
      * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-     * @param requestBody
-     * @returns PhotoperiodData
-     * @throws ApiError
-     */
-    public static apiV1EnvironmentalPhotoperiodCreate(
-        requestBody: PhotoperiodData,
-    ): CancelablePromise<PhotoperiodData> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/environmental/photoperiod/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * ViewSet for viewing and editing PhotoperiodData instances.
-     *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param area
      * @param areaIn Multiple values may be separated by commas.
      * @param date
@@ -798,17 +769,41 @@ export class ApiService {
      * ViewSet for viewing and editing PhotoperiodData instances.
      *
      * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * @param requestBody
+     * @returns PhotoperiodData
+     * @throws ApiError
+     */
+    public static apiV1EnvironmentalPhotoperiodCreate(
+        requestBody: PhotoperiodData,
+    ): CancelablePromise<PhotoperiodData> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/environmental/photoperiod/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * ViewSet for viewing and editing PhotoperiodData instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this photoperiod data.
      * @param requestBody
      * @returns PhotoperiodData
      * @throws ApiError
      */
-    public static apiV1EnvironmentalPhotoperiodUpdate(
+    public static apiV1EnvironmentalPhotoperiodPartialUpdate(
         id: number,
-        requestBody: PhotoperiodData,
+        requestBody?: PatchedPhotoperiodData,
     ): CancelablePromise<PhotoperiodData> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/photoperiod/{id}/',
             path: {
                 'id': id,
@@ -833,12 +828,12 @@ export class ApiService {
      * @returns PhotoperiodData
      * @throws ApiError
      */
-    public static apiV1EnvironmentalPhotoperiodPartialUpdate(
+    public static apiV1EnvironmentalPhotoperiodUpdate(
         id: number,
-        requestBody?: PatchedPhotoperiodData,
+        requestBody: PhotoperiodData,
     ): CancelablePromise<PhotoperiodData> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/photoperiod/{id}/',
             path: {
                 'id': id,
@@ -909,31 +904,6 @@ export class ApiService {
      *
      * Includes special filtering and aggregation methods for time-series data.
      * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-     * @param requestBody
-     * @returns WeatherData
-     * @throws ApiError
-     */
-    public static apiV1EnvironmentalWeatherCreate(
-        requestBody: WeatherData,
-    ): CancelablePromise<WeatherData> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/environmental/weather/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * ViewSet for viewing and editing WeatherData instances.
-     *
-     * Includes special filtering and aggregation methods for time-series data.
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param area
      * @param areaIn Multiple values may be separated by commas.
      * @param ordering Which field to use when ordering the results.
@@ -959,6 +929,31 @@ export class ApiService {
                 'page': page,
                 'search': search,
             },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * ViewSet for viewing and editing WeatherData instances.
+     *
+     * Includes special filtering and aggregation methods for time-series data.
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * @param requestBody
+     * @returns WeatherData
+     * @throws ApiError
+     */
+    public static apiV1EnvironmentalWeatherCreate(
+        requestBody: WeatherData,
+    ): CancelablePromise<WeatherData> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/environmental/weather/',
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 400: `Bad request (validation error)`,
                 401: `Unauthorized`,
@@ -1033,12 +1028,12 @@ export class ApiService {
      * @returns WeatherData
      * @throws ApiError
      */
-    public static apiV1EnvironmentalWeatherUpdate(
+    public static apiV1EnvironmentalWeatherPartialUpdate(
         id: number,
-        requestBody: WeatherData,
+        requestBody?: PatchedWeatherData,
     ): CancelablePromise<WeatherData> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/weather/{id}/',
             path: {
                 'id': id,
@@ -1064,12 +1059,12 @@ export class ApiService {
      * @returns WeatherData
      * @throws ApiError
      */
-    public static apiV1EnvironmentalWeatherPartialUpdate(
+    public static apiV1EnvironmentalWeatherUpdate(
         id: number,
-        requestBody?: PatchedWeatherData,
+        requestBody: WeatherData,
     ): CancelablePromise<WeatherData> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/weather/{id}/',
             path: {
                 'id': id,
@@ -1141,6 +1136,40 @@ export class ApiService {
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
      *
      * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+     * @param batchTransferWorkflow
+     * @param ordering Which field to use when ordering the results.
+     * @param page A page number within the paginated result set.
+     * @param search A search term.
+     * @returns PaginatedStageTransitionEnvironmentalList
+     * @throws ApiError
+     */
+    public static apiV1EnvironmentalStageTransitionsList(
+        batchTransferWorkflow?: number,
+        ordering?: string,
+        page?: number,
+        search?: string,
+    ): CancelablePromise<PaginatedStageTransitionEnvironmentalList> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/environmental/stage-transitions/',
+            query: {
+                'batch_transfer_workflow': batchTransferWorkflow,
+                'ordering': ordering,
+                'page': page,
+                'search': search,
+            },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * ViewSet for viewing and editing StageTransitionEnvironmental instances.
+     *
+     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param requestBody
      * @returns StageTransitionEnvironmental
      * @throws ApiError
@@ -1165,51 +1194,17 @@ export class ApiService {
      * ViewSet for viewing and editing StageTransitionEnvironmental instances.
      *
      * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-     * @param batchTransfer
-     * @param ordering Which field to use when ordering the results.
-     * @param page A page number within the paginated result set.
-     * @param search A search term.
-     * @returns PaginatedStageTransitionEnvironmentalList
-     * @throws ApiError
-     */
-    public static apiV1EnvironmentalStageTransitionsList(
-        batchTransfer?: number,
-        ordering?: string,
-        page?: number,
-        search?: string,
-    ): CancelablePromise<PaginatedStageTransitionEnvironmentalList> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/environmental/stage-transitions/',
-            query: {
-                'batch_transfer': batchTransfer,
-                'ordering': ordering,
-                'page': page,
-                'search': search,
-            },
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * ViewSet for viewing and editing StageTransitionEnvironmental instances.
-     *
-     * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
      * @param id A unique integer value identifying this stage transition environmental.
      * @param requestBody
      * @returns StageTransitionEnvironmental
      * @throws ApiError
      */
-    public static apiV1EnvironmentalStageTransitionsUpdate(
+    public static apiV1EnvironmentalStageTransitionsPartialUpdate(
         id: number,
-        requestBody: StageTransitionEnvironmental,
+        requestBody?: PatchedStageTransitionEnvironmental,
     ): CancelablePromise<StageTransitionEnvironmental> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/environmental/stage-transitions/{id}/',
             path: {
                 'id': id,
@@ -1234,12 +1229,12 @@ export class ApiService {
      * @returns StageTransitionEnvironmental
      * @throws ApiError
      */
-    public static apiV1EnvironmentalStageTransitionsPartialUpdate(
+    public static apiV1EnvironmentalStageTransitionsUpdate(
         id: number,
-        requestBody?: PatchedStageTransitionEnvironmental,
+        requestBody: StageTransitionEnvironmental,
     ): CancelablePromise<StageTransitionEnvironmental> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/environmental/stage-transitions/{id}/',
             path: {
                 'id': id,
@@ -1312,33 +1307,6 @@ export class ApiService {
      * and scientific name, searching across name, scientific name, and description,
      * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
      * to capture audit change reasons.
-     * @param requestBody
-     * @returns Species
-     * @throws ApiError
-     */
-    public static apiV1BatchSpeciesCreate(
-        requestBody: Species,
-    ): CancelablePromise<Species> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/species/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing aquaculture Species.
-     *
-     * Provides CRUD operations for species, including filtering by name
-     * and scientific name, searching across name, scientific name, and description,
-     * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
-     * to capture audit change reasons.
      * @param descriptionContains
      * @param name
      * @param nameContains
@@ -1388,17 +1356,44 @@ export class ApiService {
      * and scientific name, searching across name, scientific name, and description,
      * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
      * to capture audit change reasons.
+     * @param requestBody
+     * @returns Species
+     * @throws ApiError
+     */
+    public static apiV1BatchSpeciesCreate(
+        requestBody: Species,
+    ): CancelablePromise<Species> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/species/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing aquaculture Species.
+     *
+     * Provides CRUD operations for species, including filtering by name
+     * and scientific name, searching across name, scientific name, and description,
+     * and ordering by name, scientific name, or creation date. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      * @param id A unique integer value identifying this species.
      * @param requestBody
      * @returns Species
      * @throws ApiError
      */
-    public static apiV1BatchSpeciesUpdate(
+    public static apiV1BatchSpeciesPartialUpdate(
         id: number,
-        requestBody: Species,
+        requestBody?: PatchedSpecies,
     ): CancelablePromise<Species> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/species/{id}/',
             path: {
                 'id': id,
@@ -1426,12 +1421,12 @@ export class ApiService {
      * @returns Species
      * @throws ApiError
      */
-    public static apiV1BatchSpeciesPartialUpdate(
+    public static apiV1BatchSpeciesUpdate(
         id: number,
-        requestBody?: PatchedSpecies,
+        requestBody: Species,
     ): CancelablePromise<Species> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/species/{id}/',
             path: {
                 'id': id,
@@ -1511,34 +1506,6 @@ export class ApiService {
      * Supports searching across name, description, and species name.
      * Ordering can be done by species name, order, name, or creation date. Uses
      * HistoryReasonMixin to capture audit change reasons.
-     * @param requestBody
-     * @returns LifeCycleStage
-     * @throws ApiError
-     */
-    public static apiV1BatchLifecycleStagesCreate(
-        requestBody: LifeCycleStage,
-    ): CancelablePromise<LifeCycleStage> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/lifecycle-stages/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Species Life Cycle Stages.
-     *
-     * Provides CRUD operations for life cycle stages, specific to a species.
-     * Allows filtering by name, species, and order.
-     * Supports searching across name, description, and species name.
-     * Ordering can be done by species name, order, name, or creation date. Uses
-     * HistoryReasonMixin to capture audit change reasons.
      * @param name
      * @param nameContains
      * @param order
@@ -1595,17 +1562,45 @@ export class ApiService {
      * Supports searching across name, description, and species name.
      * Ordering can be done by species name, order, name, or creation date. Uses
      * HistoryReasonMixin to capture audit change reasons.
+     * @param requestBody
+     * @returns LifeCycleStage
+     * @throws ApiError
+     */
+    public static apiV1BatchLifecycleStagesCreate(
+        requestBody: LifeCycleStage,
+    ): CancelablePromise<LifeCycleStage> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/lifecycle-stages/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Species Life Cycle Stages.
+     *
+     * Provides CRUD operations for life cycle stages, specific to a species.
+     * Allows filtering by name, species, and order.
+     * Supports searching across name, description, and species name.
+     * Ordering can be done by species name, order, name, or creation date. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this life cycle stage.
      * @param requestBody
      * @returns LifeCycleStage
      * @throws ApiError
      */
-    public static apiV1BatchLifecycleStagesUpdate(
+    public static apiV1BatchLifecycleStagesPartialUpdate(
         id: number,
-        requestBody: LifeCycleStage,
+        requestBody?: PatchedLifeCycleStage,
     ): CancelablePromise<LifeCycleStage> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/lifecycle-stages/{id}/',
             path: {
                 'id': id,
@@ -1634,12 +1629,12 @@ export class ApiService {
      * @returns LifeCycleStage
      * @throws ApiError
      */
-    public static apiV1BatchLifecycleStagesPartialUpdate(
+    public static apiV1BatchLifecycleStagesUpdate(
         id: number,
-        requestBody?: PatchedLifeCycleStage,
+        requestBody: LifeCycleStage,
     ): CancelablePromise<LifeCycleStage> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/lifecycle-stages/{id}/',
             path: {
                 'id': id,
@@ -1709,31 +1704,6 @@ export class ApiService {
                 401: `Unauthorized`,
                 403: `Forbidden`,
                 404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * Create a new batch.
-     *
-     * Requires details such as `batch_number`, `species`, `lifecycle_stage`, `status`, `batch_type`, and `start_date`.
-     * `expected_end_date` will default to 30 days after `start_date` if not provided.
-     * @param requestBody
-     * @returns Batch
-     * @throws ApiError
-     */
-    public static apiV1BatchBatchesCreate(
-        requestBody: Batch,
-    ): CancelablePromise<Batch> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/batches/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
                 500: `Internal Server Error`,
             },
         });
@@ -1832,6 +1802,31 @@ export class ApiService {
         });
     }
     /**
+     * Create a new batch.
+     *
+     * Requires details such as `batch_number`, `species`, `lifecycle_stage`, `status`, `batch_type`, and `start_date`.
+     * `expected_end_date` will default to 30 days after `start_date` if not provided.
+     * @param requestBody
+     * @returns Batch
+     * @throws ApiError
+     */
+    public static apiV1BatchBatchesCreate(
+        requestBody: Batch,
+    ): CancelablePromise<Batch> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/batches/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
      * Compare metrics between multiple batches.
      *
      * Query parameters:
@@ -1855,6 +1850,68 @@ export class ApiService {
             query: {
                 'batch_ids': batchIds,
                 'metrics': metrics,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Get aggregated growth, mortality, and feed metrics for batches in a geography
+     * Returns geography-level aggregated metrics for all batches including:
+     * - Growth metrics (TGC, SGR, average growth rate)
+     * - Mortality metrics (total count, rate, breakdown by cause)
+     * - Feed metrics (total feed, average FCR)
+     *
+     * Useful for executive dashboards and geography-level performance monitoring.
+     * @param geography Filter by geography ID. Required.
+     * @param endDate Filter batches with activity before this date (ISO 8601 format: YYYY-MM-DD)
+     * @param startDate Filter batches with activity after this date (ISO 8601 format: YYYY-MM-DD)
+     * @returns any
+     * @throws ApiError
+     */
+    public static batchGeographySummary(
+        geography: number,
+        endDate?: string,
+        startDate?: string,
+    ): CancelablePromise<{
+        geography_id?: number;
+        geography_name?: string;
+        period_start?: string | null;
+        period_end?: string | null;
+        total_batches?: number;
+        growth_metrics?: {
+            avg_tgc?: number | null;
+            avg_sgr?: number | null;
+            avg_growth_rate_g_per_day?: number | null;
+            avg_weight_g?: number;
+            total_biomass_kg?: number;
+        };
+        mortality_metrics?: {
+            total_count?: number;
+            total_biomass_kg?: number;
+            avg_mortality_rate_percent?: number;
+            by_cause?: Array<{
+                cause?: string;
+                count?: number;
+                percentage?: number;
+            }>;
+        };
+        feed_metrics?: {
+            total_feed_kg?: number;
+            avg_fcr?: number | null;
+            feed_cost_total?: number | null;
+        };
+    }> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/batch/batches/geography-summary/',
+            query: {
+                'end_date': endDate,
+                'geography': geography,
+                'start_date': startDate,
             },
             errors: {
                 401: `Unauthorized`,
@@ -1898,12 +1955,12 @@ export class ApiService {
      * @returns Batch
      * @throws ApiError
      */
-    public static apiV1BatchBatchesUpdate(
+    public static apiV1BatchBatchesPartialUpdate(
         id: number,
-        requestBody: Batch,
+        requestBody?: PatchedBatch,
     ): CancelablePromise<Batch> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/batches/{id}/',
             path: {
                 'id': id,
@@ -1954,12 +2011,12 @@ export class ApiService {
      * @returns Batch
      * @throws ApiError
      */
-    public static apiV1BatchBatchesPartialUpdate(
+    public static apiV1BatchBatchesUpdate(
         id: number,
-        requestBody?: PatchedBatch,
+        requestBody: Batch,
     ): CancelablePromise<Batch> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/batches/{id}/',
             path: {
                 'id': id,
@@ -2168,55 +2225,6 @@ export class ApiService {
      * - `container__name`
      * - `population_count`
      * - `biomass_kg`
-     * @param requestBody
-     * @returns BatchContainerAssignment
-     * @throws ApiError
-     */
-    public static apiV1BatchContainerAssignmentsCreate(
-        requestBody: BatchContainerAssignment,
-    ): CancelablePromise<BatchContainerAssignment> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/container-assignments/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Container Assignments.
-     *
-     * This endpoint handles the assignment of batches (or parts of batches)
-     * to specific containers (e.g., tanks, ponds, cages) at a given point in time.
-     * It records the population count and biomass within that container.
-     * Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
-     * to capture audit change reasons.
-     *
-     * An assignment can be marked as inactive when a batch is moved out of a container.
-     *
-     * **Filtering:**
-     * - `batch`: ID of the assigned batch.
-     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
-     * - `container`: ID of the assigned container.
-     * - `container__in`: Filter by multiple Container IDs (comma-separated).
-     * - `is_active`: Boolean indicating if the assignment is currently active.
-     * - `assignment_date`: Exact date of the assignment.
-     *
-     * **Searching:**
-     * - `batch__batch_number`: Batch number of the assigned batch.
-     * - `container__name`: Name of the assigned container.
-     *
-     * **Ordering:**
-     * - `assignment_date` (default: descending)
-     * - `batch__batch_number`
-     * - `container__name`
-     * - `population_count`
-     * - `biomass_kg`
      * @param assignmentDate
      * @param assignmentDateAfter
      * @param assignmentDateBefore
@@ -2287,6 +2295,55 @@ export class ApiService {
                 'search': search,
                 'species': species,
             },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Batch Container Assignments.
+     *
+     * This endpoint handles the assignment of batches (or parts of batches)
+     * to specific containers (e.g., tanks, ponds, cages) at a given point in time.
+     * It records the population count and biomass within that container.
+     * Provides full CRUD operations for these assignments. Uses HistoryReasonMixin
+     * to capture audit change reasons.
+     *
+     * An assignment can be marked as inactive when a batch is moved out of a container.
+     *
+     * **Filtering:**
+     * - `batch`: ID of the assigned batch.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+     * - `container`: ID of the assigned container.
+     * - `container__in`: Filter by multiple Container IDs (comma-separated).
+     * - `is_active`: Boolean indicating if the assignment is currently active.
+     * - `assignment_date`: Exact date of the assignment.
+     *
+     * **Searching:**
+     * - `batch__batch_number`: Batch number of the assigned batch.
+     * - `container__name`: Name of the assigned container.
+     *
+     * **Ordering:**
+     * - `assignment_date` (default: descending)
+     * - `batch__batch_number`
+     * - `container__name`
+     * - `population_count`
+     * - `biomass_kg`
+     * @param requestBody
+     * @returns BatchContainerAssignment
+     * @throws ApiError
+     */
+    public static apiV1BatchContainerAssignmentsCreate(
+        requestBody: BatchContainerAssignment,
+    ): CancelablePromise<BatchContainerAssignment> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/container-assignments/',
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 400: `Bad request (validation error)`,
                 401: `Unauthorized`,
@@ -2380,12 +2437,12 @@ export class ApiService {
      * @returns BatchContainerAssignment
      * @throws ApiError
      */
-    public static apiV1BatchContainerAssignmentsUpdate(
+    public static apiV1BatchContainerAssignmentsPartialUpdate(
         id: number,
-        requestBody: BatchContainerAssignment,
+        requestBody?: PatchedBatchContainerAssignment,
     ): CancelablePromise<BatchContainerAssignment> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/container-assignments/{id}/',
             path: {
                 'id': id,
@@ -2435,12 +2492,12 @@ export class ApiService {
      * @returns BatchContainerAssignment
      * @throws ApiError
      */
-    public static apiV1BatchContainerAssignmentsPartialUpdate(
+    public static apiV1BatchContainerAssignmentsUpdate(
         id: number,
-        requestBody?: PatchedBatchContainerAssignment,
+        requestBody: BatchContainerAssignment,
     ): CancelablePromise<BatchContainerAssignment> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/container-assignments/{id}/',
             path: {
                 'id': id,
@@ -2579,49 +2636,6 @@ export class ApiService {
      * - `percentage` (default)
      * - `population_count`
      * - `biomass_kg`
-     * @param requestBody
-     * @returns BatchComposition
-     * @throws ApiError
-     */
-    public static apiV1BatchBatchCompositionsCreate(
-        requestBody: BatchComposition,
-    ): CancelablePromise<BatchComposition> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/batch-compositions/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Compositions.
-     *
-     * This endpoint defines the composition of a 'mixed' batch, detailing what
-     * percentage and quantity (population/biomass) of it comes from various
-     * 'source' batches. This is crucial for traceability when batches are merged.
-     * Provides full CRUD operations for batch composition records. Uses
-     * HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `mixed_batch`: ID of the resulting mixed batch.
-     * - `source_batch`: ID of a source batch contributing to the mixed batch.
-     *
-     * **Searching:**
-     * - `mixed_batch__batch_number`: Batch number of the mixed batch.
-     * - `source_batch__batch_number`: Batch number of the source batch.
-     *
-     * **Ordering:**
-     * - `mixed_batch__batch_number` (default)
-     * - `source_batch__batch_number`
-     * - `percentage` (default)
-     * - `population_count`
-     * - `biomass_kg`
      * @param biomassMax
      * @param biomassMin
      * @param mixedBatch
@@ -2702,17 +2716,60 @@ export class ApiService {
      * - `percentage` (default)
      * - `population_count`
      * - `biomass_kg`
+     * @param requestBody
+     * @returns BatchComposition
+     * @throws ApiError
+     */
+    public static apiV1BatchBatchCompositionsCreate(
+        requestBody: BatchComposition,
+    ): CancelablePromise<BatchComposition> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/batch-compositions/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Batch Compositions.
+     *
+     * This endpoint defines the composition of a 'mixed' batch, detailing what
+     * percentage and quantity (population/biomass) of it comes from various
+     * 'source' batches. This is crucial for traceability when batches are merged.
+     * Provides full CRUD operations for batch composition records. Uses
+     * HistoryReasonMixin to capture audit change reasons.
+     *
+     * **Filtering:**
+     * - `mixed_batch`: ID of the resulting mixed batch.
+     * - `source_batch`: ID of a source batch contributing to the mixed batch.
+     *
+     * **Searching:**
+     * - `mixed_batch__batch_number`: Batch number of the mixed batch.
+     * - `source_batch__batch_number`: Batch number of the source batch.
+     *
+     * **Ordering:**
+     * - `mixed_batch__batch_number` (default)
+     * - `source_batch__batch_number`
+     * - `percentage` (default)
+     * - `population_count`
+     * - `biomass_kg`
      * @param id A unique integer value identifying this batch composition.
      * @param requestBody
      * @returns BatchComposition
      * @throws ApiError
      */
-    public static apiV1BatchBatchCompositionsUpdate(
+    public static apiV1BatchBatchCompositionsPartialUpdate(
         id: number,
-        requestBody: BatchComposition,
+        requestBody?: PatchedBatchComposition,
     ): CancelablePromise<BatchComposition> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/batch-compositions/{id}/',
             path: {
                 'id': id,
@@ -2756,12 +2813,12 @@ export class ApiService {
      * @returns BatchComposition
      * @throws ApiError
      */
-    public static apiV1BatchBatchCompositionsPartialUpdate(
+    public static apiV1BatchBatchCompositionsUpdate(
         id: number,
-        requestBody?: PatchedBatchComposition,
+        requestBody: BatchComposition,
     ): CancelablePromise<BatchComposition> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/batch-compositions/{id}/',
             path: {
                 'id': id,
@@ -2861,417 +2918,6 @@ export class ApiService {
                 401: `Unauthorized`,
                 403: `Forbidden`,
                 404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Transfers.
-     *
-     * Batch transfers record the movement of organisms between batches or changes
-     * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers. Uses
-     * HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `source_batch`: ID of the source batch.
-     * - `destination_batch`: ID of the destination batch.
-     * - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-     * - `source_lifecycle_stage`: ID of the source lifecycle stage.
-     * - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-     * - `source_assignment`: ID of the source batch container assignment.
-     * - `destination_assignment`: ID of the destination batch container assignment.
-     *
-     * **Searching:**
-     * - `source_batch__batch_number`: Batch number of the source batch.
-     * - `destination_batch__batch_number`: Batch number of the destination batch.
-     * - `notes`: Notes associated with the transfer.
-     *
-     * **Ordering:**
-     * - `transfer_date` (default: descending)
-     * - `source_batch__batch_number`
-     * - `transfer_type`
-     * - `created_at`
-     * @param requestBody
-     * @returns BatchTransfer
-     * @throws ApiError
-     */
-    public static apiV1BatchTransfersCreate(
-        requestBody: BatchTransfer,
-    ): CancelablePromise<BatchTransfer> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/transfers/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Transfers.
-     *
-     * Batch transfers record the movement of organisms between batches or changes
-     * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers. Uses
-     * HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `source_batch`: ID of the source batch.
-     * - `destination_batch`: ID of the destination batch.
-     * - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-     * - `source_lifecycle_stage`: ID of the source lifecycle stage.
-     * - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-     * - `source_assignment`: ID of the source batch container assignment.
-     * - `destination_assignment`: ID of the destination batch container assignment.
-     *
-     * **Searching:**
-     * - `source_batch__batch_number`: Batch number of the source batch.
-     * - `destination_batch__batch_number`: Batch number of the destination batch.
-     * - `notes`: Notes associated with the transfer.
-     *
-     * **Ordering:**
-     * - `transfer_date` (default: descending)
-     * - `source_batch__batch_number`
-     * - `transfer_type`
-     * - `created_at`
-     * @param biomassMax
-     * @param biomassMin
-     * @param destinationAssignment
-     * @param destinationBatch
-     * @param destinationBatchNumber
-     * @param destinationLifecycleStage
-     * @param ordering Which field to use when ordering the results.
-     * @param page A page number within the paginated result set.
-     * @param populationMax
-     * @param populationMin
-     * @param search A search term.
-     * @param sourceAssignment
-     * @param sourceBatch
-     * @param sourceBatchNumber
-     * @param sourceLifecycleStage
-     * @param transferDateAfter
-     * @param transferDateBefore
-     * @param transferType * `CONTAINER` - Container Transfer
-     * * `LIFECYCLE` - Lifecycle Stage Change
-     * * `SPLIT` - Batch Split
-     * * `MERGE` - Batch Merge
-     * * `MIXED_TRANSFER` - Mixed Batch Transfer
-     * @param transferTypeIn * `CONTAINER` - Container Transfer
-     * * `LIFECYCLE` - Lifecycle Stage Change
-     * * `SPLIT` - Batch Split
-     * * `MERGE` - Batch Merge
-     * * `MIXED_TRANSFER` - Mixed Batch Transfer
-     * @returns PaginatedBatchTransferList
-     * @throws ApiError
-     */
-    public static apiV1BatchTransfersList(
-        biomassMax?: number,
-        biomassMin?: number,
-        destinationAssignment?: number,
-        destinationBatch?: number,
-        destinationBatchNumber?: string,
-        destinationLifecycleStage?: number,
-        ordering?: string,
-        page?: number,
-        populationMax?: number,
-        populationMin?: number,
-        search?: string,
-        sourceAssignment?: number,
-        sourceBatch?: number,
-        sourceBatchNumber?: string,
-        sourceLifecycleStage?: number,
-        transferDateAfter?: string,
-        transferDateBefore?: string,
-        transferType?: 'CONTAINER' | 'LIFECYCLE' | 'MERGE' | 'MIXED_TRANSFER' | 'SPLIT',
-        transferTypeIn?: Array<'CONTAINER' | 'LIFECYCLE' | 'MERGE' | 'MIXED_TRANSFER' | 'SPLIT'>,
-    ): CancelablePromise<PaginatedBatchTransferList> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/batch/transfers/',
-            query: {
-                'biomass_max': biomassMax,
-                'biomass_min': biomassMin,
-                'destination_assignment': destinationAssignment,
-                'destination_batch': destinationBatch,
-                'destination_batch_number': destinationBatchNumber,
-                'destination_lifecycle_stage': destinationLifecycleStage,
-                'ordering': ordering,
-                'page': page,
-                'population_max': populationMax,
-                'population_min': populationMin,
-                'search': search,
-                'source_assignment': sourceAssignment,
-                'source_batch': sourceBatch,
-                'source_batch_number': sourceBatchNumber,
-                'source_lifecycle_stage': sourceLifecycleStage,
-                'transfer_date_after': transferDateAfter,
-                'transfer_date_before': transferDateBefore,
-                'transfer_type': transferType,
-                'transfer_type_in': transferTypeIn,
-            },
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Transfers.
-     *
-     * Batch transfers record the movement of organisms between batches or changes
-     * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers. Uses
-     * HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `source_batch`: ID of the source batch.
-     * - `destination_batch`: ID of the destination batch.
-     * - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-     * - `source_lifecycle_stage`: ID of the source lifecycle stage.
-     * - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-     * - `source_assignment`: ID of the source batch container assignment.
-     * - `destination_assignment`: ID of the destination batch container assignment.
-     *
-     * **Searching:**
-     * - `source_batch__batch_number`: Batch number of the source batch.
-     * - `destination_batch__batch_number`: Batch number of the destination batch.
-     * - `notes`: Notes associated with the transfer.
-     *
-     * **Ordering:**
-     * - `transfer_date` (default: descending)
-     * - `source_batch__batch_number`
-     * - `transfer_type`
-     * - `created_at`
-     * @param id A unique integer value identifying this batch transfer.
-     * @param requestBody
-     * @returns BatchTransfer
-     * @throws ApiError
-     */
-    public static apiV1BatchTransfersUpdate(
-        id: number,
-        requestBody: BatchTransfer,
-    ): CancelablePromise<BatchTransfer> {
-        return __request(OpenAPI, {
-            method: 'PUT',
-            url: '/api/v1/batch/transfers/{id}/',
-            path: {
-                'id': id,
-            },
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Transfers.
-     *
-     * Batch transfers record the movement of organisms between batches or changes
-     * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers. Uses
-     * HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `source_batch`: ID of the source batch.
-     * - `destination_batch`: ID of the destination batch.
-     * - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-     * - `source_lifecycle_stage`: ID of the source lifecycle stage.
-     * - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-     * - `source_assignment`: ID of the source batch container assignment.
-     * - `destination_assignment`: ID of the destination batch container assignment.
-     *
-     * **Searching:**
-     * - `source_batch__batch_number`: Batch number of the source batch.
-     * - `destination_batch__batch_number`: Batch number of the destination batch.
-     * - `notes`: Notes associated with the transfer.
-     *
-     * **Ordering:**
-     * - `transfer_date` (default: descending)
-     * - `source_batch__batch_number`
-     * - `transfer_type`
-     * - `created_at`
-     * @param id A unique integer value identifying this batch transfer.
-     * @param requestBody
-     * @returns BatchTransfer
-     * @throws ApiError
-     */
-    public static apiV1BatchTransfersPartialUpdate(
-        id: number,
-        requestBody?: PatchedBatchTransfer,
-    ): CancelablePromise<BatchTransfer> {
-        return __request(OpenAPI, {
-            method: 'PATCH',
-            url: '/api/v1/batch/transfers/{id}/',
-            path: {
-                'id': id,
-            },
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Transfers.
-     *
-     * Batch transfers record the movement of organisms between batches or changes
-     * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers. Uses
-     * HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `source_batch`: ID of the source batch.
-     * - `destination_batch`: ID of the destination batch.
-     * - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-     * - `source_lifecycle_stage`: ID of the source lifecycle stage.
-     * - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-     * - `source_assignment`: ID of the source batch container assignment.
-     * - `destination_assignment`: ID of the destination batch container assignment.
-     *
-     * **Searching:**
-     * - `source_batch__batch_number`: Batch number of the source batch.
-     * - `destination_batch__batch_number`: Batch number of the destination batch.
-     * - `notes`: Notes associated with the transfer.
-     *
-     * **Ordering:**
-     * - `transfer_date` (default: descending)
-     * - `source_batch__batch_number`
-     * - `transfer_type`
-     * - `created_at`
-     * @param id A unique integer value identifying this batch transfer.
-     * @returns BatchTransfer
-     * @throws ApiError
-     */
-    public static apiV1BatchTransfersRetrieve(
-        id: number,
-    ): CancelablePromise<BatchTransfer> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/batch/transfers/{id}/',
-            path: {
-                'id': id,
-            },
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Transfers.
-     *
-     * Batch transfers record the movement of organisms between batches or changes
-     * in their lifecycle stage or container assignment within the same batch.
-     * This endpoint provides full CRUD operations for batch transfers. Uses
-     * HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `source_batch`: ID of the source batch.
-     * - `destination_batch`: ID of the destination batch.
-     * - `transfer_type`: Type of transfer (e.g., 'SPLIT', 'MERGE', 'MOVE', 'LIFECYCLE_CHANGE').
-     * - `source_lifecycle_stage`: ID of the source lifecycle stage.
-     * - `destination_lifecycle_stage`: ID of the destination lifecycle stage.
-     * - `source_assignment`: ID of the source batch container assignment.
-     * - `destination_assignment`: ID of the destination batch container assignment.
-     *
-     * **Searching:**
-     * - `source_batch__batch_number`: Batch number of the source batch.
-     * - `destination_batch__batch_number`: Batch number of the destination batch.
-     * - `notes`: Notes associated with the transfer.
-     *
-     * **Ordering:**
-     * - `transfer_date` (default: descending)
-     * - `source_batch__batch_number`
-     * - `transfer_type`
-     * - `created_at`
-     * @param id A unique integer value identifying this batch transfer.
-     * @returns void
-     * @throws ApiError
-     */
-    public static apiV1BatchTransfersDestroy(
-        id: number,
-    ): CancelablePromise<void> {
-        return __request(OpenAPI, {
-            method: 'DELETE',
-            url: '/api/v1/batch/transfers/{id}/',
-            path: {
-                'id': id,
-            },
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Batch Transfer Workflows.
-     *
-     * Batch transfer workflows orchestrate multi-step transfer operations that
-     * may take days or weeks to complete. They manage multiple TransferAction
-     * instances and track progress, completion, and finance integration.
-     *
-     * **State Machine:**
-     * - DRAFT: Initial creation, can add/modify actions
-     * - PLANNED: Finalized, ready to execute actions
-     * - IN_PROGRESS: At least one action executed
-     * - COMPLETED: All actions completed
-     * - CANCELLED: Workflow cancelled
-     *
-     * **Filtering:**
-     * - `batch`: ID of the batch being transferred
-     * - `workflow_type`: Type (LIFECYCLE_TRANSITION, CONTAINER_REDISTRIBUTION,
-     * etc.)
-     * - `status`: Workflow status
-     * - `is_intercompany`: Whether crosses subsidiary boundaries
-     * - `planned_start_date`: Filter by planned start date
-     *
-     * **Searching:**
-     * - `workflow_number`: Workflow identifier
-     * - `batch__batch_number`: Batch number
-     * - `notes`: Workflow notes
-     *
-     * **Ordering:**
-     * - `planned_start_date` (default: descending)
-     * - `created_at`
-     * - `workflow_number`
-     * - `status`
-     * @param requestBody
-     * @returns BatchTransferWorkflowCreate
-     * @throws ApiError
-     */
-    public static apiV1BatchTransferWorkflowsCreate(
-        requestBody: BatchTransferWorkflowCreate,
-    ): CancelablePromise<BatchTransferWorkflowCreate> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/transfer-workflows/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
                 500: `Internal Server Error`,
             },
         });
@@ -3438,17 +3084,69 @@ export class ApiService {
      * - `created_at`
      * - `workflow_number`
      * - `status`
+     * @param requestBody
+     * @returns BatchTransferWorkflowCreate
+     * @throws ApiError
+     */
+    public static apiV1BatchTransferWorkflowsCreate(
+        requestBody: BatchTransferWorkflowCreate,
+    ): CancelablePromise<BatchTransferWorkflowCreate> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/transfer-workflows/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Batch Transfer Workflows.
+     *
+     * Batch transfer workflows orchestrate multi-step transfer operations that
+     * may take days or weeks to complete. They manage multiple TransferAction
+     * instances and track progress, completion, and finance integration.
+     *
+     * **State Machine:**
+     * - DRAFT: Initial creation, can add/modify actions
+     * - PLANNED: Finalized, ready to execute actions
+     * - IN_PROGRESS: At least one action executed
+     * - COMPLETED: All actions completed
+     * - CANCELLED: Workflow cancelled
+     *
+     * **Filtering:**
+     * - `batch`: ID of the batch being transferred
+     * - `workflow_type`: Type (LIFECYCLE_TRANSITION, CONTAINER_REDISTRIBUTION,
+     * etc.)
+     * - `status`: Workflow status
+     * - `is_intercompany`: Whether crosses subsidiary boundaries
+     * - `planned_start_date`: Filter by planned start date
+     *
+     * **Searching:**
+     * - `workflow_number`: Workflow identifier
+     * - `batch__batch_number`: Batch number
+     * - `notes`: Workflow notes
+     *
+     * **Ordering:**
+     * - `planned_start_date` (default: descending)
+     * - `created_at`
+     * - `workflow_number`
+     * - `status`
      * @param id A unique integer value identifying this Batch Transfer Workflow.
      * @param requestBody
      * @returns BatchTransferWorkflowDetail
      * @throws ApiError
      */
-    public static apiV1BatchTransferWorkflowsUpdate(
+    public static apiV1BatchTransferWorkflowsPartialUpdate(
         id: number,
-        requestBody: BatchTransferWorkflowDetail,
+        requestBody?: PatchedBatchTransferWorkflowDetail,
     ): CancelablePromise<BatchTransferWorkflowDetail> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/transfer-workflows/{id}/',
             path: {
                 'id': id,
@@ -3501,12 +3199,12 @@ export class ApiService {
      * @returns BatchTransferWorkflowDetail
      * @throws ApiError
      */
-    public static apiV1BatchTransferWorkflowsPartialUpdate(
+    public static apiV1BatchTransferWorkflowsUpdate(
         id: number,
-        requestBody?: PatchedBatchTransferWorkflowDetail,
+        requestBody: BatchTransferWorkflowDetail,
     ): CancelablePromise<BatchTransferWorkflowDetail> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/transfer-workflows/{id}/',
             path: {
                 'id': id,
@@ -3768,56 +3466,6 @@ export class ApiService {
      * - `planned_date`
      * - `actual_execution_date`
      * - `status`
-     * @param requestBody
-     * @returns TransferActionDetail
-     * @throws ApiError
-     */
-    public static apiV1BatchTransferActionsCreate(
-        requestBody: TransferActionDetail,
-    ): CancelablePromise<TransferActionDetail> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/transfer-actions/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Transfer Actions.
-     *
-     * Transfer actions represent individual container-to-container fish
-     * movements within a workflow. Each action can be executed independently,
-     * tracking mortality, environmental conditions, and execution details.
-     *
-     * **State Machine:**
-     * - PENDING: Created, not yet executed
-     * - IN_PROGRESS: Currently being executed
-     * - COMPLETED: Successfully executed
-     * - FAILED: Execution failed, can be retried
-     * - SKIPPED: Manually skipped
-     *
-     * **Filtering:**
-     * - `workflow`: ID of parent workflow
-     * - `status`: Action status
-     * - `source_assignment`: Source container assignment
-     * - `dest_assignment`: Destination container assignment
-     * - `planned_date`: Filter by planned date
-     *
-     * **Searching:**
-     * - `workflow__workflow_number`: Workflow identifier
-     * - `notes`: Action notes
-     *
-     * **Ordering:**
-     * - `action_number` (default: ascending within workflow)
-     * - `planned_date`
-     * - `actual_execution_date`
-     * - `status`
      * @param biomassMax
      * @param biomassMin
      * @param destAssignment
@@ -3953,17 +3601,67 @@ export class ApiService {
      * - `planned_date`
      * - `actual_execution_date`
      * - `status`
+     * @param requestBody
+     * @returns TransferActionDetail
+     * @throws ApiError
+     */
+    public static apiV1BatchTransferActionsCreate(
+        requestBody: TransferActionDetail,
+    ): CancelablePromise<TransferActionDetail> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/transfer-actions/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Transfer Actions.
+     *
+     * Transfer actions represent individual container-to-container fish
+     * movements within a workflow. Each action can be executed independently,
+     * tracking mortality, environmental conditions, and execution details.
+     *
+     * **State Machine:**
+     * - PENDING: Created, not yet executed
+     * - IN_PROGRESS: Currently being executed
+     * - COMPLETED: Successfully executed
+     * - FAILED: Execution failed, can be retried
+     * - SKIPPED: Manually skipped
+     *
+     * **Filtering:**
+     * - `workflow`: ID of parent workflow
+     * - `status`: Action status
+     * - `source_assignment`: Source container assignment
+     * - `dest_assignment`: Destination container assignment
+     * - `planned_date`: Filter by planned date
+     *
+     * **Searching:**
+     * - `workflow__workflow_number`: Workflow identifier
+     * - `notes`: Action notes
+     *
+     * **Ordering:**
+     * - `action_number` (default: ascending within workflow)
+     * - `planned_date`
+     * - `actual_execution_date`
+     * - `status`
      * @param id A unique integer value identifying this Transfer Action.
      * @param requestBody
      * @returns TransferActionDetail
      * @throws ApiError
      */
-    public static apiV1BatchTransferActionsUpdate(
+    public static apiV1BatchTransferActionsPartialUpdate(
         id: number,
-        requestBody: TransferActionDetail,
+        requestBody?: PatchedTransferActionDetail,
     ): CancelablePromise<TransferActionDetail> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/transfer-actions/{id}/',
             path: {
                 'id': id,
@@ -4014,12 +3712,12 @@ export class ApiService {
      * @returns TransferActionDetail
      * @throws ApiError
      */
-    public static apiV1BatchTransferActionsPartialUpdate(
+    public static apiV1BatchTransferActionsUpdate(
         id: number,
-        requestBody?: PatchedTransferActionDetail,
+        requestBody: TransferActionDetail,
     ): CancelablePromise<TransferActionDetail> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/transfer-actions/{id}/',
             path: {
                 'id': id,
@@ -4274,49 +3972,6 @@ export class ApiService {
      * - `batch__batch_number`
      * - `count` (number of mortalities)
      * - `created_at`
-     * @param requestBody
-     * @returns MortalityEvent
-     * @throws ApiError
-     */
-    public static apiV1BatchMortalityEventsCreate(
-        requestBody: MortalityEvent,
-    ): CancelablePromise<MortalityEvent> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/mortality-events/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Mortality Events in aquaculture batches.
-     *
-     * Mortality events record the number of deaths in a batch on a specific date,
-     * along with the suspected cause and any relevant notes. This endpoint
-     * provides full CRUD operations for mortality events. Uses HistoryReasonMixin
-     * to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `batch`: ID of the batch associated with the mortality event.
-     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
-     * - `event_date`: Exact date of the mortality event.
-     * - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
-     *
-     * **Searching:**
-     * - `batch__batch_number`: Batch number of the associated batch.
-     * - `notes`: Notes associated with the mortality event.
-     *
-     * **Ordering:**
-     * - `event_date` (default: descending)
-     * - `batch__batch_number`
-     * - `count` (number of mortalities)
-     * - `created_at`
      * @param batch
      * @param batchIn Multiple values may be separated by commas.
      * @param batchNumber
@@ -4413,17 +4068,60 @@ export class ApiService {
      * - `batch__batch_number`
      * - `count` (number of mortalities)
      * - `created_at`
+     * @param requestBody
+     * @returns MortalityEvent
+     * @throws ApiError
+     */
+    public static apiV1BatchMortalityEventsCreate(
+        requestBody: MortalityEvent,
+    ): CancelablePromise<MortalityEvent> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/mortality-events/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Mortality Events in aquaculture batches.
+     *
+     * Mortality events record the number of deaths in a batch on a specific date,
+     * along with the suspected cause and any relevant notes. This endpoint
+     * provides full CRUD operations for mortality events. Uses HistoryReasonMixin
+     * to capture audit change reasons.
+     *
+     * **Filtering:**
+     * - `batch`: ID of the batch associated with the mortality event.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+     * - `event_date`: Exact date of the mortality event.
+     * - `cause`: Suspected cause of mortality (e.g., 'DISEASE', 'PREDATION', 'HANDLING').
+     *
+     * **Searching:**
+     * - `batch__batch_number`: Batch number of the associated batch.
+     * - `notes`: Notes associated with the mortality event.
+     *
+     * **Ordering:**
+     * - `event_date` (default: descending)
+     * - `batch__batch_number`
+     * - `count` (number of mortalities)
+     * - `created_at`
      * @param id A unique integer value identifying this mortality event.
      * @param requestBody
      * @returns MortalityEvent
      * @throws ApiError
      */
-    public static apiV1BatchMortalityEventsUpdate(
+    public static apiV1BatchMortalityEventsPartialUpdate(
         id: number,
-        requestBody: MortalityEvent,
+        requestBody?: PatchedMortalityEvent,
     ): CancelablePromise<MortalityEvent> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/mortality-events/{id}/',
             path: {
                 'id': id,
@@ -4467,12 +4165,12 @@ export class ApiService {
      * @returns MortalityEvent
      * @throws ApiError
      */
-    public static apiV1BatchMortalityEventsPartialUpdate(
+    public static apiV1BatchMortalityEventsUpdate(
         id: number,
-        requestBody?: PatchedMortalityEvent,
+        requestBody: MortalityEvent,
     ): CancelablePromise<MortalityEvent> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/mortality-events/{id}/',
             path: {
                 'id': id,
@@ -4599,49 +4297,6 @@ export class ApiService {
      * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
      * - `avg_weight_g`: Average weight in grams.
      * - `created_at`
-     * @param requestBody
-     * @returns GrowthSample
-     * @throws ApiError
-     */
-    public static apiV1BatchGrowthSamplesCreate(
-        requestBody: GrowthSample,
-    ): CancelablePromise<GrowthSample> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/growth-samples/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Growth Samples from aquaculture batches.
-     *
-     * Growth samples record the average weight of organisms in a batch (or a specific
-     * container assignment of a batch) on a particular date. This data is essential
-     * for tracking growth, calculating feed conversion ratios, and making management decisions.
-     * This endpoint provides full CRUD operations for growth samples. Uses
-     * HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
-     * - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
-     * - `sample_date`: Exact date of the sample.
-     *
-     * **Searching:**
-     * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
-     * - `notes`: Notes associated with the growth sample.
-     *
-     * **Ordering:**
-     * - `sample_date` (default: descending)
-     * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
-     * - `avg_weight_g`: Average weight in grams.
-     * - `created_at`
      * @param assignmentBatch
      * @param assignmentBatchIn Multiple values may be separated by commas.
      * @param avgLengthMax
@@ -4737,17 +4392,60 @@ export class ApiService {
      * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
      * - `avg_weight_g`: Average weight in grams.
      * - `created_at`
+     * @param requestBody
+     * @returns GrowthSample
+     * @throws ApiError
+     */
+    public static apiV1BatchGrowthSamplesCreate(
+        requestBody: GrowthSample,
+    ): CancelablePromise<GrowthSample> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/growth-samples/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Growth Samples from aquaculture batches.
+     *
+     * Growth samples record the average weight of organisms in a batch (or a specific
+     * container assignment of a batch) on a particular date. This data is essential
+     * for tracking growth, calculating feed conversion ratios, and making management decisions.
+     * This endpoint provides full CRUD operations for growth samples. Uses
+     * HistoryReasonMixin to capture audit change reasons.
+     *
+     * **Filtering:**
+     * - `assignment__batch`: ID of the batch associated with the growth sample (via BatchContainerAssignment).
+     * - `assignment__batch__in`: Filter by multiple Batch IDs (comma-separated).
+     * - `sample_date`: Exact date of the sample.
+     *
+     * **Searching:**
+     * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
+     * - `notes`: Notes associated with the growth sample.
+     *
+     * **Ordering:**
+     * - `sample_date` (default: descending)
+     * - `assignment__batch__batch_number`: Batch number of the associated batch (via the related BatchContainerAssignment)
+     * - `avg_weight_g`: Average weight in grams.
+     * - `created_at`
      * @param id A unique integer value identifying this growth sample.
      * @param requestBody
      * @returns GrowthSample
      * @throws ApiError
      */
-    public static apiV1BatchGrowthSamplesUpdate(
+    public static apiV1BatchGrowthSamplesPartialUpdate(
         id: number,
-        requestBody: GrowthSample,
+        requestBody?: PatchedGrowthSample,
     ): CancelablePromise<GrowthSample> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/batch/growth-samples/{id}/',
             path: {
                 'id': id,
@@ -4791,12 +4489,12 @@ export class ApiService {
      * @returns GrowthSample
      * @throws ApiError
      */
-    public static apiV1BatchGrowthSamplesPartialUpdate(
+    public static apiV1BatchGrowthSamplesUpdate(
         id: number,
-        requestBody?: PatchedGrowthSample,
+        requestBody: GrowthSample,
     ): CancelablePromise<GrowthSample> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/batch/growth-samples/{id}/',
             path: {
                 'id': id,
@@ -5065,87 +4763,6 @@ export class ApiService {
     }
     /**
      * List historical records with enhanced OpenAPI documentation.
-     * @param dateFrom Filter records from this date onwards (inclusive)
-     * @param dateTo Filter records up to this date (inclusive)
-     * @param destinationBatch
-     * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-     *
-     * * `+` - Created
-     * * `~` - Updated
-     * * `-` - Deleted
-     * @param historyUser Filter by username of the user who made the change
-     * @param ordering Which field to use when ordering the results.
-     * @param page A page number within the paginated result set.
-     * @param search A search term.
-     * @param sourceBatch
-     * @param transferType * `CONTAINER` - Container Transfer
-     * * `LIFECYCLE` - Lifecycle Stage Change
-     * * `SPLIT` - Batch Split
-     * * `MERGE` - Batch Merge
-     * * `MIXED_TRANSFER` - Mixed Batch Transfer
-     * @returns PaginatedBatchTransferHistoryList
-     * @throws ApiError
-     */
-    public static listBatchBatchTransferHistory(
-        dateFrom?: string,
-        dateTo?: string,
-        destinationBatch?: number,
-        historyType?: '+' | '-' | '~',
-        historyUser?: string,
-        ordering?: string,
-        page?: number,
-        search?: string,
-        sourceBatch?: number,
-        transferType?: 'CONTAINER' | 'LIFECYCLE' | 'MERGE' | 'MIXED_TRANSFER' | 'SPLIT',
-    ): CancelablePromise<PaginatedBatchTransferHistoryList> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/batch/history/transfers/',
-            query: {
-                'date_from': dateFrom,
-                'date_to': dateTo,
-                'destination_batch': destinationBatch,
-                'history_type': historyType,
-                'history_user': historyUser,
-                'ordering': ordering,
-                'page': page,
-                'search': search,
-                'source_batch': sourceBatch,
-                'transfer_type': transferType,
-            },
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * ViewSet for BatchTransfer historical records.
-     * @param historyId A unique integer value identifying this historical batch transfer.
-     * @returns BatchTransferHistory
-     * @throws ApiError
-     */
-    public static retrieveBatchBatchTransferHistoryDetail(
-        historyId: number,
-    ): CancelablePromise<BatchTransferHistory> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/batch/history/transfers/{history_id}/',
-            path: {
-                'history_id': historyId,
-            },
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * List historical records with enhanced OpenAPI documentation.
      * @param batch
      * @param cause * `DISEASE` - Disease
      * * `HANDLING` - Handling
@@ -5302,31 +4919,6 @@ export class ApiService {
      *
      * Provides CRUD operations for feed types used in aquaculture operations. Uses
      * HistoryReasonMixin to capture audit change reasons.
-     * @param requestBody
-     * @returns Feed
-     * @throws ApiError
-     */
-    public static apiV1InventoryFeedsCreate(
-        requestBody: Feed,
-    ): CancelablePromise<Feed> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/inventory/feeds/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * ViewSet for Feed model.
-     *
-     * Provides CRUD operations for feed types used in aquaculture operations. Uses
-     * HistoryReasonMixin to capture audit change reasons.
      * @param brand
      * @param isActive
      * @param ordering Which field to use when ordering the results.
@@ -5365,17 +4957,42 @@ export class ApiService {
      *
      * Provides CRUD operations for feed types used in aquaculture operations. Uses
      * HistoryReasonMixin to capture audit change reasons.
+     * @param requestBody
+     * @returns Feed
+     * @throws ApiError
+     */
+    public static apiV1InventoryFeedsCreate(
+        requestBody: Feed,
+    ): CancelablePromise<Feed> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/inventory/feeds/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * ViewSet for Feed model.
+     *
+     * Provides CRUD operations for feed types used in aquaculture operations. Uses
+     * HistoryReasonMixin to capture audit change reasons.
      * @param id A unique integer value identifying this feed.
      * @param requestBody
      * @returns Feed
      * @throws ApiError
      */
-    public static apiV1InventoryFeedsUpdate(
+    public static apiV1InventoryFeedsPartialUpdate(
         id: number,
-        requestBody: Feed,
+        requestBody?: PatchedFeed,
     ): CancelablePromise<Feed> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/inventory/feeds/{id}/',
             path: {
                 'id': id,
@@ -5401,12 +5018,12 @@ export class ApiService {
      * @returns Feed
      * @throws ApiError
      */
-    public static apiV1InventoryFeedsPartialUpdate(
+    public static apiV1InventoryFeedsUpdate(
         id: number,
-        requestBody?: PatchedFeed,
+        requestBody: Feed,
     ): CancelablePromise<Feed> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/inventory/feeds/{id}/',
             path: {
                 'id': id,
@@ -5479,31 +5096,6 @@ export class ApiService {
      *
      * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
      * to capture audit change reasons.
-     * @param requestBody
-     * @returns FeedPurchase
-     * @throws ApiError
-     */
-    public static apiV1InventoryFeedPurchasesCreate(
-        requestBody: FeedPurchase,
-    ): CancelablePromise<FeedPurchase> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/inventory/feed-purchases/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * ViewSet for FeedPurchase model.
-     *
-     * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
-     * to capture audit change reasons.
      * @param feed
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
@@ -5545,17 +5137,42 @@ export class ApiService {
      *
      * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
      * to capture audit change reasons.
+     * @param requestBody
+     * @returns FeedPurchase
+     * @throws ApiError
+     */
+    public static apiV1InventoryFeedPurchasesCreate(
+        requestBody: FeedPurchase,
+    ): CancelablePromise<FeedPurchase> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/inventory/feed-purchases/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * ViewSet for FeedPurchase model.
+     *
+     * Provides CRUD operations for feed purchase records. Uses HistoryReasonMixin
+     * to capture audit change reasons.
      * @param id A unique integer value identifying this feed purchase.
      * @param requestBody
      * @returns FeedPurchase
      * @throws ApiError
      */
-    public static apiV1InventoryFeedPurchasesUpdate(
+    public static apiV1InventoryFeedPurchasesPartialUpdate(
         id: number,
-        requestBody: FeedPurchase,
+        requestBody?: PatchedFeedPurchase,
     ): CancelablePromise<FeedPurchase> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/inventory/feed-purchases/{id}/',
             path: {
                 'id': id,
@@ -5581,12 +5198,12 @@ export class ApiService {
      * @returns FeedPurchase
      * @throws ApiError
      */
-    public static apiV1InventoryFeedPurchasesPartialUpdate(
+    public static apiV1InventoryFeedPurchasesUpdate(
         id: number,
-        requestBody?: PatchedFeedPurchase,
+        requestBody: FeedPurchase,
     ): CancelablePromise<FeedPurchase> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/inventory/feed-purchases/{id}/',
             path: {
                 'id': id,
@@ -5650,50 +5267,6 @@ export class ApiService {
                 401: `Unauthorized`,
                 403: `Forbidden`,
                 404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Feeding Events in aquaculture operations.
-     *
-     * Feeding events record the amount of feed given to batches in specific containers
-     * on particular dates. This endpoint provides full CRUD operations for feeding events
-     * and uses HistoryReasonMixin to capture audit change reasons.
-     *
-     * **Filtering:**
-     * - `batch`: ID of the batch being fed.
-     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
-     * - `feed`: ID of the feed type used.
-     * - `feed__in`: Filter by multiple Feed IDs (comma-separated).
-     * - `container`: ID of the container where feeding occurred.
-     * - `container__in`: Filter by multiple Container IDs (comma-separated).
-     * - `feeding_date`: Exact date of feeding.
-     * - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
-     *
-     * **Searching:**
-     * - `notes`: Notes associated with the feeding event.
-     *
-     * **Ordering:**
-     * - `feeding_date` (default: descending)
-     * - `feeding_time`
-     * - `amount_kg`
-     * @param requestBody
-     * @returns FeedingEvent
-     * @throws ApiError
-     */
-    public static apiV1InventoryFeedingEventsCreate(
-        requestBody: FeedingEvent,
-    ): CancelablePromise<FeedingEvent> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/inventory/feeding-events/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
                 500: `Internal Server Error`,
             },
         });
@@ -5866,6 +5439,50 @@ export class ApiService {
                 'page': page,
                 'search': search,
             },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Feeding Events in aquaculture operations.
+     *
+     * Feeding events record the amount of feed given to batches in specific containers
+     * on particular dates. This endpoint provides full CRUD operations for feeding events
+     * and uses HistoryReasonMixin to capture audit change reasons.
+     *
+     * **Filtering:**
+     * - `batch`: ID of the batch being fed.
+     * - `batch__in`: Filter by multiple Batch IDs (comma-separated).
+     * - `feed`: ID of the feed type used.
+     * - `feed__in`: Filter by multiple Feed IDs (comma-separated).
+     * - `container`: ID of the container where feeding occurred.
+     * - `container__in`: Filter by multiple Container IDs (comma-separated).
+     * - `feeding_date`: Exact date of feeding.
+     * - `method`: Feeding method (e.g., 'MANUAL', 'AUTOMATIC').
+     *
+     * **Searching:**
+     * - `notes`: Notes associated with the feeding event.
+     *
+     * **Ordering:**
+     * - `feeding_date` (default: descending)
+     * - `feeding_time`
+     * - `amount_kg`
+     * @param requestBody
+     * @returns FeedingEvent
+     * @throws ApiError
+     */
+    public static apiV1InventoryFeedingEventsCreate(
+        requestBody: FeedingEvent,
+    ): CancelablePromise<FeedingEvent> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/inventory/feeding-events/',
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 400: `Bad request (validation error)`,
                 401: `Unauthorized`,
@@ -6226,12 +5843,12 @@ export class ApiService {
      * @returns FeedingEvent
      * @throws ApiError
      */
-    public static apiV1InventoryFeedingEventsUpdate(
+    public static apiV1InventoryFeedingEventsPartialUpdate(
         id: number,
-        requestBody: FeedingEvent,
+        requestBody?: PatchedFeedingEvent,
     ): CancelablePromise<FeedingEvent> {
         return __request(OpenAPI, {
-            method: 'PUT',
+            method: 'PATCH',
             url: '/api/v1/inventory/feeding-events/{id}/',
             path: {
                 'id': id,
@@ -6276,12 +5893,12 @@ export class ApiService {
      * @returns FeedingEvent
      * @throws ApiError
      */
-    public static apiV1InventoryFeedingEventsPartialUpdate(
+    public static apiV1InventoryFeedingEventsUpdate(
         id: number,
-        requestBody?: PatchedFeedingEvent,
+        requestBody: FeedingEvent,
     ): CancelablePromise<FeedingEvent> {
         return __request(OpenAPI, {
-            method: 'PATCH',
+            method: 'PUT',
             url: '/api/v1/inventory/feeding-events/{id}/',
             path: {
                 'id': id,
@@ -6501,32 +6118,6 @@ export class ApiService {
      * Provides CRUD operations for feed container stock entries,
      * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
      * audit change reasons.
-     * @param requestBody
-     * @returns FeedContainerStockCreate
-     * @throws ApiError
-     */
-    public static apiV1InventoryFeedContainerStockCreate(
-        requestBody: FeedContainerStockCreate,
-    ): CancelablePromise<FeedContainerStockCreate> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/inventory/feed-container-stock/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * API endpoint for managing Feed Container Stock.
-     *
-     * Provides CRUD operations for feed container stock entries,
-     * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
-     * audit change reasons.
      * @param entryDate
      * @param entryDateGte
      * @param entryDateLte
@@ -6570,6 +6161,32 @@ export class ApiService {
                 'quantity_kg__lte': quantityKgLte,
                 'search': search,
             },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * API endpoint for managing Feed Container Stock.
+     *
+     * Provides CRUD operations for feed container stock entries,
+     * supporting FIFO inventory tracking. Uses HistoryReasonMixin to capture
+     * audit change reasons.
+     * @param requestBody
+     * @returns FeedContainerStockCreate
+     * @throws ApiError
+     */
+    public static apiV1InventoryFeedContainerStockCreate(
+        requestBody: FeedContainerStockCreate,
+    ): CancelablePromise<FeedContainerStockCreate> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/inventory/feed-container-stock/',
+            body: requestBody,
+            mediaType: 'application/json',
             errors: {
                 400: `Bad request (validation error)`,
                 401: `Unauthorized`,
@@ -6733,12 +6350,12 @@ export class ApiService {
          * @returns FeedContainerStock
          * @throws ApiError
          */
-        public static apiV1InventoryFeedContainerStockUpdate(
+        public static apiV1InventoryFeedContainerStockPartialUpdate(
             id: number,
-            requestBody: FeedContainerStock,
+            requestBody?: PatchedFeedContainerStock,
         ): CancelablePromise<FeedContainerStock> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/inventory/feed-container-stock/{id}/',
                 path: {
                     'id': id,
@@ -6765,12 +6382,12 @@ export class ApiService {
          * @returns FeedContainerStock
          * @throws ApiError
          */
-        public static apiV1InventoryFeedContainerStockPartialUpdate(
+        public static apiV1InventoryFeedContainerStockUpdate(
             id: number,
-            requestBody?: PatchedFeedContainerStock,
+            requestBody: FeedContainerStock,
         ): CancelablePromise<FeedContainerStock> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/inventory/feed-container-stock/{id}/',
                 path: {
                     'id': id,
@@ -6926,33 +6543,6 @@ export class ApiService {
          * and notes about fish health.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param requestBody
-         * @returns JournalEntry
-         * @throws ApiError
-         */
-        public static apiV1HealthJournalEntriesCreate(
-            requestBody: JournalEntry,
-        ): CancelablePromise<JournalEntry> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/journal-entries/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Journal Entries.
-         *
-         * Provides CRUD operations for journal entries, which track observations
-         * and notes about fish health.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param batchId
          * @param category * `observation` - Observation
          * * `issue` - Issue
@@ -7011,17 +6601,44 @@ export class ApiService {
          * and notes about fish health.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param requestBody
+         * @returns JournalEntry
+         * @throws ApiError
+         */
+        public static apiV1HealthJournalEntriesCreate(
+            requestBody: JournalEntry,
+        ): CancelablePromise<JournalEntry> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/journal-entries/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Journal Entries.
+         *
+         * Provides CRUD operations for journal entries, which track observations
+         * and notes about fish health.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this journal entry.
          * @param requestBody
          * @returns JournalEntry
          * @throws ApiError
          */
-        public static apiV1HealthJournalEntriesUpdate(
+        public static apiV1HealthJournalEntriesPartialUpdate(
             id: number,
-            requestBody: JournalEntry,
+            requestBody?: PatchedJournalEntry,
         ): CancelablePromise<JournalEntry> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/journal-entries/{id}/',
                 path: {
                     'id': id,
@@ -7049,12 +6666,12 @@ export class ApiService {
          * @returns JournalEntry
          * @throws ApiError
          */
-        public static apiV1HealthJournalEntriesPartialUpdate(
+        public static apiV1HealthJournalEntriesUpdate(
             id: number,
-            requestBody?: PatchedJournalEntry,
+            requestBody: JournalEntry,
         ): CancelablePromise<JournalEntry> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/journal-entries/{id}/',
                 path: {
                     'id': id,
@@ -7134,34 +6751,6 @@ export class ApiService {
          *
          * Uses HistoryReasonMixin to automatically capture change
          * reasons for audit trails.
-         * @param requestBody
-         * @returns MortalityReason
-         * @throws ApiError
-         */
-        public static apiV1HealthMortalityReasonsCreate(
-            requestBody: MortalityReason,
-        ): CancelablePromise<MortalityReason> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/mortality-reasons/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Mortality Reasons.
-         *
-         * Provides CRUD operations for mortality reasons used in
-         * mortality records.
-         *
-         * Uses HistoryReasonMixin to automatically capture change
-         * reasons for audit trails.
          * @param name
          * @param nameIcontains
          * @param page A page number within the paginated result set.
@@ -7200,17 +6789,45 @@ export class ApiService {
          *
          * Uses HistoryReasonMixin to automatically capture change
          * reasons for audit trails.
+         * @param requestBody
+         * @returns MortalityReason
+         * @throws ApiError
+         */
+        public static apiV1HealthMortalityReasonsCreate(
+            requestBody: MortalityReason,
+        ): CancelablePromise<MortalityReason> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/mortality-reasons/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Mortality Reasons.
+         *
+         * Provides CRUD operations for mortality reasons used in
+         * mortality records.
+         *
+         * Uses HistoryReasonMixin to automatically capture change
+         * reasons for audit trails.
          * @param id A unique integer value identifying this mortality reason.
          * @param requestBody
          * @returns MortalityReason
          * @throws ApiError
          */
-        public static apiV1HealthMortalityReasonsUpdate(
+        public static apiV1HealthMortalityReasonsPartialUpdate(
             id: number,
-            requestBody: MortalityReason,
+            requestBody?: PatchedMortalityReason,
         ): CancelablePromise<MortalityReason> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/mortality-reasons/{id}/',
                 path: {
                     'id': id,
@@ -7239,12 +6856,12 @@ export class ApiService {
          * @returns MortalityReason
          * @throws ApiError
          */
-        public static apiV1HealthMortalityReasonsPartialUpdate(
+        public static apiV1HealthMortalityReasonsUpdate(
             id: number,
-            requestBody?: PatchedMortalityReason,
+            requestBody: MortalityReason,
         ): CancelablePromise<MortalityReason> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/mortality-reasons/{id}/',
                 path: {
                     'id': id,
@@ -7327,35 +6944,6 @@ export class ApiService {
          * Note: UserAssignmentMixin removed as MortalityRecord has
          * no user field. Uses HistoryReasonMixin to automatically
          * capture change reasons for audit trails.
-         * @param requestBody
-         * @returns MortalityRecord
-         * @throws ApiError
-         */
-        public static apiV1HealthMortalityRecordsCreate(
-            requestBody: MortalityRecord,
-        ): CancelablePromise<MortalityRecord> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/mortality-records/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Mortality Records.
-         *
-         * Provides CRUD operations for mortality records, which track
-         * fish deaths and their causes.
-         *
-         * Note: UserAssignmentMixin removed as MortalityRecord has
-         * no user field. Uses HistoryReasonMixin to automatically
-         * capture change reasons for audit trails.
          * @param batch
          * @param container
          * @param count
@@ -7416,17 +7004,46 @@ export class ApiService {
          * Note: UserAssignmentMixin removed as MortalityRecord has
          * no user field. Uses HistoryReasonMixin to automatically
          * capture change reasons for audit trails.
+         * @param requestBody
+         * @returns MortalityRecord
+         * @throws ApiError
+         */
+        public static apiV1HealthMortalityRecordsCreate(
+            requestBody: MortalityRecord,
+        ): CancelablePromise<MortalityRecord> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/mortality-records/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Mortality Records.
+         *
+         * Provides CRUD operations for mortality records, which track
+         * fish deaths and their causes.
+         *
+         * Note: UserAssignmentMixin removed as MortalityRecord has
+         * no user field. Uses HistoryReasonMixin to automatically
+         * capture change reasons for audit trails.
          * @param id A unique integer value identifying this mortality record.
          * @param requestBody
          * @returns MortalityRecord
          * @throws ApiError
          */
-        public static apiV1HealthMortalityRecordsUpdate(
+        public static apiV1HealthMortalityRecordsPartialUpdate(
             id: number,
-            requestBody: MortalityRecord,
+            requestBody?: PatchedMortalityRecord,
         ): CancelablePromise<MortalityRecord> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/mortality-records/{id}/',
                 path: {
                     'id': id,
@@ -7456,12 +7073,12 @@ export class ApiService {
          * @returns MortalityRecord
          * @throws ApiError
          */
-        public static apiV1HealthMortalityRecordsPartialUpdate(
+        public static apiV1HealthMortalityRecordsUpdate(
             id: number,
-            requestBody?: PatchedMortalityRecord,
+            requestBody: MortalityRecord,
         ): CancelablePromise<MortalityRecord> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/mortality-records/{id}/',
                 path: {
                     'id': id,
@@ -7533,35 +7150,6 @@ export class ApiService {
                     401: `Unauthorized`,
                     403: `Forbidden`,
                     404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Lice Counts.
-         *
-         * Provides CRUD operations for lice counts, which track sea
-         * lice infestations in fish populations.
-         *
-         * Note: UserAssignmentMixin is appropriate here as LiceCount
-         * has a user field. Uses HistoryReasonMixin to automatically
-         * capture change reasons for audit trails.
-         * @param requestBody
-         * @returns LiceCount
-         * @throws ApiError
-         */
-        public static apiV1HealthLiceCountsCreate(
-            requestBody: LiceCount,
-        ): CancelablePromise<LiceCount> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/lice-counts/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
                     500: `Internal Server Error`,
                 },
             });
@@ -7657,6 +7245,35 @@ export class ApiService {
                     'search': search,
                     'user': user,
                 },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Lice Counts.
+         *
+         * Provides CRUD operations for lice counts, which track sea
+         * lice infestations in fish populations.
+         *
+         * Note: UserAssignmentMixin is appropriate here as LiceCount
+         * has a user field. Uses HistoryReasonMixin to automatically
+         * capture change reasons for audit trails.
+         * @param requestBody
+         * @returns LiceCount
+         * @throws ApiError
+         */
+        public static apiV1HealthLiceCountsCreate(
+            requestBody: LiceCount,
+        ): CancelablePromise<LiceCount> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/lice-counts/',
+                body: requestBody,
+                mediaType: 'application/json',
                 errors: {
                     400: `Bad request (validation error)`,
                     401: `Unauthorized`,
@@ -7779,12 +7396,12 @@ export class ApiService {
          * @returns LiceCount
          * @throws ApiError
          */
-        public static apiV1HealthLiceCountsUpdate(
+        public static apiV1HealthLiceCountsPartialUpdate(
             id: number,
-            requestBody: LiceCount,
+            requestBody?: PatchedLiceCount,
         ): CancelablePromise<LiceCount> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/lice-counts/{id}/',
                 path: {
                     'id': id,
@@ -7814,12 +7431,12 @@ export class ApiService {
          * @returns LiceCount
          * @throws ApiError
          */
-        public static apiV1HealthLiceCountsPartialUpdate(
+        public static apiV1HealthLiceCountsUpdate(
             id: number,
-            requestBody?: PatchedLiceCount,
+            requestBody: LiceCount,
         ): CancelablePromise<LiceCount> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/lice-counts/{id}/',
                 path: {
                     'id': id,
@@ -7982,32 +7599,6 @@ export class ApiService {
          * Provides CRUD operations for vaccination types used in treatments.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param requestBody
-         * @returns VaccinationType
-         * @throws ApiError
-         */
-        public static apiV1HealthVaccinationTypesCreate(
-            requestBody: VaccinationType,
-        ): CancelablePromise<VaccinationType> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/vaccination-types/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Vaccination Types.
-         *
-         * Provides CRUD operations for vaccination types used in treatments.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param manufacturer
          * @param manufacturerIcontains
          * @param name
@@ -8050,17 +7641,43 @@ export class ApiService {
          * Provides CRUD operations for vaccination types used in treatments.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param requestBody
+         * @returns VaccinationType
+         * @throws ApiError
+         */
+        public static apiV1HealthVaccinationTypesCreate(
+            requestBody: VaccinationType,
+        ): CancelablePromise<VaccinationType> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/vaccination-types/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Vaccination Types.
+         *
+         * Provides CRUD operations for vaccination types used in treatments.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this vaccination type.
          * @param requestBody
          * @returns VaccinationType
          * @throws ApiError
          */
-        public static apiV1HealthVaccinationTypesUpdate(
+        public static apiV1HealthVaccinationTypesPartialUpdate(
             id: number,
-            requestBody: VaccinationType,
+            requestBody?: PatchedVaccinationType,
         ): CancelablePromise<VaccinationType> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/vaccination-types/{id}/',
                 path: {
                     'id': id,
@@ -8087,12 +7704,12 @@ export class ApiService {
          * @returns VaccinationType
          * @throws ApiError
          */
-        public static apiV1HealthVaccinationTypesPartialUpdate(
+        public static apiV1HealthVaccinationTypesUpdate(
             id: number,
-            requestBody?: PatchedVaccinationType,
+            requestBody: VaccinationType,
         ): CancelablePromise<VaccinationType> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/vaccination-types/{id}/',
                 path: {
                     'id': id,
@@ -8158,33 +7775,6 @@ export class ApiService {
                     401: `Unauthorized`,
                     403: `Forbidden`,
                     404: `Not Found`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Treatments.
-         *
-         * Provides CRUD operations for treatments, which track medical interventions
-         * for fish populations.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param requestBody
-         * @returns Treatment
-         * @throws ApiError
-         */
-        public static apiV1HealthTreatmentsCreate(
-            requestBody: Treatment,
-        ): CancelablePromise<Treatment> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/treatments/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
                     500: `Internal Server Error`,
                 },
             });
@@ -8279,17 +7869,44 @@ export class ApiService {
          * for fish populations.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param requestBody
+         * @returns Treatment
+         * @throws ApiError
+         */
+        public static apiV1HealthTreatmentsCreate(
+            requestBody: Treatment,
+        ): CancelablePromise<Treatment> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/treatments/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Treatments.
+         *
+         * Provides CRUD operations for treatments, which track medical interventions
+         * for fish populations.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this treatment.
          * @param requestBody
          * @returns Treatment
          * @throws ApiError
          */
-        public static apiV1HealthTreatmentsUpdate(
+        public static apiV1HealthTreatmentsPartialUpdate(
             id: number,
-            requestBody: Treatment,
+            requestBody?: PatchedTreatment,
         ): CancelablePromise<Treatment> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/treatments/{id}/',
                 path: {
                     'id': id,
@@ -8317,12 +7934,12 @@ export class ApiService {
          * @returns Treatment
          * @throws ApiError
          */
-        public static apiV1HealthTreatmentsPartialUpdate(
+        public static apiV1HealthTreatmentsUpdate(
             id: number,
-            requestBody?: PatchedTreatment,
+            requestBody: Treatment,
         ): CancelablePromise<Treatment> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/treatments/{id}/',
                 path: {
                     'id': id,
@@ -8400,32 +8017,6 @@ export class ApiService {
          * Provides CRUD operations for sample types used in lab testing.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param requestBody
-         * @returns SampleType
-         * @throws ApiError
-         */
-        public static apiV1HealthSampleTypesCreate(
-            requestBody: SampleType,
-        ): CancelablePromise<SampleType> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/sample-types/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Sample Types.
-         *
-         * Provides CRUD operations for sample types used in lab testing.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param name
          * @param nameIcontains
          * @param page A page number within the paginated result set.
@@ -8462,17 +8053,43 @@ export class ApiService {
          * Provides CRUD operations for sample types used in lab testing.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param requestBody
+         * @returns SampleType
+         * @throws ApiError
+         */
+        public static apiV1HealthSampleTypesCreate(
+            requestBody: SampleType,
+        ): CancelablePromise<SampleType> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/sample-types/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Sample Types.
+         *
+         * Provides CRUD operations for sample types used in lab testing.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this sample type.
          * @param requestBody
          * @returns SampleType
          * @throws ApiError
          */
-        public static apiV1HealthSampleTypesUpdate(
+        public static apiV1HealthSampleTypesPartialUpdate(
             id: number,
-            requestBody: SampleType,
+            requestBody?: PatchedSampleType,
         ): CancelablePromise<SampleType> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/sample-types/{id}/',
                 path: {
                     'id': id,
@@ -8499,12 +8116,12 @@ export class ApiService {
          * @returns SampleType
          * @throws ApiError
          */
-        public static apiV1HealthSampleTypesPartialUpdate(
+        public static apiV1HealthSampleTypesUpdate(
             id: number,
-            requestBody?: PatchedSampleType,
+            requestBody: SampleType,
         ): CancelablePromise<SampleType> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/sample-types/{id}/',
                 path: {
                     'id': id,
@@ -8580,32 +8197,6 @@ export class ApiService {
          * Provides CRUD operations for health parameters used in fish health assessments.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param requestBody
-         * @returns HealthParameter
-         * @throws ApiError
-         */
-        public static apiV1HealthHealthParametersCreate(
-            requestBody: HealthParameter,
-        ): CancelablePromise<HealthParameter> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/health-parameters/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Health Parameters.
-         *
-         * Provides CRUD operations for health parameters used in fish health assessments.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param isActive
          * @param name
          * @param nameIcontains
@@ -8645,17 +8236,43 @@ export class ApiService {
          * Provides CRUD operations for health parameters used in fish health assessments.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param requestBody
+         * @returns HealthParameter
+         * @throws ApiError
+         */
+        public static apiV1HealthHealthParametersCreate(
+            requestBody: HealthParameter,
+        ): CancelablePromise<HealthParameter> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/health-parameters/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Health Parameters.
+         *
+         * Provides CRUD operations for health parameters used in fish health assessments.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this health parameter.
          * @param requestBody
          * @returns HealthParameter
          * @throws ApiError
          */
-        public static apiV1HealthHealthParametersUpdate(
+        public static apiV1HealthHealthParametersPartialUpdate(
             id: number,
-            requestBody: HealthParameter,
+            requestBody?: PatchedHealthParameter,
         ): CancelablePromise<HealthParameter> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/health-parameters/{id}/',
                 path: {
                     'id': id,
@@ -8682,12 +8299,12 @@ export class ApiService {
          * @returns HealthParameter
          * @throws ApiError
          */
-        public static apiV1HealthHealthParametersPartialUpdate(
+        public static apiV1HealthHealthParametersUpdate(
             id: number,
-            requestBody?: PatchedHealthParameter,
+            requestBody: HealthParameter,
         ): CancelablePromise<HealthParameter> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/health-parameters/{id}/',
                 path: {
                     'id': id,
@@ -8765,34 +8382,6 @@ export class ApiService {
          * action to calculate aggregate metrics.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param requestBody
-         * @returns HealthSamplingEvent
-         * @throws ApiError
-         */
-        public static apiV1HealthHealthSamplingEventsCreate(
-            requestBody: HealthSamplingEvent,
-        ): CancelablePromise<HealthSamplingEvent> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/health-sampling-events/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Health Sampling Events.
-         *
-         * Provides CRUD operations for health sampling events, including nested
-         * individual fish observations and parameter scores. Also provides an
-         * action to calculate aggregate metrics.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param assignmentBatchId
          * @param assignmentContainerId
          * @param page A page number within the paginated result set.
@@ -8843,17 +8432,45 @@ export class ApiService {
          * action to calculate aggregate metrics.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param requestBody
+         * @returns HealthSamplingEvent
+         * @throws ApiError
+         */
+        public static apiV1HealthHealthSamplingEventsCreate(
+            requestBody: HealthSamplingEvent,
+        ): CancelablePromise<HealthSamplingEvent> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/health-sampling-events/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Health Sampling Events.
+         *
+         * Provides CRUD operations for health sampling events, including nested
+         * individual fish observations and parameter scores. Also provides an
+         * action to calculate aggregate metrics.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this Health Sampling Event.
          * @param requestBody
          * @returns HealthSamplingEvent
          * @throws ApiError
          */
-        public static apiV1HealthHealthSamplingEventsUpdate(
+        public static apiV1HealthHealthSamplingEventsPartialUpdate(
             id: number,
-            requestBody: HealthSamplingEvent,
+            requestBody?: PatchedHealthSamplingEvent,
         ): CancelablePromise<HealthSamplingEvent> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/health-sampling-events/{id}/',
                 path: {
                     'id': id,
@@ -8882,12 +8499,12 @@ export class ApiService {
          * @returns HealthSamplingEvent
          * @throws ApiError
          */
-        public static apiV1HealthHealthSamplingEventsPartialUpdate(
+        public static apiV1HealthHealthSamplingEventsUpdate(
             id: number,
-            requestBody?: PatchedHealthSamplingEvent,
+            requestBody: HealthSamplingEvent,
         ): CancelablePromise<HealthSamplingEvent> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/health-sampling-events/{id}/',
                 path: {
                     'id': id,
@@ -9002,32 +8619,6 @@ export class ApiService {
          * Provides CRUD operations for individual fish observations within a health sampling event.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param requestBody
-         * @returns IndividualFishObservation
-         * @throws ApiError
-         */
-        public static apiV1HealthIndividualFishObservationsCreate(
-            requestBody: IndividualFishObservation,
-        ): CancelablePromise<IndividualFishObservation> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/individual-fish-observations/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Individual Fish Observations.
-         *
-         * Provides CRUD operations for individual fish observations within a health sampling event.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param fishIdentifier
          * @param fishIdentifierIcontains
          * @param page A page number within the paginated result set.
@@ -9067,17 +8658,43 @@ export class ApiService {
          * Provides CRUD operations for individual fish observations within a health sampling event.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param requestBody
+         * @returns IndividualFishObservation
+         * @throws ApiError
+         */
+        public static apiV1HealthIndividualFishObservationsCreate(
+            requestBody: IndividualFishObservation,
+        ): CancelablePromise<IndividualFishObservation> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/individual-fish-observations/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Individual Fish Observations.
+         *
+         * Provides CRUD operations for individual fish observations within a health sampling event.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this Individual Fish Observation.
          * @param requestBody
          * @returns IndividualFishObservation
          * @throws ApiError
          */
-        public static apiV1HealthIndividualFishObservationsUpdate(
+        public static apiV1HealthIndividualFishObservationsPartialUpdate(
             id: number,
-            requestBody: IndividualFishObservation,
+            requestBody?: PatchedIndividualFishObservation,
         ): CancelablePromise<IndividualFishObservation> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/individual-fish-observations/{id}/',
                 path: {
                     'id': id,
@@ -9104,12 +8721,12 @@ export class ApiService {
          * @returns IndividualFishObservation
          * @throws ApiError
          */
-        public static apiV1HealthIndividualFishObservationsPartialUpdate(
+        public static apiV1HealthIndividualFishObservationsUpdate(
             id: number,
-            requestBody?: PatchedIndividualFishObservation,
+            requestBody: IndividualFishObservation,
         ): CancelablePromise<IndividualFishObservation> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/individual-fish-observations/{id}/',
                 path: {
                     'id': id,
@@ -9185,32 +8802,6 @@ export class ApiService {
          * Provides CRUD operations for parameter scores assigned to individual fish observations.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param requestBody
-         * @returns FishParameterScore
-         * @throws ApiError
-         */
-        public static apiV1HealthFishParameterScoresCreate(
-            requestBody: FishParameterScore,
-        ): CancelablePromise<FishParameterScore> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/fish-parameter-scores/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Fish Parameter Scores.
-         *
-         * Provides CRUD operations for parameter scores assigned to individual fish observations.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param individualFishObservationId
          * @param page A page number within the paginated result set.
          * @param parameterId
@@ -9256,17 +8847,43 @@ export class ApiService {
          * Provides CRUD operations for parameter scores assigned to individual fish observations.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param requestBody
+         * @returns FishParameterScore
+         * @throws ApiError
+         */
+        public static apiV1HealthFishParameterScoresCreate(
+            requestBody: FishParameterScore,
+        ): CancelablePromise<FishParameterScore> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/fish-parameter-scores/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Fish Parameter Scores.
+         *
+         * Provides CRUD operations for parameter scores assigned to individual fish observations.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this Fish Parameter Score.
          * @param requestBody
          * @returns FishParameterScore
          * @throws ApiError
          */
-        public static apiV1HealthFishParameterScoresUpdate(
+        public static apiV1HealthFishParameterScoresPartialUpdate(
             id: number,
-            requestBody: FishParameterScore,
+            requestBody?: PatchedFishParameterScore,
         ): CancelablePromise<FishParameterScore> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/fish-parameter-scores/{id}/',
                 path: {
                     'id': id,
@@ -9293,12 +8910,12 @@ export class ApiService {
          * @returns FishParameterScore
          * @throws ApiError
          */
-        public static apiV1HealthFishParameterScoresPartialUpdate(
+        public static apiV1HealthFishParameterScoresUpdate(
             id: number,
-            requestBody?: PatchedFishParameterScore,
+            requestBody: FishParameterScore,
         ): CancelablePromise<FishParameterScore> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/fish-parameter-scores/{id}/',
                 path: {
                     'id': id,
@@ -9375,33 +8992,6 @@ export class ApiService {
          * with historical batch-container assignment lookup based on the sample date.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
-         * @param formData
-         * @returns HealthLabSample
-         * @throws ApiError
-         */
-        public static apiV1HealthHealthLabSamplesCreate(
-            formData: HealthLabSample,
-        ): CancelablePromise<HealthLabSample> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/health/health-lab-samples/',
-                formData: formData,
-                mediaType: 'multipart/form-data',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Health Lab Samples.
-         *
-         * Provides CRUD operations and filtering for lab samples. Handles creation
-         * with historical batch-container assignment lookup based on the sample date.
-         *
-         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param batchContainerAssignmentBatchId
          * @param batchContainerAssignmentContainerId
          * @param labReferenceId
@@ -9460,17 +9050,44 @@ export class ApiService {
          * with historical batch-container assignment lookup based on the sample date.
          *
          * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
+         * @param formData
+         * @returns HealthLabSample
+         * @throws ApiError
+         */
+        public static apiV1HealthHealthLabSamplesCreate(
+            formData: HealthLabSample,
+        ): CancelablePromise<HealthLabSample> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/health/health-lab-samples/',
+                formData: formData,
+                mediaType: 'multipart/form-data',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Health Lab Samples.
+         *
+         * Provides CRUD operations and filtering for lab samples. Handles creation
+         * with historical batch-container assignment lookup based on the sample date.
+         *
+         * Uses HistoryReasonMixin to automatically capture change reasons for audit trails.
          * @param id A unique integer value identifying this Health Lab Sample.
          * @param formData
          * @returns HealthLabSample
          * @throws ApiError
          */
-        public static apiV1HealthHealthLabSamplesUpdate(
+        public static apiV1HealthHealthLabSamplesPartialUpdate(
             id: number,
-            formData: HealthLabSample,
+            formData?: PatchedHealthLabSample,
         ): CancelablePromise<HealthLabSample> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/health/health-lab-samples/{id}/',
                 path: {
                     'id': id,
@@ -9498,12 +9115,12 @@ export class ApiService {
          * @returns HealthLabSample
          * @throws ApiError
          */
-        public static apiV1HealthHealthLabSamplesPartialUpdate(
+        public static apiV1HealthHealthLabSamplesUpdate(
             id: number,
-            formData?: PatchedHealthLabSample,
+            formData: HealthLabSample,
         ): CancelablePromise<HealthLabSample> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/health/health-lab-samples/{id}/',
                 path: {
                     'id': id,
@@ -10065,28 +9682,6 @@ export class ApiService {
         }
         /**
          * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
-         * @param requestBody
-         * @returns MaintenanceTask
-         * @throws ApiError
-         */
-        public static apiV1BroodstockMaintenanceTasksCreate(
-            requestBody: MaintenanceTask,
-        ): CancelablePromise<MaintenanceTask> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/maintenance-tasks/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
          * @param completedDate
          * @param container
          * @param ordering Which field to use when ordering the results.
@@ -10129,6 +9724,28 @@ export class ApiService {
             });
         }
         /**
+         * ViewSet for maintenance tasks. Uses HistoryReasonMixin to capture audit change reasons.
+         * @param requestBody
+         * @returns MaintenanceTask
+         * @throws ApiError
+         */
+        public static apiV1BroodstockMaintenanceTasksCreate(
+            requestBody: MaintenanceTask,
+        ): CancelablePromise<MaintenanceTask> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/maintenance-tasks/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
          * Get all overdue maintenance tasks.
          * @returns MaintenanceTask
          * @throws ApiError
@@ -10151,12 +9768,12 @@ export class ApiService {
          * @returns MaintenanceTask
          * @throws ApiError
          */
-        public static apiV1BroodstockMaintenanceTasksUpdate(
+        public static apiV1BroodstockMaintenanceTasksPartialUpdate(
             id: number,
-            requestBody: MaintenanceTask,
+            requestBody?: PatchedMaintenanceTask,
         ): CancelablePromise<MaintenanceTask> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/maintenance-tasks/{id}/',
                 path: {
                     'id': id,
@@ -10179,12 +9796,12 @@ export class ApiService {
          * @returns MaintenanceTask
          * @throws ApiError
          */
-        public static apiV1BroodstockMaintenanceTasksPartialUpdate(
+        public static apiV1BroodstockMaintenanceTasksUpdate(
             id: number,
-            requestBody?: PatchedMaintenanceTask,
+            requestBody: MaintenanceTask,
         ): CancelablePromise<MaintenanceTask> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/maintenance-tasks/{id}/',
                 path: {
                     'id': id,
@@ -10276,28 +9893,6 @@ export class ApiService {
         }
         /**
          * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
-         * @param requestBody
-         * @returns BroodstockFish
-         * @throws ApiError
-         */
-        public static apiV1BroodstockFishCreate(
-            requestBody: BroodstockFish,
-        ): CancelablePromise<BroodstockFish> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/fish/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
          * @param container
          * @param healthStatus Current health status
          *
@@ -10328,6 +9923,28 @@ export class ApiService {
                     'page': page,
                     'search': search,
                 },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for broodstock fish with HistoryReasonMixin providing audit change reasons.
+         * @param requestBody
+         * @returns BroodstockFish
+         * @throws ApiError
+         */
+        public static apiV1BroodstockFishCreate(
+            requestBody: BroodstockFish,
+        ): CancelablePromise<BroodstockFish> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/fish/',
+                body: requestBody,
+                mediaType: 'application/json',
                 errors: {
                     400: `Bad request (validation error)`,
                     401: `Unauthorized`,
@@ -10402,12 +10019,12 @@ export class ApiService {
          * @returns BroodstockFish
          * @throws ApiError
          */
-        public static apiV1BroodstockFishUpdate(
+        public static apiV1BroodstockFishPartialUpdate(
             id: number,
-            requestBody: BroodstockFish,
+            requestBody?: PatchedBroodstockFish,
         ): CancelablePromise<BroodstockFish> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/fish/{id}/',
                 path: {
                     'id': id,
@@ -10430,12 +10047,12 @@ export class ApiService {
          * @returns BroodstockFish
          * @throws ApiError
          */
-        public static apiV1BroodstockFishPartialUpdate(
+        public static apiV1BroodstockFishUpdate(
             id: number,
-            requestBody?: PatchedBroodstockFish,
+            requestBody: BroodstockFish,
         ): CancelablePromise<BroodstockFish> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/fish/{id}/',
                 path: {
                     'id': id,
@@ -10499,28 +10116,6 @@ export class ApiService {
         }
         /**
          * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
-         * @param requestBody
-         * @returns FishMovement
-         * @throws ApiError
-         */
-        public static apiV1BroodstockFishMovementsCreate(
-            requestBody: FishMovement,
-        ): CancelablePromise<FishMovement> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/fish-movements/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
          * @param fish
          * @param fromContainer
          * @param movementDate
@@ -10561,6 +10156,28 @@ export class ApiService {
             });
         }
         /**
+         * ViewSet for fish movements leveraging HistoryReasonMixin for audit change reasons.
+         * @param requestBody
+         * @returns FishMovement
+         * @throws ApiError
+         */
+        public static apiV1BroodstockFishMovementsCreate(
+            requestBody: FishMovement,
+        ): CancelablePromise<FishMovement> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/fish-movements/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
          * Transfer multiple fish between containers.
          * @param requestBody
          * @returns FishMovement
@@ -10589,12 +10206,12 @@ export class ApiService {
          * @returns FishMovement
          * @throws ApiError
          */
-        public static apiV1BroodstockFishMovementsUpdate(
+        public static apiV1BroodstockFishMovementsPartialUpdate(
             id: number,
-            requestBody: FishMovement,
+            requestBody?: PatchedFishMovement,
         ): CancelablePromise<FishMovement> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/fish-movements/{id}/',
                 path: {
                     'id': id,
@@ -10617,12 +10234,12 @@ export class ApiService {
          * @returns FishMovement
          * @throws ApiError
          */
-        public static apiV1BroodstockFishMovementsPartialUpdate(
+        public static apiV1BroodstockFishMovementsUpdate(
             id: number,
-            requestBody?: PatchedFishMovement,
+            requestBody: FishMovement,
         ): CancelablePromise<FishMovement> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/fish-movements/{id}/',
                 path: {
                     'id': id,
@@ -10686,28 +10303,6 @@ export class ApiService {
         }
         /**
          * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
-         * @param requestBody
-         * @returns BreedingPlan
-         * @throws ApiError
-         */
-        public static apiV1BroodstockBreedingPlansCreate(
-            requestBody: BreedingPlan,
-        ): CancelablePromise<BreedingPlan> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/breeding-plans/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
          * @param endDate
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -10742,6 +10337,28 @@ export class ApiService {
             });
         }
         /**
+         * ViewSet for breeding plans with HistoryReasonMixin-driven audit change reasons.
+         * @param requestBody
+         * @returns BreedingPlan
+         * @throws ApiError
+         */
+        public static apiV1BroodstockBreedingPlansCreate(
+            requestBody: BreedingPlan,
+        ): CancelablePromise<BreedingPlan> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/breeding-plans/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
          * Get all currently active breeding plans.
          * @returns BreedingPlan
          * @throws ApiError
@@ -10764,12 +10381,12 @@ export class ApiService {
          * @returns BreedingPlan
          * @throws ApiError
          */
-        public static apiV1BroodstockBreedingPlansUpdate(
+        public static apiV1BroodstockBreedingPlansPartialUpdate(
             id: number,
-            requestBody: BreedingPlan,
+            requestBody?: PatchedBreedingPlan,
         ): CancelablePromise<BreedingPlan> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/breeding-plans/{id}/',
                 path: {
                     'id': id,
@@ -10792,12 +10409,12 @@ export class ApiService {
          * @returns BreedingPlan
          * @throws ApiError
          */
-        public static apiV1BroodstockBreedingPlansPartialUpdate(
+        public static apiV1BroodstockBreedingPlansUpdate(
             id: number,
-            requestBody?: PatchedBreedingPlan,
+            requestBody: BreedingPlan,
         ): CancelablePromise<BreedingPlan> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/breeding-plans/{id}/',
                 path: {
                     'id': id,
@@ -10861,28 +10478,6 @@ export class ApiService {
         }
         /**
          * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
-         * @param requestBody
-         * @returns BreedingTraitPriority
-         * @throws ApiError
-         */
-        public static apiV1BroodstockTraitPrioritiesCreate(
-            requestBody: BreedingTraitPriority,
-        ): CancelablePromise<BreedingTraitPriority> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/trait-priorities/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param plan
@@ -10920,17 +10515,39 @@ export class ApiService {
         }
         /**
          * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
+         * @param requestBody
+         * @returns BreedingTraitPriority
+         * @throws ApiError
+         */
+        public static apiV1BroodstockTraitPrioritiesCreate(
+            requestBody: BreedingTraitPriority,
+        ): CancelablePromise<BreedingTraitPriority> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/trait-priorities/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for breeding trait priorities with HistoryReasonMixin auditing support.
          * @param id A unique integer value identifying this Breeding Trait Priority.
          * @param requestBody
          * @returns BreedingTraitPriority
          * @throws ApiError
          */
-        public static apiV1BroodstockTraitPrioritiesUpdate(
+        public static apiV1BroodstockTraitPrioritiesPartialUpdate(
             id: number,
-            requestBody: BreedingTraitPriority,
+            requestBody?: PatchedBreedingTraitPriority,
         ): CancelablePromise<BreedingTraitPriority> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/trait-priorities/{id}/',
                 path: {
                     'id': id,
@@ -10953,12 +10570,12 @@ export class ApiService {
          * @returns BreedingTraitPriority
          * @throws ApiError
          */
-        public static apiV1BroodstockTraitPrioritiesPartialUpdate(
+        public static apiV1BroodstockTraitPrioritiesUpdate(
             id: number,
-            requestBody?: PatchedBreedingTraitPriority,
+            requestBody: BreedingTraitPriority,
         ): CancelablePromise<BreedingTraitPriority> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/trait-priorities/{id}/',
                 path: {
                     'id': id,
@@ -11022,28 +10639,6 @@ export class ApiService {
         }
         /**
          * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
-         * @param requestBody
-         * @returns BreedingPair
-         * @throws ApiError
-         */
-        public static apiV1BroodstockBreedingPairsCreate(
-            requestBody: BreedingPair,
-        ): CancelablePromise<BreedingPair> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/breeding-pairs/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
          * @param femaleFish
          * @param maleFish
          * @param ordering Which field to use when ordering the results.
@@ -11085,17 +10680,39 @@ export class ApiService {
         }
         /**
          * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
+         * @param requestBody
+         * @returns BreedingPair
+         * @throws ApiError
+         */
+        public static apiV1BroodstockBreedingPairsCreate(
+            requestBody: BreedingPair,
+        ): CancelablePromise<BreedingPair> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/breeding-pairs/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for breeding pairs leveraging HistoryReasonMixin to capture audit change reasons.
          * @param id A unique integer value identifying this Breeding Pair.
          * @param requestBody
          * @returns BreedingPair
          * @throws ApiError
          */
-        public static apiV1BroodstockBreedingPairsUpdate(
+        public static apiV1BroodstockBreedingPairsPartialUpdate(
             id: number,
-            requestBody: BreedingPair,
+            requestBody?: PatchedBreedingPair,
         ): CancelablePromise<BreedingPair> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/breeding-pairs/{id}/',
                 path: {
                     'id': id,
@@ -11118,12 +10735,12 @@ export class ApiService {
          * @returns BreedingPair
          * @throws ApiError
          */
-        public static apiV1BroodstockBreedingPairsPartialUpdate(
+        public static apiV1BroodstockBreedingPairsUpdate(
             id: number,
-            requestBody?: PatchedBreedingPair,
+            requestBody: BreedingPair,
         ): CancelablePromise<BreedingPair> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/breeding-pairs/{id}/',
                 path: {
                     'id': id,
@@ -11215,28 +10832,6 @@ export class ApiService {
         }
         /**
          * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
-         * @param requestBody
-         * @returns EggSupplier
-         * @throws ApiError
-         */
-        public static apiV1BroodstockEggSuppliersCreate(
-            requestBody: EggSupplier,
-        ): CancelablePromise<EggSupplier> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/egg-suppliers/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -11266,17 +10861,39 @@ export class ApiService {
         }
         /**
          * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
+         * @param requestBody
+         * @returns EggSupplier
+         * @throws ApiError
+         */
+        public static apiV1BroodstockEggSuppliersCreate(
+            requestBody: EggSupplier,
+        ): CancelablePromise<EggSupplier> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/egg-suppliers/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for egg suppliers using HistoryReasonMixin for audit change reasons.
          * @param id A unique integer value identifying this Egg Supplier.
          * @param requestBody
          * @returns EggSupplier
          * @throws ApiError
          */
-        public static apiV1BroodstockEggSuppliersUpdate(
+        public static apiV1BroodstockEggSuppliersPartialUpdate(
             id: number,
-            requestBody: EggSupplier,
+            requestBody?: PatchedEggSupplier,
         ): CancelablePromise<EggSupplier> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/egg-suppliers/{id}/',
                 path: {
                     'id': id,
@@ -11299,12 +10916,12 @@ export class ApiService {
          * @returns EggSupplier
          * @throws ApiError
          */
-        public static apiV1BroodstockEggSuppliersPartialUpdate(
+        public static apiV1BroodstockEggSuppliersUpdate(
             id: number,
-            requestBody?: PatchedEggSupplier,
+            requestBody: EggSupplier,
         ): CancelablePromise<EggSupplier> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/egg-suppliers/{id}/',
                 path: {
                     'id': id,
@@ -11368,28 +10985,6 @@ export class ApiService {
         }
         /**
          * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
-         * @param requestBody
-         * @returns EggProduction
-         * @throws ApiError
-         */
-        public static apiV1BroodstockEggProductionsCreate(
-            requestBody: EggProduction,
-        ): CancelablePromise<EggProduction> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/egg-productions/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
          * @param destinationStation
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -11424,6 +11019,28 @@ export class ApiService {
                     'search': search,
                     'source_type': sourceType,
                 },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for egg production with HistoryReasonMixin ensuring audit change reasons.
+         * @param requestBody
+         * @returns EggProduction
+         * @throws ApiError
+         */
+        public static apiV1BroodstockEggProductionsCreate(
+            requestBody: EggProduction,
+        ): CancelablePromise<EggProduction> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/egg-productions/',
+                body: requestBody,
+                mediaType: 'application/json',
                 errors: {
                     400: `Bad request (validation error)`,
                     401: `Unauthorized`,
@@ -11494,12 +11111,12 @@ export class ApiService {
          * @returns EggProduction
          * @throws ApiError
          */
-        public static apiV1BroodstockEggProductionsUpdate(
+        public static apiV1BroodstockEggProductionsPartialUpdate(
             id: number,
-            requestBody: EggProduction,
+            requestBody?: PatchedEggProduction,
         ): CancelablePromise<EggProduction> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/egg-productions/{id}/',
                 path: {
                     'id': id,
@@ -11522,12 +11139,12 @@ export class ApiService {
          * @returns EggProduction
          * @throws ApiError
          */
-        public static apiV1BroodstockEggProductionsPartialUpdate(
+        public static apiV1BroodstockEggProductionsUpdate(
             id: number,
-            requestBody?: PatchedEggProduction,
+            requestBody: EggProduction,
         ): CancelablePromise<EggProduction> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/egg-productions/{id}/',
                 path: {
                     'id': id,
@@ -11591,28 +11208,6 @@ export class ApiService {
         }
         /**
          * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
-         * @param requestBody
-         * @returns ExternalEggBatch
-         * @throws ApiError
-         */
-        public static apiV1BroodstockExternalEggBatchesCreate(
-            requestBody: ExternalEggBatch,
-        ): CancelablePromise<ExternalEggBatch> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/external-egg-batches/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
          * @param eggProduction
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -11648,17 +11243,39 @@ export class ApiService {
         }
         /**
          * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
+         * @param requestBody
+         * @returns ExternalEggBatch
+         * @throws ApiError
+         */
+        public static apiV1BroodstockExternalEggBatchesCreate(
+            requestBody: ExternalEggBatch,
+        ): CancelablePromise<ExternalEggBatch> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/external-egg-batches/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for external egg batches using HistoryReasonMixin for audit change reasons.
          * @param id A unique integer value identifying this External Egg Batch.
          * @param requestBody
          * @returns ExternalEggBatch
          * @throws ApiError
          */
-        public static apiV1BroodstockExternalEggBatchesUpdate(
+        public static apiV1BroodstockExternalEggBatchesPartialUpdate(
             id: number,
-            requestBody: ExternalEggBatch,
+            requestBody?: PatchedExternalEggBatch,
         ): CancelablePromise<ExternalEggBatch> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/external-egg-batches/{id}/',
                 path: {
                     'id': id,
@@ -11681,12 +11298,12 @@ export class ApiService {
          * @returns ExternalEggBatch
          * @throws ApiError
          */
-        public static apiV1BroodstockExternalEggBatchesPartialUpdate(
+        public static apiV1BroodstockExternalEggBatchesUpdate(
             id: number,
-            requestBody?: PatchedExternalEggBatch,
+            requestBody: ExternalEggBatch,
         ): CancelablePromise<ExternalEggBatch> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/external-egg-batches/{id}/',
                 path: {
                     'id': id,
@@ -11750,28 +11367,6 @@ export class ApiService {
         }
         /**
          * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
-         * @param requestBody
-         * @returns BatchParentage
-         * @throws ApiError
-         */
-        public static apiV1BroodstockBatchParentagesCreate(
-            requestBody: BatchParentage,
-        ): CancelablePromise<BatchParentage> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/broodstock/batch-parentages/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
          * @param assignmentDate
          * @param batch
          * @param eggProduction
@@ -11797,6 +11392,28 @@ export class ApiService {
                     'ordering': ordering,
                     'page': page,
                 },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for batch parentage with HistoryReasonMixin ensuring audit change reasons.
+         * @param requestBody
+         * @returns BatchParentage
+         * @throws ApiError
+         */
+        public static apiV1BroodstockBatchParentagesCreate(
+            requestBody: BatchParentage,
+        ): CancelablePromise<BatchParentage> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/broodstock/batch-parentages/',
+                body: requestBody,
+                mediaType: 'application/json',
                 errors: {
                     400: `Bad request (validation error)`,
                     401: `Unauthorized`,
@@ -11850,12 +11467,12 @@ export class ApiService {
          * @returns BatchParentage
          * @throws ApiError
          */
-        public static apiV1BroodstockBatchParentagesUpdate(
+        public static apiV1BroodstockBatchParentagesPartialUpdate(
             id: number,
-            requestBody: BatchParentage,
+            requestBody?: PatchedBatchParentage,
         ): CancelablePromise<BatchParentage> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/broodstock/batch-parentages/{id}/',
                 path: {
                     'id': id,
@@ -11878,12 +11495,12 @@ export class ApiService {
          * @returns BatchParentage
          * @throws ApiError
          */
-        public static apiV1BroodstockBatchParentagesPartialUpdate(
+        public static apiV1BroodstockBatchParentagesUpdate(
             id: number,
-            requestBody?: PatchedBatchParentage,
+            requestBody: BatchParentage,
         ): CancelablePromise<BatchParentage> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/broodstock/batch-parentages/{id}/',
                 path: {
                     'id': id,
@@ -12355,46 +11972,6 @@ export class ApiService {
          * **Ordering:**
          * - `name` (default)
          * - `created_at`
-         * @param requestBody
-         * @returns Geography
-         * @throws ApiError
-         */
-        public static apiV1InfrastructureGeographiesCreate(
-            requestBody: Geography,
-        ): CancelablePromise<Geography> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/infrastructure/geographies/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Geographical locations or zones.
-         *
-         * Geographies represent defined geographical areas relevant to the aquaculture
-         * operations, such as countries, regions, specific water bodies, or custom zones.
-         * These can be used to associate other entities (like facilities or environmental
-         * readings) with a spatial context.
-         * This endpoint allows for full CRUD operations on Geography instances. Uses
-         * HistoryReasonMixin to capture audit change reasons.
-         *
-         * **Filtering:**
-         * - `name`: Filter by the exact name of the geography.
-         *
-         * **Searching:**
-         * - `name`: Search by geography name (partial matches).
-         * - `description`: Search within the description of the geography.
-         *
-         * **Ordering:**
-         * - `name` (default)
-         * - `created_at`
          * @param name
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -12445,17 +12022,57 @@ export class ApiService {
          * **Ordering:**
          * - `name` (default)
          * - `created_at`
+         * @param requestBody
+         * @returns Geography
+         * @throws ApiError
+         */
+        public static apiV1InfrastructureGeographiesCreate(
+            requestBody: Geography,
+        ): CancelablePromise<Geography> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/infrastructure/geographies/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Geographical locations or zones.
+         *
+         * Geographies represent defined geographical areas relevant to the aquaculture
+         * operations, such as countries, regions, specific water bodies, or custom zones.
+         * These can be used to associate other entities (like facilities or environmental
+         * readings) with a spatial context.
+         * This endpoint allows for full CRUD operations on Geography instances. Uses
+         * HistoryReasonMixin to capture audit change reasons.
+         *
+         * **Filtering:**
+         * - `name`: Filter by the exact name of the geography.
+         *
+         * **Searching:**
+         * - `name`: Search by geography name (partial matches).
+         * - `description`: Search within the description of the geography.
+         *
+         * **Ordering:**
+         * - `name` (default)
+         * - `created_at`
          * @param id A unique integer value identifying this geography.
          * @param requestBody
          * @returns Geography
          * @throws ApiError
          */
-        public static apiV1InfrastructureGeographiesUpdate(
+        public static apiV1InfrastructureGeographiesPartialUpdate(
             id: number,
-            requestBody: Geography,
+            requestBody?: PatchedGeography,
         ): CancelablePromise<Geography> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/infrastructure/geographies/{id}/',
                 path: {
                     'id': id,
@@ -12496,12 +12113,12 @@ export class ApiService {
          * @returns Geography
          * @throws ApiError
          */
-        public static apiV1InfrastructureGeographiesPartialUpdate(
+        public static apiV1InfrastructureGeographiesUpdate(
             id: number,
-            requestBody?: PatchedGeography,
+            requestBody: Geography,
         ): CancelablePromise<Geography> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/infrastructure/geographies/{id}/',
                 path: {
                     'id': id,
@@ -12646,47 +12263,6 @@ export class ApiService {
          * - `name` (default)
          * - `geography__name`
          * - `created_at`
-         * @param requestBody
-         * @returns Area
-         * @throws ApiError
-         */
-        public static apiV1InfrastructureAreasCreate(
-            requestBody: Area,
-        ): CancelablePromise<Area> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/infrastructure/areas/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Areas within the aquaculture facility.
-         *
-         * Areas represent distinct geographical or functional zones within a larger geography
-         * (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
-         * on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
-         *
-         * **Filtering:**
-         * - `name`: Filter by the exact name of the area.
-         * - `geography`: Filter by the ID of the parent Geography.
-         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
-         * - `active`: Filter by active status (boolean).
-         *
-         * **Searching:**
-         * - `name`: Search by area name (partial matches).
-         * - `geography__name`: Search by the name of the parent Geography (partial matches).
-         *
-         * **Ordering:**
-         * - `name` (default)
-         * - `geography__name`
-         * - `created_at`
          * @param active
          * @param geography
          * @param geographyIn Multiple values may be separated by commas.
@@ -12750,17 +12326,58 @@ export class ApiService {
          * - `name` (default)
          * - `geography__name`
          * - `created_at`
+         * @param requestBody
+         * @returns Area
+         * @throws ApiError
+         */
+        public static apiV1InfrastructureAreasCreate(
+            requestBody: Area,
+        ): CancelablePromise<Area> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/infrastructure/areas/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Areas within the aquaculture facility.
+         *
+         * Areas represent distinct geographical or functional zones within a larger geography
+         * (e.g., a specific section of a farm). This endpoint allows for full CRUD operations
+         * on Area instances. Uses HistoryReasonMixin to capture audit change reasons.
+         *
+         * **Filtering:**
+         * - `name`: Filter by the exact name of the area.
+         * - `geography`: Filter by the ID of the parent Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
+         * - `active`: Filter by active status (boolean).
+         *
+         * **Searching:**
+         * - `name`: Search by area name (partial matches).
+         * - `geography__name`: Search by the name of the parent Geography (partial matches).
+         *
+         * **Ordering:**
+         * - `name` (default)
+         * - `geography__name`
+         * - `created_at`
          * @param id A unique integer value identifying this area.
          * @param requestBody
          * @returns Area
          * @throws ApiError
          */
-        public static apiV1InfrastructureAreasUpdate(
+        public static apiV1InfrastructureAreasPartialUpdate(
             id: number,
-            requestBody: Area,
+            requestBody?: PatchedArea,
         ): CancelablePromise<Area> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/infrastructure/areas/{id}/',
                 path: {
                     'id': id,
@@ -12802,12 +12419,12 @@ export class ApiService {
          * @returns Area
          * @throws ApiError
          */
-        public static apiV1InfrastructureAreasPartialUpdate(
+        public static apiV1InfrastructureAreasUpdate(
             id: number,
-            requestBody?: PatchedArea,
+            requestBody: Area,
         ): CancelablePromise<Area> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/infrastructure/areas/{id}/',
                 path: {
                     'id': id,
@@ -12982,52 +12599,6 @@ export class ApiService {
          * - `station_type`
          * - `geography__name`: Order by the name of the associated Geography.
          * - `created_at`
-         * @param requestBody
-         * @returns FreshwaterStation
-         * @throws ApiError
-         */
-        public static apiV1InfrastructureFreshwaterStationsCreate(
-            requestBody: FreshwaterStation,
-        ): CancelablePromise<FreshwaterStation> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/infrastructure/freshwater-stations/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Freshwater Stations.
-         *
-         * Freshwater Stations represent sources of freshwater for the aquaculture facility,
-         * such as wells, boreholes, or municipal supplies. They can be categorized by type
-         * and associated with a specific geographical location.
-         * This endpoint allows for full CRUD operations on FreshwaterStation instances.
-         * Uses HistoryReasonMixin to capture audit change reasons.
-         *
-         * **Filtering:**
-         * - `name`: Filter by the exact name of the freshwater station.
-         * - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
-         * - `geography`: Filter by the ID of the associated Geography.
-         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
-         * - `active`: Filter by active status (boolean).
-         *
-         * **Searching:**
-         * - `name`: Search by station name (partial matches).
-         * - `description`: Search within the description of the station.
-         * - `geography__name`: Search by the name of the associated Geography.
-         *
-         * **Ordering:**
-         * - `name` (default)
-         * - `station_type`
-         * - `geography__name`: Order by the name of the associated Geography.
-         * - `created_at`
          * @param active
          * @param geography
          * @param geographyIn Multiple values may be separated by commas.
@@ -13100,17 +12671,63 @@ export class ApiService {
          * - `station_type`
          * - `geography__name`: Order by the name of the associated Geography.
          * - `created_at`
+         * @param requestBody
+         * @returns FreshwaterStation
+         * @throws ApiError
+         */
+        public static apiV1InfrastructureFreshwaterStationsCreate(
+            requestBody: FreshwaterStation,
+        ): CancelablePromise<FreshwaterStation> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/infrastructure/freshwater-stations/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Freshwater Stations.
+         *
+         * Freshwater Stations represent sources of freshwater for the aquaculture facility,
+         * such as wells, boreholes, or municipal supplies. They can be categorized by type
+         * and associated with a specific geographical location.
+         * This endpoint allows for full CRUD operations on FreshwaterStation instances.
+         * Uses HistoryReasonMixin to capture audit change reasons.
+         *
+         * **Filtering:**
+         * - `name`: Filter by the exact name of the freshwater station.
+         * - `station_type`: Filter by the type of station (e.g., WELL, BOREHOLE, MUNICIPAL).
+         * - `geography`: Filter by the ID of the associated Geography.
+         * - `geography__in`: Filter by multiple Geography IDs (comma-separated).
+         * - `active`: Filter by active status (boolean).
+         *
+         * **Searching:**
+         * - `name`: Search by station name (partial matches).
+         * - `description`: Search within the description of the station.
+         * - `geography__name`: Search by the name of the associated Geography.
+         *
+         * **Ordering:**
+         * - `name` (default)
+         * - `station_type`
+         * - `geography__name`: Order by the name of the associated Geography.
+         * - `created_at`
          * @param id A unique integer value identifying this freshwater station.
          * @param requestBody
          * @returns FreshwaterStation
          * @throws ApiError
          */
-        public static apiV1InfrastructureFreshwaterStationsUpdate(
+        public static apiV1InfrastructureFreshwaterStationsPartialUpdate(
             id: number,
-            requestBody: FreshwaterStation,
+            requestBody?: PatchedFreshwaterStation,
         ): CancelablePromise<FreshwaterStation> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/infrastructure/freshwater-stations/{id}/',
                 path: {
                     'id': id,
@@ -13157,12 +12774,12 @@ export class ApiService {
          * @returns FreshwaterStation
          * @throws ApiError
          */
-        public static apiV1InfrastructureFreshwaterStationsPartialUpdate(
+        public static apiV1InfrastructureFreshwaterStationsUpdate(
             id: number,
-            requestBody?: PatchedFreshwaterStation,
+            requestBody: FreshwaterStation,
         ): CancelablePromise<FreshwaterStation> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/infrastructure/freshwater-stations/{id}/',
                 path: {
                     'id': id,
@@ -13328,50 +12945,6 @@ export class ApiService {
          * - `name` (default)
          * - `freshwater_station__name`: Order by the name of the associated Freshwater Station.
          * - `created_at`
-         * @param requestBody
-         * @returns Hall
-         * @throws ApiError
-         */
-        public static apiV1InfrastructureHallsCreate(
-            requestBody: Hall,
-        ): CancelablePromise<Hall> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/infrastructure/halls/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Halls within the aquaculture facility.
-         *
-         * Halls represent distinct buildings or sections within the facility,
-         * often containing multiple containers or systems. They can be associated
-         * with a Freshwater Station.
-         * This endpoint allows for full CRUD operations on Hall instances. Uses
-         * HistoryReasonMixin to capture audit change reasons.
-         *
-         * **Filtering:**
-         * - `name`: Filter by the exact name of the hall.
-         * - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
-         * - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
-         * - `active`: Filter by active status (boolean).
-         *
-         * **Searching:**
-         * - `name`: Search by hall name (partial matches).
-         * - `description`: Search within the description of the hall.
-         * - `freshwater_station__name`: Search by the name of the associated Freshwater Station.
-         *
-         * **Ordering:**
-         * - `name` (default)
-         * - `freshwater_station__name`: Order by the name of the associated Freshwater Station.
-         * - `created_at`
          * @param active
          * @param freshwaterStation
          * @param freshwaterStationIn Multiple values may be separated by commas.
@@ -13435,17 +13008,61 @@ export class ApiService {
          * - `name` (default)
          * - `freshwater_station__name`: Order by the name of the associated Freshwater Station.
          * - `created_at`
+         * @param requestBody
+         * @returns Hall
+         * @throws ApiError
+         */
+        public static apiV1InfrastructureHallsCreate(
+            requestBody: Hall,
+        ): CancelablePromise<Hall> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/infrastructure/halls/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Halls within the aquaculture facility.
+         *
+         * Halls represent distinct buildings or sections within the facility,
+         * often containing multiple containers or systems. They can be associated
+         * with a Freshwater Station.
+         * This endpoint allows for full CRUD operations on Hall instances. Uses
+         * HistoryReasonMixin to capture audit change reasons.
+         *
+         * **Filtering:**
+         * - `name`: Filter by the exact name of the hall.
+         * - `freshwater_station`: Filter by the ID of the associated Freshwater Station.
+         * - `freshwater_station__in`: Filter by multiple Freshwater Station IDs (comma-separated).
+         * - `active`: Filter by active status (boolean).
+         *
+         * **Searching:**
+         * - `name`: Search by hall name (partial matches).
+         * - `description`: Search within the description of the hall.
+         * - `freshwater_station__name`: Search by the name of the associated Freshwater Station.
+         *
+         * **Ordering:**
+         * - `name` (default)
+         * - `freshwater_station__name`: Order by the name of the associated Freshwater Station.
+         * - `created_at`
          * @param id A unique integer value identifying this hall.
          * @param requestBody
          * @returns Hall
          * @throws ApiError
          */
-        public static apiV1InfrastructureHallsUpdate(
+        public static apiV1InfrastructureHallsPartialUpdate(
             id: number,
-            requestBody: Hall,
+            requestBody?: PatchedHall,
         ): CancelablePromise<Hall> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/infrastructure/halls/{id}/',
                 path: {
                     'id': id,
@@ -13490,12 +13107,12 @@ export class ApiService {
          * @returns Hall
          * @throws ApiError
          */
-        public static apiV1InfrastructureHallsPartialUpdate(
+        public static apiV1InfrastructureHallsUpdate(
             id: number,
-            requestBody?: PatchedHall,
+            requestBody: Hall,
         ): CancelablePromise<Hall> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/infrastructure/halls/{id}/',
                 path: {
                     'id': id,
@@ -13621,46 +13238,6 @@ export class ApiService {
          * - `name` (default)
          * - `category`
          * - `created_at`
-         * @param requestBody
-         * @returns ContainerType
-         * @throws ApiError
-         */
-        public static apiV1InfrastructureContainerTypesCreate(
-            requestBody: ContainerType,
-        ): CancelablePromise<ContainerType> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/infrastructure/container-types/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Container Types.
-         *
-         * Container Types define the characteristics and categories of different containers
-         * used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
-         * This endpoint allows for full CRUD operations on ContainerType instances. Uses
-         * HistoryReasonMixin to capture audit change reasons.
-         *
-         * **Filtering:**
-         * - `name`: Filter by the exact name of the container type.
-         * - `category`: Filter by the category of the container type (e.g., TANK, POND, CAGE).
-         *
-         * **Searching:**
-         * - `name`: Search by container type name (partial matches).
-         * - `description`: Search within the description of the container type.
-         *
-         * **Ordering:**
-         * - `name` (default)
-         * - `category`
-         * - `created_at`
          * @param category * `TANK` - Tank
          * * `PEN` - Pen
          * * `TRAY` - Tray
@@ -13717,17 +13294,57 @@ export class ApiService {
          * - `name` (default)
          * - `category`
          * - `created_at`
+         * @param requestBody
+         * @returns ContainerType
+         * @throws ApiError
+         */
+        public static apiV1InfrastructureContainerTypesCreate(
+            requestBody: ContainerType,
+        ): CancelablePromise<ContainerType> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/infrastructure/container-types/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Container Types.
+         *
+         * Container Types define the characteristics and categories of different containers
+         * used in the aquaculture facility (e.g., "Circular Tank - 5000L", "Rectangular Pond - 1 Ha").
+         * This endpoint allows for full CRUD operations on ContainerType instances. Uses
+         * HistoryReasonMixin to capture audit change reasons.
+         *
+         * **Filtering:**
+         * - `name`: Filter by the exact name of the container type.
+         * - `category`: Filter by the category of the container type (e.g., TANK, POND, CAGE).
+         *
+         * **Searching:**
+         * - `name`: Search by container type name (partial matches).
+         * - `description`: Search within the description of the container type.
+         *
+         * **Ordering:**
+         * - `name` (default)
+         * - `category`
+         * - `created_at`
          * @param id A unique integer value identifying this container type.
          * @param requestBody
          * @returns ContainerType
          * @throws ApiError
          */
-        public static apiV1InfrastructureContainerTypesUpdate(
+        public static apiV1InfrastructureContainerTypesPartialUpdate(
             id: number,
-            requestBody: ContainerType,
+            requestBody?: PatchedContainerType,
         ): CancelablePromise<ContainerType> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/infrastructure/container-types/{id}/',
                 path: {
                     'id': id,
@@ -13768,12 +13385,12 @@ export class ApiService {
          * @returns ContainerType
          * @throws ApiError
          */
-        public static apiV1InfrastructureContainerTypesPartialUpdate(
+        public static apiV1InfrastructureContainerTypesUpdate(
             id: number,
-            requestBody?: PatchedContainerType,
+            requestBody: ContainerType,
         ): CancelablePromise<ContainerType> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/infrastructure/container-types/{id}/',
                 path: {
                     'id': id,
@@ -13899,54 +13516,6 @@ export class ApiService {
          * - `name` (default)
          * - `container_type__name`
          * - `created_at`
-         * @param requestBody
-         * @returns Container
-         * @throws ApiError
-         */
-        public static apiV1InfrastructureContainersCreate(
-            requestBody: Container,
-        ): CancelablePromise<Container> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/infrastructure/containers/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Containers within the aquaculture facility.
-         *
-         * Containers represent physical units (e.g., tanks, ponds, cages) used for
-         * holding aquatic organisms. They are associated with a specific container type,
-         * and can be located within a Hall and an Area. This endpoint allows for
-         * full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
-         * audit change reasons.
-         *
-         * **Filtering:**
-         * - `name`: Filter by the exact name of the container.
-         * - `container_type`: Filter by the ID of the ContainerType.
-         * - `hall`: Filter by the ID of the parent Hall.
-         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
-         * - `area`: Filter by the ID of the parent Area.
-         * - `area__in`: Filter by multiple Area IDs (comma-separated).
-         * - `active`: Filter by active status (boolean).
-         *
-         * **Searching:**
-         * - `name`: Search by container name (partial matches).
-         * - `container_type__name`: Search by the name of the ContainerType.
-         * - `hall__name`: Search by the name of the parent Hall.
-         * - `area__name`: Search by the name of the parent Area.
-         *
-         * **Ordering:**
-         * - `name` (default)
-         * - `container_type__name`
-         * - `created_at`
          * @param active
          * @param area
          * @param areaIn Multiple values may be separated by commas.
@@ -14023,17 +13592,65 @@ export class ApiService {
          * - `name` (default)
          * - `container_type__name`
          * - `created_at`
+         * @param requestBody
+         * @returns Container
+         * @throws ApiError
+         */
+        public static apiV1InfrastructureContainersCreate(
+            requestBody: Container,
+        ): CancelablePromise<Container> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/infrastructure/containers/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Containers within the aquaculture facility.
+         *
+         * Containers represent physical units (e.g., tanks, ponds, cages) used for
+         * holding aquatic organisms. They are associated with a specific container type,
+         * and can be located within a Hall and an Area. This endpoint allows for
+         * full CRUD operations on Container instances. Uses HistoryReasonMixin to capture
+         * audit change reasons.
+         *
+         * **Filtering:**
+         * - `name`: Filter by the exact name of the container.
+         * - `container_type`: Filter by the ID of the ContainerType.
+         * - `hall`: Filter by the ID of the parent Hall.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
+         * - `area`: Filter by the ID of the parent Area.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
+         * - `active`: Filter by active status (boolean).
+         *
+         * **Searching:**
+         * - `name`: Search by container name (partial matches).
+         * - `container_type__name`: Search by the name of the ContainerType.
+         * - `hall__name`: Search by the name of the parent Hall.
+         * - `area__name`: Search by the name of the parent Area.
+         *
+         * **Ordering:**
+         * - `name` (default)
+         * - `container_type__name`
+         * - `created_at`
          * @param id A unique integer value identifying this container.
          * @param requestBody
          * @returns Container
          * @throws ApiError
          */
-        public static apiV1InfrastructureContainersUpdate(
+        public static apiV1InfrastructureContainersPartialUpdate(
             id: number,
-            requestBody: Container,
+            requestBody?: PatchedContainer,
         ): CancelablePromise<Container> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/infrastructure/containers/{id}/',
                 path: {
                     'id': id,
@@ -14082,12 +13699,12 @@ export class ApiService {
          * @returns Container
          * @throws ApiError
          */
-        public static apiV1InfrastructureContainersPartialUpdate(
+        public static apiV1InfrastructureContainersUpdate(
             id: number,
-            requestBody?: PatchedContainer,
+            requestBody: Container,
         ): CancelablePromise<Container> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/infrastructure/containers/{id}/',
                 path: {
                     'id': id,
@@ -14228,53 +13845,6 @@ export class ApiService {
          * - `sensor_type`
          * - `container__name`: Order by the name of the associated Container.
          * - `created_at`
-         * @param requestBody
-         * @returns Sensor
-         * @throws ApiError
-         */
-        public static apiV1InfrastructureSensorsCreate(
-            requestBody: Sensor,
-        ): CancelablePromise<Sensor> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/infrastructure/sensors/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Sensors within the aquaculture facility.
-         *
-         * Sensors are devices used to monitor various environmental parameters (e.g., temperature,
-         * pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
-         * type, have a unique serial number, and be associated with a manufacturer.
-         * This endpoint allows for full CRUD operations on Sensor instances. Uses
-         * HistoryReasonMixin to capture audit change reasons.
-         *
-         * **Filtering:**
-         * - `name`: Filter by the exact name of the sensor.
-         * - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
-         * - `container`: Filter by the ID of the Container where the sensor is installed.
-         * - `container__in`: Filter by multiple Container IDs (comma-separated).
-         * - `active`: Filter by active status (boolean).
-         *
-         * **Searching:**
-         * - `name`: Search by sensor name (partial matches).
-         * - `serial_number`: Search by the sensor's serial number.
-         * - `manufacturer`: Search by the sensor's manufacturer.
-         * - `container__name`: Search by the name of the Container where the sensor is installed.
-         *
-         * **Ordering:**
-         * - `name` (default)
-         * - `sensor_type`
-         * - `container__name`: Order by the name of the associated Container.
-         * - `created_at`
          * @param active
          * @param container
          * @param containerIn Multiple values may be separated by commas.
@@ -14352,17 +13922,64 @@ export class ApiService {
          * - `sensor_type`
          * - `container__name`: Order by the name of the associated Container.
          * - `created_at`
+         * @param requestBody
+         * @returns Sensor
+         * @throws ApiError
+         */
+        public static apiV1InfrastructureSensorsCreate(
+            requestBody: Sensor,
+        ): CancelablePromise<Sensor> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/infrastructure/sensors/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Sensors within the aquaculture facility.
+         *
+         * Sensors are devices used to monitor various environmental parameters (e.g., temperature,
+         * pH, dissolved oxygen) within specific containers. Each sensor can be of a particular
+         * type, have a unique serial number, and be associated with a manufacturer.
+         * This endpoint allows for full CRUD operations on Sensor instances. Uses
+         * HistoryReasonMixin to capture audit change reasons.
+         *
+         * **Filtering:**
+         * - `name`: Filter by the exact name of the sensor.
+         * - `sensor_type`: Filter by the type of the sensor (e.g., TEMPERATURE, PH, DO).
+         * - `container`: Filter by the ID of the Container where the sensor is installed.
+         * - `container__in`: Filter by multiple Container IDs (comma-separated).
+         * - `active`: Filter by active status (boolean).
+         *
+         * **Searching:**
+         * - `name`: Search by sensor name (partial matches).
+         * - `serial_number`: Search by the sensor's serial number.
+         * - `manufacturer`: Search by the sensor's manufacturer.
+         * - `container__name`: Search by the name of the Container where the sensor is installed.
+         *
+         * **Ordering:**
+         * - `name` (default)
+         * - `sensor_type`
+         * - `container__name`: Order by the name of the associated Container.
+         * - `created_at`
          * @param id A unique integer value identifying this sensor.
          * @param requestBody
          * @returns Sensor
          * @throws ApiError
          */
-        public static apiV1InfrastructureSensorsUpdate(
+        public static apiV1InfrastructureSensorsPartialUpdate(
             id: number,
-            requestBody: Sensor,
+            requestBody?: PatchedSensor,
         ): CancelablePromise<Sensor> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/infrastructure/sensors/{id}/',
                 path: {
                     'id': id,
@@ -14410,12 +14027,12 @@ export class ApiService {
          * @returns Sensor
          * @throws ApiError
          */
-        public static apiV1InfrastructureSensorsPartialUpdate(
+        public static apiV1InfrastructureSensorsUpdate(
             id: number,
-            requestBody?: PatchedSensor,
+            requestBody: Sensor,
         ): CancelablePromise<Sensor> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/infrastructure/sensors/{id}/',
                 path: {
                     'id': id,
@@ -14555,54 +14172,6 @@ export class ApiService {
          * - `name` (default)
          * - `container_type`: Order by the type of the feed container.
          * - `created_at`
-         * @param requestBody
-         * @returns FeedContainer
-         * @throws ApiError
-         */
-        public static apiV1InfrastructureFeedContainersCreate(
-            requestBody: FeedContainer,
-        ): CancelablePromise<FeedContainer> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/infrastructure/feed-containers/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * API endpoint for managing Feed Containers within the aquaculture facility.
-         *
-         * Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
-         * storing feed. They can be associated with a specific container type (defining
-         * its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
-         * This endpoint allows for full CRUD operations on FeedContainer instances. Uses
-         * HistoryReasonMixin to capture audit change reasons.
-         *
-         * **Filtering:**
-         * - `name`: Filter by the exact name of the feed container.
-         * - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
-         * - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
-         * - `hall`: Filter by the ID of the parent Hall where the feed container is located.
-         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
-         * - `area`: Filter by the ID of the parent Area where the feed container is located.
-         * - `area__in`: Filter by multiple Area IDs (comma-separated).
-         * - `active`: Filter by active status (boolean).
-         *
-         * **Searching:**
-         * - `name`: Search by feed container name (partial matches).
-         * - `hall__name`: Search by the name of the parent Hall.
-         * - `area__name`: Search by the name of the parent Area.
-         *
-         * **Ordering:**
-         * - `name` (default)
-         * - `container_type`: Order by the type of the feed container.
-         * - `created_at`
          * @param active
          * @param area
          * @param areaIn Multiple values may be separated by commas.
@@ -14685,17 +14254,65 @@ export class ApiService {
          * - `name` (default)
          * - `container_type`: Order by the type of the feed container.
          * - `created_at`
+         * @param requestBody
+         * @returns FeedContainer
+         * @throws ApiError
+         */
+        public static apiV1InfrastructureFeedContainersCreate(
+            requestBody: FeedContainer,
+        ): CancelablePromise<FeedContainer> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/infrastructure/feed-containers/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * API endpoint for managing Feed Containers within the aquaculture facility.
+         *
+         * Feed Containers represent physical units (e.g., silos, hoppers, bags) used for
+         * storing feed. They can be associated with a specific container type (defining
+         * its nature, e.g., "Silo - 10 Ton"), and can be located within a Hall and an Area.
+         * This endpoint allows for full CRUD operations on FeedContainer instances. Uses
+         * HistoryReasonMixin to capture audit change reasons.
+         *
+         * **Filtering:**
+         * - `name`: Filter by the exact name of the feed container.
+         * - `container_type`: Filter by the ID of the feed container's type (e.g., Silo, Hopper).
+         * - `container_type__in`: Filter by multiple Container Type IDs (comma-separated).
+         * - `hall`: Filter by the ID of the parent Hall where the feed container is located.
+         * - `hall__in`: Filter by multiple Hall IDs (comma-separated).
+         * - `area`: Filter by the ID of the parent Area where the feed container is located.
+         * - `area__in`: Filter by multiple Area IDs (comma-separated).
+         * - `active`: Filter by active status (boolean).
+         *
+         * **Searching:**
+         * - `name`: Search by feed container name (partial matches).
+         * - `hall__name`: Search by the name of the parent Hall.
+         * - `area__name`: Search by the name of the parent Area.
+         *
+         * **Ordering:**
+         * - `name` (default)
+         * - `container_type`: Order by the type of the feed container.
+         * - `created_at`
          * @param id A unique integer value identifying this feed container.
          * @param requestBody
          * @returns FeedContainer
          * @throws ApiError
          */
-        public static apiV1InfrastructureFeedContainersUpdate(
+        public static apiV1InfrastructureFeedContainersPartialUpdate(
             id: number,
-            requestBody: FeedContainer,
+            requestBody?: PatchedFeedContainer,
         ): CancelablePromise<FeedContainer> {
             return __request(OpenAPI, {
-                method: 'PUT',
+                method: 'PATCH',
                 url: '/api/v1/infrastructure/feed-containers/{id}/',
                 path: {
                     'id': id,
@@ -14744,12 +14361,12 @@ export class ApiService {
          * @returns FeedContainer
          * @throws ApiError
          */
-        public static apiV1InfrastructureFeedContainersPartialUpdate(
+        public static apiV1InfrastructureFeedContainersUpdate(
             id: number,
-            requestBody?: PatchedFeedContainer,
+            requestBody: FeedContainer,
         ): CancelablePromise<FeedContainer> {
             return __request(OpenAPI, {
-                method: 'PATCH',
+                method: 'PUT',
                 url: '/api/v1/infrastructure/feed-containers/{id}/',
                 path: {
                     'id': id,
@@ -15505,28 +15122,6 @@ export class ApiService {
         }
         /**
          * ViewSet for temperature profiles with audit trail support.
-         * @param requestBody
-         * @returns TemperatureProfile
-         * @throws ApiError
-         */
-        public static apiV1ScenarioTemperatureProfilesCreate(
-            requestBody: TemperatureProfile,
-        ): CancelablePromise<TemperatureProfile> {
-            return __request(OpenAPI, {
-                method: 'POST',
-                url: '/api/v1/scenario/temperature-profiles/',
-                body: requestBody,
-                mediaType: 'application/json',
-                errors: {
-                    400: `Bad request (validation error)`,
-                    401: `Unauthorized`,
-                    403: `Forbidden`,
-                    500: `Internal Server Error`,
-                },
-            });
-        }
-        /**
-         * ViewSet for temperature profiles with audit trail support.
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
          * @param search A search term.
@@ -15546,6 +15141,28 @@ export class ApiService {
                     'page': page,
                     'search': search,
                 },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for temperature profiles with audit trail support.
+         * @param requestBody
+         * @returns TemperatureProfile
+         * @throws ApiError
+         */
+        public static apiV1ScenarioTemperatureProfilesCreate(
+            requestBody: TemperatureProfile,
+        ): CancelablePromise<TemperatureProfile> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/scenario/temperature-profiles/',
+                body: requestBody,
+                mediaType: 'application/json',
                 errors: {
                     400: `Bad request (validation error)`,
                     401: `Unauthorized`,
@@ -15638,12 +15255,12 @@ export class ApiService {
                  * @returns TemperatureProfile
                  * @throws ApiError
                  */
-                public static apiV1ScenarioTemperatureProfilesUpdate(
+                public static apiV1ScenarioTemperatureProfilesPartialUpdate(
                     profileId: number,
-                    requestBody: TemperatureProfile,
+                    requestBody?: PatchedTemperatureProfile,
                 ): CancelablePromise<TemperatureProfile> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
                         path: {
                             'profile_id': profileId,
@@ -15666,12 +15283,12 @@ export class ApiService {
                  * @returns TemperatureProfile
                  * @throws ApiError
                  */
-                public static apiV1ScenarioTemperatureProfilesPartialUpdate(
+                public static apiV1ScenarioTemperatureProfilesUpdate(
                     profileId: number,
-                    requestBody?: PatchedTemperatureProfile,
+                    requestBody: TemperatureProfile,
                 ): CancelablePromise<TemperatureProfile> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
                         path: {
                             'profile_id': profileId,
@@ -15758,28 +15375,6 @@ export class ApiService {
                 }
                 /**
                  * Enhanced ViewSet for TGC models with audit trail support.
-                 * @param requestBody
-                 * @returns TGCModel
-                 * @throws ApiError
-                 */
-                public static apiV1ScenarioTgcModelsCreate(
-                    requestBody: TGCModel,
-                ): CancelablePromise<TGCModel> {
-                    return __request(OpenAPI, {
-                        method: 'POST',
-                        url: '/api/v1/scenario/tgc-models/',
-                        body: requestBody,
-                        mediaType: 'application/json',
-                        errors: {
-                            400: `Bad request (validation error)`,
-                            401: `Unauthorized`,
-                            403: `Forbidden`,
-                            500: `Internal Server Error`,
-                        },
-                    });
-                }
-                /**
-                 * Enhanced ViewSet for TGC models with audit trail support.
                  * @param location
                  * @param ordering Which field to use when ordering the results.
                  * @param page A page number within the paginated result set.
@@ -15814,6 +15409,28 @@ export class ApiService {
                     });
                 }
                 /**
+                 * Enhanced ViewSet for TGC models with audit trail support.
+                 * @param requestBody
+                 * @returns TGCModel
+                 * @throws ApiError
+                 */
+                public static apiV1ScenarioTgcModelsCreate(
+                    requestBody: TGCModel,
+                ): CancelablePromise<TGCModel> {
+                    return __request(OpenAPI, {
+                        method: 'POST',
+                        url: '/api/v1/scenario/tgc-models/',
+                        body: requestBody,
+                        mediaType: 'application/json',
+                        errors: {
+                            400: `Bad request (validation error)`,
+                            401: `Unauthorized`,
+                            403: `Forbidden`,
+                            500: `Internal Server Error`,
+                        },
+                    });
+                }
+                /**
                  * Get predefined TGC model templates.
                  * @returns TGCModel
                  * @throws ApiError
@@ -15836,12 +15453,12 @@ export class ApiService {
                  * @returns TGCModel
                  * @throws ApiError
                  */
-                public static apiV1ScenarioTgcModelsUpdate(
+                public static apiV1ScenarioTgcModelsPartialUpdate(
                     modelId: number,
-                    requestBody: TGCModel,
+                    requestBody?: PatchedTGCModel,
                 ): CancelablePromise<TGCModel> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/scenario/tgc-models/{model_id}/',
                         path: {
                             'model_id': modelId,
@@ -15864,12 +15481,12 @@ export class ApiService {
                  * @returns TGCModel
                  * @throws ApiError
                  */
-                public static apiV1ScenarioTgcModelsPartialUpdate(
+                public static apiV1ScenarioTgcModelsUpdate(
                     modelId: number,
-                    requestBody?: PatchedTGCModel,
+                    requestBody: TGCModel,
                 ): CancelablePromise<TGCModel> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/scenario/tgc-models/{model_id}/',
                         path: {
                             'model_id': modelId,
@@ -15961,28 +15578,6 @@ export class ApiService {
                 }
                 /**
                  * Enhanced ViewSet for FCR models with audit trail support.
-                 * @param requestBody
-                 * @returns FCRModel
-                 * @throws ApiError
-                 */
-                public static apiV1ScenarioFcrModelsCreate(
-                    requestBody: FCRModel,
-                ): CancelablePromise<FCRModel> {
-                    return __request(OpenAPI, {
-                        method: 'POST',
-                        url: '/api/v1/scenario/fcr-models/',
-                        body: requestBody,
-                        mediaType: 'application/json',
-                        errors: {
-                            400: `Bad request (validation error)`,
-                            401: `Unauthorized`,
-                            403: `Forbidden`,
-                            500: `Internal Server Error`,
-                        },
-                    });
-                }
-                /**
-                 * Enhanced ViewSet for FCR models with audit trail support.
                  * @param ordering Which field to use when ordering the results.
                  * @param page A page number within the paginated result set.
                  * @param search A search term.
@@ -16002,6 +15597,28 @@ export class ApiService {
                             'page': page,
                             'search': search,
                         },
+                        errors: {
+                            400: `Bad request (validation error)`,
+                            401: `Unauthorized`,
+                            403: `Forbidden`,
+                            500: `Internal Server Error`,
+                        },
+                    });
+                }
+                /**
+                 * Enhanced ViewSet for FCR models with audit trail support.
+                 * @param requestBody
+                 * @returns FCRModel
+                 * @throws ApiError
+                 */
+                public static apiV1ScenarioFcrModelsCreate(
+                    requestBody: FCRModel,
+                ): CancelablePromise<FCRModel> {
+                    return __request(OpenAPI, {
+                        method: 'POST',
+                        url: '/api/v1/scenario/fcr-models/',
+                        body: requestBody,
+                        mediaType: 'application/json',
                         errors: {
                             400: `Bad request (validation error)`,
                             401: `Unauthorized`,
@@ -16033,12 +15650,12 @@ export class ApiService {
                  * @returns FCRModel
                  * @throws ApiError
                  */
-                public static apiV1ScenarioFcrModelsUpdate(
+                public static apiV1ScenarioFcrModelsPartialUpdate(
                     modelId: number,
-                    requestBody: FCRModel,
+                    requestBody?: PatchedFCRModel,
                 ): CancelablePromise<FCRModel> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/scenario/fcr-models/{model_id}/',
                         path: {
                             'model_id': modelId,
@@ -16061,12 +15678,12 @@ export class ApiService {
                  * @returns FCRModel
                  * @throws ApiError
                  */
-                public static apiV1ScenarioFcrModelsPartialUpdate(
+                public static apiV1ScenarioFcrModelsUpdate(
                     modelId: number,
-                    requestBody?: PatchedFCRModel,
+                    requestBody: FCRModel,
                 ): CancelablePromise<FCRModel> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/scenario/fcr-models/{model_id}/',
                         path: {
                             'model_id': modelId,
@@ -16153,28 +15770,6 @@ export class ApiService {
                 }
                 /**
                  * Enhanced ViewSet for mortality models with audit trail support.
-                 * @param requestBody
-                 * @returns MortalityModel
-                 * @throws ApiError
-                 */
-                public static apiV1ScenarioMortalityModelsCreate(
-                    requestBody: MortalityModel,
-                ): CancelablePromise<MortalityModel> {
-                    return __request(OpenAPI, {
-                        method: 'POST',
-                        url: '/api/v1/scenario/mortality-models/',
-                        body: requestBody,
-                        mediaType: 'application/json',
-                        errors: {
-                            400: `Bad request (validation error)`,
-                            401: `Unauthorized`,
-                            403: `Forbidden`,
-                            500: `Internal Server Error`,
-                        },
-                    });
-                }
-                /**
-                 * Enhanced ViewSet for mortality models with audit trail support.
                  * @param frequency Rate application frequency
                  *
                  * * `daily` - Daily
@@ -16209,6 +15804,28 @@ export class ApiService {
                     });
                 }
                 /**
+                 * Enhanced ViewSet for mortality models with audit trail support.
+                 * @param requestBody
+                 * @returns MortalityModel
+                 * @throws ApiError
+                 */
+                public static apiV1ScenarioMortalityModelsCreate(
+                    requestBody: MortalityModel,
+                ): CancelablePromise<MortalityModel> {
+                    return __request(OpenAPI, {
+                        method: 'POST',
+                        url: '/api/v1/scenario/mortality-models/',
+                        body: requestBody,
+                        mediaType: 'application/json',
+                        errors: {
+                            400: `Bad request (validation error)`,
+                            401: `Unauthorized`,
+                            403: `Forbidden`,
+                            500: `Internal Server Error`,
+                        },
+                    });
+                }
+                /**
                  * Get predefined mortality model templates.
                  * @returns MortalityModel
                  * @throws ApiError
@@ -16231,12 +15848,12 @@ export class ApiService {
                  * @returns MortalityModel
                  * @throws ApiError
                  */
-                public static apiV1ScenarioMortalityModelsUpdate(
+                public static apiV1ScenarioMortalityModelsPartialUpdate(
                     modelId: number,
-                    requestBody: MortalityModel,
+                    requestBody?: PatchedMortalityModel,
                 ): CancelablePromise<MortalityModel> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/scenario/mortality-models/{model_id}/',
                         path: {
                             'model_id': modelId,
@@ -16259,12 +15876,12 @@ export class ApiService {
                  * @returns MortalityModel
                  * @throws ApiError
                  */
-                public static apiV1ScenarioMortalityModelsPartialUpdate(
+                public static apiV1ScenarioMortalityModelsUpdate(
                     modelId: number,
-                    requestBody?: PatchedMortalityModel,
+                    requestBody: MortalityModel,
                 ): CancelablePromise<MortalityModel> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/scenario/mortality-models/{model_id}/',
                         path: {
                             'model_id': modelId,
@@ -16328,28 +15945,6 @@ export class ApiService {
                 }
                 /**
                  * ViewSet for biological constraints with audit trail support.
-                 * @param requestBody
-                 * @returns BiologicalConstraints
-                 * @throws ApiError
-                 */
-                public static apiV1ScenarioBiologicalConstraintsCreate(
-                    requestBody: BiologicalConstraints,
-                ): CancelablePromise<BiologicalConstraints> {
-                    return __request(OpenAPI, {
-                        method: 'POST',
-                        url: '/api/v1/scenario/biological-constraints/',
-                        body: requestBody,
-                        mediaType: 'application/json',
-                        errors: {
-                            400: `Bad request (validation error)`,
-                            401: `Unauthorized`,
-                            403: `Forbidden`,
-                            500: `Internal Server Error`,
-                        },
-                    });
-                }
-                /**
-                 * ViewSet for biological constraints with audit trail support.
                  * @param isActive
                  * @param page A page number within the paginated result set.
                  * @param search A search term.
@@ -16369,6 +15964,28 @@ export class ApiService {
                             'page': page,
                             'search': search,
                         },
+                        errors: {
+                            400: `Bad request (validation error)`,
+                            401: `Unauthorized`,
+                            403: `Forbidden`,
+                            500: `Internal Server Error`,
+                        },
+                    });
+                }
+                /**
+                 * ViewSet for biological constraints with audit trail support.
+                 * @param requestBody
+                 * @returns BiologicalConstraints
+                 * @throws ApiError
+                 */
+                public static apiV1ScenarioBiologicalConstraintsCreate(
+                    requestBody: BiologicalConstraints,
+                ): CancelablePromise<BiologicalConstraints> {
+                    return __request(OpenAPI, {
+                        method: 'POST',
+                        url: '/api/v1/scenario/biological-constraints/',
+                        body: requestBody,
+                        mediaType: 'application/json',
                         errors: {
                             400: `Bad request (validation error)`,
                             401: `Unauthorized`,
@@ -16400,12 +16017,12 @@ export class ApiService {
                  * @returns BiologicalConstraints
                  * @throws ApiError
                  */
-                public static apiV1ScenarioBiologicalConstraintsUpdate(
+                public static apiV1ScenarioBiologicalConstraintsPartialUpdate(
                     id: number,
-                    requestBody: BiologicalConstraints,
+                    requestBody?: PatchedBiologicalConstraints,
                 ): CancelablePromise<BiologicalConstraints> {
                     return __request(OpenAPI, {
-                        method: 'PUT',
+                        method: 'PATCH',
                         url: '/api/v1/scenario/biological-constraints/{id}/',
                         path: {
                             'id': id,
@@ -16428,12 +16045,12 @@ export class ApiService {
                  * @returns BiologicalConstraints
                  * @throws ApiError
                  */
-                public static apiV1ScenarioBiologicalConstraintsPartialUpdate(
+                public static apiV1ScenarioBiologicalConstraintsUpdate(
                     id: number,
-                    requestBody?: PatchedBiologicalConstraints,
+                    requestBody: BiologicalConstraints,
                 ): CancelablePromise<BiologicalConstraints> {
                     return __request(OpenAPI, {
-                        method: 'PATCH',
+                        method: 'PUT',
                         url: '/api/v1/scenario/biological-constraints/{id}/',
                         path: {
                             'id': id,
@@ -16497,28 +16114,6 @@ export class ApiService {
                 }
                 /**
                  * Enhanced ViewSet for scenarios with audit trail support.
-                 * @param requestBody
-                 * @returns Scenario
-                 * @throws ApiError
-                 */
-                public static apiV1ScenarioScenariosCreate(
-                    requestBody: Scenario,
-                ): CancelablePromise<Scenario> {
-                    return __request(OpenAPI, {
-                        method: 'POST',
-                        url: '/api/v1/scenario/scenarios/',
-                        body: requestBody,
-                        mediaType: 'application/json',
-                        errors: {
-                            400: `Bad request (validation error)`,
-                            401: `Unauthorized`,
-                            403: `Forbidden`,
-                            500: `Internal Server Error`,
-                        },
-                    });
-                }
-                /**
-                 * Enhanced ViewSet for scenarios with audit trail support.
                  * @param createdBy
                  * @param ordering Which field to use when ordering the results.
                  * @param page A page number within the paginated result set.
@@ -16547,6 +16142,28 @@ export class ApiService {
                             'start_date': startDate,
                             'tgc_model__location': tgcModelLocation,
                         },
+                        errors: {
+                            400: `Bad request (validation error)`,
+                            401: `Unauthorized`,
+                            403: `Forbidden`,
+                            500: `Internal Server Error`,
+                        },
+                    });
+                }
+                /**
+                 * Enhanced ViewSet for scenarios with audit trail support.
+                 * @param requestBody
+                 * @returns Scenario
+                 * @throws ApiError
+                 */
+                public static apiV1ScenarioScenariosCreate(
+                    requestBody: Scenario,
+                ): CancelablePromise<Scenario> {
+                    return __request(OpenAPI, {
+                        method: 'POST',
+                        url: '/api/v1/scenario/scenarios/',
+                        body: requestBody,
+                        mediaType: 'application/json',
                         errors: {
                             400: `Bad request (validation error)`,
                             401: `Unauthorized`,
@@ -16636,12 +16253,12 @@ export class ApiService {
                          * @returns Scenario
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioScenariosUpdate(
+                        public static apiV1ScenarioScenariosPartialUpdate(
                             scenarioId: number,
-                            requestBody: Scenario,
+                            requestBody?: PatchedScenario,
                         ): CancelablePromise<Scenario> {
                             return __request(OpenAPI, {
-                                method: 'PUT',
+                                method: 'PATCH',
                                 url: '/api/v1/scenario/scenarios/{scenario_id}/',
                                 path: {
                                     'scenario_id': scenarioId,
@@ -16664,12 +16281,12 @@ export class ApiService {
                          * @returns Scenario
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioScenariosPartialUpdate(
+                        public static apiV1ScenarioScenariosUpdate(
                             scenarioId: number,
-                            requestBody?: PatchedScenario,
+                            requestBody: Scenario,
                         ): CancelablePromise<Scenario> {
                             return __request(OpenAPI, {
-                                method: 'PATCH',
+                                method: 'PUT',
                                 url: '/api/v1/scenario/scenarios/{scenario_id}/',
                                 path: {
                                     'scenario_id': scenarioId,
@@ -17367,6 +16984,48 @@ export class ApiService {
                                     });
                                 }
                                 /**
+                                 * List pending approvals
+                                 * Get all transactions in PENDING state awaiting approval. Useful for approval dashboards.
+                                 * @param company Matches either from or to finance company ID
+                                 * @param dateFrom Start of posting date range (inclusive)
+                                 * @param dateTo End of posting date range (inclusive)
+                                 * @param ordering Which field to use when ordering the results.
+                                 * @param page A page number within the paginated result set.
+                                 * @param pageSize Number of results to return per page.
+                                 * @param state Transaction state
+                                 * @returns PaginatedIntercompanyTransactionList
+                                 * @throws ApiError
+                                 */
+                                public static apiV1FinanceIntercompanyTransactionsPendingApprovalsList(
+                                    company?: number,
+                                    dateFrom?: string,
+                                    dateTo?: string,
+                                    ordering?: string,
+                                    page?: number,
+                                    pageSize?: number,
+                                    state?: string,
+                                ): CancelablePromise<PaginatedIntercompanyTransactionList> {
+                                    return __request(OpenAPI, {
+                                        method: 'GET',
+                                        url: '/api/v1/finance/intercompany/transactions/pending-approvals/',
+                                        query: {
+                                            'company': company,
+                                            'date_from': dateFrom,
+                                            'date_to': dateTo,
+                                            'ordering': ordering,
+                                            'page': page,
+                                            'page_size': pageSize,
+                                            'state': state,
+                                        },
+                                        errors: {
+                                            400: `Bad request (validation error)`,
+                                            401: `Unauthorized`,
+                                            403: `Forbidden`,
+                                            500: `Internal Server Error`,
+                                        },
+                                    });
+                                }
+                                /**
                                  * Read-only access to intercompany transactions.
                                  * @param txId Unique intercompany transaction identifier.
                                  * @returns IntercompanyTransaction
@@ -17385,6 +17044,29 @@ export class ApiService {
                                             401: `Unauthorized`,
                                             403: `Forbidden`,
                                             404: `Not Found`,
+                                            500: `Internal Server Error`,
+                                        },
+                                    });
+                                }
+                                /**
+                                 * Approve intercompany transaction
+                                 * Approve a pending intercompany transaction. Transitions state from PENDING to POSTED. Only Finance Managers can approve transactions.
+                                 * @param txId A unique integer value identifying this intercompany transaction.
+                                 * @returns IntercompanyTransaction
+                                 * @throws ApiError
+                                 */
+                                public static apiV1FinanceIntercompanyTransactionsApproveCreate(
+                                    txId: number,
+                                ): CancelablePromise<IntercompanyTransaction> {
+                                    return __request(OpenAPI, {
+                                        method: 'POST',
+                                        url: '/api/v1/finance/intercompany/transactions/{tx_id}/approve/',
+                                        path: {
+                                            'tx_id': txId,
+                                        },
+                                        errors: {
+                                            401: `Unauthorized`,
+                                            403: `Forbidden`,
                                             500: `Internal Server Error`,
                                         },
                                     });
@@ -17559,30 +17241,6 @@ export class ApiService {
                                  * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
                                  *
                                  * Provides CRUD operations for users with appropriate permission checks.
-                                 * @param requestBody
-                                 * @returns UserCreate
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersCreate(
-                                    requestBody: UserCreate,
-                                ): CancelablePromise<UserCreate> {
-                                    return __request(OpenAPI, {
-                                        method: 'POST',
-                                        url: '/api/v1/users/users/',
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
-                                 *
-                                 * Provides CRUD operations for users with appropriate permission checks.
                                  * @param ordering Which field to use when ordering the results.
                                  * @param page A page number within the paginated result set.
                                  * @param search A search term.
@@ -17602,6 +17260,30 @@ export class ApiService {
                                             'page': page,
                                             'search': search,
                                         },
+                                        errors: {
+                                            400: `Bad request (validation error)`,
+                                            401: `Unauthorized`,
+                                            403: `Forbidden`,
+                                            500: `Internal Server Error`,
+                                        },
+                                    });
+                                }
+                                /**
+                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
+                                 *
+                                 * Provides CRUD operations for users with appropriate permission checks.
+                                 * @param requestBody
+                                 * @returns UserCreate
+                                 * @throws ApiError
+                                 */
+                                public static apiV1UsersUsersCreate(
+                                    requestBody: UserCreate,
+                                ): CancelablePromise<UserCreate> {
+                                    return __request(OpenAPI, {
+                                        method: 'POST',
+                                        url: '/api/v1/users/users/',
+                                        body: requestBody,
+                                        mediaType: 'application/json',
                                         errors: {
                                             400: `Bad request (validation error)`,
                                             401: `Unauthorized`,
@@ -17665,12 +17347,12 @@ export class ApiService {
                                  * @returns User
                                  * @throws ApiError
                                  */
-                                public static apiV1UsersUsersUpdate(
+                                public static apiV1UsersUsersPartialUpdate(
                                     id: number,
-                                    requestBody: User,
+                                    requestBody?: PatchedUser,
                                 ): CancelablePromise<User> {
                                     return __request(OpenAPI, {
-                                        method: 'PUT',
+                                        method: 'PATCH',
                                         url: '/api/v1/users/users/{id}/',
                                         path: {
                                             'id': id,
@@ -17695,12 +17377,12 @@ export class ApiService {
                                  * @returns User
                                  * @throws ApiError
                                  */
-                                public static apiV1UsersUsersPartialUpdate(
+                                public static apiV1UsersUsersUpdate(
                                     id: number,
-                                    requestBody?: PatchedUser,
+                                    requestBody: User,
                                 ): CancelablePromise<User> {
                                     return __request(OpenAPI, {
-                                        method: 'PATCH',
+                                        method: 'PUT',
                                         url: '/api/v1/users/users/{id}/',
                                         path: {
                                             'id': id,

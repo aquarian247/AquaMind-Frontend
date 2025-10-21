@@ -11,13 +11,13 @@
 export type StageTransitionEnvironmental = {
     readonly id: number;
     /**
-     * ID of the batch transfer this environmental record is associated with.
+     * ID of the batch transfer workflow this environmental record is associated with.
      */
-    readonly batch_transfer_id: number;
+    readonly batch_transfer_workflow_id: number;
     /**
-     * The batch transfer this environmental record is associated with.
+     * The batch transfer workflow this environmental record is associated with.
      */
-    batch_transfer: number;
+    batch_transfer_workflow: number;
     /**
      * Water temperature in degrees Celsius during the transfer.
      */

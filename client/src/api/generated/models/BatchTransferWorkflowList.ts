@@ -78,7 +78,7 @@ export type BatchTransferWorkflowList = {
     /**
      * User who created this workflow
      */
-    initiated_by: number;
+    readonly initiated_by: number;
     readonly initiated_by_username: string;
     readonly created_at: string;
 };

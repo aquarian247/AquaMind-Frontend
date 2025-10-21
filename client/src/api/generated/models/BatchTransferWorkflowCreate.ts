@@ -124,10 +124,10 @@ export type BatchTransferWorkflowCreate = {
     /**
      * User who created this workflow
      */
-    initiated_by: number;
+    readonly initiated_by: number;
     /**
      * User who completed this workflow
      */
-    completed_by?: number | null;
+    readonly completed_by: number | null;
 };
 

@@ -266,21 +266,7 @@ const HISTORY_METHODS: Record<AppDomain, Record<string, HistoryMethodMapping>> =
       ),
       detail: async (id: number) => await ApiService.retrieveBatchMortalityEventHistoryDetail(id)
     },
-    'batch-transfer': {
-      list: async (filters?: HistoryFilters) => await ApiService.listBatchBatchTransferHistory(
-        filters?.dateFrom,
-        filters?.dateTo,
-        undefined, // destinationBatch
-        filters?.historyType,
-        filters?.historyUser,
-        undefined, // ordering
-        filters?.page,
-        undefined, // search
-        undefined, // sourceBatch
-        undefined  // transferType
-      ),
-      detail: async (id: number) => await ApiService.retrieveBatchBatchTransferHistoryDetail(id)
-    }
+    // Legacy batch-transfer history removed - use transfer-workflow instead
   },
   [APP_DOMAINS.INFRASTRUCTURE]: {
     'area': {

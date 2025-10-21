@@ -48,29 +48,10 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
   
   const assignments = assignmentsResponse?.results || [];
 
-  // Fetch transfers for this batch
-  const { data: transfers = [], isLoading: isLoadingTransfers, error: transfersError } = useQuery<any[]>({
-    queryKey: ["batch/transfers", batchId],
-    queryFn: async () => {
-      console.log('📡 Fetching transfers for batch:', batchId);
-      const response = await ApiService.apiV1BatchTransfersList(
-        batchId,   // batch filter
-        undefined, // batchIn
-        undefined, // ordering
-        undefined, // page
-        undefined, // search
-        undefined, // transferDate
-        undefined, // transferDateAfter
-        undefined, // transferDateBefore
-        undefined  // transferType
-      );
-      console.log('✅ Transfers fetched:', {
-        count: response.count,
-        resultsLength: response.results?.length || 0,
-      });
-      return response.results || [];
-    },
-  });
+  // Legacy transfers removed - use BatchTransferWorkflow instead
+  const transfers: any[] = [];
+  const isLoadingTransfers = false;
+  const transfersError = null;
 
   // Use stages and containers from props if available, otherwise fetch
   const { data: fetchedContainers, isLoading: isLoadingContainers, error: containersError } = useQuery<any[]>({
