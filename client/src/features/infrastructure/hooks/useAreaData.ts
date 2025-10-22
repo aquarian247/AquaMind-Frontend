@@ -9,7 +9,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { ApiService } from "@/api/generated";
-import { useAreaSummary, type AreaSummary } from "@/features/infrastructure/api";
+import { useAreaSummary, type AreaSummaryData } from "@/features/infrastructure/api";
 import { AuthService, authenticatedFetch } from "@/services/auth.service";
 import { apiConfig } from "@/config/api.config";
 
@@ -65,7 +65,7 @@ export interface EnvironmentalData {
  */
 export interface UseAreaDataReturn {
   area: AreaDetail | undefined;
-  areaSummary: AreaSummary | undefined;
+  areaSummary: AreaSummaryData | undefined;
   rings: Ring[];
   environmentalData: EnvironmentalData | undefined;
   isLoading: boolean;
@@ -126,11 +126,7 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
     data: areaSummary,
     isPending: isAreaSummaryLoading,
     error: areaSummaryError,
-  } = useAreaSummary(areaId) as {
-    data: AreaSummary | undefined;
-    isPending: boolean;
-    error: Error | null;
-  };
+  } = useAreaSummary(areaId);
 
   // 3. Fetch containers/rings for detailed view
   const { data: ringsData, isLoading: isLoadingRings } = useQuery({
@@ -246,7 +242,7 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
     },
   });
 
-  // 4. Fetch environmental data
+  // 4. Fetch environmental data - aggregate stats across all containers in area
   const { data: environmentalData } = useQuery({
     queryKey: ["area", areaId, "environmental"],
     queryFn: async () => {
@@ -263,14 +259,58 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
           };
         }
 
-        // Environmental data fetching not implemented yet - API endpoint needed
-        // Returning null values with hasData: false
+        // If we don't have rings data yet, return no data
+        if (!ringsData?.results || ringsData.results.length === 0) {
+          return {
+            waterTemperature: null,
+            oxygenLevel: null,
+            salinity: null,
+            currentSpeed: null,
+            hasData: false,
+          };
+        }
+
+        // Fetch stats for all containers in this area and aggregate
+        const containerIds = ringsData.results.slice(0, 20).map((r: any) => r.id); // Limit to first 20 for performance
+        const statsPromises = containerIds.map((containerId: number) =>
+          authenticatedFetch(`${apiConfig.baseUrl}/api/v1/environmental/readings/stats/?container=${containerId}`)
+            .then(res => res.json())
+            .catch(() => [])
+        );
+
+        const allStats = await Promise.all(statsPromises);
+        
+        // Aggregate stats across containers by parameter name
+        const parameterAverages: Record<string, number[]> = {};
+        
+        allStats.forEach((containerStats) => {
+          if (Array.isArray(containerStats)) {
+            containerStats.forEach((stat: any) => {
+              const paramName = stat.parameter__name;
+              if (!parameterAverages[paramName]) {
+                parameterAverages[paramName] = [];
+              }
+              parameterAverages[paramName].push(parseFloat(stat.avg_value));
+            });
+          }
+        });
+
+        // Calculate area-wide averages
+        const calculateAvg = (values: number[]) => 
+          values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
+
+        const temperature = calculateAvg(parameterAverages['Temperature'] || []);
+        const oxygen = calculateAvg(parameterAverages['Dissolved Oxygen'] || []);
+        const salinity = calculateAvg(parameterAverages['Salinity'] || []);
+
+        const hasData = temperature !== null || oxygen !== null || salinity !== null;
+
         return {
-          waterTemperature: null,
-          oxygenLevel: null,
-          salinity: null,
-          currentSpeed: null,
-          hasData: false,
+          waterTemperature: temperature,
+          oxygenLevel: oxygen,
+          salinity: salinity,
+          currentSpeed: null, // No sensor/data for current speed
+          hasData,
         };
       } catch (error) {
         console.warn("Failed to fetch environmental data:", error);
@@ -283,6 +323,7 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
         };
       }
     },
+    enabled: !!ringsData?.results && ringsData.results.length > 0,
   });
 
   // Aggregate loading states

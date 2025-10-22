@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { ApiService } from "@/api/generated";
-import { useHallSummaries, type HallSummary } from "@/features/infrastructure/api";
+import { useHallSummaries, type HallSummaryData } from "@/features/infrastructure/api";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
 
 interface Hall {
@@ -83,7 +83,7 @@ export default function StationHalls({ params }: { params: { id: string } }) {
 
   // Create lookup map for summaries (correlate by position since backend doesn't return id)
   const summaryMap = useMemo(() => {
-    if (!hallSummaries || hallSummaries.length === 0) return new Map<number, HallSummary>();
+    if (!hallSummaries || hallSummaries.length === 0) return new Map<number, HallSummaryData>();
     // Map summaries back to hall IDs by position (Promise.all maintains order)
     return new Map(hallIds.map((id, index) => [id, hallSummaries[index]]));
   }, [hallSummaries, hallIds]);
@@ -182,7 +182,15 @@ export default function StationHalls({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {filteredHalls.reduce((sum, hall) => sum + hall.containers, 0)}
+              {summariesLoading
+                ? "..."
+                : formatCount(
+                    filteredHalls.reduce((sum, hall) => {
+                      const summary = summaryMap.get(hall.id);
+                      return sum + (summary?.container_count || 0);
+                    }, 0),
+                    "containers"
+                  )}
             </div>
             <p className="text-xs text-muted-foreground">Active units</p>
           </CardContent>
@@ -195,7 +203,14 @@ export default function StationHalls({ params }: { params: { id: string } }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {filteredHalls.reduce((sum, hall) => sum + hall.totalBiomass, 0)} tons
+              {summariesLoading
+                ? "..."
+                : formatWeight(
+                    filteredHalls.reduce((sum, hall) => {
+                      const summary = summaryMap.get(hall.id);
+                      return sum + (summary?.active_biomass_kg || 0);
+                    }, 0)
+                  )}
             </div>
             <p className="text-xs text-muted-foreground">Current stock</p>
           </CardContent>

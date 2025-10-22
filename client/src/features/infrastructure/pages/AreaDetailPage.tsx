@@ -174,7 +174,7 @@ export default function AreaDetailPage({ params }: AreaDetailPageProps) {
         </TabsContent>
 
         <TabsContent value="operations">
-          <AreaOperationsTab area={area} areaSummary={areaSummary} />
+          <AreaOperationsTab rings={rings} areaSummary={areaSummary} />
         </TabsContent>
 
         <TabsContent value="regulatory">

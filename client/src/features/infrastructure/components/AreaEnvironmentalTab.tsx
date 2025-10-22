@@ -37,14 +37,14 @@ export function AreaEnvironmentalTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {environmental?.hasData
-                ? `${environmental.waterTemperature}°C`
+              {environmental?.hasData && environmental.waterTemperature !== null
+                ? `${environmental.waterTemperature.toFixed(1)}°C`
                 : "N/A"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {environmental?.hasData
+              {environmental?.hasData && environmental.waterTemperature !== null
                 ? "Optimal range: 8-16°C"
-                : "No environmental data available"}
+                : "No temperature data available"}
             </p>
           </CardContent>
         </Card>
@@ -56,10 +56,14 @@ export function AreaEnvironmentalTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {environmental?.hasData ? environmental.oxygenLevel : "N/A"}
+              {environmental?.hasData && environmental.oxygenLevel !== null
+                ? `${environmental.oxygenLevel.toFixed(1)}%`
+                : "N/A"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {environmental?.hasData ? "mg/L" : "No environmental data available"}
+              {environmental?.hasData && environmental.oxygenLevel !== null
+                ? "Dissolved oxygen saturation"
+                : "No oxygen data available"}
             </p>
           </CardContent>
         </Card>
@@ -71,10 +75,14 @@ export function AreaEnvironmentalTab({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {environmental?.hasData ? environmental.salinity : "N/A"}
+              {environmental?.hasData && environmental.salinity !== null
+                ? `${environmental.salinity.toFixed(1)} ppt`
+                : "N/A"}
             </div>
             <p className="text-xs text-muted-foreground">
-              {environmental?.hasData ? "ppt" : "No environmental data available"}
+              {environmental?.salinity !== null
+                ? "Parts per thousand"
+                : "No salinity data available"}
             </p>
           </CardContent>
         </Card>
@@ -85,17 +93,10 @@ export function AreaEnvironmentalTab({
             <Wind className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {environmental?.hasData ? environmental.currentSpeed : "N/A"}
-            </div>
+            <div className="text-2xl font-bold">N/A</div>
             <p className="text-xs text-muted-foreground">
-              {environmental?.hasData ? "m/s" : "No environmental data available"}
+              No current speed data available
             </p>
-            {environmental?.hasData && environmental.currentSpeed && (
-              <div className="mt-2">
-                <Progress value={(environmental.currentSpeed / 1) * 100} />
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

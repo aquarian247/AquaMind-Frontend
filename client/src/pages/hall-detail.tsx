@@ -70,7 +70,6 @@ export default function HallDetail({ params }: { params: { id: string } }) {
     queryKey: ["hall", hallId, "containers"],
     queryFn: async () => {
       // ✅ Use correct camelCase parameter name from generated API
-      // Signature: (active?, area?, areaIn?, containerType?, hall?, hallIn?, name?, ordering?, page?, search?)
       const res = await ApiService.apiV1InfrastructureContainersList(
         undefined,        // active filter
         undefined,        // area
@@ -79,9 +78,46 @@ export default function HallDetail({ params }: { params: { id: string } }) {
         Number(hallId)    // hall (5th parameter)
       );
 
-      /* Map API result to UI shape expected by page */
-      const mapped = (res.results || []).map((c: any) => {
+      const containers = res.results || [];
+      
+      // Fetch batch assignments for all containers in this hall
+      const { authenticatedFetch } = await import("@/services/auth.service");
+      const containerIds = containers.map(c => c.id).join(',');
+      
+      let assignmentsMap = new Map<number, any>();
+      
+      if (containerIds) {
+        try {
+          const assignmentsResponse = await authenticatedFetch(
+            `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/batch/container-assignments/?container__in=${containerIds}&is_active=true&page_size=100`
+          );
+          const assignmentsData = await assignmentsResponse.json();
+          
+          // Map assignments by container ID
+          (assignmentsData.results || []).forEach((assignment: any) => {
+            const containerId = typeof assignment.container === 'object' 
+              ? assignment.container.id 
+              : assignment.container;
+            assignmentsMap.set(containerId, assignment);
+          });
+        } catch (error) {
+          console.warn('Failed to fetch batch assignments:', error);
+        }
+      }
+
+      /* Map API result to UI shape with real data */
+      const mapped = containers.map((c: any) => {
         const capacity = parseFloat(c.volume_m3 ?? "0") || 0;
+        const assignment = assignmentsMap.get(c.id);
+        
+        const biomassKg = assignment ? parseFloat(assignment.biomass_kg || '0') : 0;
+        const fishCount = assignment ? assignment.population_count : 0;
+        const avgWeightG = assignment ? parseFloat(assignment.avg_weight_g || '0') : 0;
+        const avgWeightKg = avgWeightG / 1000;
+        
+        // Calculate density (kg/m³)
+        const density = capacity > 0 ? biomassKg / capacity : 0;
+        
         return {
           id: c.id,
           name: c.name,
@@ -89,19 +125,19 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           hallName: c.hall_name || hall?.name || `Hall ${hallId}`,
           stationId: hall?.freshwater_station ?? 0,
           stationName: hall?.freshwater_station_name ?? "",
-          type: (c.container_type_name as Container["type"]) || "Smolt Tank",
-          stage: "Smolt",
+          type: (c.container_type_name as Container["type"]) || "Tank",
+          stage: assignment?.lifecycle_stage?.name || "Unknown",
           status: c.active ? "active" : "inactive",
-          biomass: 0,
+          biomass: biomassKg,
           capacity,
-          fishCount: 0,
-          averageWeight: 0,
-          temperature: 0,
-          oxygenLevel: 0,
-          flowRate: 0,
+          fishCount,
+          averageWeight: avgWeightKg,
+          temperature: 0, // TODO: Fetch from environmental stats if needed
+          oxygenLevel: 0, // TODO: Fetch from environmental stats if needed
+          flowRate: 0, // Not tracked
           lastMaintenance: new Date().toISOString(),
-          systemStatus: "optimal",
-          density: 0,
+          systemStatus: assignment ? "active" : "empty",
+          density,
           feedingSchedule: "08:00, 12:00, 16:00",
         } as Container;
       });
@@ -348,45 +384,63 @@ export default function HallDetail({ params }: { params: { id: string } }) {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Biomass</span>
-                  <div className="font-semibold text-lg">{container.biomass} kg</div>
+                  <div className="font-semibold text-lg">
+                    {container.biomass > 0 
+                      ? `${container.biomass.toLocaleString()} kg`
+                      : 'Empty'}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Fish Count</span>
-                  <div className="font-semibold text-lg">{container.fishCount.toLocaleString()}</div>
+                  <div className="font-semibold text-lg">
+                    {container.fishCount > 0 
+                      ? container.fishCount.toLocaleString()
+                      : 'Empty'}
+                  </div>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Thermometer className="h-3 w-3 text-blue-500" />
                   <span className="text-muted-foreground">Temp</span>
-                  <div className="font-medium">{container.temperature}°C</div>
+                  <div className="font-medium">N/A</div>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Droplet className="h-3 w-3 text-cyan-500" />
                   <span className="text-muted-foreground">O₂</span>
-                  <div className="font-medium">{container.oxygenLevel} mg/L</div>
+                  <div className="font-medium">N/A</div>
                 </div>
               </div>
               
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Capacity Utilization</span>
-                  <span>{Math.round((container.biomass / container.capacity) * 100)}%</span>
+                  <span>
+                    {container.capacity > 0 && container.biomass > 0
+                      ? `${Math.round((container.biomass / container.capacity) * 100)}%`
+                      : 'N/A'}
+                  </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-600 h-2 rounded-full transition-all" 
-                    style={{ width: `${Math.min((container.biomass / container.capacity) * 100, 100)}%` }}
-                  ></div>
-                </div>
+                {container.capacity > 0 && container.biomass > 0 && (
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all" 
+                      style={{ width: `${Math.min((container.biomass / container.capacity) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Density:</span>
-                  <span>{container.density} kg/m³</span>
+                  <span>
+                    {container.density > 0
+                      ? `${container.density.toFixed(1)} kg/m³`
+                      : 'N/A'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Flow Rate:</span>
-                  <span>{container.flowRate} L/min</span>
+                  <span>N/A</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Feeding:</span>

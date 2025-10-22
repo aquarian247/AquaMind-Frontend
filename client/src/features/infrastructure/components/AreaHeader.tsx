@@ -16,12 +16,12 @@ import { useLocation } from "wouter";
 import type { AreaDetail } from "../hooks/useAreaData";
 import type { FormattedAreaKPIs } from "../utils/areaFormatters";
 import { calculateAreaUtilization } from "../utils/areaFormatters";
-import type { AreaSummary } from "../api";
+import type { AreaSummaryData } from "../api";
 
 interface AreaHeaderProps {
   area: AreaDetail;
   formattedKPIs: FormattedAreaKPIs;
-  areaSummary: AreaSummary | undefined;
+  areaSummary: AreaSummaryData | undefined;
   isAreaSummaryLoading: boolean;
 }
 

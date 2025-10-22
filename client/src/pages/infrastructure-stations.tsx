@@ -168,11 +168,42 @@ export default function InfrastructureStations() {
 
   const geographies = geographiesData?.results || [];
 
+  // Parse geography from URL query parameter (like areas page does)
+  const urlSelectedGeography = useMemo(() => {
+    const queryString = window.location.search.substring(1);
+    const urlParams = new URLSearchParams(queryString);
+    const geo = urlParams.get('geography');
+    return geo || 'all';
+  }, []);
+
+  // Fetch geographies to get ID from name
+  const selectedGeographyId = useMemo(() => {
+    if (urlSelectedGeography === "all" || !geographies.length) return undefined;
+    
+    const normalizedSelection = urlSelectedGeography.toLowerCase().replace(/-/g, ' ');
+    const geo = geographies.find((g: any) => {
+      const normalizedGeoName = g.name.toLowerCase();
+      return normalizedGeoName === normalizedSelection;
+    });
+    
+    return geo?.id;
+  }, [urlSelectedGeography, geographies]);
+
   const { data: stationsData, isLoading } = useQuery({
-    queryKey: ["stations", selectedGeography],
+    queryKey: ["stations", selectedGeographyId],
     queryFn: async () => {
-      // ✅ Use generated ApiService for stations list
-      const data = await ApiService.apiV1InfrastructureFreshwaterStationsList();
+      // ✅ Use server-side geography filtering
+      const data = await ApiService.apiV1InfrastructureFreshwaterStationsList(
+        undefined, // active
+        selectedGeographyId, // geography filter
+        undefined, // geographyIn
+        undefined, // name
+        undefined, // nameIcontains
+        undefined, // ordering
+        undefined, // page
+        undefined, // search
+        undefined  // stationType
+      );
       
       const mapped = (data.results || []).map((raw: any): Station => ({
         id: raw.id,
@@ -191,16 +222,7 @@ export default function InfrastructureStations() {
         lastInspection: new Date().toISOString() as string,
       }));
 
-      const filtered =
-        selectedGeography === "all"
-          ? mapped
-          : mapped.filter((s: Station) =>
-              s.geography
-                .toLowerCase()
-                .includes(selectedGeography.toLowerCase()),
-            );
-
-      return { results: filtered };
+      return { results: mapped };
     },
   });
 

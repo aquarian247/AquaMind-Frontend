@@ -299,20 +299,39 @@ export default function RingDetail({ params }: { params: { id: string } }) {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Mortality Rate</span>
-                    <span className="font-medium">{ring.mortalityRate?.toFixed(2) || '0.15'}%</span>
+                    <span className="font-medium">
+                      {ring.mortalityRate !== undefined && ring.mortalityRate > 0 
+                        ? `${ring.mortalityRate.toFixed(2)}%`
+                        : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Feed Conversion Ratio</span>
-                    <span className="font-medium">{ring.feedConversionRatio?.toFixed(2) || '1.12'}</span>
+                    <span className="font-medium">
+                      {ring.feedConversionRatio !== undefined && ring.feedConversionRatio > 0
+                        ? ring.feedConversionRatio.toFixed(2)
+                        : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Daily Feed Amount</span>
-                    <span className="font-medium">{ring.dailyFeedAmount?.toFixed(1) || '850'} kg</span>
+                    <span className="font-medium">
+                      {ring.dailyFeedAmount !== undefined && ring.dailyFeedAmount > 0
+                        ? `${ring.dailyFeedAmount.toFixed(1)} kg`
+                        : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Last Feeding</span>
                     <span className="font-medium">
-                      {ring.lastFeedingTime ? new Date(ring.lastFeedingTime).toLocaleTimeString() : '08:30'}
+                      {ring.lastFeedingTime 
+                        ? new Date(ring.lastFeedingTime).toLocaleString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            hour: 'numeric', 
+                            minute: '2-digit' 
+                          })
+                        : 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -335,28 +354,32 @@ export default function RingDetail({ params }: { params: { id: string } }) {
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Thermometer className="h-6 w-6 mx-auto mb-2 text-blue-600" />
                     <div className="text-2xl font-bold text-blue-600">
-                      {ring.waterTemperature?.toFixed(1) || '8.5'}°C
+                      {ring.waterTemperature && ring.waterTemperature > 0
+                        ? `${ring.waterTemperature.toFixed(1)}°C`
+                        : 'N/A'}
                     </div>
                     <div className="text-xs text-muted-foreground">Temperature</div>
                   </div>
                   <div className="text-center p-4 bg-cyan-50 rounded-lg">
                     <Droplet className="h-6 w-6 mx-auto mb-2 text-cyan-600" />
                     <div className="text-2xl font-bold text-cyan-600">
-                      {ring.oxygenSaturation?.toFixed(1) || '95.2'}%
+                      {ring.oxygenSaturation && ring.oxygenSaturation > 0
+                        ? `${ring.oxygenSaturation.toFixed(1)}%`
+                        : 'N/A'}
                     </div>
                     <div className="text-xs text-muted-foreground">Oxygen Saturation</div>
                   </div>
                   <div className="text-center p-4 bg-teal-50 rounded-lg">
                     <Wind className="h-6 w-6 mx-auto mb-2 text-teal-600" />
-                    <div className="text-2xl font-bold text-teal-600">
-                      {ring.currentSpeed?.toFixed(1) || '0.3'} m/s
-                    </div>
+                    <div className="text-2xl font-bold text-teal-600">N/A</div>
                     <div className="text-xs text-muted-foreground">Current Speed</div>
                   </div>
                   <div className="text-center p-4 bg-indigo-50 rounded-lg">
                     <Waves className="h-6 w-6 mx-auto mb-2 text-indigo-600" />
                     <div className="text-2xl font-bold text-indigo-600">
-                      {ring.salinity?.toFixed(1) || '34.8'}‰
+                      {ring.salinity && ring.salinity > 0
+                        ? `${ring.salinity.toFixed(1)}‰`
+                        : 'N/A'}
                     </div>
                     <div className="text-xs text-muted-foreground">Salinity</div>
                   </div>

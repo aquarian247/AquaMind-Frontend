@@ -56,17 +56,17 @@ const INFRASTRUCTURE_QUERY_OPTIONS = {
 
 /**
  * Hook to fetch area summary with server-side aggregation
- * Note: Backend does not have summary endpoint for areas yet.
- * Returns base area data without aggregated metrics.
+ * Uses /api/v1/infrastructure/areas/{id}/summary/ endpoint
+ * Returns aggregated metrics: biomass, population, ring count, etc.
  * @param areaId - The area ID to fetch summary for
  * @returns Query result with area summary data
  */
-export function useAreaSummary(areaId: number | undefined): UseQueryResult<AreaSummary, Error> {
+export function useAreaSummary(areaId: number | undefined): UseQueryResult<AreaSummaryData, Error> {
   return useQuery({
     queryKey: ["infrastructure", "area-summary", areaId],
     queryFn: async () => {
       if (!areaId) throw new Error("Area ID is required");
-      return await ApiService.apiV1InfrastructureAreasRetrieve(areaId);
+      return await ApiService.areaSummary(areaId);
     },
     enabled: !!areaId,
     ...INFRASTRUCTURE_QUERY_OPTIONS,
@@ -91,18 +91,36 @@ export function useStationSummary(stationId: number | undefined): UseQueryResult
 }
 
 /**
+ * Hall summary data structure (from /halls/{id}/summary/ endpoint)
+ */
+export type HallSummaryData = {
+  container_count: number;
+  active_biomass_kg: number;
+  population_count: number;
+  avg_weight_kg: number;
+};
+
+/**
  * Hook to fetch hall summary with server-side aggregation
- * Note: Backend does not have summary endpoint for halls yet.
- * Returns base hall data without aggregated metrics.
+ * Uses /api/v1/infrastructure/halls/{id}/summary/ endpoint
  * @param hallId - The hall ID to fetch summary for
  * @returns Query result with hall summary data
  */
-export function useHallSummary(hallId: number | undefined): UseQueryResult<HallSummary, Error> {
+export function useHallSummary(hallId: number | undefined): UseQueryResult<HallSummaryData, Error> {
   return useQuery({
     queryKey: ["infrastructure", "hall-summary", hallId],
     queryFn: async () => {
       if (!hallId) throw new Error("Hall ID is required");
-      return await ApiService.apiV1InfrastructureHallsRetrieve(hallId);
+      
+      // Use authenticatedFetch since generated client doesn't have hall-summary method yet
+      const { authenticatedFetch } = await import("@/services/auth.service");
+      const { OpenAPI } = await import("@/api/generated");
+      
+      const response = await authenticatedFetch(
+        `${OpenAPI.BASE}/api/v1/infrastructure/halls/${hallId}/summary/`
+      );
+      
+      return await response.json();
     },
     enabled: !!hallId,
     ...INFRASTRUCTURE_QUERY_OPTIONS,
@@ -186,12 +204,21 @@ export function useStationSummaries(stationIds: number[]): UseQueryResult<Freshw
  * @param hallIds - Array of hall IDs to fetch summaries for
  * @returns Array of query results
  */
-export function useHallSummaries(hallIds: number[]): UseQueryResult<HallSummary[], Error> {
+export function useHallSummaries(hallIds: number[]): UseQueryResult<HallSummaryData[], Error> {
   return useQuery({
     queryKey: ["infrastructure", "hall-summaries", hallIds],
     queryFn: async () => {
+      // Use authenticatedFetch since generated client doesn't have hall-summary method
+      const { authenticatedFetch } = await import("@/services/auth.service");
+      const { OpenAPI } = await import("@/api/generated");
+      
       const summaries = await Promise.all(
-        hallIds.map(id => ApiService.apiV1InfrastructureHallsRetrieve(id))
+        hallIds.map(async (id) => {
+          const response = await authenticatedFetch(
+            `${OpenAPI.BASE}/api/v1/infrastructure/halls/${id}/summary/`
+          );
+          return await response.json();
+        })
       );
       return summaries;
     },

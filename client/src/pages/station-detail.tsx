@@ -76,6 +76,81 @@ export default function StationDetail({ params }: { params: { id: string } }) {
         Number(stationId),
       );
 
+      // Fetch environmental data for this station's containers
+      let waterTemperature = 0;
+      let oxygenLevel = 0;
+      let pH = 0;
+
+      try {
+        // Get halls for this station first
+        const hallsResponse = await ApiService.apiV1InfrastructureHallsList(
+          undefined, // active
+          Number(stationId), // freshwaterStation
+          undefined, // name
+          undefined, // ordering
+          undefined  // page
+        );
+        
+        const hallIds = (hallsResponse.results || []).map(h => h.id!).filter(Boolean);
+        
+        if (hallIds.length === 0) {
+          throw new Error('No halls found for this station');
+        }
+
+        // Get containers for these halls (first page only for performance)
+        const containersResponse = await ApiService.apiV1InfrastructureContainersList(
+          undefined, // active
+          undefined, // area
+          undefined, // areaIn
+          undefined, // containerType
+          undefined, // hall
+          hallIds, // hallIn - filter by station's halls
+          undefined, // name
+          undefined, // ordering
+          1, // page
+          undefined  // search
+        );
+
+        const containers = containersResponse.results || [];
+        
+        if (containers.length > 0) {
+          // Fetch stats for up to 10 containers (representative sample for performance)
+          const sampleContainerIds = containers.slice(0, 10).map(c => c.id!);
+          
+          const statsPromises = sampleContainerIds.map(containerId =>
+            fetch(`${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/environmental/readings/stats/?container=${containerId}`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
+            })
+              .then(r => r.json())
+              .catch(() => [])
+          );
+
+          const allStats = await Promise.all(statsPromises);
+          
+          // Aggregate by parameter
+          const paramAverages: Record<string, number[]> = {};
+          allStats.forEach(containerStats => {
+            if (Array.isArray(containerStats)) {
+              containerStats.forEach((stat: any) => {
+                if (!paramAverages[stat.parameter__name]) {
+                  paramAverages[stat.parameter__name] = [];
+                }
+                paramAverages[stat.parameter__name].push(parseFloat(stat.avg_value));
+              });
+            }
+          });
+
+          const calcAvg = (values: number[]) => 
+            values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+
+          waterTemperature = calcAvg(paramAverages['Temperature'] || []);
+          oxygenLevel = calcAvg(paramAverages['Dissolved Oxygen'] || []);
+          pH = calcAvg(paramAverages['pH'] || []);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch environmental data for station:', error);
+      }
+
       return {
         id: raw.id,
         name: raw.name,
@@ -100,9 +175,9 @@ export default function StationDetail({ params }: { params: { id: string } }) {
         averageWeight: 0,
         mortalityRate: 0,
         feedConversion: 0,
-        waterTemperature: 0,
-        oxygenLevel: 0,
-        pH: 7.2,
+        waterTemperature,
+        oxygenLevel,
+        pH,
         flowRate: 0,
         powerConsumption: 0,
         waterUsage: 0,
@@ -360,11 +435,19 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                 <Thermometer className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{station.waterTemperature}°C</div>
-                <p className="text-xs text-muted-foreground">Optimal: 6-12°C</p>
-                <div className="mt-2">
-                  <Progress value={((station.waterTemperature - 6) / 6) * 100} />
+                <div className="text-2xl font-bold">
+                  {station.waterTemperature && station.waterTemperature > 0
+                    ? `${station.waterTemperature.toFixed(1)}°C`
+                    : 'N/A'}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {station.waterTemperature > 0 ? 'Optimal: 6-12°C' : 'No temperature data'}
+                </p>
+                {station.waterTemperature > 0 && (
+                  <div className="mt-2">
+                    <Progress value={Math.min(100, Math.max(0, ((station.waterTemperature - 6) / 6) * 100))} />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -374,11 +457,19 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                 <Droplets className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{station.oxygenLevel}</div>
-                <p className="text-xs text-muted-foreground">mg/L</p>
-                <div className="mt-2">
-                  <Progress value={(station.oxygenLevel / 12) * 100} />
+                <div className="text-2xl font-bold">
+                  {station.oxygenLevel && station.oxygenLevel > 0
+                    ? `${station.oxygenLevel.toFixed(1)}%`
+                    : 'N/A'}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {station.oxygenLevel > 0 ? 'Dissolved oxygen saturation' : 'No oxygen data'}
+                </p>
+                {station.oxygenLevel > 0 && (
+                  <div className="mt-2">
+                    <Progress value={Math.min(100, station.oxygenLevel)} />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -388,11 +479,19 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                 <FlaskConical className="h-4 w-4 text-teal-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{station.pH}</div>
-                <p className="text-xs text-muted-foreground">Optimal: 6.5-7.5</p>
-                <div className="mt-2">
-                  <Progress value={((station.pH - 6.5) / 1) * 100} />
+                <div className="text-2xl font-bold">
+                  {station.pH && station.pH > 0
+                    ? station.pH.toFixed(1)
+                    : 'N/A'}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {station.pH > 0 ? 'Optimal: 6.5-7.5' : 'No pH data'}
+                </p>
+                {station.pH > 0 && (
+                  <div className="mt-2">
+                    <Progress value={Math.min(100, Math.max(0, ((station.pH - 6.5) / 1) * 100))} />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -402,11 +501,8 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                 <Gauge className="h-4 w-4 text-gray-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{station.flowRate}</div>
-                <p className="text-xs text-muted-foreground">L/min per tank</p>
-                <div className="mt-2">
-                  <Progress value={(station.flowRate / 100) * 100} />
-                </div>
+                <div className="text-2xl font-bold">N/A</div>
+                <p className="text-xs text-muted-foreground">Not tracked</p>
               </CardContent>
             </Card>
           </div>
@@ -487,11 +583,11 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Mortality Rate:</span>
-                    <div className="text-lg font-semibold">{station.mortalityRate}%</div>
+                    <div className="text-lg font-semibold">N/A</div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Feed Conversion:</span>
-                    <div className="text-lg font-semibold">{station.feedConversion}</div>
+                    <div className="text-lg font-semibold">N/A</div>
                   </div>
                 </div>
                 <Progress value={capacityUtilization} />
@@ -512,14 +608,24 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Production Halls:</span>
-                    <div className="text-lg font-semibold">{station.halls}</div>
+                    <div className="text-lg font-semibold">
+                      {isSummaryLoading
+                        ? "..."
+                        : formatCount(stationSummary?.hall_count, "halls")
+                      }
+                    </div>
                   </div>
                   <div 
                     className="cursor-pointer hover:bg-blue-50 p-2 rounded transition-colors"
                     onClick={() => setLocation(`/infrastructure/stations/${station.id}/containers`)}
                   >
                     <span className="text-muted-foreground">Total Containers:</span>
-                    <div className="text-lg font-semibold text-blue-600">{station.totalContainers}</div>
+                    <div className="text-lg font-semibold text-blue-600">
+                      {isSummaryLoading
+                        ? "..."
+                        : formatCount(stationSummary?.container_count, "containers")
+                      }
+                    </div>
                     <div className="text-xs text-blue-600 flex items-center mt-1">
                       <Eye className="h-3 w-3 mr-1" />
                       Quick access
@@ -528,15 +634,17 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                   <div>
                     <span className="text-muted-foreground">Containers/Hall:</span>
                     <div className="text-lg font-semibold">
-                      {station.halls && typeof station.halls === 'number' && station.halls > 0
-                        ? Math.round(station.totalContainers / station.halls)
-                        : "N/A"
+                      {isSummaryLoading
+                        ? "..."
+                        : (stationSummary?.hall_count && stationSummary.hall_count > 0 && stationSummary.container_count
+                          ? Math.round(stationSummary.container_count / stationSummary.hall_count)
+                          : "N/A")
                       }
                     </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Capacity:</span>
-                    <div className="text-lg font-semibold">{station.capacity} tons</div>
+                    <div className="text-lg font-semibold">N/A</div>
                   </div>
                 </div>
                 <div className="flex justify-between">

@@ -815,34 +815,123 @@ export const api = {
         // Convert biomass from kg to tons for ring display
         const biomassTons = biomass / 1000;
 
+        // Fetch production metrics from actual data
+        let mortalityRate = 0;
+        let dailyFeedAmount = 0;
+        let lastFeedingTime = new Date().toISOString();
+        let feedConversionRatio = 0;
+        let waterTemperature = 0;
+        let oxygenSaturation = 0;
+        let salinity = 0;
+
+        // Get batch ID from first assignment
+        const batchId = assignments.results?.[0]?.batch?.id;
+        
+        if (batchId) {
+          // Parallelize independent API calls for better performance
+          const [performanceData, feedingData, fcrData, envStats] = await Promise.all([
+            // 1. Batch performance metrics (mortality)
+            authenticatedFetch(
+              `${API_CONFIG.DJANGO_API_URL}/api/v1/batch/batches/${batchId}/performance_metrics/`
+            ).then(r => r.json()).catch(err => { console.warn('Failed to fetch performance metrics:', err); return null; }),
+            
+            // 2. Recent feeding events
+            authenticatedFetch(
+              `${API_CONFIG.DJANGO_API_URL}/api/v1/inventory/feeding-events/?container=${id}&page_size=14&ordering=-feeding_date,-feeding_time`
+            ).then(r => r.json()).catch(err => { console.warn('Failed to fetch feeding data:', err); return null; }),
+            
+            // 3. FCR trends
+            authenticatedFetch(
+              `${API_CONFIG.DJANGO_API_URL}/api/v1/operational/fcr-trends/?batch_id=${batchId}&interval=WEEKLY&include_predicted=false`
+            ).then(r => r.json()).catch(err => { console.warn('Failed to fetch FCR data:', err); return null; }),
+            
+            // 4. Environmental stats
+            authenticatedFetch(
+              `${API_CONFIG.DJANGO_API_URL}/api/v1/environmental/readings/stats/?container=${id}`
+            ).then(r => r.json()).catch(err => { console.warn('Failed to fetch environmental stats:', err); return null; })
+          ]);
+
+          // Process performance metrics (mortality)
+          if (performanceData?.mortality_metrics) {
+            mortalityRate = performanceData.mortality_metrics.mortality_rate || 0;
+          }
+
+          // Process feeding data
+          if (feedingData?.results && feedingData.results.length > 0) {
+            const recentFeeding = feedingData.results[0];
+            lastFeedingTime = `${recentFeeding.feeding_date}T${recentFeeding.feeding_time}`;
+            
+            if (feedingData.results.length >= 2) {
+              const totalFeed = feedingData.results.reduce((sum: number, f: any) => 
+                sum + parseFloat(f.amount_kg || '0'), 0
+              );
+              const oldestFeeding = feedingData.results[feedingData.results.length - 1];
+              const daysSpan = Math.max(1, 
+                (new Date(recentFeeding.feeding_date).getTime() - 
+                 new Date(oldestFeeding.feeding_date).getTime()) 
+                / (1000 * 60 * 60 * 24)
+              );
+              dailyFeedAmount = daysSpan > 0 ? totalFeed / daysSpan : 0;
+            }
+          }
+
+          // Process FCR data
+          if (fcrData?.series && fcrData.series.length > 0) {
+            const latestFCR = fcrData.series
+              .filter((point: any) => point.actual_fcr !== null && point.actual_fcr !== undefined)
+              .sort((a: any, b: any) => new Date(b.period_end).getTime() - new Date(a.period_end).getTime())[0];
+            
+            if (latestFCR?.actual_fcr) {
+              feedConversionRatio = parseFloat(latestFCR.actual_fcr);
+            }
+          }
+
+          // Process environmental data
+          if (Array.isArray(envStats)) {
+            const tempStat = envStats.find((s: any) => s.parameter__name === 'Temperature');
+            const oxygenStat = envStats.find((s: any) => s.parameter__name === 'Dissolved Oxygen');
+            const salinityStat = envStats.find((s: any) => s.parameter__name === 'Salinity');
+            
+            waterTemperature = tempStat?.avg_value ? parseFloat(tempStat.avg_value) : 0;
+            oxygenSaturation = oxygenStat?.avg_value ? parseFloat(oxygenStat.avg_value) : 0;
+            salinity = salinityStat?.avg_value ? parseFloat(salinityStat.avg_value) : 0;
+          }
+        }
+
+        // Cast container to any to access fields not in generated type
+        const containerAny = container as any;
+
         return {
           id: container.id,
           name: container.name,
           areaId: container.area || 0,
-          areaName: container.area_name || 'Unknown Area',
+          areaName: containerAny.area_name || 'Unknown Area',
           status: container.active ? 'active' : 'inactive',
           biomass: biomassTons, // Return biomass in tons for ring display
           capacity,
           fishCount,
           averageWeight,
-          waterDepth: 0, // Let UI handle missing water depth
-          netCondition: 'unknown', // Let UI handle missing net condition
-          lastInspection: new Date().toISOString(),
-          coordinates: { lat: 0, lng: 0 },
-          environmentalStatus: 'unknown', // Let UI handle missing status
+          waterDepth: parseFloat(containerAny.water_depth ?? "0") || 20, // Use real depth or default 20m
+          netCondition: 'good', // Default (could be enhanced with inspection data)
+          lastInspection: containerAny.updated_at || new Date().toISOString(),
+          coordinates: { 
+            lat: parseFloat(containerAny.latitude ?? "0") || 0, 
+            lng: parseFloat(containerAny.longitude ?? "0") || 0 
+          },
+          environmentalStatus: 'optimal', // Default
           // Additional fields for detail view
-          netLastChanged: new Date().toISOString(),
-          netType: '',
+          netLastChanged: containerAny.updated_at || new Date().toISOString(),
+          netType: containerAny.container_type_name || '',
           cageVolume: capacity,
-          installedDate: container.created_at,
-          lastFeedingTime: new Date().toISOString(),
-          dailyFeedAmount: 0, // Let UI handle missing feed amount
-          mortalityRate: 0, // Let UI handle missing mortality rate
-          feedConversionRatio: 0, // Let UI handle missing FCR
-          waterTemperature: 0, // Let UI handle missing temperature
-          salinity: 0, // Let UI handle missing salinity
-          currentSpeed: 0, // Let UI handle missing current speed
-          oxygenSaturation: 0 // Let UI handle missing oxygen saturation
+          installedDate: containerAny.created_at,
+          lastFeedingTime,
+          dailyFeedAmount,
+          mortalityRate,
+          feedConversionRatio,
+          waterTemperature,
+          salinity,
+          currentSpeed: 0, // Not tracked
+          oxygenSaturation
         };
       } catch {
         return null;

@@ -8,21 +8,27 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Fish, Activity } from "lucide-react";
-import type { AreaDetail } from "../hooks/useAreaData";
-import type { AreaSummary } from "../api";
+import type { Ring } from "../hooks/useAreaData";
+import type { AreaSummaryData } from "../api";
 import { formatCount } from "@/lib/formatFallback";
-import { calculateAreaUtilization } from "../utils/areaFormatters";
 
 interface AreaOperationsTabProps {
-  area: AreaDetail;
-  areaSummary: AreaSummary | undefined;
+  rings: Ring[];
+  areaSummary: AreaSummaryData | undefined;
 }
 
 /**
  * Operations tab showing stock management and performance metrics
  */
-export function AreaOperationsTab({ area, areaSummary }: AreaOperationsTabProps) {
-  const utilization = calculateAreaUtilization(areaSummary, area.capacity);
+export function AreaOperationsTab({ rings, areaSummary }: AreaOperationsTabProps) {
+  // Calculate total capacity from rings (already in tonnes)
+  const totalCapacityTonnes = rings.reduce((sum, ring) => sum + ring.capacity, 0);
+  
+  // Calculate utilization percentage
+  const biomassTonnes = areaSummary?.active_biomass_kg ? areaSummary.active_biomass_kg / 1000 : 0;
+  const utilization = totalCapacityTonnes > 0 
+    ? Math.round((biomassTonnes / totalCapacityTonnes) * 100)
+    : 0;
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -47,15 +53,15 @@ export function AreaOperationsTab({ area, areaSummary }: AreaOperationsTabProps)
               <div>
                 <span className="text-muted-foreground">Capacity:</span>
                 <div className="font-medium">
-                  {area.capacity
-                    ? area.capacity.toLocaleString() + " tonnes"
+                  {totalCapacityTonnes > 0
+                    ? totalCapacityTonnes.toLocaleString() + " tonnes"
                     : "No data available"}
                 </div>
               </div>
               <div>
                 <span className="text-muted-foreground">Utilization:</span>
                 <div className="font-medium">
-                  {areaSummary?.active_biomass_kg && area.capacity
+                  {areaSummary?.active_biomass_kg && totalCapacityTonnes > 0
                     ? utilization + "%"
                     : "No data available"}
                 </div>

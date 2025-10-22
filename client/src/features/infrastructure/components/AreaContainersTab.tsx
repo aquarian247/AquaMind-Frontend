@@ -32,7 +32,7 @@ import type { Ring } from "../hooks/useAreaData";
 import type { FormattedAreaKPIs } from "../utils/areaFormatters";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
 import { countActiveRings, calculateAverageRingDepth } from "../utils/areaFormatters";
-import type { AreaSummary } from "../api";
+import type { AreaSummaryData } from "../api";
 
 interface AreaContainersTabProps {
   rings: Ring[];
@@ -42,7 +42,7 @@ interface AreaContainersTabProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   isLoadingRings: boolean;
-  areaSummary: AreaSummary | undefined;
+  areaSummary: AreaSummaryData | undefined;
   isAreaSummaryLoading: boolean;
   formattedKPIs: FormattedAreaKPIs;
 }

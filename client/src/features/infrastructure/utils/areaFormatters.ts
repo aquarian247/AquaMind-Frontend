@@ -8,7 +8,7 @@
  */
 
 import { formatWeight, formatCount, formatFallback } from "@/lib/formatFallback";
-import type { AreaSummary } from "@/features/infrastructure/api";
+import type { AreaSummaryData } from "@/features/infrastructure/api";
 
 /**
  * Container/Ring display data after formatting
@@ -54,7 +54,7 @@ export interface FormattedAreaKPIs {
  * // kpis.totalBiomass = "45.2 t" or "0 t"
  * ```
  */
-export function formatAreaKPIs(summary: AreaSummary | undefined): FormattedAreaKPIs {
+export function formatAreaKPIs(summary: AreaSummaryData | undefined): FormattedAreaKPIs {
   // Biomass: Convert kg to tonnes, 1 decimal place
   // Honest fallback: use 0 when data unavailable (not N/A) for numerical displays
   const biomassKg = summary?.active_biomass_kg ?? null;
@@ -163,7 +163,7 @@ export function formatContainerData(container: {
  * @returns Utilization percentage (0-100) or 0 if data unavailable
  */
 export function calculateAreaUtilization(
-  areaSummary: AreaSummary | undefined,
+  areaSummary: AreaSummaryData | undefined,
   areaCapacity: number | undefined
 ): number {
   if (!areaSummary?.active_biomass_kg || !areaCapacity || areaCapacity === 0) {
