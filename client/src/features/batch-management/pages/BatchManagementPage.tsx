@@ -20,8 +20,10 @@ import type { ExtendedBatch } from "@/features/batch/types";
 // Helper component for "select batch" placeholder
 const SelectBatchPlaceholder = ({ message }: { message: string }) => (
   <Card>
-    <CardContent className="p-8 text-center">
-      <p className="text-muted-foreground">{message}</p>
+    <CardContent className="p-12 text-center space-y-3">
+      <Fish className="h-12 w-12 mx-auto text-muted-foreground/50" />
+      <p className="text-lg font-medium text-muted-foreground">{message}</p>
+      <p className="text-sm text-muted-foreground/70">Click the "Select Batch" button on any batch card in the Overview tab</p>
     </CardContent>
   </Card>
 );

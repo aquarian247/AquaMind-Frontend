@@ -20,7 +20,7 @@ interface OperationalInsightsCardProps {
   feedingEvents: FeedingEvent[];
   currentDateRange: { from?: Date; to?: Date };
   uniqueContainers: string[];
-  currentFCR: number;
+  currentFCR: number | null;
 }
 
 export function OperationalInsightsCard({
@@ -80,11 +80,11 @@ export function OperationalInsightsCard({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">Previous period FCR:</span>
-              <p className="font-medium">{(currentFCR + 0.05).toFixed(2)}</p>
+              <p className="font-medium">{currentFCR !== null ? (currentFCR + 0.05).toFixed(2) : "N/A"}</p>
             </div>
             <div>
               <span className="text-muted-foreground">Improvement:</span>
-              <p className="font-medium text-green-600">-4.0%</p>
+              <p className="font-medium text-green-600">{currentFCR !== null ? "-4.0%" : "N/A"}</p>
             </div>
           </div>
         </div>

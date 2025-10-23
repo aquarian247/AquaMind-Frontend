@@ -53,9 +53,18 @@ const getStageProgress = (stageName?: string, daysActive?: number) => {
   if (!stageName || !daysActive) return 0;
 
   const stages = getLifecycleStages();
-  const currentStageIndex = stages.findIndex(s =>
-    stageName.toLowerCase().includes(s.name.toLowerCase())
-  );
+  const normalizedStageName = stageName.toLowerCase().trim();
+  
+  // Use exact match or word boundary matching to prevent "Post-Smolt" from matching "Smolt"
+  const currentStageIndex = stages.findIndex(s => {
+    const stageLower = s.name.toLowerCase();
+    // Special case for Egg/Alevin
+    if (stageLower === "egg" && normalizedStageName.includes("alevin")) return true;
+    // Exact match or match as complete word
+    return normalizedStageName === stageLower || 
+           normalizedStageName === stageLower.replace("-", " ") ||
+           normalizedStageName === stageLower.replace(" ", "-");
+  });
 
   if (currentStageIndex === -1) return 0;
 
@@ -196,11 +205,23 @@ export function BatchOverview({
                       </div>
                     </div>
 
-                    <Link href={`/batch-details/${batch.id}`}>
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-2" />View Details
+                    <div className="flex gap-2">
+                      <Button 
+                        variant={selectedBatch?.id === batch.id ? "default" : "outline"} 
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onBatchSelect(batch);
+                        }}
+                      >
+                        {selectedBatch?.id === batch.id ? "✓ Selected" : "Select Batch"}
                       </Button>
-                    </Link>
+                      <Link href={`/batch-details/${batch.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-2" />View Details
+                        </Button>
+                      </Link>
+                    </div>
                   </div>
 
                   {/* Lifecycle Progress */}
@@ -212,10 +233,19 @@ export function BatchOverview({
                     <div className="flex space-x-1">
                       {getLifecycleStages().map((stage, index) => {
                         const stages = getLifecycleStages();
-                        const currentStageIndex = stages.findIndex(s =>
-                          batch.current_lifecycle_stage?.name?.toLowerCase().includes(s.name.toLowerCase()) ||
-                          (s.name === "Egg" && batch.current_lifecycle_stage?.name?.toLowerCase().includes("alevin"))
-                        );
+                        const normalizedBatchStage = (batch.current_lifecycle_stage?.name || '').toLowerCase().trim();
+                        
+                        // Use exact match to prevent "Post-Smolt" from matching "Smolt"
+                        const currentStageIndex = stages.findIndex(s => {
+                          const stageLower = s.name.toLowerCase();
+                          // Special case for Egg/Alevin
+                          if (stageLower === "egg" && normalizedBatchStage.includes("alevin")) return true;
+                          // Exact match or match as complete word
+                          return normalizedBatchStage === stageLower || 
+                                 normalizedBatchStage === stageLower.replace("-", " ") ||
+                                 normalizedBatchStage === stageLower.replace(" ", "-");
+                        });
+                        
                         const isCurrentStage = currentStageIndex === index;
                         const isCompleted = currentStageIndex > index;
 

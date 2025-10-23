@@ -8,7 +8,7 @@ interface PeriodOverviewCardProps {
   feedingSummaryEventsCount: number | undefined;
   totalEvents: number;
   feedingEventsLength: number;
-  currentFCR: number;
+  currentFCR: number | null;
   averageDailyFeed: number;
 }
 
@@ -69,14 +69,14 @@ export function PeriodOverviewCard({
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground">Feed Conversion</label>
             <div className="space-y-1">
-              <p className={cn("text-2xl font-bold", getFCRColor(currentFCR))}>
-                {Number(currentFCR).toFixed(2)} FCR
+              <p className={cn("text-2xl font-bold", currentFCR !== null ? getFCRColor(currentFCR) : "text-muted-foreground")}>
+                {currentFCR !== null ? `${Number(currentFCR).toFixed(2)} FCR` : "N/A"}
               </p>
               <p className="text-sm text-muted-foreground">
-                Feed conversion ratio
+                {currentFCR !== null ? "Feed conversion ratio" : "No FCR data available"}
               </p>
               <p className="text-sm text-blue-600">
-                {currentFCR <= 1.2 ? "Excellent" : currentFCR <= 1.4 ? "Good" : "Needs attention"}
+                {currentFCR !== null ? (currentFCR <= 1.2 ? "Excellent" : currentFCR <= 1.4 ? "Good" : "Needs attention") : ""}
               </p>
             </div>
           </div>
@@ -104,7 +104,7 @@ export function PeriodOverviewCard({
                 Feed utilization
               </p>
               <p className="text-sm text-green-600">
-                {((currentFCR > 0 ? 100 / currentFCR : 0)).toFixed(1)}% conversion efficiency
+                {(currentFCR !== null && currentFCR > 0) ? `${(100 / currentFCR).toFixed(1)}% conversion efficiency` : "N/A"}
               </p>
             </div>
           </div>

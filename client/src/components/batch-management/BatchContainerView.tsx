@@ -107,18 +107,33 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Active Container Assignments</h3>
-          <p className="text-sm text-muted-foreground">
-            Current locations for {selectedBatch.batch_number}
-          </p>
-        </div>
-        <Badge variant="outline">
-          {assignments.length} assignment{assignments.length !== 1 ? 's' : ''}
-        </Badge>
-      </div>
+      {/* Selected Batch Header */}
+      <Card className="bg-primary/5 border-primary/20">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Fish className="h-5 w-5 text-primary" />
+              <div>
+                <h3 className="text-lg font-semibold">
+                  {selectedBatch.batch_number}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {selectedBatch.species_name || "Unknown Species"} • {selectedBatch.status}
+                  {(selectedBatch as any).current_lifecycle_stage?.name && 
+                    ` • ${(selectedBatch as any).current_lifecycle_stage.name}`
+                  }
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">Active Containers</div>
+                <div className="text-2xl font-bold text-primary">{assignments.length}</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Assignment Grid - Shows active assignments directly */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -35,9 +35,18 @@ export function getStageProgress(stageName?: string, daysActive?: number): numbe
   if (!stageName || !daysActive) return 0;
 
   const stages = getLifecycleStages();
-  const currentStageIndex = stages.findIndex(s => 
-    stageName.toLowerCase().includes(s.name.toLowerCase())
-  );
+  const normalizedStageName = stageName.toLowerCase().trim();
+  
+  // Use exact match to prevent "Post-Smolt" from matching "Smolt"
+  const currentStageIndex = stages.findIndex(s => {
+    const stageLower = s.name.toLowerCase();
+    // Special case for Egg/Alevin
+    if (stageLower === "egg" && normalizedStageName.includes("alevin")) return true;
+    // Exact match or match as complete word (handle both hyphenated and space-separated)
+    return normalizedStageName === stageLower || 
+           normalizedStageName === stageLower.replace("-", " ") ||
+           normalizedStageName === stageLower.replace(" ", "-");
+  });
 
   if (currentStageIndex === -1) return 0;
 

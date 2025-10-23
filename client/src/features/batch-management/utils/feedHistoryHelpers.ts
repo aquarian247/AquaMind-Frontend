@@ -102,22 +102,20 @@ export function calculateAverageDailyFeed(
  * Get current Feed Conversion Ratio (FCR) from latest feeding summary
  * 
  * @param feedingSummaries - Array of feeding summary objects
- * @param defaultFCR - Default FCR value if no summaries exist
- * @returns Current FCR value
+ * @returns Current FCR value, or null if no data available
  * 
  * @example
- * getCurrentFCR([{fcr: 1.2}, {fcr: 1.25}], 1.3) // 1.25 (latest)
- * getCurrentFCR([], 1.3) // 1.3 (default)
+ * getCurrentFCR([{fcr: 1.2}, {fcr: 1.25}]) // 1.25 (latest)
+ * getCurrentFCR([]) // null (no data)
  */
 export function getCurrentFCR(
-  feedingSummaries: { fcr: number }[],
-  defaultFCR = 1.25
-): number {
+  feedingSummaries: { fcr: number }[]
+): number | null {
   if (feedingSummaries.length === 0) {
-    return defaultFCR;
+    return null;
   }
   const latestSummary = feedingSummaries[feedingSummaries.length - 1];
-  return latestSummary?.fcr || defaultFCR;
+  return latestSummary?.fcr || null;
 }
 
 /**

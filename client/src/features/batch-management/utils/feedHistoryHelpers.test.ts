@@ -180,12 +180,8 @@ describe('feedHistoryHelpers', () => {
       expect(getCurrentFCR(summaries)).toBe(1.3);
     });
 
-    it('should return default FCR when no summaries', () => {
-      expect(getCurrentFCR([])).toBe(1.25);
-    });
-
-    it('should use custom default FCR', () => {
-      expect(getCurrentFCR([], 1.5)).toBe(1.5);
+    it('should return null when no summaries', () => {
+      expect(getCurrentFCR([])).toBeNull();
     });
 
     it('should handle single summary', () => {
@@ -193,9 +189,9 @@ describe('feedHistoryHelpers', () => {
       expect(getCurrentFCR(summaries)).toBe(1.1);
     });
 
-    it('should handle summary with undefined fcr', () => {
+    it('should return null for summary with undefined fcr', () => {
       const summaries = [{ fcr: undefined as any }];
-      expect(getCurrentFCR(summaries, 1.3)).toBe(1.3);
+      expect(getCurrentFCR(summaries)).toBeNull();
     });
   });
 

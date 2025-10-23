@@ -51,7 +51,7 @@ interface PeriodSummariesTabProps {
   feedingSummary: { eventsCount: number; totalFeedKg?: number } | null | undefined;
   totalEvents: number;
   feedingEvents: FeedingEvent[];
-  currentFCR: number;
+  currentFCR: number | null;
   averageDailyFeed: number;
   feedTypeUsage: FeedTypeUsage[];
   uniqueContainers: string[];

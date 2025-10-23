@@ -24,7 +24,7 @@ interface FeedTypeUsage {
 }
 
 interface FeedEfficiencyTabProps {
-  currentFCR: number;
+  currentFCR: number | null;
   totalFeedConsumed: number;
   totalFeedCost: number;
   feedTypeUsage: FeedTypeUsage[];
@@ -56,22 +56,22 @@ export function FeedEfficiencyTab({
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Current FCR</span>
-              <span className={getFCRColor(currentFCR) + " font-bold"}>
-                {currentFCR.toFixed(2)}
+              <span className={(currentFCR !== null ? getFCRColor(currentFCR) : "text-muted-foreground") + " font-bold"}>
+                {currentFCR !== null ? currentFCR.toFixed(2) : "N/A"}
               </span>
             </div>
 
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Cost per kg of fish</span>
               <span className="font-bold">
-                ${totalFeedConsumed > 0 ? ((totalFeedCost / totalFeedConsumed) * currentFCR).toFixed(2) : '0.00'}
+                ${(totalFeedConsumed > 0 && currentFCR !== null) ? ((totalFeedCost / totalFeedConsumed) * currentFCR).toFixed(2) : 'N/A'}
               </span>
             </div>
 
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Feed efficiency</span>
               <span className="font-bold text-green-600">
-                {currentFCR > 0 ? (100 / currentFCR).toFixed(1) : '0'}%
+                {(currentFCR !== null && currentFCR > 0) ? (100 / currentFCR).toFixed(1) : 'N/A'}%
               </span>
             </div>
 

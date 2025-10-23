@@ -10,7 +10,7 @@ interface FeedSummaryCardsProps {
   totalFeedCost: number;
   averageDailyFeed: number;
   daysSinceStart: number;
-  currentFCR: number;
+  currentFCR: number | null;
 }
 
 export function FeedSummaryCards({
@@ -87,11 +87,11 @@ export function FeedSummaryCards({
           <BarChart3 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={cn("text-2xl font-bold", getFCRColor(currentFCR))}>
-            {Number(currentFCR).toFixed(2)} FCR
+          <div className={cn("text-2xl font-bold", currentFCR !== null ? getFCRColor(currentFCR) : "text-muted-foreground")}>
+            {currentFCR !== null ? `${Number(currentFCR).toFixed(2)} FCR` : "N/A"}
           </div>
           <p className="text-xs text-muted-foreground">
-            Feed conversion ratio
+            {currentFCR !== null ? "Feed conversion ratio" : "No FCR data available"}
           </p>
         </CardContent>
       </Card>
