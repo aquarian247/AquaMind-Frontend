@@ -163,8 +163,8 @@ describe('ExecutiveDashboardPage', () => {
     render(<ExecutiveDashboardPage />, { wrapper });
 
     // Geography filter is applied to Overview tab hooks (visible by default)
-    expect(api.useExecutiveSummary).toHaveBeenCalledWith('global');
-    expect(api.useFacilitySummaries).toHaveBeenCalledWith('global');
+    expect(api.useExecutiveSummary).toHaveBeenCalledWith(1); // Default to Faroe Islands
+    expect(api.useFacilitySummaries).toHaveBeenCalledWith(1); // Default to Faroe Islands
     
     // Note: Financial/Strategic/Market hooks only called when tabs are active
   });

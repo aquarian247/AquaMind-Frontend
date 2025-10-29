@@ -53,8 +53,8 @@ export interface KPIData {
 export interface ExecutiveSummary {
   geography_id: number | null;
   geography_name: string;
-  period_start: string;
-  period_end: string;
+  period_start: string | null;
+  period_end: string | null;
   
   // Biomass & Population
   total_biomass_kg: number | null;

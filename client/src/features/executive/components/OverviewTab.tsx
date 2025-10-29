@@ -74,31 +74,31 @@ export function OverviewTab({ geography }: OverviewTabProps) {
         subtitle: 'Specific Growth Rate',
       }),
       formatKPI({
-        title: 'Feed This Week',
+        title: 'Total Feed Consumed',
         value: summary.feed_this_week_kg,
         unit: 'kg',
-        subtitle: 'All facilities',
+        subtitle: 'All batches',
       }),
 
       // Row 3: Mortality
       formatKPI({
-        title: 'Mortality Count',
+        title: 'Total Mortality',
         value: summary.mortality_count_week,
         unit: 'fish',
-        subtitle: 'This week',
+        subtitle: 'Cumulative total',
         decimalPlaces: 0,
       }),
       formatKPI({
         title: 'Mortality Biomass',
         value: summary.mortality_biomass_kg,
         unit: 'kg',
-        subtitle: 'This week',
+        subtitle: 'Cumulative total',
       }),
       formatKPI({
         title: 'Mortality %',
         value: summary.mortality_percentage,
         unit: '%',
-        subtitle: 'Of total population',
+        subtitle: 'Average across batches',
       }),
 
       // Row 4: Lice & Operations
@@ -106,14 +106,14 @@ export function OverviewTab({ geography }: OverviewTabProps) {
         title: 'Mature Lice',
         value: summary.mature_lice_average,
         unit: 'per fish',
-        subtitle: 'Last 7 days',
+        subtitle: 'Recent average',
         // Note: Alert level displayed via FacilityList table, not in KPI card
       }),
       formatKPI({
         title: 'Movable Lice',
         value: summary.movable_lice_average,
         unit: 'per fish',
-        subtitle: 'Last 7 days',
+        subtitle: 'Recent average',
       }),
       formatKPI({
         title: 'Capacity Utilization',

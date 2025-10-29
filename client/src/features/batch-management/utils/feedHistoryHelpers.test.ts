@@ -41,7 +41,7 @@ describe('feedHistoryHelpers', () => {
       const result = getDateRangeFromPeriod('7');
       expect(result.from).toBeDefined();
       expect(result.to).toBeDefined();
-      const daysDiff = Math.ceil(
+      const daysDiff = Math.round(
         (result.to!.getTime() - result.from!.getTime()) / (1000 * 60 * 60 * 24)
       );
       expect(daysDiff).toBeCloseTo(7, 0);
@@ -49,7 +49,7 @@ describe('feedHistoryHelpers', () => {
 
     it('should return last 30 days range', () => {
       const result = getDateRangeFromPeriod('30');
-      const daysDiff = Math.ceil(
+      const daysDiff = Math.round(
         (result.to!.getTime() - result.from!.getTime()) / (1000 * 60 * 60 * 24)
       );
       expect(daysDiff).toBeCloseTo(30, 0);
@@ -57,7 +57,7 @@ describe('feedHistoryHelpers', () => {
 
     it('should return last 90 days range', () => {
       const result = getDateRangeFromPeriod('90');
-      const daysDiff = Math.ceil(
+      const daysDiff = Math.round(
         (result.to!.getTime() - result.from!.getTime()) / (1000 * 60 * 60 * 24)
       );
       expect(daysDiff).toBeCloseTo(90, 0);

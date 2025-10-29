@@ -275,10 +275,18 @@ export default function BatchDetails() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {batch.start_date ? Math.floor((new Date().getTime() - new Date(batch.start_date).getTime()) / (1000 * 60 * 60 * 24)) : '0'} days
+              {batch.start_date ? Math.floor((
+                (batch.actual_end_date 
+                  ? new Date(batch.actual_end_date).getTime() 
+                  : new Date().getTime()
+                ) - new Date(batch.start_date).getTime()
+              ) / (1000 * 60 * 60 * 24)) : '0'} days
             </div>
             <p className="text-xs text-muted-foreground">
-              Started {batch.start_date || 'Unknown'}
+              {batch.actual_end_date 
+                ? `Harvested ${batch.actual_end_date}`
+                : `Started ${batch.start_date || 'Unknown'}`
+              }
             </p>
           </CardContent>
         </Card>

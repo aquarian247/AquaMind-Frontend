@@ -29,7 +29,7 @@ import { useQuery } from '@tanstack/react-query';
  */
 export default function ExecutiveDashboardPage() {
   const [, navigate] = useLocation();
-  const [geography, setGeography] = useState<GeographyFilterValue>('global');
+  const [geography, setGeography] = useState<GeographyFilterValue>(1); // Default to Faroe Islands
   const [activeTab, setActiveTab] = useState('overview');
 
   // Fetch available geographies for filter

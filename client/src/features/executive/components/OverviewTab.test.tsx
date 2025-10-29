@@ -96,7 +96,7 @@ describe('OverviewTab', () => {
     expect(screen.getByText('Total Biomass')).toBeInTheDocument();
     expect(screen.getByText('Average Weight')).toBeInTheDocument();
     expect(screen.getByText('TGC')).toBeInTheDocument();
-    expect(screen.getByText('Mortality Count')).toBeInTheDocument();
+    expect(screen.getByText('Total Mortality')).toBeInTheDocument();
     expect(screen.getByText('Mature Lice')).toBeInTheDocument();
     expect(screen.getByText('Capacity Utilization')).toBeInTheDocument();
 

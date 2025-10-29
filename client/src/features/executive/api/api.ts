@@ -28,10 +28,11 @@ import {
 
 /**
  * Hook: useExecutiveSummary
- * 
+ *
  * Fetches geography-level aggregated KPIs for the executive dashboard.
- * Combines data from infrastructure, batch, and lice endpoints.
- * 
+ * Uses the new geography summary endpoint when specific geography is selected,
+ * otherwise combines data from infrastructure, batch, and lice endpoints.
+ *
  * @param geography - Geography ID or 'global' for all geographies
  */
 export function useExecutiveSummary(
@@ -43,28 +44,94 @@ export function useExecutiveSummary(
       // Determine if we're querying a specific geography or global
       const geographyId = geography === 'global' ? null : geography;
 
-      // Parallel fetch of all required data
-      const [infraSummary, batchSummary, liceSummary] = await Promise.all([
-        // Infrastructure summary (if specific geography)
-        geographyId
-          ? ApiService.apiV1InfrastructureGeographiesSummaryRetrieve(geographyId)
-          : Promise.resolve(null),
+      // If specific geography is selected, use the new geography summary endpoint
+      if (geographyId) {
+        // Fetch geography summary (cumulative data for demo - test data lacks recent activity), infrastructure summary, batch summary, and lice summary (last 2 weeks) in parallel
+        const [geographySummary, infraSummary, batchSummary, liceSummary] = await Promise.all([
+          ApiService.batchGeographySummary(geographyId, undefined, undefined),
+          ApiService.apiV1InfrastructureGeographiesSummaryRetrieve(geographyId) as Promise<any>,
+          ApiService.batchContainerAssignmentsSummary(
+            undefined, // area
+            undefined, // containerType
+            geographyId, // geography
+            undefined, // hall
+            true, // isActive
+            undefined // station
+          ),
+          ApiService.apiV1HealthLiceCountsSummaryRetrieve(
+            undefined, // area
+            new Date().toISOString().split('T')[0], // endDate
+            geographyId, // geography
+            new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // startDate (2 weeks)
+          ),
+        ]);
 
-        // Batch/container summary
+        // Map geography summary response to ExecutiveSummary interface
+        const summary: ExecutiveSummary = {
+          geography_id: geographySummary.geography_id || geographyId,
+          geography_name: geographySummary.geography_name || 'Unknown',
+          period_start: geographySummary.period_start || null,
+          period_end: geographySummary.period_end || null,
+
+          // Biomass & Population from multiple sources
+          total_biomass_kg: geographySummary.growth_metrics?.total_biomass_kg || null,
+          total_population: batchSummary.total_population || null, // From batch container assignments
+          average_weight_g: geographySummary.growth_metrics?.avg_weight_g || null,
+
+          // Growth Metrics from geography summary
+          tgc_average: geographySummary.growth_metrics?.avg_tgc || null,
+          sgr_average: geographySummary.growth_metrics?.avg_sgr || null,
+
+          // Feed & FCR from feed metrics
+          feed_this_week_kg: geographySummary.feed_metrics?.total_feed_kg || null,
+          fcr_average: geographySummary.feed_metrics?.avg_fcr || null,
+
+          // Mortality from mortality metrics (cumulative totals across all batches)
+          mortality_count_week: geographySummary.mortality_metrics?.total_count || null,
+          mortality_biomass_kg: geographySummary.mortality_metrics?.total_biomass_kg || null,
+          mortality_percentage: geographySummary.mortality_metrics?.avg_mortality_rate_percent || null,
+
+          // Lice Management from lice summary
+          mature_lice_average: liceSummary.by_development_stage?.mature || liceSummary.average_per_fish || null,
+          movable_lice_average: liceSummary.by_development_stage?.movable || liceSummary.average_per_fish || null,
+          lice_alert_level: getLiceAlertLevel(
+            liceSummary.by_development_stage?.mature || liceSummary.average_per_fish || null,
+            liceSummary.by_development_stage?.movable || liceSummary.average_per_fish || null
+          ),
+
+          // Infrastructure from infra summary
+          total_containers: infraSummary.container_count || null,
+          active_batches: geographySummary.total_batches || null,
+          capacity_utilization_percentage: calculateCapacityUtilization(
+            geographySummary.growth_metrics?.total_biomass_kg ?? null,
+            infraSummary.capacity_kg ?? null
+          ),
+
+          // Freshwater Releases (not available)
+          released_from_freshwater_week: null,
+        };
+
+        return summary;
+      }
+
+      // For global view, combine data from multiple endpoints (existing behavior)
+      // Parallel fetch of all required data
+      const [batchSummary, liceSummary] = await Promise.all([
+        // Batch/container summary (global)
         ApiService.batchContainerAssignmentsSummary(
           undefined, // area
           undefined, // containerType
-          geographyId ?? undefined, // geography (convert null to undefined)
+          undefined, // geography (global)
           undefined, // hall
           true, // isActive
           undefined // station
         ),
 
-        // Lice summary (last 7 days)
+        // Lice summary (last 7 days, global)
         ApiService.apiV1HealthLiceCountsSummaryRetrieve(
           undefined, // area
           new Date().toISOString().split('T')[0], // endDate
-          geographyId ?? undefined, // geography (convert null to undefined)
+          undefined, // geography (global)
           new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // startDate
         ),
       ]);
@@ -89,11 +156,8 @@ export function useExecutiveSummary(
 
       // Construct executive summary
       const summary: ExecutiveSummary = {
-        geography_id: geographyId,
-        geography_name:
-          geographyId && infraSummary
-            ? infraSummary.name || 'Unknown'
-            : 'Global',
+        geography_id: null, // Global view
+        geography_name: 'Global',
         period_start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
           .toISOString()
           .split('T')[0],
@@ -167,11 +231,12 @@ export function useFacilitySummaries(
         ? geographiesList.results.filter((g) => g.id === geographyId)
         : geographiesList.results;
 
-      // For each geography, fetch summary data
+      // For each geography, fetch summary data including the new geography summary endpoint
       const facilitySummaries: FacilitySummary[] = await Promise.all(
         geosToProcess.map(async (geo) => {
           try {
-            const [batchSummary, liceSummary] = await Promise.all([
+            const [geographySummary, batchSummary, liceSummary] = await Promise.all([
+              ApiService.batchGeographySummary(geo.id!, undefined, undefined),
               ApiService.batchContainerAssignmentsSummary(
                 undefined, // area
                 undefined, // containerType
@@ -188,9 +253,9 @@ export function useFacilitySummaries(
               ),
             ]);
 
-            const biomassKg = batchSummary.active_biomass_kg || null;
+            const biomassKg = geographySummary.growth_metrics?.total_biomass_kg || null;
             const population = batchSummary.total_population || null; // Total fish count
-            const averageWeightG = calculateAverageWeight(biomassKg, population);
+            const averageWeightG = geographySummary.growth_metrics?.avg_weight_g || null;
 
             const liceAvgPerFish = liceSummary.average_per_fish || null;
             const liceByStage = liceSummary.by_development_stage || {};
@@ -198,11 +263,14 @@ export function useFacilitySummaries(
             const movableLice = liceByStage['movable'] || liceAvgPerFish || null;
             const liceAlertLevel = getLiceAlertLevel(matureLice, movableLice);
 
+            const mortalityPercentage = geographySummary.mortality_metrics?.avg_mortality_rate_percent || null;
+            const fcr = geographySummary.feed_metrics?.avg_fcr || null;
+
             const healthStatus = getFacilityHealthStatus({
               matureLice,
               movableLice,
-              mortalityPercentage: null, // TODO: Add when mortality endpoint available
-              fcr: null, // TODO: Add when FCR aggregation available
+              mortalityPercentage,
+              fcr,
             });
 
             // Note: Container counts not available in batch summary endpoint
@@ -220,9 +288,9 @@ export function useFacilitySummaries(
               // Key Metrics
               biomass_kg: biomassKg,
               average_weight_g: averageWeightG,
-              tgc: null, // TODO: Calculate from growth data
-              fcr: null, // TODO: Get from FCR trends
-              mortality_percentage: null, // TODO: Calculate from mortality events
+              tgc: geographySummary.growth_metrics?.avg_tgc || null,
+              fcr: fcr,
+              mortality_percentage: mortalityPercentage,
 
               // Lice Status
               mature_lice_average: matureLice,
