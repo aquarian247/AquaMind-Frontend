@@ -30,6 +30,7 @@ interface BatchDetails {
   } | null;
   start_date: string;
   expected_end_date?: string | null;
+  actual_end_date?: string | null;
   calculated_population_count: number;
   calculated_biomass_kg: number;
   status: string;

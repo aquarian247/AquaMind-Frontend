@@ -27124,6 +27124,12 @@ components:
           nullable: true
           description: Anticipated end date for the batch (e.g., for harvest or transfer)
             (YYYY-MM-DD). Defaults to 30 days after start_date if not provided.
+        actual_end_date:
+          type: string
+          format: date
+          nullable: true
+          description: Actual end date when the batch was completed/harvested (YYYY-MM-DD).
+            Used to freeze age counter in UI.
         notes:
           type: string
           description: Any general notes or comments about the batch (optional).
@@ -35918,6 +35924,12 @@ components:
           nullable: true
           description: Anticipated end date for the batch (e.g., for harvest or transfer)
             (YYYY-MM-DD). Defaults to 30 days after start_date if not provided.
+        actual_end_date:
+          type: string
+          format: date
+          nullable: true
+          description: Actual end date when the batch was completed/harvested (YYYY-MM-DD).
+            Used to freeze age counter in UI.
         notes:
           type: string
           description: Any general notes or comments about the batch (optional).

@@ -55,6 +55,10 @@ export type PatchedBatch = {
      */
     expected_end_date?: string | null;
     /**
+     * Actual end date when the batch was completed/harvested (YYYY-MM-DD). Used to freeze age counter in UI.
+     */
+    actual_end_date?: string | null;
+    /**
      * Any general notes or comments about the batch (optional).
      */
     notes?: string;
