@@ -1,210 +1,105 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { 
   Heart, 
-  Activity, 
-  AlertTriangle, 
-  TrendingUp, 
-  Calendar,
-  FileText,
+  FileText, 
+  Microscope,
+  Beaker,
+  Pill,
+  TestTube,
   Syringe,
-  Bug,
-  Users,
-  BarChart3,
   Plus,
-  Search,
-  Filter
+  Edit,
+  TrendingUp,
+  AlertTriangle,
+  Activity
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { ApiService } from "@/api/generated/services/ApiService";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// Unified client-computed API
-import { api } from "@/lib/api";
-import { formatCount, formatFallback, formatPercentage } from "@/lib/formatFallback";
+import { formatCount, formatPercentage } from "@/lib/formatFallback";
+import { 
+  useJournalEntries, 
+  useHealthSamplingEvents, 
+  useHealthLabSamples, 
+  useTreatments,
+  useSampleTypes,
+  useVaccinationTypes,
+  useLiceCounts
+} from "@/features/health/api";
+import { JournalEntryForm } from "@/features/health/components/JournalEntryForm";
+import { HealthSamplingEventForm } from "@/features/health/components/HealthSamplingEventForm";
+import { HealthLabSampleForm } from "@/features/health/components/HealthLabSampleForm";
+import { TreatmentForm } from "@/features/health/components/TreatmentForm";
+import { SampleTypeForm } from "@/features/health/components/SampleTypeForm";
+import { VaccinationTypeForm } from "@/features/health/components/VaccinationTypeForm";
+import type { 
+  JournalEntry, 
+  HealthSamplingEvent, 
+  HealthLabSample, 
+  Treatment,
+  SampleType,
+  VaccinationType 
+} from "@/api/generated";
 
-// Health data interfaces based on the comprehensive data model
-interface HealthJournalEntry {
-  id: number;
-  batch: number;
-  container: number;
-  entryDate: string;
-  observations: string;
-  veterinarian: string;
-  healthStatus: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
-  flaggedForReview: boolean;
-  reviewedBy?: string;
-  reviewDate?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+type DialogType = 'journalEntry' | 'samplingEvent' | 'labSample' | 'treatment' | 'sampleType' | 'vaccinationType' | null;
 
-interface HealthParameter {
-  id: number;
-  name: string;
-  description: string;
-  minValue: number;
-  maxValue: number;
-  unit: string;
-  category: 'physical' | 'behavioral' | 'environmental';
-}
-
-interface MortalityRecord {
-  id: number;
-  batch: number;
-  container: number;
-  date: string;
-  count: number;
-  reason?: string;
-  notes?: string;
-  reportedBy: string;
-  veterinarianReview: boolean;
-}
-
-interface LiceCount {
-  id: number;
-  batch: number;
-  container: number;
-  countDate: string;
-  adultFemale: number;
-  adultMale: number;
-  juvenile: number;
-  countedBy: string;
-}
-
-interface Treatment {
-  id: number;
-  batch: number;
-  container: number;
-  treatmentType: string;
-  medication: string;
-  dosage: string;
-  startDate: string;
-  endDate?: string;
-  veterinarian: string;
-  reason: string;
-  effectiveness?: 'excellent' | 'good' | 'fair' | 'poor';
-  notes?: string;
-}
-
-interface HealthSummary {
-  totalBatches: number;
-  healthyBatches: number;
-  batchesUnderTreatment: number;
-  averageHealthScore: number;
-  recentMortality: number;
-  activeTreatments: number;
-  pendingReviews: number;
-  avgLiceCount: number;
+interface DialogState {
+  type: DialogType;
+  mode: 'create' | 'edit';
+  data?: any;
 }
 
 export default function Health() {
-  const [selectedTab, setSelectedTab] = useState("overview");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const [selectedGeography, setSelectedGeography] = useState("all");
+  const [dialogState, setDialogState] = useState<DialogState>({ type: null, mode: 'create' });
   const isMobile = useIsMobile();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Geography data
-  const { data: geographiesData } = useQuery({
-    queryKey: ["/api/v1/infrastructure/geographies/"],
-    queryFn: async () => {
-      try {
-        const response = await ApiService.apiV1InfrastructureGeographiesList();
-        return response;
-      } catch (error) {
-        console.error("Failed to fetch geographies:", error);
-        throw new Error("Failed to fetch geographies");
-      }
-    },
-  });
+  // Fetch real data from backend
+  const { data: journalEntriesData } = useJournalEntries({ page: 1 });
+  const { data: samplingEventsData } = useHealthSamplingEvents({ page: 1 });
+  const { data: labSamplesData } = useHealthLabSamples({ page: 1 });
+  const { data: treatmentsData } = useTreatments({ page: 1 });
+  const { data: sampleTypesData } = useSampleTypes({ page: 1 });
+  const { data: vaccinationTypesData } = useVaccinationTypes({ page: 1 });
+  const { data: liceCountsData } = useLiceCounts({ page: 1 });
 
-  // Health dashboard data
-  const { data: healthSummary, isLoading: summaryLoading } = useQuery<HealthSummary>({
-    // Non-URL key prevents the endpoint validator from flagging this query.
-    queryKey: ["health/summary", selectedGeography],
-    // Use client-computed aggregation
-    queryFn: () => api.health.getSummary(selectedGeography),
-  });
-
-  const { data: recentJournalEntries = [] } = useQuery<HealthJournalEntry[]>({
-    queryKey: ["health/journal", { limit: 10 }],
-    queryFn: async () => [],
-  });
-
-  const { data: criticalAlerts = [] } = useQuery<MortalityRecord[]>({
-    queryKey: ["health/alerts/critical"],
-    queryFn: () => api.health.getCriticalAlerts(),
-  });
-
-  const { data: activeTreatments = [] } = useQuery<Treatment[]>({
-    queryKey: ["health/treatments/active"],
-    queryFn: async () => [],
-  });
-
-  const { data: recentMortality = [] } = useQuery<MortalityRecord[]>({
-    queryKey: ["health/mortality/recent"],
-    queryFn: async () => [],
-  });
-
-  const { data: liceCounts = [] } = useQuery<LiceCount[]>({
-    queryKey: ["health/lice/recent"],
-    queryFn: async () => [],
-  });
-
-  const getHealthStatusColor = (status: string) => {
-    switch (status) {
-      case "excellent": return "bg-green-500";
-      case "good": return "bg-blue-500";
-      case "fair": return "bg-yellow-500";
-      case "poor": return "bg-orange-500";
-      case "critical": return "bg-red-500";
-      default: return "bg-gray-500";
-    }
+  const openCreateDialog = (type: DialogType) => {
+    setDialogState({ type, mode: 'create', data: undefined });
   };
 
-  const getHealthStatusText = (status: string) => {
-    switch (status) {
-      case "excellent": return "Excellent";
-      case "good": return "Good";
-      case "fair": return "Fair";
-      case "poor": return "Poor";
-      case "critical": return "Critical";
-      default: return "Unknown";
-    }
+  const openEditDialog = (type: DialogType, data: any) => {
+    setDialogState({ type, mode: 'edit', data });
   };
 
-  if (summaryLoading) {
-    return (
-      <div className="container mx-auto p-4 space-y-6">
-        <div className="flex items-center space-x-2">
-          <Heart className="h-8 w-8 text-red-500" />
-          <h1 className="text-2xl font-bold">Health Management</h1>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const closeDialog = () => {
+    setDialogState({ type: null, mode: 'create', data: undefined });
+  };
+
+  const handleSuccess = () => {
+    closeDialog();
+  };
+
+  // Calculate summary metrics from real data
+  const totalJournalEntries = journalEntriesData?.count || 0;
+  const totalSamplingEvents = samplingEventsData?.count || 0;
+  const totalLabSamples = labSamplesData?.count || 0;
+  const totalTreatments = treatmentsData?.count || 0;
+  const totalLiceCounts = liceCountsData?.count || 0;
+
+  // Calculate average lice count from real data
+  const avgLicePerFish = liceCountsData?.results?.length 
+    ? liceCountsData.results.reduce((sum: number, lc: any) => {
+        const fishSampled = lc.fish_sampled || 1;
+        const totalLice = (lc.adult_female_count || 0) + (lc.adult_male_count || 0) + (lc.juvenile_count || 0);
+        return sum + (totalLice / fishSampled);
+      }, 0) / liceCountsData.results.length
+    : 0;
+
+  // Get recent entries for quick view
+  const recentJournalEntries = journalEntriesData?.results?.slice(0, 5) || [];
+  const recentTreatments = treatmentsData?.results?.slice(0, 5) || [];
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -215,316 +110,167 @@ export default function Health() {
           <div>
             <h1 className="text-2xl font-bold">Health Management</h1>
             <p className="text-muted-foreground">
-              Comprehensive aquaculture health monitoring and management
+              Comprehensive aquaculture health monitoring and compliance
             </p>
           </div>
         </div>
-        
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Geography" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Geographies</SelectItem>
-              {geographiesData?.results?.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
-                  {geo.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button className="bg-red-500 hover:bg-red-600">
-            <Plus className="h-4 w-4 mr-2" />
-            New Journal Entry
-          </Button>
-          <Button variant="outline">
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule Sampling
-          </Button>
-        </div>
       </div>
 
-      {/* Critical Alerts */}
-      {criticalAlerts.length > 0 && (
-        <Alert className="border-red-200 bg-red-50">
-          <AlertTriangle className="h-4 w-4 text-red-500" />
-          <AlertTitle className="text-red-700">Critical Health Alerts</AlertTitle>
-          <AlertDescription className="text-red-600">
-            {criticalAlerts.length} batch(es) require immediate veterinary attention
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* 
-        ⚠️ TEMPORARY CLIENT-SIDE AGGREGATION NOTICE ⚠️
-        
-        Current Implementation Status:
-        - Health metrics are calculated client-side from individual API endpoints
-        - No backend health summary aggregation endpoint exists yet
-        - This approach works but is not optimal for large datasets
-        
-        Production Roadmap:
-        TODO: Backend team should implement /api/v1/health/summary/ endpoint with:
-          - Overall health score aggregation
-          - Active treatments count
-          - Mortality rate calculations (7-day, 30-day windows)
-          - Average lice count aggregations
-          - Pending review counts
-          
-        Migration Path:
-        Once backend summary endpoint is available:
-        1. Replace `api.health.getSummary()` with `ApiService.apiV1HealthSummaryRetrieve()`
-        2. Remove client-side aggregation logic from lib/api.ts
-        3. Update KPI cards to use server-aggregated data
-        4. Remove this disclosure banner
-      */}
-      <Alert className="border-blue-200 bg-blue-50">
-        <Activity className="h-4 w-4 text-blue-500" />
-        <AlertTitle className="text-blue-700">Data Processing Notice</AlertTitle>
-        <AlertDescription className="text-blue-600">
-          Health metrics are currently calculated from multiple data sources. Backend aggregation endpoints 
-          will improve performance in future releases.
-        </AlertDescription>
-      </Alert>
-
-      {/* Health Summary KPIs */}
+      {/* Overview Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overall Health Score</CardTitle>
-            <Activity className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium">Journal Entries</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {healthSummary?.averageHealthScore 
-                ? `${healthSummary.averageHealthScore.toFixed(1)}/5.0` 
-                : formatFallback(null, undefined, { fallbackText: "N/A" })}
-            </div>
-            <div className="flex items-center space-x-2 mt-2">
-              <Progress value={(healthSummary?.averageHealthScore ?? 0) * 20} className="flex-1" />
-              <span className="text-xs text-muted-foreground">
-                {healthSummary?.healthyBatches 
-                  ? formatPercentage(healthSummary.healthyBatches) + " healthy"
-                  : "No health data"}
-              </span>
-            </div>
+            <div className="text-2xl font-bold">{formatCount(totalJournalEntries)}</div>
+            <p className="text-xs text-muted-foreground">
+              Health observations recorded
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sampling Events</CardTitle>
+            <Microscope className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCount(totalSamplingEvents)}</div>
+            <p className="text-xs text-muted-foreground">
+              Detailed health assessments
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Treatments</CardTitle>
-            <Syringe className="h-4 w-4 text-blue-600" />
+            <Pill className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {formatCount(healthSummary?.activeTreatments)}
-            </div>
+            <div className="text-2xl font-bold">{formatCount(totalTreatments)}</div>
             <p className="text-xs text-muted-foreground">
-              {healthSummary?.batchesUnderTreatment 
-                ? `${formatCount(healthSummary.batchesUnderTreatment, "batches")} under treatment`
-                : "No treatment data"}
+              Medical interventions
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mortality Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium">Avg Lice/Fish</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {healthSummary?.recentMortality !== undefined && healthSummary?.recentMortality !== null
-                ? formatPercentage(healthSummary.recentMortality)
-                : formatFallback(null)}
-            </div>
+            <div className="text-2xl font-bold">{avgLicePerFish.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              {healthSummary?.recentMortality !== undefined && healthSummary?.recentMortality !== null
-                ? "Last 7 days"
-                : "No mortality data"}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Lice Count</CardTitle>
-            <Bug className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {formatFallback(healthSummary?.avgLiceCount, undefined, { precision: 1 })}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {healthSummary?.avgLiceCount !== undefined && healthSummary?.avgLiceCount !== null
-                ? "Per fish"
-                : "No lice data"}
+              From {formatCount(totalLiceCounts)} recent counts
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content Tabs */}
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
-        <div className="w-full">
-          <div className="hidden lg:block">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="journal">Medical Journal</TabsTrigger>
-              <TabsTrigger value="treatments">Treatments</TabsTrigger>
-              <TabsTrigger value="mortality">Mortality</TabsTrigger>
-              <TabsTrigger value="lice">Lice Management</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            </TabsList>
-          </div>
-          
-          <div className="lg:hidden">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="journal">Journal</TabsTrigger>
-            </TabsList>
-            <div className="mt-2">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="treatments">Treatments</TabsTrigger>
-                <TabsTrigger value="mortality">Mortality</TabsTrigger>
-              </TabsList>
+      {/* Alert for high lice count */}
+      {avgLicePerFish > 0.5 && (
+        <Card className="border-orange-500 bg-orange-50 dark:bg-orange-950">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <CardTitle>Elevated Lice Levels Detected</CardTitle>
             </div>
-            <div className="mt-2">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="lice">Lice Mgmt</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-              </TabsList>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              Average lice count ({avgLicePerFish.toFixed(2)} per fish) exceeds recommended threshold. 
+              Consider scheduling treatments or sampling events.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Main Tabs */}
+      <Tabs defaultValue="journal" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+          <TabsTrigger value="journal">
+            <FileText className="h-4 w-4 mr-2" />
+            {!isMobile && "Journal"}
+          </TabsTrigger>
+          <TabsTrigger value="sampling">
+            <Microscope className="h-4 w-4 mr-2" />
+            {!isMobile && "Sampling"}
+          </TabsTrigger>
+          <TabsTrigger value="lab">
+            <Beaker className="h-4 w-4 mr-2" />
+            {!isMobile && "Lab"}
+          </TabsTrigger>
+          <TabsTrigger value="treatments">
+            <Pill className="h-4 w-4 mr-2" />
+            {!isMobile && "Treatments"}
+          </TabsTrigger>
+          <TabsTrigger value="sample-types">
+            <TestTube className="h-4 w-4 mr-2" />
+            {!isMobile && "Types"}
+          </TabsTrigger>
+          <TabsTrigger value="vaccinations">
+            <Syringe className="h-4 w-4 mr-2" />
+            {!isMobile && "Vaccines"}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Journal Entries Tab */}
+        <TabsContent value="journal" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Health Journal Entries</h2>
+              <p className="text-sm text-muted-foreground">
+                Record observations, issues, and actions for batches
+              </p>
             </div>
-          </div>
-        </div>
-
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-            {/* Recent Journal Entries */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <FileText className="h-5 w-5" />
-                  <span>Recent Journal Entries</span>
-                </CardTitle>
-                <CardDescription>Latest health observations and assessments</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-48 md:h-64">
-                  {recentJournalEntries.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                      <FileText className="h-12 w-12 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">No recent journal entries</p>
-                      <p className="text-xs text-muted-foreground mt-1">Create a new entry to get started</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {recentJournalEntries.map((entry) => (
-                        <div key={entry.id} className="flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-3 p-3 border rounded-lg">
-                          <div className={`w-3 h-3 rounded-full flex-shrink-0 ${getHealthStatusColor(entry.healthStatus)}`} />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-1 space-y-1 sm:space-y-0">
-                              <p className="font-medium text-sm">Batch {entry.batch}</p>
-                              <Badge variant="outline" className="text-xs w-fit">
-                                {getHealthStatusText(entry.healthStatus)}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground break-words">
-                              {entry.observations}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {entry.veterinarian} • {new Date(entry.entryDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
-
-            {/* Active Treatments */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Syringe className="h-5 w-5" />
-                  <span>Active Treatments</span>
-                </CardTitle>
-                <CardDescription>Ongoing medical treatments and interventions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-48 md:h-64">
-                  {activeTreatments.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-6">
-                      <Syringe className="h-12 w-12 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">No active treatments</p>
-                      <p className="text-xs text-muted-foreground mt-1">All batches are in good health</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {activeTreatments.map((treatment) => (
-                        <div key={treatment.id} className="p-3 border rounded-lg">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-1 sm:space-y-0">
-                            <p className="font-medium text-sm">Batch {treatment.batch}</p>
-                            <Badge className="bg-blue-100 text-blue-800 text-xs w-fit">
-                              {treatment.treatmentType}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-1 break-words">
-                            {treatment.medication} - {treatment.dosage}
-                          </p>
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-muted-foreground space-y-1 sm:space-y-0">
-                            <span>Started: {new Date(treatment.startDate).toLocaleDateString()}</span>
-                            <span>{treatment.veterinarian}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </CardContent>
-            </Card>
+            <Button onClick={() => openCreateDialog('journalEntry')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Entry
+            </Button>
           </div>
 
-          {/* Recent Mortality Events */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <AlertTriangle className="h-5 w-5" />
-                <span>Recent Mortality Events</span>
-              </CardTitle>
-              <CardDescription>Mortality tracking and trend analysis</CardDescription>
+              <CardTitle>Recent Entries ({formatCount(totalJournalEntries)} total)</CardTitle>
+              <CardDescription>Latest health observations and issues</CardDescription>
             </CardHeader>
             <CardContent>
-              {recentMortality.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center p-8">
-                  <AlertTriangle className="h-12 w-12 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">No recent mortality events</p>
-                  <p className="text-xs text-muted-foreground mt-1">All batches showing healthy survival rates</p>
+              {recentJournalEntries.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No journal entries found</p>
+                  <p className="text-sm mt-2">Create your first entry to start tracking health observations</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {recentMortality.map((mortality) => (
-                    <div key={mortality.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg space-y-2 sm:space-y-0">
+                <div className="space-y-4">
+                  {recentJournalEntries.map((entry: JournalEntry) => (
+                    <div key={entry.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
                       <div className="flex-1">
-                        <p className="font-medium text-sm break-words">
-                          Batch {mortality.batch} - Container {mortality.container}
-                        </p>
-                        <p className="text-sm text-muted-foreground break-words">
-                          {mortality.count} fish • {mortality.reason || "Unknown cause"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(mortality.date).toLocaleDateString()} • {mortality.reportedBy}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant={entry.category === 'issue' ? 'destructive' : 'default'}>
+                            {entry.category}
+                          </Badge>
+                          <Badge variant="outline">{entry.severity}</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            Batch {entry.batch}
+                          </span>
+                        </div>
+                        <p className="text-sm line-clamp-2">{entry.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {entry.entry_date ? new Date(entry.entry_date).toLocaleDateString() : 'No date'}
                         </p>
                       </div>
-                      <div className="sm:text-right">
-                        <Badge variant={mortality.veterinarianReview ? "default" : "destructive"} className="w-fit">
-                          {mortality.veterinarianReview ? "Reviewed" : "Pending Review"}
-                        </Badge>
-                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => openEditDialog('journalEntry', entry)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -533,114 +279,428 @@ export default function Health() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="journal" className="space-y-4">
+        {/* Health Sampling Events Tab */}
+        <TabsContent value="sampling" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Health Sampling Events</h2>
+              <p className="text-sm text-muted-foreground">
+                Detailed fish health assessments with measurements
+              </p>
+            </div>
+            <Button onClick={() => openCreateDialog('samplingEvent')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Sampling Event
+            </Button>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>Medical Journal</CardTitle>
-              <CardDescription>
-                Complete medical journal entries across all batches and containers
-              </CardDescription>
+              <CardTitle>Sampling Events ({formatCount(totalSamplingEvents)} total)</CardTitle>
+              <CardDescription>Health assessments with fish measurements and K-factors</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col lg:flex-row space-y-2 lg:space-y-0 lg:space-x-2 mb-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Search journal entries..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full"
-                  />
+              {!samplingEventsData?.results || samplingEventsData.results.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Microscope className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No sampling events found</p>
+                  <p className="text-sm mt-2">Create a sampling event to record detailed fish health data</p>
                 </div>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-full lg:w-48">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="excellent">Excellent</SelectItem>
-                    <SelectItem value="good">Good</SelectItem>
-                    <SelectItem value="fair">Fair</SelectItem>
-                    <SelectItem value="poor">Poor</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button>
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-              </div>
-              
-              <p className="text-center text-muted-foreground py-8">
-                Journal entry interface will be implemented here with detailed forms and filtering
-              </p>
+              ) : (
+                <div className="space-y-4">
+                  {samplingEventsData.results.slice(0, 5).map((event: HealthSamplingEvent) => (
+                    <div key={event.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-medium">
+                            {event.number_of_fish_sampled} fish sampled
+                          </span>
+                          {event.avg_weight_g && (
+                            <Badge variant="outline">
+                              Avg: {event.avg_weight_g}g
+                            </Badge>
+                          )}
+                          {event.avg_k_factor && (
+                            <Badge variant="outline">
+                              K: {event.avg_k_factor}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Assignment {event.assignment}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {event.sampling_date ? new Date(event.sampling_date).toLocaleDateString() : 'No date'}
+                        </p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => openEditDialog('samplingEvent', event)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Lab Samples Tab */}
+        <TabsContent value="lab" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Laboratory Samples</h2>
+              <p className="text-sm text-muted-foreground">
+                Track lab tests and external analysis results
+              </p>
+            </div>
+            <Button onClick={() => openCreateDialog('labSample')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Lab Sample
+            </Button>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Lab Samples ({formatCount(totalLabSamples)} total)</CardTitle>
+              <CardDescription>External laboratory tests and results</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!labSamplesData?.results || labSamplesData.results.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Beaker className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No lab samples found</p>
+                  <p className="text-sm mt-2">Record lab samples to track external test results</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {labSamplesData.results.slice(0, 5).map((sample: HealthLabSample) => (
+                    <div key={sample.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge>Sample Type {sample.sample_type}</Badge>
+                          {sample.lab_reference_id && (
+                            <span className="text-sm text-muted-foreground">
+                              Ref: {sample.lab_reference_id}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm">
+                          {sample.findings_summary || 'Awaiting results'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Sampled: {new Date(sample.sample_date).toLocaleDateString()}
+                          {sample.date_results_received && (
+                            <> • Results: {new Date(sample.date_results_received as string).toLocaleDateString()}</>
+                          )}
+                        </p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => openEditDialog('labSample', sample)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Treatments Tab */}
         <TabsContent value="treatments" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Treatments</h2>
+              <p className="text-sm text-muted-foreground">
+                Medical interventions and vaccinations
+              </p>
+            </div>
+            <Button onClick={() => openCreateDialog('treatment')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Treatment
+            </Button>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>Treatment Management</CardTitle>
-              <CardDescription>
-                Plan, track, and analyze treatment effectiveness
-              </CardDescription>
+              <CardTitle>Treatments ({formatCount(totalTreatments)} total)</CardTitle>
+              <CardDescription>Medications, vaccinations, and interventions</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-center text-muted-foreground py-8">
-                Treatment planning and tracking interface will be implemented here
-              </p>
+              {recentTreatments.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Pill className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No treatments found</p>
+                  <p className="text-sm mt-2">Record treatments to track medical interventions</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentTreatments.map((treatment: Treatment) => (
+                    <div key={treatment.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge>{treatment.treatment_type}</Badge>
+                          <span className="text-sm text-muted-foreground">
+                            Batch {treatment.batch}
+                          </span>
+                        </div>
+                        <p className="text-sm">{treatment.description}</p>
+                        {treatment.withholding_period_days && treatment.withholding_period_days > 0 && (
+                          <p className="text-xs text-orange-600 mt-1">
+                            Withholding period: {treatment.withholding_period_days} days
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {new Date(treatment.treatment_date as string).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => openEditDialog('treatment', treatment)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="mortality" className="space-y-4">
+        {/* Sample Types Tab (Reference Data) */}
+        <TabsContent value="sample-types" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Sample Types</h2>
+              <p className="text-sm text-muted-foreground">
+                Configure laboratory sample type categories
+              </p>
+            </div>
+            <Button onClick={() => openCreateDialog('sampleType')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Sample Type
+            </Button>
+          </div>
+
           <Card>
             <CardHeader>
-              <CardTitle>Mortality Tracking</CardTitle>
-              <CardDescription>
-                Record and analyze mortality events and patterns
-              </CardDescription>
+              <CardTitle>Sample Types ({formatCount(sampleTypesData?.count || 0)} total)</CardTitle>
+              <CardDescription>Laboratory sample categories for classification</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-center text-muted-foreground py-8">
-                Mortality recording and analysis interface will be implemented here
-              </p>
+              {!sampleTypesData?.results || sampleTypesData.results.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No sample types configured</p>
+                  <p className="text-sm mt-2">Add sample types to categorize lab samples</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {sampleTypesData.results.slice(0, 10).map((type: SampleType) => (
+                    <div key={type.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
+                      <div className="flex-1">
+                        <p className="font-medium">{type.name}</p>
+                        <p className="text-sm text-muted-foreground">{type.description}</p>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => openEditDialog('sampleType', type)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="lice" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lice Management</CardTitle>
-              <CardDescription>
-                Sea lice counting, tracking, and treatment correlation
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center text-muted-foreground py-8">
-                Lice counting and management interface will be implemented here
+        {/* Vaccination Types Tab (Reference Data) */}
+        <TabsContent value="vaccinations" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Vaccination Types</h2>
+              <p className="text-sm text-muted-foreground">
+                Configure available vaccine types and manufacturers
               </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </div>
+            <Button onClick={() => openCreateDialog('vaccinationType')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Vaccination Type
+            </Button>
+          </div>
 
-        <TabsContent value="analytics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Health Analytics</CardTitle>
-              <CardDescription>
-                Cross-batch health comparisons and trend analysis
-              </CardDescription>
+              <CardTitle>Vaccination Types ({formatCount(vaccinationTypesData?.count || 0)} total)</CardTitle>
+              <CardDescription>Available vaccines for treatment tracking</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-center text-muted-foreground py-8">
-                Health analytics and reporting dashboard will be implemented here
-              </p>
+              {!vaccinationTypesData?.results || vaccinationTypesData.results.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Syringe className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No vaccination types configured</p>
+                  <p className="text-sm mt-2">Add vaccination types to track immunizations</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {vaccinationTypesData.results.slice(0, 10).map((type: VaccinationType) => (
+                    <div key={type.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
+                      <div className="flex-1">
+                        <p className="font-medium">{type.name}</p>
+                        {type.manufacturer && (
+                          <p className="text-sm text-muted-foreground">
+                            Manufacturer: {type.manufacturer}
+                          </p>
+                        )}
+                        {type.dosage && (
+                          <p className="text-sm text-muted-foreground">
+                            Dosage: {type.dosage}
+                          </p>
+                        )}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => openEditDialog('vaccinationType', type)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs for Create/Edit */}
+      
+      {/* Journal Entry Dialog */}
+      <Dialog open={dialogState.type === 'journalEntry'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Journal Entry
+            </DialogTitle>
+            <DialogDescription>
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a journal entry
+            </DialogDescription>
+          </DialogHeader>
+          <JournalEntryForm
+            journalEntry={dialogState.data}
+            onSuccess={handleSuccess}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Sampling Event Dialog */}
+      <Dialog open={dialogState.type === 'samplingEvent'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Sampling Event
+            </DialogTitle>
+            <DialogDescription>
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a sampling event
+            </DialogDescription>
+          </DialogHeader>
+          <HealthSamplingEventForm
+            samplingEvent={dialogState.data}
+            onSuccess={handleSuccess}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Lab Sample Dialog */}
+      <Dialog open={dialogState.type === 'labSample'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Lab Sample
+            </DialogTitle>
+            <DialogDescription>
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a lab sample
+            </DialogDescription>
+          </DialogHeader>
+          <HealthLabSampleForm
+            labSample={dialogState.data}
+            onSuccess={handleSuccess}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Treatment Dialog */}
+      <Dialog open={dialogState.type === 'treatment'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Treatment
+            </DialogTitle>
+            <DialogDescription>
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a treatment
+            </DialogDescription>
+          </DialogHeader>
+          <TreatmentForm
+            treatment={dialogState.data}
+            onSuccess={handleSuccess}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Sample Type Dialog */}
+      <Dialog open={dialogState.type === 'sampleType'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Sample Type
+            </DialogTitle>
+            <DialogDescription>
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a sample type
+            </DialogDescription>
+          </DialogHeader>
+          <SampleTypeForm
+            sampleType={dialogState.data}
+            onSuccess={handleSuccess}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Vaccination Type Dialog */}
+      <Dialog open={dialogState.type === 'vaccinationType'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Vaccination Type
+            </DialogTitle>
+            <DialogDescription>
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a vaccination type
+            </DialogDescription>
+          </DialogHeader>
+          <VaccinationTypeForm
+            vaccinationType={dialogState.data}
+            onSuccess={handleSuccess}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

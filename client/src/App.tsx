@@ -11,20 +11,13 @@ import LoginPage from "@/pages/login";
 
 const TemperatureDataView = lazy(() => import("./pages/TemperatureDataView"));
 
-import Dashboard from "@/pages/dashboard";
-import Monitoring from "@/pages/monitoring";
-import FarmManagement from "@/pages/farm-management";
+// Feature pages
 import Infrastructure from "@/pages/infrastructure";
 import InfrastructureManagementPage from "@/features/infrastructure/pages/InfrastructureManagementPage";
 import InfrastructureAreas from "@/pages/infrastructure-areas";
-import InventoryManagementPage from "@/features/inventory/pages/InventoryManagementPage";
-import HealthManagementPage from "@/features/health/pages/HealthManagementPage";
-import EnvironmentalManagementPage from "@/features/environmental/pages/EnvironmentalManagementPage";
-import UserManagementPage from "@/features/users/pages/UserManagementPage";
-import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModelManagementPage";
-import BroodstockManagementPage from "@/features/broodstock/pages/BroodstockManagementPage";
-import ExecutiveDashboardPage from "@/features/executive/pages/ExecutiveDashboardPage";
 import InfrastructureStations from "@/pages/infrastructure-stations";
+import InfrastructureContainers from "@/pages/infrastructure-containers";
+import InfrastructureSensors from "@/pages/infrastructure-sensors";
 import AreaDetail from "@/pages/area-detail";
 import StationDetail from "@/pages/station-detail";
 import AreaRings from "@/pages/area-rings";
@@ -32,25 +25,43 @@ import StationHalls from "@/pages/station-halls";
 import RingDetail from "@/pages/ring-detail";
 import HallDetail from "@/pages/hall-detail";
 import ContainerDetail from "@/pages/container-detail";
-import InfrastructureContainers from "@/pages/infrastructure-containers";
-import InfrastructureSensors from "@/pages/infrastructure-sensors";
-import Inventory from "@/pages/inventory";
-import Analytics from "@/pages/analytics";
-import MortalityReporting from "@/pages/mortality-reporting";
+
+// Batch management
 import BatchManagement from "@/pages/batch-management";
 import BatchDetails from "@/pages/batch-details";
 import BatchSetupPage from "@/features/batch-management/pages/BatchSetupPage";
 import { WorkflowListPage } from "@/features/batch-management/workflows/pages/WorkflowListPage";
 import { WorkflowDetailPage } from "@/features/batch-management/workflows/pages/WorkflowDetailPage";
+
+// Health
 import Health from "@/pages/health";
+import HealthManagementPage from "@/features/health/pages/HealthManagementPage";
+
+// Inventory
+import Inventory from "@/pages/inventory";
+import InventoryManagementPage from "@/features/inventory/pages/InventoryManagementPage";
+
+// Broodstock
 import Broodstock from "@/pages/broodstock";
 import BroodstockPrograms from "@/pages/broodstock-programs";
 import BroodstockGenetic from "@/pages/broodstock-genetic";
 import BroodstockPopulation from "@/pages/broodstock-population";
 import BreedingProgramDetails from "@/pages/breeding-program-details";
 import BroodstockContainerDetails from "@/pages/broodstock-container-details";
+import BroodstockManagementPage from "@/features/broodstock/pages/BroodstockManagementPage";
+
+// Scenario planning
 import ScenarioPlanning from "@/pages/ScenarioPlanning";
 import { ScenarioDetailPage } from "@/pages/ScenarioDetailPage";
+import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModelManagementPage";
+
+// Executive & specialized
+import ExecutiveDashboardPage from "@/features/executive/pages/ExecutiveDashboardPage";
+import MortalityReporting from "@/pages/mortality-reporting";
+
+// System
+import EnvironmentalManagementPage from "@/features/environmental/pages/EnvironmentalManagementPage";
+import UserManagementPage from "@/features/users/pages/UserManagementPage";
 import NotFound from "@/pages/not-found";
 
 const AuditTrailOverview = lazy(() => import("@/features/audit-trail").then(m => ({ default: m.OverviewPage })));
@@ -62,7 +73,7 @@ import Header from "@/components/layout/header";
 // Root redirect component
 const RootRedirect = () => {
   const { isAuthenticated } = useAuth();
-  return <Redirect to={isAuthenticated ? "/dashboard" : "/login"} />;
+  return <Redirect to={isAuthenticated ? "/executive" : "/login"} />;
 };
 
 // Layout wrapper component
@@ -92,26 +103,10 @@ function Router() {
       <Route path="/login" component={LoginPage} />
       
       {/* Protected routes with layout */}
-      <Route path="/dashboard">
-        <ProtectedRoute>
-          <AppLayout>
-            <Dashboard />
-          </AppLayout>
-        </ProtectedRoute>
-      </Route>
-
       <Route path="/executive">
         <ProtectedRoute>
           <AppLayout>
             <ExecutiveDashboardPage />
-          </AppLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/monitoring">
-        <ProtectedRoute>
-          <AppLayout>
-            <Monitoring />
           </AppLayout>
         </ProtectedRoute>
       </Route>
@@ -120,14 +115,6 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <EnvironmentalManagementPage />
-          </AppLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/farm-management">
-        <ProtectedRoute>
-          <AppLayout>
-            <FarmManagement />
           </AppLayout>
         </ProtectedRoute>
       </Route>
@@ -417,14 +404,6 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Inventory />
-          </AppLayout>
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/analytics">
-        <ProtectedRoute>
-          <AppLayout>
-            <Analytics />
           </AppLayout>
         </ProtectedRoute>
       </Route>

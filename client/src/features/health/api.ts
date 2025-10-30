@@ -546,3 +546,81 @@ export function useDeleteSampleType() {
   });
 }
 
+// ==========================================
+// Lice Counts
+// ==========================================
+
+export function useLiceCounts(filters?: {
+  batchId?: number;
+  containerId?: number;
+  countDateGte?: string;
+  countDateLte?: string;
+  page?: number;
+}): UseQueryResult<any, Error> {
+  return useQuery({
+    queryKey: ["health", "lice-counts", filters],
+    queryFn: () => ApiService.apiV1HealthLiceCountsList(
+      undefined, // adultFemaleCount
+      undefined, // adultFemaleCountGte
+      undefined, // adultFemaleCountLte
+      undefined, // adultMaleCount
+      undefined, // adultMaleCountGte
+      undefined, // adultMaleCountLte
+      filters?.batchId, // batch
+      filters?.containerId, // container
+      undefined, // countDate
+      filters?.countDateGte, // countDateGte
+      filters?.countDateLte, // countDateLte
+      undefined, // countValue
+      undefined, // countValueGte
+      undefined, // countValueLte
+      undefined, // fishSampled
+      undefined, // fishSampledGte
+      undefined, // fishSampledLte
+      undefined, // juvenileCount
+      undefined, // juvenileCountGte
+      undefined, // juvenileCountLte
+      undefined, // liceType
+      filters?.page, // page
+      undefined, // search
+      undefined, // user
+    ),
+    ...HEALTH_QUERY_OPTIONS,
+  });
+}
+
+export function useLiceCount(
+  id: number | undefined
+): UseQueryResult<any, Error> {
+  return useQuery({
+    queryKey: ["health", "lice-counts", id],
+    queryFn: () => ApiService.apiV1HealthLiceCountsRetrieve(id!),
+    enabled: !!id,
+    ...HEALTH_QUERY_OPTIONS,
+  });
+}
+
+export function useCreateLiceCount() {
+  return useCrudMutation<any, any>({
+    mutationFn: (data) => ApiService.apiV1HealthLiceCountsCreate(data),
+    description: "Lice count recorded successfully",
+    invalidateQueries: ["health", "lice-counts"],
+  });
+}
+
+export function useUpdateLiceCount() {
+  return useCrudMutation<any & { id: number }, any>({
+    mutationFn: ({ id, ...data }) => ApiService.apiV1HealthLiceCountsUpdate(id, data as any),
+    description: "Lice count updated successfully",
+    invalidateQueries: ["health", "lice-counts"],
+  });
+}
+
+export function useDeleteLiceCount() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) => ApiService.apiV1HealthLiceCountsDestroy(id),
+    description: "Lice count deleted successfully",
+    invalidateQueries: ["health", "lice-counts"],
+  });
+}
+

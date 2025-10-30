@@ -48,7 +48,7 @@ const LoginPage: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate('/executive');
     }
   }, [isAuthenticated, navigate]);
 
@@ -66,7 +66,7 @@ const LoginPage: React.FC = () => {
     try {
       const success = await login(values.username, values.password);
       if (success) {
-        navigate('/dashboard');
+        navigate('/executive');
       }
     } finally {
       setIsSubmitting(false);

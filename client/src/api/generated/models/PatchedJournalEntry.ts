@@ -35,9 +35,9 @@ export type PatchedJournalEntry = {
      */
     severity?: string | null;
     /**
-     * Current status of resolution for this entry (e.g., 'open', 'in progress', 'resolved').
+     * Whether the issue has been resolved or addressed.
      */
-    resolution_status?: string | null;
+    resolution_status?: boolean;
     /**
      * Notes on how the issue was resolved or is being addressed.
      */

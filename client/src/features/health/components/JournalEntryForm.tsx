@@ -96,8 +96,8 @@ export function JournalEntryForm({
         category: journalEntry.category as JournalEntryFormValues['category'],
         severity: journalEntry.severity as JournalEntryFormValues['severity'],
         description: journalEntry.description,
-        // Convert string to boolean (resolution_status is string|null in API)
-        resolution_status: journalEntry.resolution_status === 'true' || journalEntry.resolution_status === 'True',
+        // API now returns boolean directly (after serializer fix)
+        resolution_status: !!journalEntry.resolution_status,
         resolution_notes: journalEntry.resolution_notes || '',
       })
     }
@@ -122,13 +122,14 @@ export function JournalEntryForm({
       const apiData: Partial<JournalEntry> = {
         batch: values.batch,
         container: values.container || null,
-        entry_date: values.entry_date,
+        // Convert date string to ISO datetime for backend DateTimeField
+        entry_date: new Date(values.entry_date).toISOString(),
         category: values.category,
         severity: values.severity,
         description: values.description,
-        // Convert boolean to string for API (backend expects string|null)
-        resolution_status: String(values.resolution_status) as any,
-        resolution_notes: values.resolution_notes,
+        // Backend now expects boolean, not string
+        resolution_status: values.resolution_status as any,
+        resolution_notes: values.resolution_notes || '',
       }
 
       if (isEditMode) {
@@ -237,7 +238,6 @@ export function JournalEntryForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">None (applies to entire batch)</SelectItem>
                     {containersData?.results?.map((container) => (
                       <SelectItem key={container.id} value={String(container.id)}>
                         {container.name || `Container ${container.id}`}
