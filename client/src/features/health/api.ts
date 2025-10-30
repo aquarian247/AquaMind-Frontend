@@ -624,3 +624,129 @@ export function useDeleteLiceCount() {
   });
 }
 
+// ==========================================
+// Health Parameters
+// ==========================================
+
+export function useHealthParameters(filters?: {
+  isActive?: boolean;
+  name?: string;
+  page?: number;
+  search?: string;
+}): UseQueryResult<any, Error> {
+  return useQuery({
+    queryKey: ["health", "health-parameters", filters],
+    queryFn: () => ApiService.apiV1HealthHealthParametersList(
+      filters?.isActive,
+      undefined, // maxScore
+      undefined, // maxScoreGte
+      undefined, // maxScoreLte
+      undefined, // minScore
+      undefined, // minScoreGte
+      undefined, // minScoreLte
+      filters?.name,
+      undefined, // nameIcontains
+      filters?.page,
+      filters?.search,
+    ),
+    ...HEALTH_QUERY_OPTIONS,
+  });
+}
+
+export function useHealthParameter(
+  id: number | undefined
+): UseQueryResult<any, Error> {
+  return useQuery({
+    queryKey: ["health", "health-parameters", id],
+    queryFn: () => ApiService.apiV1HealthHealthParametersRetrieve(id!),
+    enabled: !!id,
+    ...HEALTH_QUERY_OPTIONS,
+  });
+}
+
+export function useCreateHealthParameter() {
+  return useCrudMutation<any, any>({
+    mutationFn: (data) => ApiService.apiV1HealthHealthParametersCreate(data),
+    description: "Health parameter created successfully",
+    invalidateQueries: ["health", "health-parameters"],
+  });
+}
+
+export function useUpdateHealthParameter() {
+  return useCrudMutation<any & { id: number }, any>({
+    mutationFn: ({ id, ...data }) => ApiService.apiV1HealthHealthParametersUpdate(id, data as any),
+    description: "Health parameter updated successfully",
+    invalidateQueries: ["health", "health-parameters"],
+  });
+}
+
+export function useDeleteHealthParameter() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) => ApiService.apiV1HealthHealthParametersDestroy(id),
+    description: "Health parameter deleted successfully",
+    invalidateQueries: ["health", "health-parameters"],
+  });
+}
+
+// ==========================================
+// Parameter Score Definitions
+// ==========================================
+
+export function useParameterScoreDefinitions(filters?: {
+  parameterId?: number;
+  scoreValue?: number;
+  page?: number;
+  search?: string;
+}): UseQueryResult<any, Error> {
+  return useQuery({
+    queryKey: ["health", "parameter-score-definitions", filters],
+    queryFn: () => ApiService.apiV1HealthParameterScoreDefinitionsList(
+      filters?.page,
+      filters?.parameterId, // parameter filter
+      undefined, // parameterId (parameter__id filter)
+      filters?.scoreValue,
+      undefined, // scoreValueGte
+      undefined, // scoreValueLte
+      filters?.search,
+    ),
+    ...HEALTH_QUERY_OPTIONS,
+  });
+}
+
+export function useParameterScoreDefinition(
+  id: number | undefined
+): UseQueryResult<any, Error> {
+  return useQuery({
+    queryKey: ["health", "parameter-score-definitions", id],
+    queryFn: () => ApiService.apiV1HealthParameterScoreDefinitionsRetrieve(id!),
+    enabled: !!id,
+    ...HEALTH_QUERY_OPTIONS,
+  });
+}
+
+export function useCreateParameterScoreDefinition() {
+  return useCrudMutation<any, any>({
+    mutationFn: (data) => ApiService.apiV1HealthParameterScoreDefinitionsCreate(data),
+    description: "Score definition created successfully",
+    invalidateQueries: ["health", "parameter-score-definitions", "health-parameters"],
+  });
+}
+
+export function useUpdateParameterScoreDefinition() {
+  return useCrudMutation<any & { id: number }, any>({
+    mutationFn: ({ id, ...data }) => 
+      ApiService.apiV1HealthParameterScoreDefinitionsUpdate(id, data as any),
+    description: "Score definition updated successfully",
+    invalidateQueries: ["health", "parameter-score-definitions", "health-parameters"],
+  });
+}
+
+export function useDeleteParameterScoreDefinition() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) => 
+      ApiService.apiV1HealthParameterScoreDefinitionsDestroy(id),
+    description: "Score definition deleted successfully",
+    invalidateQueries: ["health", "parameter-score-definitions", "health-parameters"],
+  });
+}
+

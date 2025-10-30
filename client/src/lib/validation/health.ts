@@ -226,3 +226,35 @@ export const healthLabSampleSchema = z.object({
 
 export type HealthLabSampleFormValues = z.infer<typeof healthLabSampleSchema>
 
+/**
+ * Parameter score definition schema (for configuring what each score means)
+ */
+export const parameterScoreDefinitionSchema = z.object({
+  parameter: z.coerce.number().int().positive('Parameter is required'),
+  score_value: z.coerce.number().int().min(0).max(10, 'Score value must be between 0-10'),
+  label: nonEmptyString.max(50, 'Label must be 50 characters or less'),
+  description: nonEmptyString,
+  display_order: z.coerce.number().int().min(0).optional(),
+})
+
+export type ParameterScoreDefinitionFormValues = z.infer<typeof parameterScoreDefinitionSchema>
+
+/**
+ * Health parameter schema (updated with min/max scores)
+ */
+export const healthParameterSchema = z.object({
+  name: nonEmptyString.max(100, 'Name must be 100 characters or less'),
+  description: optionalString,
+  min_score: z.coerce.number().int().min(0, 'Minimum score must be 0 or greater'),
+  max_score: z.coerce.number().int().min(0, 'Maximum score must be 0 or greater'),
+  is_active: z.boolean().default(true),
+}).refine(
+  (data) => data.max_score > data.min_score,
+  {
+    message: "Maximum score must be greater than minimum score",
+    path: ["max_score"],
+  }
+)
+
+export type HealthParameterFormValues = z.infer<typeof healthParameterSchema>
+

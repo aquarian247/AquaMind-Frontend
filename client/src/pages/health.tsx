@@ -2,18 +2,24 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { 
   Heart, 
   FileText, 
   Microscope,
+  Ruler,
+  Stethoscope,
   Beaker,
   Pill,
   TestTube,
   Syringe,
+  BookOpen,
   Plus,
   Edit,
+  Info,
   TrendingUp,
   AlertTriangle,
   Activity
@@ -27,7 +33,8 @@ import {
   useTreatments,
   useSampleTypes,
   useVaccinationTypes,
-  useLiceCounts
+  useLiceCounts,
+  useHealthParameters
 } from "@/features/health/api";
 import { JournalEntryForm } from "@/features/health/components/JournalEntryForm";
 import { HealthSamplingEventForm } from "@/features/health/components/HealthSamplingEventForm";
@@ -35,6 +42,8 @@ import { HealthLabSampleForm } from "@/features/health/components/HealthLabSampl
 import { TreatmentForm } from "@/features/health/components/TreatmentForm";
 import { SampleTypeForm } from "@/features/health/components/SampleTypeForm";
 import { VaccinationTypeForm } from "@/features/health/components/VaccinationTypeForm";
+import { HealthParameterForm } from "@/features/health/components/HealthParameterForm";
+import { HealthAssessmentForm } from "@/features/health/components/HealthAssessmentForm";
 import type { 
   JournalEntry, 
   HealthSamplingEvent, 
@@ -44,7 +53,7 @@ import type {
   VaccinationType 
 } from "@/api/generated";
 
-type DialogType = 'journalEntry' | 'samplingEvent' | 'labSample' | 'treatment' | 'sampleType' | 'vaccinationType' | null;
+type DialogType = 'journalEntry' | 'samplingEvent' | 'healthAssessment' | 'labSample' | 'treatment' | 'sampleType' | 'vaccinationType' | 'healthParameter' | null;
 
 interface DialogState {
   type: DialogType;
@@ -64,6 +73,7 @@ export default function Health() {
   const { data: sampleTypesData } = useSampleTypes({ page: 1 });
   const { data: vaccinationTypesData } = useVaccinationTypes({ page: 1 });
   const { data: liceCountsData } = useLiceCounts({ page: 1 });
+  const { data: healthParametersData } = useHealthParameters({ page: 1 });
 
   const openCreateDialog = (type: DialogType) => {
     setDialogState({ type, mode: 'create', data: undefined });
@@ -133,13 +143,13 @@ export default function Health() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sampling Events</CardTitle>
-            <Microscope className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Growth Measurements</CardTitle>
+            <Ruler className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCount(totalSamplingEvents)}</div>
             <p className="text-xs text-muted-foreground">
-              Detailed health assessments
+              Weight & length tracking
             </p>
           </CardContent>
         </Card>
@@ -196,9 +206,13 @@ export default function Health() {
             <FileText className="h-4 w-4 mr-2" />
             {!isMobile && "Journal"}
           </TabsTrigger>
-          <TabsTrigger value="sampling">
-            <Microscope className="h-4 w-4 mr-2" />
-            {!isMobile && "Sampling"}
+          <TabsTrigger value="measurements">
+            <Ruler className="h-4 w-4 mr-2" />
+            {!isMobile && "Measurements"}
+          </TabsTrigger>
+          <TabsTrigger value="assessments">
+            <Stethoscope className="h-4 w-4 mr-2" />
+            {!isMobile && "Assessments"}
           </TabsTrigger>
           <TabsTrigger value="lab">
             <Beaker className="h-4 w-4 mr-2" />
@@ -208,13 +222,9 @@ export default function Health() {
             <Pill className="h-4 w-4 mr-2" />
             {!isMobile && "Treatments"}
           </TabsTrigger>
-          <TabsTrigger value="sample-types">
-            <TestTube className="h-4 w-4 mr-2" />
-            {!isMobile && "Types"}
-          </TabsTrigger>
-          <TabsTrigger value="vaccinations">
-            <Syringe className="h-4 w-4 mr-2" />
-            {!isMobile && "Vaccines"}
+          <TabsTrigger value="reference">
+            <BookOpen className="h-4 w-4 mr-2" />
+            {!isMobile && "Reference"}
           </TabsTrigger>
         </TabsList>
 
@@ -279,18 +289,18 @@ export default function Health() {
           </Card>
         </TabsContent>
 
-        {/* Health Sampling Events Tab */}
-        <TabsContent value="sampling" className="space-y-4">
+        {/* Growth Measurements Tab (renamed from Sampling) */}
+        <TabsContent value="measurements" className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-lg font-semibold">Health Sampling Events</h2>
+              <h2 className="text-lg font-semibold">Growth Measurements</h2>
               <p className="text-sm text-muted-foreground">
-                Detailed fish health assessments with measurements
+                Record weight and length measurements for growth tracking
               </p>
             </div>
             <Button onClick={() => openCreateDialog('samplingEvent')}>
               <Plus className="h-4 w-4 mr-2" />
-              New Sampling Event
+              New Measurement
             </Button>
           </div>
 
@@ -337,6 +347,79 @@ export default function Health() {
                         variant="ghost" 
                         size="sm"
                         onClick={() => openEditDialog('samplingEvent', event)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Health Assessments Tab (NEW) */}
+        <TabsContent value="assessments" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold">Health Assessments</h2>
+              <p className="text-sm text-muted-foreground">
+                Veterinary health parameter scoring (gill condition, fin condition, etc.)
+              </p>
+            </div>
+            <Button onClick={() => openCreateDialog('healthAssessment')}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Assessment
+            </Button>
+          </div>
+
+          <Alert className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Note:</strong> Health assessments use the same underlying data as growth measurements 
+              but focus on veterinary parameter scoring rather than weight/length tracking. 
+              Configure health parameters in the Reference tab before creating assessments.
+            </AlertDescription>
+          </Alert>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Health Assessments ({formatCount(totalSamplingEvents)} total)</CardTitle>
+              <CardDescription>Veterinary parameter scoring for fish health evaluation</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {!samplingEventsData?.results || samplingEventsData.results.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Stethoscope className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No health assessments found</p>
+                  <p className="text-sm mt-2">Create a health assessment to record veterinary parameter scores</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {samplingEventsData.results.slice(0, 5).map((event: HealthSamplingEvent) => (
+                    <div key={event.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-medium">
+                            {event.number_of_fish_sampled} fish assessed
+                          </span>
+                          <Badge variant="outline">
+                            {event.sampling_date ? new Date(event.sampling_date).toLocaleDateString() : 'No date'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Assignment {event.assignment}
+                        </p>
+                        {event.notes && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {event.notes}
+                          </p>
+                        )}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => openEditDialog('healthAssessment', event)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -476,113 +559,165 @@ export default function Health() {
           </Card>
         </TabsContent>
 
-        {/* Sample Types Tab (Reference Data) */}
-        <TabsContent value="sample-types" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-lg font-semibold">Sample Types</h2>
-              <p className="text-sm text-muted-foreground">
-                Configure laboratory sample type categories
-              </p>
-            </div>
-            <Button onClick={() => openCreateDialog('sampleType')}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Sample Type
-            </Button>
+        {/* Reference Data Tab (Combined: Sample Types, Health Parameters, Vaccination Types) */}
+        <TabsContent value="reference" className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Reference Data</h2>
+            <p className="text-sm text-muted-foreground">
+              Configure reference data for health monitoring
+            </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Sample Types ({formatCount(sampleTypesData?.count || 0)} total)</CardTitle>
-              <CardDescription>Laboratory sample categories for classification</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!sampleTypesData?.results || sampleTypesData.results.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No sample types configured</p>
-                  <p className="text-sm mt-2">Add sample types to categorize lab samples</p>
-                </div>
-              ) : (
+          <Accordion type="multiple" className="space-y-4">
+            {/* Sample Types Section */}
+            <AccordionItem value="sample-types">
+              <AccordionTrigger className="text-lg font-semibold">
+                Laboratory Sample Types ({formatCount(sampleTypesData?.count || 0)})
+              </AccordionTrigger>
+              <AccordionContent>
                 <div className="space-y-4">
-                  {sampleTypesData.results.slice(0, 10).map((type: SampleType) => (
-                    <div key={type.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
-                      <div className="flex-1">
-                        <p className="font-medium">{type.name}</p>
-                        <p className="text-sm text-muted-foreground">{type.description}</p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => openEditDialog('sampleType', type)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                  <div className="flex justify-end">
+                    <Button onClick={() => openCreateDialog('sampleType')} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Sample Type
+                    </Button>
+                  </div>
+                  {!sampleTypesData?.results || sampleTypesData.results.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No sample types configured</p>
+                      <p className="text-sm mt-2">Add sample types to categorize lab samples</p>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="space-y-2">
+                      {sampleTypesData.results.map((type: SampleType) => (
+                        <div key={type.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-accent">
+                          <div className="flex-1">
+                            <p className="font-medium">{type.name}</p>
+                            <p className="text-sm text-muted-foreground">{type.description}</p>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => openEditDialog('sampleType', type)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </AccordionContent>
+            </AccordionItem>
 
-        {/* Vaccination Types Tab (Reference Data) */}
-        <TabsContent value="vaccinations" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-lg font-semibold">Vaccination Types</h2>
-              <p className="text-sm text-muted-foreground">
-                Configure available vaccine types and manufacturers
-              </p>
-            </div>
-            <Button onClick={() => openCreateDialog('vaccinationType')}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Vaccination Type
-            </Button>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Vaccination Types ({formatCount(vaccinationTypesData?.count || 0)} total)</CardTitle>
-              <CardDescription>Available vaccines for treatment tracking</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {!vaccinationTypesData?.results || vaccinationTypesData.results.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Syringe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No vaccination types configured</p>
-                  <p className="text-sm mt-2">Add vaccination types to track immunizations</p>
-                </div>
-              ) : (
+            {/* Health Parameters Section */}
+            <AccordionItem value="health-parameters">
+              <AccordionTrigger className="text-lg font-semibold">
+                Health Parameters ({formatCount(healthParametersData?.count || 0)})
+              </AccordionTrigger>
+              <AccordionContent>
                 <div className="space-y-4">
-                  {vaccinationTypesData.results.slice(0, 10).map((type: VaccinationType) => (
-                    <div key={type.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
-                      <div className="flex-1">
-                        <p className="font-medium">{type.name}</p>
-                        {type.manufacturer && (
-                          <p className="text-sm text-muted-foreground">
-                            Manufacturer: {type.manufacturer}
-                          </p>
-                        )}
-                        {type.dosage && (
-                          <p className="text-sm text-muted-foreground">
-                            Dosage: {type.dosage}
-                          </p>
-                        )}
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => openEditDialog('vaccinationType', type)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                  <div className="flex justify-end">
+                    <Button onClick={() => openCreateDialog('healthParameter')} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Parameter
+                    </Button>
+                  </div>
+                  {!healthParametersData?.results || healthParametersData.results.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No health parameters configured</p>
+                      <p className="text-sm mt-2">Add health parameters for veterinary assessments</p>
                     </div>
-                  ))}
+                  ) : (
+                    <div className="space-y-2">
+                      {healthParametersData.results.map((param: any) => (
+                        <div key={param.id} className="p-3 border rounded-lg hover:bg-accent">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <p className="font-medium">{param.name}</p>
+                              <p className="text-sm text-muted-foreground">{param.description}</p>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Score range: {param.min_score}-{param.max_score} ({(param.max_score - param.min_score + 1)} levels)
+                              </p>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => openEditDialog('healthParameter', param)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          {param.score_definitions && param.score_definitions.length > 0 && (
+                            <div className="mt-2 pl-4 border-l-2 border-muted space-y-1">
+                              {param.score_definitions.map((def: any) => (
+                                <p key={def.id} className="text-sm">
+                                  <span className="font-medium">{def.score_value}:</span> {def.label} - {def.description}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Vaccination Types Section */}
+            <AccordionItem value="vaccination-types">
+              <AccordionTrigger className="text-lg font-semibold">
+                Vaccination Types ({formatCount(vaccinationTypesData?.count || 0)})
+              </AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div className="flex justify-end">
+                    <Button onClick={() => openCreateDialog('vaccinationType')} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Vaccination Type
+                    </Button>
+                  </div>
+                  {!vaccinationTypesData?.results || vaccinationTypesData.results.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Syringe className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No vaccination types configured</p>
+                      <p className="text-sm mt-2">Add vaccination types to track immunizations</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {vaccinationTypesData.results.map((type: VaccinationType) => (
+                        <div key={type.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-accent">
+                          <div className="flex-1">
+                            <p className="font-medium">{type.name}</p>
+                            {type.manufacturer && (
+                              <p className="text-sm text-muted-foreground">
+                                Manufacturer: {type.manufacturer}
+                              </p>
+                            )}
+                            {type.dosage && (
+                              <p className="text-sm text-muted-foreground">
+                                Dosage: {type.dosage}
+                              </p>
+                            )}
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => openEditDialog('vaccinationType', type)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </TabsContent>
       </Tabs>
 
@@ -607,18 +742,37 @@ export default function Health() {
         </DialogContent>
       </Dialog>
 
-      {/* Sampling Event Dialog */}
+      {/* Sampling Event Dialog (Growth Measurements) */}
       <Dialog open={dialogState.type === 'samplingEvent'} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="sr-only">
             <DialogTitle>
-              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Sampling Event
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Growth Measurement
             </DialogTitle>
             <DialogDescription>
-              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a sampling event
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a growth measurement event
             </DialogDescription>
           </DialogHeader>
           <HealthSamplingEventForm
+            samplingEvent={dialogState.data}
+            onSuccess={handleSuccess}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Health Assessment Dialog (Veterinary Parameter Scoring) */}
+      <Dialog open={dialogState.type === 'healthAssessment'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Health Assessment
+            </DialogTitle>
+            <DialogDescription>
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a veterinary health assessment
+            </DialogDescription>
+          </DialogHeader>
+          <HealthAssessmentForm
             samplingEvent={dialogState.data}
             onSuccess={handleSuccess}
             onCancel={closeDialog}
@@ -696,6 +850,25 @@ export default function Health() {
           </DialogHeader>
           <VaccinationTypeForm
             vaccinationType={dialogState.data}
+            onSuccess={handleSuccess}
+            onCancel={closeDialog}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Health Parameter Dialog */}
+      <Dialog open={dialogState.type === 'healthParameter'} onOpenChange={(open) => !open && closeDialog()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {dialogState.mode === 'edit' ? 'Edit' : 'Create'} Health Parameter
+            </DialogTitle>
+            <DialogDescription>
+              Form for {dialogState.mode === 'edit' ? 'editing' : 'creating'} a health parameter
+            </DialogDescription>
+          </DialogHeader>
+          <HealthParameterForm
+            healthParameter={dialogState.data}
             onSuccess={handleSuccess}
             onCancel={closeDialog}
           />

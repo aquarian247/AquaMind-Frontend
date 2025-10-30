@@ -4,6 +4,8 @@
 /* eslint-disable */
 /**
  * Input serializer for nested fish parameter scores.
+ *
+ * Note: Score validation is performed dynamically based on the parameter's min/max range.
  */
 export type FishParameterScoreInput = {
     /**
@@ -11,7 +13,7 @@ export type FishParameterScoreInput = {
      */
     parameter: number;
     /**
-     * Score value (typically 1-5) representing the health assessment for this parameter.
+     * Score value - range defined by parameter's min_score/max_score
      */
     score: number;
 };

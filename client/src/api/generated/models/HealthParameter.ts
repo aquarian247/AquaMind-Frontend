@@ -2,39 +2,37 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ParameterScoreDefinition } from './ParameterScoreDefinition';
 /**
- * Serializer for the HealthParameter model.
+ * Serializer for the HealthParameter model with nested score definitions.
  *
  * Uses HealthBaseSerializer for consistent error handling and field management.
+ * Includes nested score_definitions for flexible parameter scoring.
  */
 export type HealthParameter = {
     readonly id: number;
     /**
-     * Name of the health parameter (e.g., 'Gill Condition', 'Fin Condition').
+     * Name of the health parameter (e.g., Gill Condition).
      */
     name: string;
     /**
-     * Description of what score 1 represents for this parameter.
+     * General description of this health parameter
      */
-    description_score_1: string;
+    description?: string | null;
     /**
-     * Description of what score 2 represents for this parameter.
+     * Minimum score value (inclusive)
      */
-    description_score_2: string;
+    min_score?: number;
     /**
-     * Description of what score 3 represents for this parameter.
+     * Maximum score value (inclusive)
      */
-    description_score_3: string;
+    max_score?: number;
     /**
-     * Description of what score 4 represents for this parameter.
+     * Score definitions for this parameter (e.g., 0-3 scale with labels and descriptions).
      */
-    description_score_4: string;
+    readonly score_definitions: Array<ParameterScoreDefinition>;
     /**
-     * Description of what score 5 represents for this parameter.
-     */
-    description_score_5: string;
-    /**
-     * Whether this parameter is currently active and available for scoring.
+     * Is this parameter currently in use?
      */
     is_active?: boolean;
     readonly created_at: string;
