@@ -343,11 +343,14 @@ export function HealthAssessmentForm({
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {batchesData?.results?.map((batch: any) => (
-                  <SelectItem key={batch.id} value={batch.id.toString()}>
-                    {batch.batch_number} - {batch.lifecycle_stage_name || 'Unknown Stage'}
-                  </SelectItem>
-                ))}
+                {batchesData?.results?.map((batch: any) => {
+                  const stageName = batch.current_lifecycle_stage?.name || 'Unknown Stage';
+                  return (
+                    <SelectItem key={batch.id} value={batch.id.toString()}>
+                      {batch.batch_number} - {stageName}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             <FormDescription>
@@ -381,11 +384,13 @@ export function HealthAssessmentForm({
                   <SelectContent>
                     {enrichedAssignments.map((assignment: any) => {
                       const containerName = assignment.container_info?.name 
-                        || assignment.container_name 
-                        || `Container #${assignment.container}`;
+                        || assignment.container?.name 
+                        || `Container #${assignment.container || assignment.container_id}`;
                       const population = assignment.population_count || 0;
                       const days = assignment.days_occupied || 0;
-                      const stageName = assignment.lifecycle_stage_name || 'Unknown Stage';
+                      const stageName = assignment.lifecycle_stage?.name 
+                        || assignment.lifecycle_stage_info?.name 
+                        || 'Unknown Stage';
                       
                       return (
                         <SelectItem key={assignment.id} value={assignment.id.toString()}>
