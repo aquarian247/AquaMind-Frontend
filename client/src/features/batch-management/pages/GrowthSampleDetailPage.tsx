@@ -8,9 +8,19 @@
  */
 
 import { useParams, useLocation } from 'wouter'
-import { ArrowLeft, Fish, Ruler, TrendingUp, Activity } from 'lucide-react'
+import { 
+  ArrowLeft, 
+  Fish, 
+  Ruler, 
+  TrendingUp, 
+  Activity, 
+  Scale,
+  Maximize2,
+  Minimize2,
+  BarChart3
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -90,25 +100,33 @@ export function GrowthSampleDetailPage() {
 
       {/* Aggregate Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Sample Size */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sample Size</CardTitle>
+            <Fish className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{sample.sample_size}</div>
+            <p className="text-xs text-muted-foreground">
+              Individual fish measured
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Average Weight */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Average Weight
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Weight</CardTitle>
+            <Scale className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {sample.avg_weight_g ? `${Number(sample.avg_weight_g).toFixed(2)}g` : 'N/A'}
+              {sample.avg_weight_g ? `${Number(sample.avg_weight_g).toFixed(2)} g` : 'N/A'}
             </div>
             {sample.std_deviation_weight && (
-              <p className="text-xs text-muted-foreground mt-1">
-                ± {Number(sample.std_deviation_weight).toFixed(2)}g
-              </p>
-            )}
-            {sample.min_weight_g && sample.max_weight_g && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Range: {Number(sample.min_weight_g).toFixed(2)}g - {Number(sample.max_weight_g).toFixed(2)}g
+              <p className="text-xs text-muted-foreground">
+                Std Dev: ± {Number(sample.std_deviation_weight).toFixed(2)} g
               </p>
             )}
           </CardContent>
@@ -116,18 +134,17 @@ export function GrowthSampleDetailPage() {
 
         {/* Average Length */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Average Length
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Average Length</CardTitle>
+            <Ruler className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {sample.avg_length_cm ? `${Number(sample.avg_length_cm).toFixed(2)}cm` : 'N/A'}
+              {sample.avg_length_cm ? `${Number(sample.avg_length_cm).toFixed(2)} cm` : 'N/A'}
             </div>
             {sample.std_deviation_length && (
-              <p className="text-xs text-muted-foreground mt-1">
-                ± {Number(sample.std_deviation_length).toFixed(2)}cm
+              <p className="text-xs text-muted-foreground">
+                Std Dev: ± {Number(sample.std_deviation_length).toFixed(2)} cm
               </p>
             )}
           </CardContent>
@@ -135,36 +152,55 @@ export function GrowthSampleDetailPage() {
 
         {/* K-Factor */}
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Condition Factor (K)
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Condition Factor (K)</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {sample.condition_factor ? Number(sample.condition_factor).toFixed(2) : 'N/A'}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               Fulton's K-factor
             </p>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Sample Size */}
+      {/* Weight Range Card */}
+      {sample.min_weight_g && sample.max_weight_g && (
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Sample Size
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Weight Distribution</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{sample.sample_size}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Individual fish measured
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Minimize2 className="h-4 w-4 text-blue-500" />
+                  <span className="text-xs font-medium text-muted-foreground">Minimum</span>
+                </div>
+                <div className="text-xl font-bold mt-1">
+                  {Number(sample.min_weight_g).toFixed(2)} g
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <Maximize2 className="h-4 w-4 text-blue-500" />
+                  <span className="text-xs font-medium text-muted-foreground">Maximum</span>
+                </div>
+                <div className="text-xl font-bold mt-1">
+                  {Number(sample.max_weight_g).toFixed(2)} g
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Range: {(Number(sample.max_weight_g) - Number(sample.min_weight_g)).toFixed(2)} g
             </p>
           </CardContent>
         </Card>
-      </div>
+      )}
 
       {/* Notes (if any) */}
       {sample.notes && (
