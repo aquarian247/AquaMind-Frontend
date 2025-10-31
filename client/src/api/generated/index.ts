@@ -79,6 +79,8 @@ export type { HealthParameter } from './models/HealthParameter';
 export type { HealthSamplingEvent } from './models/HealthSamplingEvent';
 export type { IndividualFishObservation } from './models/IndividualFishObservation';
 export type { IndividualFishObservationInput } from './models/IndividualFishObservationInput';
+export type { IndividualGrowthObservation } from './models/IndividualGrowthObservation';
+export type { IndividualGrowthObservationInput } from './models/IndividualGrowthObservationInput';
 export type { IntercompanyPolicySummary } from './models/IntercompanyPolicySummary';
 export type { IntercompanyTransaction } from './models/IntercompanyTransaction';
 export type { JournalEntry } from './models/JournalEntry';

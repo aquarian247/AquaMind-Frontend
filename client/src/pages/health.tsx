@@ -39,6 +39,7 @@ import {
   useLiceCounts,
   useHealthParameters
 } from "@/features/health/api";
+import { useGrowthSamples } from "@/features/batch-management/api";
 import { JournalEntryForm } from "@/features/health/components/JournalEntryForm";
 import { HealthSamplingEventForm } from "@/features/health/components/HealthSamplingEventForm";
 import { HealthLabSampleForm } from "@/features/health/components/HealthLabSampleForm";
@@ -72,6 +73,7 @@ export default function Health() {
   // Fetch real data from backend
   const { data: journalEntriesData } = useJournalEntries({ page: 1 });
   const { data: samplingEventsData } = useHealthSamplingEvents({ page: 1 });
+  const { data: growthSamplesData } = useGrowthSamples({});  // For Measurements tab (read-only)
   const { data: labSamplesData } = useHealthLabSamples({ page: 1 });
   const { data: treatmentsData } = useTreatments({ page: 1 });
   const { data: sampleTypesData } = useSampleTypes({ page: 1 });
@@ -293,66 +295,76 @@ export default function Health() {
           </Card>
         </TabsContent>
 
-        {/* Growth Measurements Tab (renamed from Sampling) */}
+        {/* Growth Measurements Tab (Read-Only View) */}
         <TabsContent value="measurements" className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-lg font-semibold">Growth Measurements</h2>
+              <h2 className="text-lg font-semibold">Growth Measurements (View Only)</h2>
               <p className="text-sm text-muted-foreground">
-                Record weight and length measurements for growth tracking
+                View growth samples recorded by operators on batch detail pages
               </p>
             </div>
-            <Button onClick={() => openCreateDialog('samplingEvent')}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Measurement
-            </Button>
+            {/* NO "New Measurement" button - this is read-only for veterinarians */}
           </div>
+
+          <Alert className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Note:</strong> Growth samples are created on the Batch Detail page 
+              by operators. This view is for veterinarian reference only.
+            </AlertDescription>
+          </Alert>
 
           <Card>
             <CardHeader>
-              <CardTitle>Sampling Events ({formatCount(totalSamplingEvents)} total)</CardTitle>
-              <CardDescription>Health assessments with fish measurements and K-factors</CardDescription>
+              <CardTitle>Growth Samples ({formatCount(growthSamplesData?.count || 0)} total)</CardTitle>
+              <CardDescription>Operator-recorded growth measurements with individual fish data</CardDescription>
             </CardHeader>
             <CardContent>
-              {!samplingEventsData?.results || samplingEventsData.results.length === 0 ? (
+              {!growthSamplesData?.results || growthSamplesData.results.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  <Microscope className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No sampling events found</p>
-                  <p className="text-sm mt-2">Create a sampling event to record detailed fish health data</p>
+                  <Ruler className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No growth samples found</p>
+                  <p className="text-sm mt-2">Growth samples are recorded by operators on the Batch Detail page</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {samplingEventsData.results.slice(0, 5).map((event: HealthSamplingEvent) => (
-                    <div key={event.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
+                  {growthSamplesData.results.slice(0, 10).map((sample) => (
+                    <div key={sample.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-accent">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-medium">
-                            {event.number_of_fish_sampled} fish sampled
-                          </span>
-                          {event.avg_weight_g && (
+                          <Badge variant="default">
+                            {sample.sample_size} fish sampled
+                          </Badge>
+                          {sample.avg_weight_g && (
                             <Badge variant="outline">
-                              Avg: {event.avg_weight_g}g
+                              Avg: {Number(sample.avg_weight_g).toFixed(2)}g
                             </Badge>
                           )}
-                          {event.avg_k_factor && (
+                          {sample.avg_length_cm && (
                             <Badge variant="outline">
-                              K: {event.avg_k_factor}
+                              {Number(sample.avg_length_cm).toFixed(2)}cm
+                            </Badge>
+                          )}
+                          {sample.condition_factor && (
+                            <Badge variant="outline">
+                              K: {Number(sample.condition_factor).toFixed(2)}
                             </Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          Assignment {event.assignment}
+                          {(sample.assignment_details as any)?.batch?.batch_number || `Assignment ${sample.assignment}`}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {event.sampling_date ? new Date(event.sampling_date).toLocaleDateString() : 'No date'}
+                          {sample.sample_date ? new Date(sample.sample_date).toLocaleDateString() : 'No date'}
                         </p>
                       </div>
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => openEditDialog('samplingEvent', event)}
+                        onClick={() => navigate(`/batch/growth-samples/${sample.id}`)}
                       >
-                        <Edit className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}

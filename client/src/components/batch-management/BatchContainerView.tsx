@@ -3,18 +3,24 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Fish, Thermometer } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { MapPin, Fish, Thermometer, Ruler } from "lucide-react";
 import { api } from "@/lib/api";
 import { ApiService } from "@/api/generated";
 import type { Batch } from "@/api/generated/models/Batch";
 import type { Container } from "@/api/generated/models/Container";
 import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
+import { GrowthSampleForm } from "@/features/batch-management/components/GrowthSampleForm";
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
 }
 
 export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
+  // State for growth sample dialog
+  const [growthSampleDialogOpen, setGrowthSampleDialogOpen] = useState(false)
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null)
+
   // Simplified: Just show containers for the selected batch - no filters needed
 
   // Fetch container assignments for this batch (fetch ALL pages, try active first)
@@ -197,17 +203,31 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                   </div>
                 </div>
 
-                {/* Action Button */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => {
-                    console.log('View assignment details:', assignment.id);
-                  }}
-                >
-                  View Assignment Details
-                </Button>
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => {
+                      console.log('View assignment details:', assignment.id);
+                    }}
+                  >
+                    View Details
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedAssignmentId(assignment.id);
+                      setGrowthSampleDialogOpen(true);
+                    }}
+                  >
+                    <Ruler className="h-4 w-4 mr-2" />
+                    Record Growth
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
@@ -243,6 +263,31 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Growth Sample Dialog */}
+      <Dialog open={growthSampleDialogOpen} onOpenChange={setGrowthSampleDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Record Growth Sample</DialogTitle>
+            <DialogDescription>
+              Enter individual fish measurements. Aggregates will be calculated automatically.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedAssignmentId && (
+            <GrowthSampleForm
+              assignmentId={selectedAssignmentId}
+              onSuccess={() => {
+                setGrowthSampleDialogOpen(false);
+                setSelectedAssignmentId(null);
+              }}
+              onCancel={() => {
+                setGrowthSampleDialogOpen(false);
+                setSelectedAssignmentId(null);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

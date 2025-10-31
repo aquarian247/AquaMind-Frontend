@@ -2,6 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { IndividualGrowthObservation } from './IndividualGrowthObservation';
+import type { IndividualGrowthObservationInput } from './IndividualGrowthObservationInput';
 /**
  * Serializer for GrowthSample model with calculated fields.
  */
@@ -53,5 +55,13 @@ export type PatchedGrowthSample = {
     readonly updated_at?: string;
     individual_lengths?: Array<string>;
     individual_weights?: Array<string>;
+    /**
+     * Individual fish observations to create (write-only, for POST/PUT).
+     */
+    individual_observations?: Array<IndividualGrowthObservationInput>;
+    /**
+     * Individual fish observations with K-factors (read-only, for GET).
+     */
+    readonly fish_observations?: Array<IndividualGrowthObservation>;
 };
 

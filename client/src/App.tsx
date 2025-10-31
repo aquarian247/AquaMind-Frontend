@@ -32,6 +32,7 @@ import BatchDetails from "@/pages/batch-details";
 import BatchSetupPage from "@/features/batch-management/pages/BatchSetupPage";
 import { WorkflowListPage } from "@/features/batch-management/workflows/pages/WorkflowListPage";
 import { WorkflowDetailPage } from "@/features/batch-management/workflows/pages/WorkflowDetailPage";
+import { GrowthSampleDetailPage } from "@/features/batch-management/pages/GrowthSampleDetailPage";
 
 // Health
 import Health from "@/pages/health";
@@ -275,6 +276,16 @@ function Router() {
           <ProtectedRoute>
             <AppLayout>
               <WorkflowDetailPage />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/batch/growth-samples/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <GrowthSampleDetailPage />
             </AppLayout>
           </ProtectedRoute>
         )}

@@ -7,10 +7,9 @@ import { useBatches, useLifecycleStages, useGrowthSamples, useMortalityEvents } 
 import { BatchForm } from '../components/BatchForm'
 import { BatchCreationForm } from '../components/BatchCreationForm'
 import { LifecycleStageForm } from '../components/LifecycleStageForm'
-import { GrowthSampleForm } from '../components/GrowthSampleForm'
 import { MortalityEventForm } from '../components/MortalityEventForm'
 
-type EntityType = 'batch' | 'lifecycleStage' | 'growthSample' | 'mortalityEvent' | null
+type EntityType = 'batch' | 'lifecycleStage' | 'mortalityEvent' | null
 
 /**
  * Batch Setup Page with Create Dialogs
@@ -30,7 +29,6 @@ export default function BatchSetupPage() {
   // Load counts for display
   const { data: batchesData } = useBatches()
   const { data: stagesData } = useLifecycleStages()
-  const { data: growthSamplesData } = useGrowthSamples()
   const { data: mortalityEventsData } = useMortalityEvents()
 
   const handleSuccess = () => {
@@ -57,14 +55,6 @@ export default function BatchSetupPage() {
       icon: TrendingUp,
       count: stagesData?.results?.length || 0,
       color: 'green'
-    },
-    {
-      id: 'growthSample' as const,
-      name: 'Growth Sample',
-      description: 'Record growth measurements',
-      icon: LineChart,
-      count: growthSamplesData?.results?.length || 0,
-      color: 'teal'
     },
     {
       id: 'mortalityEvent' as const,
@@ -151,17 +141,6 @@ export default function BatchSetupPage() {
             <DialogDescription>Define a new lifecycle stage for tracking batch progression</DialogDescription>
           </DialogHeader>
           <LifecycleStageForm onSuccess={handleSuccess} onCancel={handleCancel} />
-        </DialogContent>
-      </Dialog>
-
-      {/* Growth Sample Create Dialog */}
-      <Dialog open={createDialogOpen === 'growthSample'} onOpenChange={(open) => !open && setCreateDialogOpen(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Record Growth Sample</DialogTitle>
-            <DialogDescription>Record weight and length measurements for batch monitoring</DialogDescription>
-          </DialogHeader>
-          <GrowthSampleForm onSuccess={handleSuccess} onCancel={handleCancel} />
         </DialogContent>
       </Dialog>
 
