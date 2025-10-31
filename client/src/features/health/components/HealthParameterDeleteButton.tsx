@@ -1,7 +1,6 @@
 import React from 'react'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { DeleteGate } from '@/features/shared/permissions'
 import {
   useAuditReasonPrompt,
   AuditReasonDialog,
@@ -63,19 +62,17 @@ export function HealthParameterDeleteButton({
 
   return (
     <>
-      <DeleteGate fallback={null}>
-        <Button
-          variant="destructive"
-          size={iconOnly ? 'icon' : 'default'}
-          onClick={handleDelete}
-          disabled={deleteMutation.isPending}
-          className={className}
-          aria-label={`Delete health parameter ${healthParameter.name}`}
-        >
-          <Trash2 className={iconOnly ? 'h-4 w-4' : 'mr-2 h-4 w-4'} />
-          {!iconOnly && 'Delete Parameter'}
-        </Button>
-      </DeleteGate>
+      <Button
+        variant="destructive"
+        size={iconOnly ? 'icon' : 'default'}
+        onClick={handleDelete}
+        disabled={deleteMutation.isPending}
+        className={className}
+        aria-label={`Delete health parameter ${healthParameter.name}`}
+      >
+        <Trash2 className={iconOnly ? 'h-4 w-4' : 'mr-2 h-4 w-4'} />
+        {!iconOnly && 'Delete Parameter'}
+      </Button>
 
       <AuditReasonDialog
         open={dialogState.isOpen}
