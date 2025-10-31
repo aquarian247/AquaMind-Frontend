@@ -63,6 +63,7 @@ export function HealthParameterDeleteButton({
   return (
     <>
       <Button
+        type="button"
         variant="destructive"
         size={iconOnly ? 'icon' : 'default'}
         onClick={handleDelete}
@@ -71,7 +72,7 @@ export function HealthParameterDeleteButton({
         aria-label={`Delete health parameter ${healthParameter.name}`}
       >
         <Trash2 className={iconOnly ? 'h-4 w-4' : 'mr-2 h-4 w-4'} />
-        {!iconOnly && 'Delete Parameter'}
+        {!iconOnly && (deleteMutation.isPending ? 'Deleting...' : 'Delete Parameter')}
       </Button>
 
       <AuditReasonDialog
