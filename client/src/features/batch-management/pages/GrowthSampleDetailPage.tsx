@@ -98,13 +98,13 @@ export function GrowthSampleDetailPage() {
         </Badge>
       </div>
 
-      {/* Aggregate Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Primary Statistics - Row 1 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Sample Size */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Sample Size</CardTitle>
-            <Fish className="h-4 w-4 text-muted-foreground" />
+            <Fish className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{sample.sample_size}</div>
@@ -118,17 +118,15 @@ export function GrowthSampleDetailPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Weight</CardTitle>
-            <Scale className="h-4 w-4 text-muted-foreground" />
+            <Scale className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {sample.avg_weight_g ? `${Number(sample.avg_weight_g).toFixed(2)} g` : 'N/A'}
             </div>
-            {sample.std_deviation_weight && (
-              <p className="text-xs text-muted-foreground">
-                Std Dev: ± {Number(sample.std_deviation_weight).toFixed(2)} g
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Mean weight per fish
+            </p>
           </CardContent>
         </Card>
 
@@ -136,17 +134,15 @@ export function GrowthSampleDetailPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Average Length</CardTitle>
-            <Ruler className="h-4 w-4 text-muted-foreground" />
+            <Ruler className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {sample.avg_length_cm ? `${Number(sample.avg_length_cm).toFixed(2)} cm` : 'N/A'}
             </div>
-            {sample.std_deviation_length && (
-              <p className="text-xs text-muted-foreground">
-                Std Dev: ± {Number(sample.std_deviation_length).toFixed(2)} cm
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Mean length per fish
+            </p>
           </CardContent>
         </Card>
 
@@ -154,7 +150,7 @@ export function GrowthSampleDetailPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Condition Factor (K)</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <Activity className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -167,40 +163,103 @@ export function GrowthSampleDetailPage() {
         </Card>
       </div>
 
-      {/* Weight Range Card */}
-      {sample.min_weight_g && sample.max_weight_g && (
+      {/* Distribution & Variability - Row 2 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Weight Distribution */}
+        {sample.min_weight_g && sample.max_weight_g ? (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Weight Range</CardTitle>
+              <BarChart3 className="h-4 w-4 text-teal-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Min</span>
+                  <span className="font-semibold">{Number(sample.min_weight_g).toFixed(2)} g</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Max</span>
+                  <span className="font-semibold">{Number(sample.max_weight_g).toFixed(2)} g</span>
+                </div>
+                <div className="flex items-center justify-between text-xs pt-1 border-t">
+                  <span className="text-muted-foreground">Range</span>
+                  <span className="font-bold">{(Number(sample.max_weight_g) - Number(sample.min_weight_g)).toFixed(2)} g</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Weight Range</CardTitle>
+              <BarChart3 className="h-4 w-4 text-teal-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-muted-foreground">N/A</div>
+              <p className="text-xs text-muted-foreground">No data</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Length Distribution (if we have data) */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Weight Distribution</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Length Range</CardTitle>
+            <Maximize2 className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Minimize2 className="h-4 w-4 text-blue-500" />
-                  <span className="text-xs font-medium text-muted-foreground">Minimum</span>
+            {sample.avg_length_cm ? (
+              <div className="space-y-1">
+                <div className="text-sm text-muted-foreground">
+                  Avg ± Std Dev
                 </div>
-                <div className="text-xl font-bold mt-1">
-                  {Number(sample.min_weight_g).toFixed(2)} g
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <Maximize2 className="h-4 w-4 text-blue-500" />
-                  <span className="text-xs font-medium text-muted-foreground">Maximum</span>
-                </div>
-                <div className="text-xl font-bold mt-1">
-                  {Number(sample.max_weight_g).toFixed(2)} g
+                <div className="text-lg font-bold">
+                  {Number(sample.avg_length_cm).toFixed(2)} ±{' '}
+                  {sample.std_deviation_length ? Number(sample.std_deviation_length).toFixed(2) : '0.00'} cm
                 </div>
               </div>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-muted-foreground">N/A</div>
+                <p className="text-xs text-muted-foreground">No data</p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Standard Deviation - Weight */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Weight Std Dev</CardTitle>
+            <TrendingUp className="h-4 w-4 text-rose-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {sample.std_deviation_weight ? `± ${Number(sample.std_deviation_weight).toFixed(2)} g` : 'N/A'}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Range: {(Number(sample.max_weight_g) - Number(sample.min_weight_g)).toFixed(2)} g
+            <p className="text-xs text-muted-foreground">
+              Weight variability
             </p>
           </CardContent>
         </Card>
-      )}
+
+        {/* Standard Deviation - Length */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Length Std Dev</CardTitle>
+            <TrendingUp className="h-4 w-4 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {sample.std_deviation_length ? `± ${Number(sample.std_deviation_length).toFixed(2)} cm` : 'N/A'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Length variability
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Notes (if any) */}
       {sample.notes && (
