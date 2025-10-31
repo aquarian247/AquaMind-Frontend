@@ -64,7 +64,7 @@ export function AssessmentDetailPage() {
     )
   }
 
-  const observations = (assessment as any).individual_fish_observations || []
+  const observations = (assessment as any).fish_observations || []
   const fishCount = observations.length
   const hasScores = observations.some((obs: any) => obs.parameter_scores?.length > 0)
 

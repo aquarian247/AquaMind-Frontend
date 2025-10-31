@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { IndividualFishObservation } from './IndividualFishObservation';
 import type { IndividualFishObservationInput } from './IndividualFishObservationInput';
 /**
  * Serializer for HealthSamplingEvent model.
@@ -41,7 +42,14 @@ export type HealthSamplingEvent = {
      * Maximum weight in grams among sampled fish.
      */
     readonly max_weight_g: string | null;
+    /**
+     * Fish observations to create (write-only, for POST/PUT).
+     */
     individual_fish_observations?: Array<IndividualFishObservationInput>;
+    /**
+     * Individual fish observations with parameter scores (read-only, for GET).
+     */
+    readonly fish_observations: Array<IndividualFishObservation>;
     /**
      * Average length in centimeters of sampled fish.
      */
