@@ -57,7 +57,13 @@ const healthAssessmentSchema = z.object({
   number_of_fish_sampled: z.coerce.number().int().positive('Number of fish must be positive'),
   notes: optionalString,
   individual_fish_observations: z.array(fishAssessmentSchema).min(1, 'At least one fish assessment is required'),
-})
+}).refine(
+  (data) => data.number_of_fish_sampled === data.individual_fish_observations.length,
+  {
+    message: "Number of fish sampled must match the number of individual fish assessments",
+    path: ["number_of_fish_sampled"],
+  }
+)
 
 type HealthAssessmentFormValues = z.infer<typeof healthAssessmentSchema>
 
@@ -427,21 +433,36 @@ export function HealthAssessmentForm({
             <FormField
               control={form.control}
               name="number_of_fish_sampled"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of Fish</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="5"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormDescription>Fish to assess</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const actualCount = fields.length;
+                const expectedCount = field.value || 0;
+                const mismatch = actualCount !== expectedCount;
+                
+                return (
+                  <FormItem>
+                    <FormLabel>Number of Fish</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="5"
+                        {...field}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        className={mismatch ? 'border-amber-500' : ''}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      {mismatch ? (
+                        <span className="text-amber-600 font-medium">
+                          ⚠️ Declared: {expectedCount}, Actual: {actualCount} - Must match!
+                        </span>
+                      ) : (
+                        `Fish to assess (currently: ${actualCount})`
+                      )}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
           </div>
         </FormSection>
