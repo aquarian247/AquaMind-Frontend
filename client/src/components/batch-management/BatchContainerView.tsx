@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
   // State for growth sample dialog
   const [growthSampleDialogOpen, setGrowthSampleDialogOpen] = useState(false)
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null)
+  const [, navigate] = useLocation()
 
   // Simplified: Just show containers for the selected batch - no filters needed
 
@@ -210,7 +212,14 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                     size="sm" 
                     className="flex-1"
                     onClick={() => {
-                      console.log('View assignment details:', assignment.id);
+                      // Navigate to infrastructure container detail page
+                      const containerId = typeof assignment.container === 'object' && assignment.container
+                        ? (assignment.container as any).id
+                        : assignment.container;
+                      
+                      if (containerId) {
+                        navigate(`/infrastructure/containers/${containerId}`);
+                      }
                     }}
                   >
                     View Details
