@@ -36,6 +36,7 @@ import { WorkflowDetailPage } from "@/features/batch-management/workflows/pages/
 // Health
 import Health from "@/pages/health";
 import HealthManagementPage from "@/features/health/pages/HealthManagementPage";
+import { AssessmentDetailPage } from "@/features/health/pages";
 
 // Inventory
 import Inventory from "@/pages/inventory";
@@ -283,6 +284,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Health />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/health/assessments/:id">
+        <ProtectedRoute>
+          <AppLayout>
+            <AssessmentDetailPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

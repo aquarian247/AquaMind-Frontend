@@ -1,5 +1,1 @@
-export { default as HealthManagementPage } from './HealthManagementPage'
-
-
-
-
+export { AssessmentDetailPage } from './AssessmentDetailPage'
