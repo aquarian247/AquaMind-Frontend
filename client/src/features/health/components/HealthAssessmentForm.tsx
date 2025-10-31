@@ -131,6 +131,22 @@ export function HealthAssessmentForm({
     batch: selectedBatchId || undefined,
   })
 
+  // Enrich assignments with days occupied
+  const enrichedAssignments = useMemo(() => {
+    if (!assignmentsData?.results) return []
+    
+    return assignmentsData.results.map((assignment: any) => {
+      const assignmentDate = new Date(assignment.assignment_date)
+      const today = new Date()
+      const daysOccupied = Math.floor((today.getTime() - assignmentDate.getTime()) / (1000 * 60 * 60 * 24))
+      
+      return {
+        ...assignment,
+        days_occupied: daysOccupied,
+      }
+    })
+  }, [assignmentsData])
+
   // Load active health parameters with score definitions
   const { data: parametersData, isLoading: parametersLoading } = useHealthParameters({
     isActive: true,
@@ -363,11 +379,20 @@ export function HealthAssessmentForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {assignmentsData?.results?.map((assignment: any) => (
-                      <SelectItem key={assignment.id} value={assignment.id.toString()}>
-                        {assignment.container_name} ({assignment.lifecycle_stage_name})
-                      </SelectItem>
-                    ))}
+                    {enrichedAssignments.map((assignment: any) => {
+                      const containerName = assignment.container_info?.name 
+                        || assignment.container_name 
+                        || `Container #${assignment.container}`;
+                      const population = assignment.population_count || 0;
+                      const days = assignment.days_occupied || 0;
+                      const stageName = assignment.lifecycle_stage_name || 'Unknown Stage';
+                      
+                      return (
+                        <SelectItem key={assignment.id} value={assignment.id.toString()}>
+                          {containerName} ({population.toLocaleString()} fish, {days} days) - {stageName}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
                 <FormDescription>
