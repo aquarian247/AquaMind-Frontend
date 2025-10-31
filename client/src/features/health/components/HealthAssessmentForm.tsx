@@ -165,6 +165,10 @@ export function HealthAssessmentForm({
   // Update form with sampling event data if in edit mode
   React.useEffect(() => {
     if (samplingEvent) {
+      // Note: Edit mode is currently limited because the list API doesn't include
+      // full nested individual_fish_observations. For now, we recommend users
+      // delete and recreate assessments rather than edit them.
+      // TODO: Fetch full assessment details via detail endpoint for edit mode
       form.reset({
         assignment: samplingEvent.assignment,
         sampling_date: samplingEvent.sampling_date?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -469,8 +473,21 @@ export function HealthAssessmentForm({
 
         <FormSection
           title="Select Health Parameters"
-          description="Choose which health parameters to score for this assessment."
+          description={isEditMode 
+            ? "Parameters cannot be changed in edit mode. To change parameters, delete this assessment and create a new one."
+            : "Choose which health parameters to score for this assessment."
+          }
         >
+          {isEditMode && (
+            <Alert className="mb-4">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Edit Mode:</strong> You cannot add or remove parameters in edit mode. 
+                You can only update existing fish scores. To change parameters, delete this assessment and create a new one.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {parametersLoading ? (
             <div className="text-sm text-muted-foreground">Loading parameters...</div>
           ) : activeParameters.length === 0 ? (
@@ -487,12 +504,17 @@ export function HealthAssessmentForm({
                   <Checkbox
                     id={`param-${param.id}`}
                     checked={selectedParameterIds.includes(param.id)}
-                    onCheckedChange={() => toggleParameter(param.id)}
+                    onCheckedChange={() => !isEditMode && toggleParameter(param.id)}
+                    disabled={isEditMode}
                   />
                   <div className="grid gap-1.5 leading-none">
                     <label
                       htmlFor={`param-${param.id}`}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      className={`text-sm font-medium leading-none ${
+                        isEditMode 
+                          ? 'cursor-not-allowed opacity-70' 
+                          : 'cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                      }`}
                     >
                       {param.name}
                     </label>

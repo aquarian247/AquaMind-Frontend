@@ -19,6 +19,7 @@ import {
   BookOpen,
   Plus,
   Edit,
+  Trash2,
   Info,
   TrendingUp,
   AlertTriangle,
@@ -419,9 +420,15 @@ export default function Health() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => openEditDialog('healthAssessment', event)}
+                        onClick={() => {
+                          // TODO: Implement delete functionality
+                          // For now, assessments should be deleted and recreated rather than edited
+                          // due to complexity of editing nested parameter scores
+                          alert('Delete functionality coming soon. For now, use Django Admin to delete assessments.')
+                        }}
+                        title="Delete assessment"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   ))}
