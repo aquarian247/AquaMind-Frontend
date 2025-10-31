@@ -35,7 +35,7 @@ import {
 import { Plus, Trash2, Info, Stethoscope } from 'lucide-react'
 import { WriteGate } from '@/features/shared/permissions'
 import { useCreateHealthSamplingEvent, useUpdateHealthSamplingEvent, useHealthParameters } from '../api'
-import { useBatchContainerAssignments } from '@/features/batch-management/api'
+import { useBatches, useBatchContainerAssignments } from '@/features/batch-management/api'
 import type { HealthSamplingEvent } from '@/api/generated'
 
 // Validation schema for health assessments
@@ -99,6 +99,7 @@ export function HealthAssessmentForm({
 }: HealthAssessmentFormProps) {
   const isEditMode = !!samplingEvent
   const [selectedParameterIds, setSelectedParameterIds] = useState<number[]>([])
+  const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null)
 
   const form = useForm<HealthAssessmentFormValues>({
     resolver: zodResolver(healthAssessmentSchema),
@@ -119,9 +120,15 @@ export function HealthAssessmentForm({
     name: 'individual_fish_observations',
   })
 
-  // Load batch container assignments
+  // Load active batches
+  const { data: batchesData, isLoading: batchesLoading } = useBatches({
+    status: 'ACTIVE',
+  })
+
+  // Load batch container assignments (filtered by selected batch)
   const { data: assignmentsData, isLoading: assignmentsLoading } = useBatchContainerAssignments({
     isActive: true,
+    batch: selectedBatchId || undefined,
   })
 
   // Load active health parameters with score definitions
@@ -301,32 +308,70 @@ export function HealthAssessmentForm({
           title="Assessment Details"
           description="Select the batch/container and date for this health assessment."
         >
+          {/* Step 1: Select Batch */}
+          <FormItem>
+            <FormLabel>Batch</FormLabel>
+            <Select
+              onValueChange={(value) => {
+                const batchId = Number(value)
+                setSelectedBatchId(batchId)
+                // Reset assignment when batch changes
+                form.setValue('assignment', 0)
+              }}
+              value={selectedBatchId?.toString() || ''}
+              disabled={batchesLoading}
+            >
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a batch" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {batchesData?.results?.map((batch: any) => (
+                  <SelectItem key={batch.id} value={batch.id.toString()}>
+                    {batch.batch_number} - {batch.lifecycle_stage_name || 'Unknown Stage'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormDescription>
+              Select the batch to assess (only active batches shown).
+            </FormDescription>
+          </FormItem>
+
+          {/* Step 2: Select Container Assignment (only shows when batch selected) */}
           <FormField
             control={form.control}
             name="assignment"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Batch & Container Assignment</FormLabel>
+                <FormLabel>Container Assignment</FormLabel>
                 <Select
                   onValueChange={(value) => field.onChange(Number(value))}
                   value={field.value?.toString()}
-                  disabled={assignmentsLoading}
+                  disabled={!selectedBatchId || assignmentsLoading}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a batch and container" />
+                      <SelectValue placeholder={
+                        !selectedBatchId 
+                          ? "Select a batch first" 
+                          : assignmentsLoading 
+                          ? "Loading containers..." 
+                          : "Select container"
+                      } />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     {assignmentsData?.results?.map((assignment: any) => (
                       <SelectItem key={assignment.id} value={assignment.id.toString()}>
-                        Batch {assignment.batch_number} - {assignment.container_name}
+                        {assignment.container_name} ({assignment.lifecycle_stage_name})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Select the batch and container being assessed.
+                  Select the specific container for this batch (only active assignments shown).
                 </FormDescription>
                 <FormMessage />
               </FormItem>
