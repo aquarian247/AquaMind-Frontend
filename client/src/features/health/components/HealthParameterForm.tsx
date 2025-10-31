@@ -271,36 +271,37 @@ export function HealthParameterForm({
           />
         </FormSection>
 
-        {isEditMode && healthParameter && (
-          <FormSection
-            title="Delete Parameter"
-            description="Permanently delete this health parameter and all associated score definitions."
-          >
-            <div className="space-y-4">
-              <div className="text-sm text-muted-foreground p-4 bg-destructive/10 border border-destructive/20 rounded-md">
-                <p className="font-medium text-destructive mb-2">⚠️ Warning: Irreversible Action</p>
-                <p className="mb-2">
-                  Deleting this parameter will:
-                </p>
-                <ul className="list-disc list-inside space-y-1 ml-2">
-                  <li>Remove all associated score definitions ({healthParameter.score_definitions?.length || 0} definitions)</li>
-                  <li>Prevent this parameter from being used in future health assessments</li>
-                  <li>NOT delete existing fish parameter scores (historical data preserved)</li>
-                </ul>
-                <p className="mt-2 text-xs">
-                  Note: Existing health assessments using this parameter will retain their scores, 
-                  but the parameter cannot be used for new assessments.
-                </p>
-              </div>
-              
-              <HealthParameterDeleteButton
-                healthParameter={healthParameter}
-                onSuccess={onSuccess}
-              />
-            </div>
-          </FormSection>
-        )}
       </WriteGate>
+
+      {isEditMode && healthParameter && (
+        <FormSection
+          title="Delete Parameter"
+          description="Permanently delete this health parameter and all associated score definitions."
+        >
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+              <p className="font-medium text-destructive mb-2">⚠️ Warning: Irreversible Action</p>
+              <p className="mb-2">
+                Deleting this parameter will:
+              </p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li>Remove all associated score definitions ({healthParameter.score_definitions?.length || 0} definitions)</li>
+                <li>Prevent this parameter from being used in future health assessments</li>
+                <li>NOT delete existing fish parameter scores (historical data preserved)</li>
+              </ul>
+              <p className="mt-2 text-xs">
+                Note: Existing health assessments using this parameter will retain their scores, 
+                but the parameter cannot be used for new assessments.
+              </p>
+            </div>
+            
+            <HealthParameterDeleteButton
+              healthParameter={healthParameter}
+              onSuccess={onSuccess}
+            />
+          </div>
+        </FormSection>
+      )}
     </FormLayout>
   )
 }
