@@ -41,7 +41,11 @@ export function HealthParameterDeleteButton({
   const { promptReason, dialogState } = useAuditReasonPrompt()
   const deleteMutation = useDeleteHealthParameter()
 
-  const handleDelete = async () => {
+  const handleDelete = async (e?: React.MouseEvent) => {
+    // Prevent event bubbling to parent form
+    e?.preventDefault()
+    e?.stopPropagation()
+    
     const { confirmed, reason } = await promptReason({
       title: 'Confirm Health Parameter Deletion',
       description: `You are about to delete the health parameter "${healthParameter.name}". This will also delete all associated score definitions. This action cannot be undone.`,
