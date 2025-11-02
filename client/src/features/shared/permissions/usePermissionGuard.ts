@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useUser } from '@/contexts/UserContext'
 import { checkPermission, isAdmin, isManager, isOperator, canWrite, canDelete } from './utils'
 import type { PermissionCheckOptions, PermissionCheckResult } from './types'
 
 /**
  * Hook for checking user permissions based on role, geography, and subsidiary.
  * Provides both a flexible check function and common permission shortcuts.
+ * 
+ * Now enhanced with UserContext integration for RBAC-specific permissions.
  * 
  * @example Basic usage
  * ```tsx
@@ -38,9 +41,33 @@ import type { PermissionCheckOptions, PermissionCheckResult } from './types'
  *   )
  * }
  * ```
+ * 
+ * @example RBAC-specific permissions
+ * ```tsx
+ * function TreatmentForm() {
+ *   const { hasTreatmentEditAccess, hasHealthAccess } = usePermissionGuard()
+ *   
+ *   if (!hasHealthAccess) {
+ *     return <AccessDenied />
+ *   }
+ *   
+ *   return (
+ *     <Form>
+ *       <Button disabled={!hasTreatmentEditAccess}>Save Treatment</Button>
+ *     </Form>
+ *   )
+ * }
+ * ```
  */
 export function usePermissionGuard() {
   const { user, isAuthenticated } = useAuth()
+  const {
+    hasHealthAccess,
+    hasOperationalAccess,
+    hasTreatmentEditAccess,
+    hasFinanceAccess,
+    hasLocationAssignments,
+  } = useUser()
 
   // Memoize permission check function
   const can = useMemo(
@@ -65,12 +92,27 @@ export function usePermissionGuard() {
       canWrite: canWrite(user),
       canDelete: canDelete(user),
       
+      // RBAC-specific permissions (from UserContext)
+      hasHealthAccess,
+      hasOperationalAccess,
+      hasTreatmentEditAccess,
+      hasFinanceAccess,
+      hasLocationAssignments,
+      
       // User info
       role: user?.role,
       geography: user?.geography,
       subsidiary: user?.subsidiary,
     }),
-    [user, isAuthenticated]
+    [
+      user, 
+      isAuthenticated,
+      hasHealthAccess,
+      hasOperationalAccess,
+      hasTreatmentEditAccess,
+      hasFinanceAccess,
+      hasLocationAssignments,
+    ]
   )
 
   return {
