@@ -3,11 +3,17 @@ import { render, screen } from '@testing-library/react'
 import { PermissionGate, AdminGate, WriteGate, DeleteGate } from '../PermissionGate'
 import { UserRole } from '../types'
 import * as AuthContext from '@/contexts/AuthContext'
+import * as UserContext from '@/contexts/UserContext'
 import type { User } from '@/api/generated'
 
 // Mock AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(),
+}))
+
+// Mock UserContext
+vi.mock('@/contexts/UserContext', () => ({
+  useUser: vi.fn(),
 }))
 
 const createUser = (overrides: Partial<User> = {}): User => ({
@@ -23,16 +29,33 @@ const createUser = (overrides: Partial<User> = {}): User => ({
   ...overrides,
 })
 
+// Helper to setup common mocks
+const setupMocks = (role: string) => {
+  vi.mocked(AuthContext.useAuth).mockReturnValue({
+    user: createUser({ role }),
+    isAuthenticated: true,
+  } as any)
+
+  const isAdmin = role === 'ADMIN'
+  const canWrite = ['ADMIN', 'MGR', 'OPR', 'VET', 'QA', 'FIN'].includes(role)
+  const canDelete = ['ADMIN', 'MGR'].includes(role)
+
+  vi.mocked(UserContext.useUser).mockReturnValue({
+    hasHealthAccess: ['ADMIN', 'VET', 'QA'].includes(role),
+    hasOperationalAccess: ['ADMIN', 'MGR', 'OPR'].includes(role),
+    hasTreatmentEditAccess: ['ADMIN', 'VET'].includes(role),
+    hasFinanceAccess: ['ADMIN', 'FIN'].includes(role),
+    hasLocationAssignments: false,
+  } as any)
+}
+
 describe('PermissionGate', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('renders children when permission check passes', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'ADMIN' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('ADMIN')
 
     render(
       <PermissionGate role={UserRole.ADMIN}>
@@ -44,10 +67,7 @@ describe('PermissionGate', () => {
   })
 
   it('hides children when permission check fails', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'VIEW' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('VIEW')
 
     render(
       <PermissionGate role={UserRole.ADMIN}>
@@ -59,10 +79,7 @@ describe('PermissionGate', () => {
   })
 
   it('shows fallback when permission check fails', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'VIEW' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('VIEW')
 
     render(
       <PermissionGate role={UserRole.ADMIN} fallback={<div>Access Denied</div>}>
@@ -75,10 +92,7 @@ describe('PermissionGate', () => {
   })
 
   it('passes className to wrapper', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'ADMIN' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('ADMIN')
 
     const { container } = render(
       <PermissionGate role={UserRole.ADMIN} className="custom-class">
@@ -96,10 +110,7 @@ describe('AdminGate', () => {
   })
 
   it('renders children for admin user', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'ADMIN' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('ADMIN')
 
     render(
       <AdminGate>
@@ -111,10 +122,7 @@ describe('AdminGate', () => {
   })
 
   it('hides children for non-admin user', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'MGR' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('MGR')
 
     render(
       <AdminGate>
@@ -132,10 +140,7 @@ describe('WriteGate', () => {
   })
 
   it('renders children for users with write permission', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'OPR' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('OPR')
 
     render(
       <WriteGate>
@@ -147,10 +152,7 @@ describe('WriteGate', () => {
   })
 
   it('hides children for VIEW role', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'VIEW' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('VIEW')
 
     render(
       <WriteGate>
@@ -168,10 +170,7 @@ describe('DeleteGate', () => {
   })
 
   it('renders children for users with delete permission', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'MGR' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('MGR')
 
     render(
       <DeleteGate>
@@ -183,10 +182,7 @@ describe('DeleteGate', () => {
   })
 
   it('hides children for users without delete permission', () => {
-    vi.mocked(AuthContext.useAuth).mockReturnValue({
-      user: createUser({ role: 'OPR' }),
-      isAuthenticated: true,
-    } as any)
+    setupMocks('OPR')
 
     render(
       <DeleteGate>

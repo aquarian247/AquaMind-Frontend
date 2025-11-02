@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { UserProvider } from "@/contexts/UserContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import LoginPage from "@/pages/login";
 
@@ -473,8 +474,10 @@ function App() {
       <ThemeProvider defaultTheme="ocean-depths" defaultMode="light">
         <TooltipProvider>
           <AuthProvider>
-            <Toaster />
-            <Router />
+            <UserProvider>
+              <Toaster />
+              <Router />
+            </UserProvider>
           </AuthProvider>
         </TooltipProvider>
       </ThemeProvider>

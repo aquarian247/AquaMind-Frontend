@@ -3,11 +3,17 @@ import { renderHook } from '@testing-library/react'
 import { usePermissionGuard } from '../usePermissionGuard'
 import { UserRole, Geography, Subsidiary } from '../types'
 import * as AuthContext from '@/contexts/AuthContext'
+import * as UserContext from '@/contexts/UserContext'
 import type { User } from '@/api/generated'
 
 // Mock AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: vi.fn(),
+}))
+
+// Mock UserContext
+vi.mock('@/contexts/UserContext', () => ({
+  useUser: vi.fn(),
 }))
 
 const createUser = (overrides: Partial<User> = {}): User => ({
@@ -34,6 +40,14 @@ describe('usePermissionGuard', () => {
       isAuthenticated: true,
     } as any)
 
+    vi.mocked(UserContext.useUser).mockReturnValue({
+      hasHealthAccess: true,
+      hasOperationalAccess: true,
+      hasTreatmentEditAccess: true,
+      hasFinanceAccess: true,
+      hasLocationAssignments: false,
+    } as any)
+
     const { result } = renderHook(() => usePermissionGuard())
 
     expect(result.current.can).toBeDefined()
@@ -46,6 +60,14 @@ describe('usePermissionGuard', () => {
     vi.mocked(AuthContext.useAuth).mockReturnValue({
       user: createUser({ role: 'MGR' }),
       isAuthenticated: true,
+    } as any)
+
+    vi.mocked(UserContext.useUser).mockReturnValue({
+      hasHealthAccess: false,
+      hasOperationalAccess: true,
+      hasTreatmentEditAccess: false,
+      hasFinanceAccess: false,
+      hasLocationAssignments: false,
     } as any)
 
     const { result } = renderHook(() => usePermissionGuard())
@@ -62,6 +84,14 @@ describe('usePermissionGuard', () => {
       isAuthenticated: true,
     } as any)
 
+    vi.mocked(UserContext.useUser).mockReturnValue({
+      hasHealthAccess: false,
+      hasOperationalAccess: true,
+      hasTreatmentEditAccess: false,
+      hasFinanceAccess: false,
+      hasLocationAssignments: false,
+    } as any)
+
     const { result } = renderHook(() => usePermissionGuard())
 
     expect(result.current.canWrite).toBe(true)
@@ -72,6 +102,14 @@ describe('usePermissionGuard', () => {
     vi.mocked(AuthContext.useAuth).mockReturnValue({
       user: createUser({ role: 'VIEW' }),
       isAuthenticated: true,
+    } as any)
+
+    vi.mocked(UserContext.useUser).mockReturnValue({
+      hasHealthAccess: false,
+      hasOperationalAccess: false,
+      hasTreatmentEditAccess: false,
+      hasFinanceAccess: false,
+      hasLocationAssignments: false,
     } as any)
 
     const { result } = renderHook(() => usePermissionGuard())
@@ -87,6 +125,14 @@ describe('usePermissionGuard', () => {
       isAuthenticated: true,
     } as any)
 
+    vi.mocked(UserContext.useUser).mockReturnValue({
+      hasHealthAccess: false,
+      hasOperationalAccess: true,
+      hasTreatmentEditAccess: false,
+      hasFinanceAccess: false,
+      hasLocationAssignments: false,
+    } as any)
+
     const { result } = renderHook(() => usePermissionGuard())
 
     expect(result.current.role).toBe('OPR')
@@ -99,6 +145,14 @@ describe('usePermissionGuard', () => {
     vi.mocked(AuthContext.useAuth).mockReturnValue({
       user: createUser({ role: 'OPR', geography: 'FO', subsidiary: 'FM' }),
       isAuthenticated: true,
+    } as any)
+
+    vi.mocked(UserContext.useUser).mockReturnValue({
+      hasHealthAccess: false,
+      hasOperationalAccess: true,
+      hasTreatmentEditAccess: false,
+      hasFinanceAccess: false,
+      hasLocationAssignments: false,
     } as any)
 
     const { result } = renderHook(() => usePermissionGuard())
@@ -126,6 +180,14 @@ describe('usePermissionGuard', () => {
     vi.mocked(AuthContext.useAuth).mockReturnValue({
       user: null,
       isAuthenticated: false,
+    } as any)
+
+    vi.mocked(UserContext.useUser).mockReturnValue({
+      hasHealthAccess: false,
+      hasOperationalAccess: false,
+      hasTreatmentEditAccess: false,
+      hasFinanceAccess: false,
+      hasLocationAssignments: false,
     } as any)
 
     const { result } = renderHook(() => usePermissionGuard())

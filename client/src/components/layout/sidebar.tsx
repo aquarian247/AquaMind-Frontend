@@ -5,8 +5,17 @@ import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ThemeSelector } from "@/components/theme-selector";
+import { useUser } from "@/contexts/UserContext";
 
-const navigationItems = [
+interface NavigationItem {
+  id: number;
+  label: string;
+  icon: string;
+  path: string;
+  requiresPermission?: 'health' | 'operational' | 'finance' | 'admin';
+}
+
+const baseNavigationItems: NavigationItem[] = [
   {
     id: 1,
     label: "Executive Dashboard",
@@ -24,18 +33,21 @@ const navigationItems = [
     label: "Batch Management",
     icon: "fas fa-fish",
     path: "/batch-management",
+    requiresPermission: 'operational',
   },
   {
     id: 4,
     label: "Transfer Workflows",
     icon: "fas fa-exchange-alt",
     path: "/transfer-workflows",
+    requiresPermission: 'operational',
   },
   {
     id: 5,
     label: "Health",
     icon: "fas fa-heart",
     path: "/health",
+    requiresPermission: 'health',
   },
   {
     id: 6,
@@ -54,6 +66,7 @@ const navigationItems = [
     label: "Inventory",
     icon: "fas fa-boxes",
     path: "/inventory",
+    requiresPermission: 'operational',
   },
   {
     id: 9,
@@ -66,22 +79,43 @@ const navigationItems = [
     label: "Mortality Report",
     icon: "fas fa-clipboard-list",
     path: "/mortality-reporting",
+    requiresPermission: 'health',
   },
   {
     id: 11,
     label: "User Management",
     icon: "fas fa-users-cog",
     path: "/users/manage",
+    requiresPermission: 'admin',
   },
 ];
 
 // Navigation items component for reuse
 function NavigationMenu({ onItemClick }: { onItemClick?: () => void }) {
   const [location] = useLocation();
+  const { hasHealthAccess, hasOperationalAccess, hasFinanceAccess, isAdmin } = useUser();
+
+  // Filter navigation items based on user permissions
+  const visibleItems = baseNavigationItems.filter((item) => {
+    if (!item.requiresPermission) return true;
+
+    switch (item.requiresPermission) {
+      case 'health':
+        return hasHealthAccess;
+      case 'operational':
+        return hasOperationalAccess;
+      case 'finance':
+        return hasFinanceAccess;
+      case 'admin':
+        return isAdmin;
+      default:
+        return true;
+    }
+  });
 
   return (
     <div className="space-y-2">
-      {navigationItems.map((item) => (
+      {visibleItems.map((item) => (
         <Link key={item.id} href={item.path}>
           <div
             onClick={onItemClick}
