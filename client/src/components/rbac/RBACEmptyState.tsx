@@ -21,12 +21,14 @@ export const RBACEmptyState: React.FC<EmptyStateProps> = ({
   description,
   icon,
   action,
-  type = 'no-data'
+  type
 }) => {
   const { isOperator, hasLocationAssignments, profile } = useUser();
   
   // Auto-detect empty state type if not specified
-  const detectedType = type || (isOperator && !hasLocationAssignments ? 'no-assignments' : 'no-data');
+  const detectedType = type !== undefined 
+    ? type 
+    : (isOperator && !hasLocationAssignments ? 'no-assignments' : 'no-data');
   
   // Default configurations for each type
   const configs = {

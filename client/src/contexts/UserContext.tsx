@@ -113,21 +113,42 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const hasAreaAccess = (areaId: number): boolean => {
     if (!profile) return false;
     if (isAdmin || profile.geography === 'ALL') return true;
-    if (!profile.allowed_areas || profile.allowed_areas.length === 0) return true;
+    
+    // If field is undefined (Phase 1 - field doesn't exist), grant access
+    if (profile.allowed_areas === undefined) return true;
+    
+    // If field is defined but empty (Phase 2 - no assignments), deny access
+    if (profile.allowed_areas.length === 0) return false;
+    
+    // Check if user has access to this specific area
     return profile.allowed_areas.includes(areaId);
   };
   
   const hasStationAccess = (stationId: number): boolean => {
     if (!profile) return false;
     if (isAdmin || profile.geography === 'ALL') return true;
-    if (!profile.allowed_stations || profile.allowed_stations.length === 0) return true;
+    
+    // If field is undefined (Phase 1 - field doesn't exist), grant access
+    if (profile.allowed_stations === undefined) return true;
+    
+    // If field is defined but empty (Phase 2 - no assignments), deny access
+    if (profile.allowed_stations.length === 0) return false;
+    
+    // Check if user has access to this specific station
     return profile.allowed_stations.includes(stationId);
   };
   
   const hasContainerAccess = (containerId: number): boolean => {
     if (!profile) return false;
     if (isAdmin || profile.geography === 'ALL') return true;
-    if (!profile.allowed_containers || profile.allowed_containers.length === 0) return true;
+    
+    // If field is undefined (Phase 1 - field doesn't exist), grant access
+    if (profile.allowed_containers === undefined) return true;
+    
+    // If field is defined but empty (Phase 2 - no assignments), deny access
+    if (profile.allowed_containers.length === 0) return false;
+    
+    // Check if user has access to this specific container
     return profile.allowed_containers.includes(containerId);
   };
   
