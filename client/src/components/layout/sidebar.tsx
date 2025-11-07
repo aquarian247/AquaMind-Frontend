@@ -93,11 +93,17 @@ const baseNavigationItems: NavigationItem[] = [
 // Navigation items component for reuse
 function NavigationMenu({ onItemClick }: { onItemClick?: () => void }) {
   const [location] = useLocation();
-  const { hasHealthAccess, hasOperationalAccess, hasFinanceAccess, isAdmin } = useUser();
+  const { hasHealthAccess, hasOperationalAccess, hasFinanceAccess, isAdmin, profile, isLoading } = useUser();
 
   // Filter navigation items based on user permissions
+  // If profile is loading or not yet loaded, show all items (fallback to backend auth)
   const visibleItems = baseNavigationItems.filter((item) => {
     if (!item.requiresPermission) return true;
+
+    // If still loading or no profile, show items (let backend handle auth)
+    if (isLoading || !profile || !profile.role) {
+      return true;
+    }
 
     switch (item.requiresPermission) {
       case 'health':

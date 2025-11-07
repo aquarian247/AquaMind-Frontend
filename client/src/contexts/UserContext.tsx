@@ -65,7 +65,7 @@ interface UserProviderProps {
  */
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { user, isLoading } = useAuth();
-  
+
   // Get user profile from auth context
   const profile = user?.profile as ExtendedUserProfile | null;
   
@@ -77,23 +77,24 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const isQA = useMemo(() => profile?.role === 'QA', [profile]);
   const isFinance = useMemo(() => profile?.role === 'FIN', [profile]);
   const isViewer = useMemo(() => profile?.role === 'VIEW', [profile]);
+
   
   // Permission checks
   const hasHealthAccess = useMemo(
     () => isAdmin || isVeterinarian || isQA,
     [isAdmin, isVeterinarian, isQA]
   );
-  
+
   const hasOperationalAccess = useMemo(
     () => isAdmin || isManager || isOperator,
     [isAdmin, isManager, isOperator]
   );
-  
+
   const hasTreatmentEditAccess = useMemo(
     () => isAdmin || isVeterinarian,
     [isAdmin, isVeterinarian]
   );
-  
+
   const hasFinanceAccess = useMemo(
     () => isAdmin || isFinance,
     [isAdmin, isFinance]

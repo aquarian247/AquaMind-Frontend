@@ -44,3 +44,11 @@ export const growthSampleSchema = z.object({
 export type GrowthSampleFormValues = z.infer<typeof growthSampleSchema>
 export type IndividualFishObservationValues = z.infer<typeof individualFishObservationSchema>
 
+
+
+
+
+
+
+
+

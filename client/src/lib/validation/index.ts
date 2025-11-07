@@ -85,3 +85,11 @@ export {
   mortalityEventSchema,
   type MortalityEventFormValues,
 } from './batch'
+
+// Domain schemas - Users
+export {
+  userFormSchema,
+  userCreateSchema,
+  type UserFormData,
+  type UserCreateData,
+} from './users'
