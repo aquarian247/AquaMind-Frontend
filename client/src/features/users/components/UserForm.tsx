@@ -78,7 +78,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
       const { password_confirm, ...apiData } = values
 
       if (isEditMode && user) {
-        await updateMutation.mutateAsync(apiData as any)
+        await updateMutation!.mutateAsync(apiData as any)
       } else {
         await createMutation.mutateAsync(apiData as any)
       }
