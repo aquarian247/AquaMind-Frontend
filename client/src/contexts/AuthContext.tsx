@@ -103,7 +103,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUserProfile = async (): Promise<UserProfile | null> => {
     try {
       const profile = await ApiService.apiV1UsersAuthProfileRetrieve();
-      
+
       // Update user state with profile data
       if (profile && state.user) {
         setState(prev => ({
@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }));
       }
-      
+
       return profile;
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
