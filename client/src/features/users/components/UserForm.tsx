@@ -70,7 +70,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   })
 
   const createMutation = useCreateUser()
-  const updateMutation = useUpdateUser(user?.id!)
+  const updateMutation = isEditMode ? useUpdateUser(user.id) : null
 
   const onSubmit = async (values: UserFormInput) => {
     try {
