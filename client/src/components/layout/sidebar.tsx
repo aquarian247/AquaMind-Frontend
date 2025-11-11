@@ -43,6 +43,13 @@ const baseNavigationItems: NavigationItem[] = [
     requiresPermission: 'operational',
   },
   {
+    id: 13,
+    label: "Batch Creation",
+    icon: "fas fa-plus-circle",
+    path: "/batch-creation-workflows",
+    requiresPermission: 'operational',
+  },
+  {
     id: 5,
     label: "Health",
     icon: "fas fa-heart",

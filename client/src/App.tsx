@@ -33,6 +33,8 @@ import BatchDetails from "@/pages/batch-details";
 import BatchSetupPage from "@/features/batch-management/pages/BatchSetupPage";
 import { WorkflowListPage } from "@/features/batch-management/workflows/pages/WorkflowListPage";
 import { WorkflowDetailPage } from "@/features/batch-management/workflows/pages/WorkflowDetailPage";
+import { CreationWorkflowListPage } from "@/features/batch-management/batch-creation/pages/CreationWorkflowListPage";
+import { CreationWorkflowDetailPage } from "@/features/batch-management/batch-creation/pages/CreationWorkflowDetailPage";
 import { GrowthSampleDetailPage } from "@/features/batch-management/pages/GrowthSampleDetailPage";
 
 // Health
@@ -277,6 +279,24 @@ function Router() {
           <ProtectedRoute>
             <AppLayout>
               <WorkflowDetailPage />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+      
+      <Route path="/batch-creation-workflows">
+        <ProtectedRoute>
+          <AppLayout>
+            <CreationWorkflowListPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/batch-creation-workflows/:id">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <CreationWorkflowDetailPage />
             </AppLayout>
           </ProtectedRoute>
         )}
