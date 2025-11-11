@@ -4,7 +4,8 @@
  * TanStack Query hooks for managing batch creation workflows and actions.
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchApi } from '@/lib/fetch';
+import { authenticatedFetch } from '@/services/auth.service';
+import { API_CONFIG } from '@/lib/config';
 
 // ============================================================================
 // Types (will be replaced by generated types once API is regenerated)
@@ -84,8 +85,8 @@ export function useCreationWorkflows(filters?: {
       if (filters?.egg_source_type) params.set('egg_source_type', filters.egg_source_type);
       if (filters?.batch) params.set('batch', filters.batch.toString());
       
-      const url = `/api/v1/batch/creation-workflows/${params.toString() ? '?' + params.toString() : ''}`;
-      const response = await fetchApi(url);
+      const url = `${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-workflows/${params.toString() ? '?' + params.toString() : ''}`;
+      const response = await authenticatedFetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch creation workflows');
@@ -102,7 +103,7 @@ export function useCreationWorkflow(id?: number) {
     queryFn: async () => {
       if (!id) throw new Error('Workflow ID required');
       
-      const response = await fetchApi(`/api/v1/batch/creation-workflows/${id}/`);
+      const response = await authenticatedFetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-workflows/${id}/`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch creation workflow');
@@ -123,8 +124,9 @@ export function useCreateCreationWorkflow() {
   
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetchApi('/api/v1/batch/creation-workflows/', {
+      const response = await authenticatedFetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-workflows/`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
       
@@ -147,7 +149,7 @@ export function usePlanCreationWorkflow() {
   
   return useMutation({
     mutationFn: async (workflowId: number) => {
-      const response = await fetchApi(`/api/v1/batch/creation-workflows/${workflowId}/plan/`, {
+      const response = await authenticatedFetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-workflows/${workflowId}/plan/`, {
         method: 'POST',
       });
       
@@ -170,8 +172,9 @@ export function useCancelCreationWorkflow() {
   
   return useMutation({
     mutationFn: async ({ workflowId, reason }: { workflowId: number; reason: string }) => {
-      const response = await fetchApi(`/api/v1/batch/creation-workflows/${workflowId}/cancel/`, {
+      const response = await authenticatedFetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-workflows/${workflowId}/cancel/`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason }),
       });
       
@@ -199,7 +202,7 @@ export function useCreationActions(workflowId?: number) {
     queryFn: async () => {
       if (!workflowId) throw new Error('Workflow ID required');
       
-      const response = await fetchApi(`/api/v1/batch/creation-actions/?workflow=${workflowId}`);
+      const response = await authenticatedFetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-actions/?workflow=${workflowId}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch creation actions');
@@ -220,8 +223,9 @@ export function useCreateCreationAction() {
   
   return useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetchApi('/api/v1/batch/creation-actions/', {
+      const response = await authenticatedFetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-actions/`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
       
@@ -244,8 +248,9 @@ export function useExecuteCreationAction() {
   
   return useMutation({
     mutationFn: async ({ actionId, data }: { actionId: number; data: any }) => {
-      const response = await fetchApi(`/api/v1/batch/creation-actions/${actionId}/execute/`, {
+      const response = await authenticatedFetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-actions/${actionId}/execute/`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
       
@@ -270,8 +275,9 @@ export function useSkipCreationAction() {
   
   return useMutation({
     mutationFn: async ({ actionId, reason }: { actionId: number; reason: string }) => {
-      const response = await fetchApi(`/api/v1/batch/creation-actions/${actionId}/skip/`, {
+      const response = await authenticatedFetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/batch/creation-actions/${actionId}/skip/`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason }),
       });
       

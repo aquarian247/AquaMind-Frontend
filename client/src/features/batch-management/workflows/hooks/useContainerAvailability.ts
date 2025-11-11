@@ -6,7 +6,8 @@
  * showing which containers are available, will be available, or have conflicts.
  */
 import { useQuery } from '@tanstack/react-query';
-import { fetchApi } from '@/lib/fetch';
+import { authenticatedFetch } from '@/services/auth.service';
+import { API_CONFIG } from '@/lib/config';
 
 /**
  * Container availability status types
@@ -123,11 +124,8 @@ export function useContainerAvailability({
       params.set('include_occupied', includeOccupied.toString());
       
       // Call API endpoint
-      const response = await fetchApi(
-        `/api/v1/batch/containers/availability/?${params.toString()}`,
-        {
-          method: 'GET',
-        }
+      const response = await authenticatedFetch(
+        `${API_CONFIG.DJANGO_API_URL}/api/v1/batch/containers/availability/?${params.toString()}`
       );
       
       if (!response.ok) {
