@@ -26,6 +26,16 @@ import {
 } from 'lucide-react';
 
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +43,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
 import { useWorkflow, useActions, useCancelWorkflow, usePlanWorkflow } from '../api';
@@ -67,6 +78,7 @@ export function WorkflowDetailPage() {
   const [selectedActionId, setSelectedActionId] = useState<number | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showAddActionsDialog, setShowAddActionsDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   if (isLoading) {
     return (
@@ -119,6 +131,54 @@ export function WorkflowDetailPage() {
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleCancelWorkflow = async () => {
+    // Validate reason is provided
+    if (!cancelReason.trim()) {
+      toast({
+        title: 'Cancellation Reason Required',
+        description: 'Please provide a reason for cancelling this workflow (required for compliance)',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    try {
+      await cancelWorkflow.mutateAsync({
+        id: workflow.id,
+        reason: cancelReason,
+      });
+      
+      toast({
+        title: 'Workflow Cancelled',
+        description: 'The workflow has been cancelled successfully',
+      });
+      
+      // Navigate back to list
+      navigate('/transfer-workflows');
+    } catch (error) {
+      console.error('Error cancelling workflow:', error);
+      
+      let errorMessage = 'Failed to cancel workflow';
+      if (error && typeof error === 'object') {
+        const apiError = error as any;
+        if (apiError.body) {
+          errorMessage = JSON.stringify(apiError.body);
+        } else if (apiError.message) {
+          errorMessage = apiError.message;
+        }
+      }
+      
+      toast({
+        title: 'Error Cancelling Workflow',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setShowCancelDialog(false);
+      setCancelReason('');
     }
   };
 
@@ -355,6 +415,67 @@ export function WorkflowDetailPage() {
           onClose={() => setSelectedActionId(null)}
         />
       )}
+
+      {/* Cancel Workflow Confirmation Dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Workflow?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action will cancel workflow <strong>{workflow.workflow_number}</strong>.
+              {workflow.actions_completed > 0 && (
+                <span className="block mt-2 text-amber-600">
+                  <strong>Warning:</strong> {workflow.actions_completed} action(s) have already been completed.
+                  Cancelling will not reverse these transfers.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="cancel-reason" className="text-sm font-medium">
+              Reason for cancellation *
+              <span className="text-xs text-muted-foreground ml-2 font-normal">
+                (Required for compliance)
+              </span>
+            </Label>
+            <Textarea
+              id="cancel-reason"
+              placeholder="Enter reason for cancelling this workflow..."
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              className="mt-2 min-h-[80px]"
+              required
+            />
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowCancelDialog(false);
+              setCancelReason('');
+            }}>
+              Keep Workflow
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelWorkflow}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={cancelWorkflow.isPending}
+            >
+              {cancelWorkflow.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                <>
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Cancel Workflow
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

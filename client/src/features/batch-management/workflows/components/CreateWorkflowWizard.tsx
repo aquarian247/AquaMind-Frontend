@@ -1,8 +1,11 @@
 /**
  * Create Workflow Wizard - Multi-step dialog for creating transfer workflows.
  * 
- * Follows app pattern: 3-step wizard with progress indicator.
- * Simplified version - actions added after workflow creation.
+ * Follows app pattern: 2-step wizard with progress indicator.
+ * Step 1: Basic information (batch, type, dates)
+ * Step 2: Lifecycle stages, notes, and create
+ * 
+ * Actions are added separately after workflow creation via AddActionsDialog.
  */
 
 import { useState } from 'react';
@@ -64,7 +67,6 @@ const workflowFormSchema = z.object({
     'LIFECYCLE_TRANSITION',
     'CONTAINER_REDISTRIBUTION',
     'EMERGENCY_CASCADE',
-    'PARTIAL_HARVEST',
   ]),
   source_lifecycle_stage: z.number().int().positive('Source stage is required'),
   dest_lifecycle_stage: z.number().int().positive().optional(),
@@ -178,17 +180,12 @@ export function CreateWorkflowWizard({
     
     if (currentStep === 1) {
       fieldsToValidate = ['batch', 'workflow_type', 'planned_start_date'];
-    } else if (currentStep === 2) {
-      fieldsToValidate = ['source_lifecycle_stage'];
-      if (form.watch('workflow_type') === 'LIFECYCLE_TRANSITION') {
-        fieldsToValidate.push('dest_lifecycle_stage');
+      const isValid = await form.trigger(fieldsToValidate);
+      if (isValid && currentStep < 2) {
+        setCurrentStep(currentStep + 1);
       }
     }
-
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid && currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    }
+    // Step 2 is the final step - validation happens on submit
   };
 
   const prevStep = () => {
@@ -213,7 +210,7 @@ export function CreateWorkflowWizard({
                     <FormLabel>Batch *</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value?.toString()}
+                      value={field.value?.toString() ?? ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -256,9 +253,6 @@ export function CreateWorkflowWizard({
                       <SelectItem value="EMERGENCY_CASCADE">
                         Emergency Cascading Transfer
                       </SelectItem>
-                      <SelectItem value="PARTIAL_HARVEST">
-                        Partial Harvest Preparation
-                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
@@ -268,8 +262,6 @@ export function CreateWorkflowWizard({
                       'Redistribute fish within same lifecycle stage'}
                     {workflowType === 'EMERGENCY_CASCADE' &&
                       'Multi-step emergency transfer operation'}
-                    {workflowType === 'PARTIAL_HARVEST' &&
-                      'Prepare fish for partial harvest'}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -376,7 +368,7 @@ export function CreateWorkflowWizard({
                   <FormLabel>Source Lifecycle Stage *</FormLabel>
                   <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
-                    value={field.value?.toString()}
+                    value={field.value?.toString() ?? ""}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -406,7 +398,7 @@ export function CreateWorkflowWizard({
                     <FormLabel>Destination Lifecycle Stage *</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
-                      value={field.value?.toString()}
+                      value={field.value?.toString() ?? ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -465,99 +457,6 @@ export function CreateWorkflowWizard({
           </div>
         );
 
-      case 3:
-        const formData = form.getValues();
-        const selectedBatch = batchesData?.results?.find(
-          (b) => b.id === formData.batch
-        );
-        const sourceStage = lifecycleStagesData?.results?.find(
-          (s) => s.id === formData.source_lifecycle_stage
-        );
-        const destStage = lifecycleStagesData?.results?.find(
-          (s) => s.id === formData.dest_lifecycle_stage
-        );
-
-        return (
-          <div className="space-y-4">
-            <h4 className="text-lg font-medium">Review Workflow Configuration</h4>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Workflow Details</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Batch:</span>
-                  <span className="font-medium">
-                    {selectedBatch?.batch_number || `Batch #${formData.batch}`}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type:</span>
-                  <Badge variant="outline">
-                    {workflowType === 'LIFECYCLE_TRANSITION' && 'Lifecycle Transition'}
-                    {workflowType === 'CONTAINER_REDISTRIBUTION' &&
-                      'Container Redistribution'}
-                    {workflowType === 'EMERGENCY_CASCADE' && 'Emergency Cascade'}
-                    {workflowType === 'PARTIAL_HARVEST' && 'Partial Harvest'}
-                  </Badge>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Source Stage:</span>
-                  <span className="font-medium">{sourceStage?.name || 'Unknown'}</span>
-                </div>
-                {destStage && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Destination Stage:</span>
-                    <span className="font-medium">{destStage.name}</span>
-                  </div>
-                )}
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Planned Start:</span>
-                  <span className="font-medium">
-                    {format(formData.planned_start_date, 'PPP')}
-                  </span>
-                </div>
-                {formData.planned_completion_date && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Planned Completion:</span>
-                    <span className="font-medium">
-                      {format(formData.planned_completion_date, 'PPP')}
-                    </span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Intercompany Detection */}
-            {workflowType === 'LIFECYCLE_TRANSITION' &&
-              sourceStage?.name === 'Post-Smolt' &&
-              destStage?.name === 'Adult' && (
-                <Alert className="border-amber-200 bg-amber-50">
-                  <DollarSign className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Intercompany Transfer Detected</strong>
-                    <p className="text-xs mt-1">
-                      This transfer crosses from Freshwater to Farming subsidiary. A
-                      financial transaction will be created upon completion.
-                    </p>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Next Step:</strong> After creating this workflow, you'll need to
-                add transfer actions (container-to-container movements) before you can
-                plan and execute it.
-              </AlertDescription>
-            </Alert>
-          </div>
-        );
-
       default:
         return null;
     }
@@ -568,9 +467,7 @@ export function CreateWorkflowWizard({
       case 1:
         return 'Basic Information';
       case 2:
-        return 'Lifecycle Stages';
-      case 3:
-        return 'Review & Create';
+        return 'Lifecycle Stages & Create';
       default:
         return '';
     }
@@ -583,7 +480,7 @@ export function CreateWorkflowWizard({
         <DialogHeader>
           <DialogTitle>Create Transfer Workflow</DialogTitle>
           <DialogDescription>
-            Step {currentStep} of 3: {getStepTitle()}
+            Step {currentStep} of 2: {getStepTitle()}
           </DialogDescription>
         </DialogHeader>
 
@@ -591,7 +488,7 @@ export function CreateWorkflowWizard({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Progress indicator */}
             <div className="flex items-center space-x-2">
-              {[1, 2, 3].map((step) => (
+              {[1, 2].map((step) => (
                 <div key={step} className="flex items-center">
                   <div
                     className={cn(
@@ -603,7 +500,7 @@ export function CreateWorkflowWizard({
                   >
                     {step}
                   </div>
-                  {step < 3 && (
+                  {step < 2 && (
                     <div
                       className={cn(
                         'w-12 h-1 mx-2',
@@ -630,13 +527,14 @@ export function CreateWorkflowWizard({
               </div>
 
               <div className="flex gap-2">
-                {currentStep < 3 ? (
+                {currentStep < 2 ? (
                   <Button type="button" onClick={nextStep}>
                     Next
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 ) : (
                   <Button type="submit" disabled={createWorkflow.isPending}>
+                    <ArrowRightLeft className="h-4 w-4 mr-2" />
                     {createWorkflow.isPending ? 'Creating...' : 'Create Workflow'}
                   </Button>
                 )}
