@@ -4,10 +4,10 @@
  * Shows workflow details, progress, and actions.
  */
 import { useParams, useLocation } from 'wouter';
-import { ArrowLeft, Calendar, Package, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Package, AlertCircle, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';

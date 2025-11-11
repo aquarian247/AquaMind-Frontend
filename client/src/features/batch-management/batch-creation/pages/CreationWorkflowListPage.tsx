@@ -4,7 +4,7 @@
  * Displays table of batch creation workflows with filtering.
  */
 import { useState } from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { Plus, Eye } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ import { Progress } from '@/components/ui/progress';
 import { useCreationWorkflows } from '../api';
 
 export function CreationWorkflowListPage() {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [eggSourceFilter, setEggSourceFilter] = useState<string>('');
   
