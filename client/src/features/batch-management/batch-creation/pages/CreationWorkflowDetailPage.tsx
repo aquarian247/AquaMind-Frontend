@@ -3,26 +3,109 @@
  * 
  * Shows workflow details, progress, and actions.
  */
+import { useState } from 'react';
 import { useParams, useLocation } from 'wouter';
-import { ArrowLeft, Calendar, Package, AlertCircle, Plus } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowLeft, Calendar, Package, AlertCircle, Plus, Play, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
-import { useCreationWorkflow, useCreationActions } from '../api';
+import { ApiService } from '@/api/generated';
+import { useCreationWorkflow, useCreationActions, usePlanCreationWorkflow, useCancelCreationWorkflow } from '../api';
+import type { CreationAction } from '../api';
+import { AddCreationActionsDialog } from '../components/AddCreationActionsDialog';
+import { ExecuteCreationActionDialog } from '../components/ExecuteCreationActionDialog';
 
 export function CreationWorkflowDetailPage() {
   const params = useParams();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const workflowId = params.id ? parseInt(params.id) : undefined;
   
-  const { data: workflow, isLoading } = useCreationWorkflow(workflowId);
-  const { data: actionsData } = useCreationActions(workflowId);
+  const { data: workflow, isLoading, refetch } = useCreationWorkflow(workflowId);
+  const { data: actionsData, refetch: refetchActions } = useCreationActions(workflowId);
+  
+  const [addActionsDialogOpen, setAddActionsDialogOpen] = useState(false);
+  const [executeActionDialogOpen, setExecuteActionDialogOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<CreationAction | null>(null);
+  const [geographyId, setGeographyId] = useState<number | null>(null);
   
   const actions = actionsData?.results || [];
+  
+  const planWorkflow = usePlanCreationWorkflow();
+  const cancelWorkflow = useCancelCreationWorkflow();
+  
+  // Fetch batch to get geography
+  const { data: batchData } = useQuery({
+    queryKey: ['batch', workflow?.batch],
+    queryFn: async () => {
+      if (!workflow?.batch) return null;
+      const result = await ApiService.apiV1BatchBatchesRetrieve(workflow.batch);
+      // Extract geography from batch (may be in various field names)
+      const geo = (result as any)?.geography || (result as any)?.geography_id || (result as any)?.current_geography || (result as any)?.current_geography_id;
+      if (geo) {
+        setGeographyId(geo);
+      }
+      return result;
+    },
+    enabled: !!workflow?.batch,
+  });
+  
+  const handlePlanWorkflow = async () => {
+    if (!workflowId) return;
+    
+    try {
+      await planWorkflow.mutateAsync(workflowId);
+      toast({
+        title: 'Workflow Planned',
+        description: 'The workflow has been scheduled successfully',
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Failed to Plan Workflow',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const handleCancelWorkflow = async () => {
+    if (!workflowId) return;
+    
+    const reason = window.prompt('Enter cancellation reason:');
+    if (!reason) return;
+    
+    try {
+      await cancelWorkflow.mutateAsync({ workflowId, reason });
+      toast({
+        title: 'Workflow Cancelled',
+        description: 'The workflow has been cancelled',
+      });
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Failed to Cancel Workflow',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const handleExecuteAction = (action: CreationAction) => {
+    setSelectedAction(action);
+    setExecuteActionDialogOpen(true);
+  };
+  
+  const handleActionSuccess = () => {
+    refetch();
+    refetchActions();
+  };
   
   if (isLoading) {
     return <div className="p-8 text-center">Loading...</div>;
@@ -62,6 +145,22 @@ export function CreationWorkflowDetailPage() {
               Batch {workflow.batch_number} • {workflow.species_name} ({workflow.lifecycle_stage_name})
             </p>
           </div>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          {workflow.status === 'DRAFT' && actions.length > 0 && (
+            <Button onClick={handlePlanWorkflow} disabled={planWorkflow.isPending}>
+              <Play className="mr-2 h-4 w-4" />
+              {planWorkflow.isPending ? 'Planning...' : 'Plan Workflow'}
+            </Button>
+          )}
+          {(workflow.status === 'DRAFT' || workflow.status === 'PLANNED') && (
+            <Button variant="destructive" onClick={handleCancelWorkflow} disabled={cancelWorkflow.isPending}>
+              <XCircle className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+          )}
         </div>
       </div>
       
@@ -161,7 +260,11 @@ export function CreationWorkflowDetailPage() {
               <CardDescription>Individual egg deliveries to containers</CardDescription>
             </div>
             {workflow.status === 'DRAFT' && (
-              <Button size="sm">
+              <Button 
+                size="sm" 
+                onClick={() => setAddActionsDialogOpen(true)}
+                disabled={!geographyId}
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Actions
               </Button>
@@ -173,7 +276,7 @@ export function CreationWorkflowDetailPage() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                No actions planned for this workflow
+                No actions planned for this workflow. Add delivery actions to specify containers and dates.
               </AlertDescription>
             </Alert>
           ) : (
@@ -188,6 +291,7 @@ export function CreationWorkflowDetailPage() {
                     <th className="pb-2 font-medium">DOA</th>
                     <th className="pb-2 font-medium">Delivery Date</th>
                     <th className="pb-2 font-medium">Status</th>
+                    <th className="pb-2 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -200,17 +304,43 @@ export function CreationWorkflowDetailPage() {
                       </td>
                       <td className="py-3">{action.egg_count_planned.toLocaleString()}</td>
                       <td className="py-3">{action.egg_count_actual?.toLocaleString() || '—'}</td>
-                      <td className="py-3">{action.mortality_on_arrival?.toLocaleString() || '—'}</td>
+                      <td className="py-3">
+                        {action.mortality_on_arrival !== null && action.mortality_on_arrival !== undefined 
+                          ? action.mortality_on_arrival.toLocaleString() 
+                          : '—'}
+                        {action.mortality_rate_percentage && (
+                          <div className="text-xs text-muted-foreground">
+                            ({action.mortality_rate_percentage}%)
+                          </div>
+                        )}
+                      </td>
                       <td className="py-3">
                         <div className="text-sm">{action.actual_delivery_date || action.expected_delivery_date}</div>
                         {action.actual_delivery_date && action.actual_delivery_date !== action.expected_delivery_date && (
                           <div className="text-xs text-muted-foreground">Expected: {action.expected_delivery_date}</div>
+                        )}
+                        {action.days_since_expected && action.days_since_expected > 0 && (
+                          <div className="text-xs text-amber-600">
+                            {action.days_since_expected} days late
+                          </div>
                         )}
                       </td>
                       <td className="py-3">
                         <Badge variant={action.status === 'COMPLETED' ? 'default' : 'secondary'}>
                           {action.status_display}
                         </Badge>
+                      </td>
+                      <td className="py-3">
+                        {action.status === 'PENDING' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleExecuteAction(action)}
+                          >
+                            <Play className="h-3 w-3 mr-1" />
+                            Execute
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -220,6 +350,28 @@ export function CreationWorkflowDetailPage() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Dialogs */}
+      {geographyId && (
+        <AddCreationActionsDialog
+          workflow={workflow}
+          geographyId={geographyId}
+          open={addActionsDialogOpen}
+          onClose={() => setAddActionsDialogOpen(false)}
+          onSuccess={handleActionSuccess}
+        />
+      )}
+      
+      {selectedAction && (
+        <ExecuteCreationActionDialog
+          action={selectedAction}
+          open={executeActionDialogOpen}
+          onClose={() => {
+            setExecuteActionDialogOpen(false);
+            setSelectedAction(null);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,24 +1,12 @@
-import { useState } from "react";
-import * as React from "react";
+import { createElement, useMemo, useState } from "react";
 import { useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { 
   Package, 
   DollarSign, 
@@ -27,7 +15,6 @@ import {
   MapPin,
   Scale,
   Truck,
-  AlertTriangle,
   Plus,
   Settings,
   BarChart3,
@@ -37,154 +24,34 @@ import {
 } from "lucide-react";
 import { ApiService } from "@/api/generated/services/ApiService";
 import HierarchicalFilter, { OperationsOverview } from "@/components/layout/hierarchical-filter";
-import { useFeedingEventsSummaryLastDays } from "@/features/inventory/api";
-import { formatCount, formatWeight } from "@/lib/formatFallback";
-
-// Types based on Django data model section 3.3
-interface Feed {
-  id: number;
-  name: string;
-  brand: string;
-  sizeCategory: 'MICRO' | 'SMALL' | 'MEDIUM' | 'LARGE';
-  pelletSizeMm?: number;
-  proteinPercentage?: number;
-  fatPercentage?: number;
-  carbohydratePercentage?: number;
-  description?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface FeedPurchase {
-  id: number;
-  feed: number;
-  purchaseDate: string;
-  quantityKg: string;
-  costPerKg: string;
-  supplier: string;
-  batchNumber?: string;
-  expiryDate?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface FeedContainer {
-  id: number;
-  name: string;
-  capacity: string;
-  location?: string;
-  containerType: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface FeedStock {
-  id: number;
-  feed: number;
-  feedContainer: number;
-  currentQuantityKg: string;
-  reorderThresholdKg: string;
-  updatedAt: string;
-  notes?: string;
-}
-
-interface FeedingEvent {
-  id: number;
-  batch: number;
-  container: number;
-  feed: number;
-  feedingDate: string;
-  feedingTime: string;
-  amountKg: string;
-  batchBiomassKg: string;
-  feedingPercentage?: string;
-  feedCost?: string;
-  method: string;
-  notes?: string;
-  recordedBy?: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface FeedContainerStock {
-  id: number;
-  feedContainer: number;
-  feedPurchase: number;
-  quantityKg: string;
-  costPerKg: string;
-  purchaseDate: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface BatchFeedingSummary {
-  id: number;
-  batch: number;
-  periodStart: string;
-  periodEnd: string;
-  totalFeedKg: string;
-  averageBiomassKg?: string;
-  averageFeedingPercentage?: string;
-  feedConversionRatio?: string;
-  totalFeedConsumedKg?: string;
-  totalBiomassGainKg?: string;
-  fcr?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Form validation schemas
-const feedSchema = z.object({
-  name: z.string().min(1, "Feed name is required"),
-  brand: z.string().min(1, "Brand is required"),
-  sizeCategory: z.enum(["MICRO", "SMALL", "MEDIUM", "LARGE"]),
-  pelletSizeMm: z.string().optional(),
-  proteinPercentage: z.string().optional(),
-  fatPercentage: z.string().optional(),
-  carbohydratePercentage: z.string().optional(),
-  description: z.string().optional(),
-});
-
-const purchaseSchema = z.object({
-  feed: z.string().min(1, "Feed type is required"),
-  purchaseDate: z.string().min(1, "Purchase date is required"),
-  quantityKg: z.string().min(1, "Quantity is required"),
-  costPerKg: z.string().min(1, "Cost per kg is required"),
-  supplier: z.string().min(1, "Supplier is required"),
-  batchNumber: z.string().optional(),
-  expiryDate: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-const feedDistributionSchema = z.object({
-  feedPurchase: z.string().min(1, "Feed purchase is required"),
-  targetContainer: z.string().min(1, "Target container is required"),
-  amountKg: z.string().min(1, "Amount is required"),
-  distributionDate: z.string().min(1, "Distribution date is required"),
-  notes: z.string().optional(),
-});
-
-const feedingEventSchema = z.object({
-  batch: z.string().min(1, "Batch is required"),
-  feedContainer: z.string().min(1, "Feed container is required"),
-  feed: z.string().min(1, "Feed type is required"),
-  feedingDate: z.string().min(1, "Feeding date is required"),
-  feedingTime: z.string().min(1, "Feeding time is required"),
-  amountKg: z.string().min(1, "Amount is required"),
-  batchBiomassKg: z.string().min(1, "Batch biomass is required"),
-  method: z.string().min(1, "Feeding method is required"),
-  notes: z.string().optional(),
-});
+import {
+  useFeedingEventsSummaryLastDays,
+  useFeedContainerStockSummary,
+  useFeedingEventsFinanceReport,
+} from "@/features/inventory/api";
+import {
+  FeedTypesTabContent,
+  FeedPurchasesTabContent,
+  DistributionTabContent,
+  FeedingEventsTabContent,
+  StockLevelsTabContent,
+  InventoryAnalyticsTabContent,
+} from "@/features/inventory/components/InventoryTabsContent";
+import {
+  FeedRecord,
+  FeedPurchaseRecord,
+  FeedContainerRecord,
+  FeedContainerStockRecord,
+  FeedingEventRecord,
+} from "@/features/inventory/types";
+import { formatCount, formatWeight, formatCurrency } from "@/lib/formatFallback";
 
 const api = {
-  async getFeedTypes(): Promise<{ results: Feed[] }> {
+  async getFeedTypes(): Promise<{ results: FeedRecord[] }> {
     try {
       const response = await ApiService.apiV1InventoryFeedsList();
       const list: any[] = (response as any)?.results ?? [];
-      const mapped: Feed[] = list.map((f: any) => ({
+      const mapped: FeedRecord[] = list.map((f: any) => ({
         id: f.feed_id ?? f.id,
         name: f.name ?? "",
         brand: f.brand ?? "",
@@ -205,16 +72,16 @@ const api = {
     }
   },
 
-  async getFeedPurchases(): Promise<{ results: FeedPurchase[] }> {
+  async getFeedPurchases(): Promise<{ results: FeedPurchaseRecord[] }> {
     try {
       const response = await ApiService.apiV1InventoryFeedPurchasesList();
       const list: any[] = (response as any)?.results ?? [];
-      const mapped: FeedPurchase[] = list.map((p: any) => ({
+      const mapped: FeedPurchaseRecord[] = list.map((p: any) => ({
         id: p.id ?? p.feed_purchase_id,
         feed: p.feed,
         purchaseDate: p.purchase_date ?? p.date ?? new Date().toISOString(),
-        quantityKg: String(p.quantity_kg ?? p.quantity ?? "0"),
-        costPerKg: String(p.cost_per_kg ?? p.unit_cost ?? "0"),
+        quantityKg: Number(p.quantity_kg ?? p.quantity ?? 0),
+        costPerKg: Number(p.cost_per_kg ?? p.unit_cost ?? 0),
         supplier: p.supplier ?? "Unknown",
         batchNumber: p.batch_number ?? undefined,
         expiryDate: p.expiry_date ?? undefined,
@@ -229,14 +96,14 @@ const api = {
     }
   },
 
-  async getFeedContainers(): Promise<{ results: FeedContainer[] }> {
+  async getFeedContainers(): Promise<{ results: FeedContainerRecord[] }> {
     try {
       const response = await ApiService.apiV1InfrastructureFeedContainersList();
       const list: any[] = (response as any)?.results ?? [];
-      const mapped: FeedContainer[] = list.map((c: any) => ({
+      const mapped: FeedContainerRecord[] = list.map((c: any) => ({
         id: c.id ?? c.feed_container_id,
         name: c.name ?? "Container",
-        capacity: String(c.capacity_kg ?? c.capacity ?? "0"),
+        capacityKg: Number(c.capacity_kg ?? c.capacity ?? 0),
         location: c.location ?? c.hall_name ?? undefined,
         containerType: c.container_type ?? "BARGE", // Backend returns 'SILO' | 'BARGE' | 'TANK' | 'OTHER' (uppercase)
         isActive: Boolean(c.active ?? c.is_active ?? true),
@@ -252,21 +119,21 @@ const api = {
 
   // Note: FeedStock model removed in backend migration 0014 (deprecated in favor of FIFO via FeedContainerStock)
 
-  async getFeedingEvents(): Promise<{ results: FeedingEvent[] }> {
+  async getFeedingEvents(): Promise<{ results: FeedingEventRecord[] }> {
     try {
       const response = await ApiService.apiV1InventoryFeedingEventsList();
       const list: any[] = (response as any)?.results ?? [];
-      const mapped: FeedingEvent[] = list.map((e: any) => ({
+      const mapped: FeedingEventRecord[] = list.map((e: any) => ({
         id: e.id ?? e.feeding_event_id,
         batch: e.batch ?? 0,
         container: e.container ?? 0,
         feed: e.feed ?? 0,
         feedingDate: e.feeding_date ?? e.date ?? new Date().toISOString(),
         feedingTime: e.feeding_time ?? "08:00",
-        amountKg: String(e.amount_kg ?? e.amount ?? "0"),
-        batchBiomassKg: String(e.batch_biomass_kg ?? e.biomass_kg ?? "0"),
-        feedingPercentage: e.feeding_percentage != null ? String(e.feeding_percentage) : undefined,
-        feedCost: e.feed_cost != null ? String(e.feed_cost) : undefined,
+        amountKg: Number(e.amount_kg ?? e.amount ?? 0),
+        batchBiomassKg: Number(e.batch_biomass_kg ?? e.biomass_kg ?? 0),
+        feedingPercentage: e.feeding_percentage != null ? Number(e.feeding_percentage) : undefined,
+        feedCost: e.feed_cost != null ? Number(e.feed_cost) : undefined,
         method: e.method ?? "MANUAL",
         notes: e.notes ?? undefined,
         recordedBy: e.recorded_by ?? undefined,
@@ -280,16 +147,16 @@ const api = {
     }
   },
 
-  async getFeedContainerStock(): Promise<{ results: FeedContainerStock[] }> {
+  async getFeedContainerStock(): Promise<{ results: FeedContainerStockRecord[] }> {
     try {
       const response = await ApiService.apiV1InventoryFeedContainerStockList();
       const list: any[] = (response as any)?.results ?? [];
-      const mapped: FeedContainerStock[] = list.map((cs: any) => ({
+      const mapped: FeedContainerStockRecord[] = list.map((cs: any) => ({
         id: cs.id ?? cs.feed_container_stock_id,
         feedContainer: cs.feed_container ?? 0,
         feedPurchase: cs.feed_purchase ?? 0,
-        quantityKg: String(cs.quantity_kg ?? cs.quantity ?? "0"),
-        costPerKg: String(cs.cost_per_kg ?? cs.unit_cost ?? "0"),
+        quantityKg: Number(cs.quantity_kg ?? cs.quantity ?? 0),
+        costPerKg: Number(cs.cost_per_kg ?? cs.unit_cost ?? 0),
         purchaseDate: cs.purchase_date ?? new Date().toISOString(),
         createdAt: cs.created_at ?? new Date().toISOString(),
         updatedAt: cs.updated_at ?? new Date().toISOString(),
@@ -301,43 +168,12 @@ const api = {
     }
   },
 
-  async getBatchFeedingSummaries(): Promise<{ results: BatchFeedingSummary[] }> {
-    try {
-      const response = await ApiService.apiV1InventoryBatchFeedingSummariesList();
-      const list: any[] = (response as any)?.results ?? [];
-      const mapped: BatchFeedingSummary[] = list.map((b: any) => ({
-        id: b.id ?? b.batch_feeding_summary_id,
-        batch: b.batch ?? 0,
-        periodStart: b.period_start ?? new Date().toISOString(),
-        periodEnd: b.period_end ?? new Date().toISOString(),
-        totalFeedKg: String(b.total_feed_kg ?? b.total_feed ?? "0"),
-        averageBiomassKg: b.average_biomass_kg != null ? String(b.average_biomass_kg) : undefined,
-        averageFeedingPercentage: b.average_feeding_percentage != null ? String(b.average_feeding_percentage) : undefined,
-        feedConversionRatio: b.feed_conversion_ratio != null ? String(b.feed_conversion_ratio) : undefined,
-        totalFeedConsumedKg: b.total_feed_consumed_kg != null ? String(b.total_feed_consumed_kg) : undefined,
-        totalBiomassGainKg: b.total_biomass_gain_kg != null ? String(b.total_biomass_gain_kg) : undefined,
-        fcr: b.fcr != null ? String(b.fcr) : undefined,
-        createdAt: b.created_at ?? new Date().toISOString(),
-        updatedAt: b.updated_at ?? new Date().toISOString(),
-      }));
-      return { results: mapped };
-    } catch (error) {
-      console.error("Failed to fetch feeding summaries:", error);
-      throw new Error("Failed to fetch feeding summaries");
-    }
-  },
-
 };
 
 export default function Inventory() {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
   const [selectedGeography, setSelectedGeography] = useState("all");
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-
-
   // Data queries
   const { data: feedTypesData, isLoading: feedTypesLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feeds/"],
@@ -373,9 +209,32 @@ export default function Inventory() {
     queryFn: api.getFeedContainerStock,
   });
 
-  const { data: summariesData, isLoading: summariesLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/batch-feeding-summaries/"],
-    queryFn: api.getBatchFeedingSummaries,
+  const { data: stockSummary, isLoading: stockSummaryLoading } = useFeedContainerStockSummary();
+
+  const analyticsRange = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - 29);
+    const formatter = new Intl.DateTimeFormat(undefined, {
+      month: "short",
+      day: "numeric",
+    });
+    return {
+      startDate: start.toISOString().split("T")[0],
+      endDate: end.toISOString().split("T")[0],
+      label: `${formatter.format(start)} – ${formatter.format(end)}`,
+    };
+  }, []);
+
+  const {
+    data: financeReport,
+    isLoading: financeReportLoading,
+    refetch: refetchFinanceReport,
+  } = useFeedingEventsFinanceReport({
+    startDate: analyticsRange.startDate,
+    endDate: analyticsRange.endDate,
+    groupBy: "week",
+    includeTimeSeries: true,
   });
 
   // Get infrastructure data for real counts
@@ -396,10 +255,66 @@ export default function Inventory() {
   // Note: feedStock removed (model deprecated in backend)
   const feedingEvents = feedingEventsData?.results || [];
   const containerStock = containerStockData?.results || [];
-  const summaries = summariesData?.results || [];
-
+  const [filters, setFilters] = useState<Record<string, any>>({});
   // Extract feeding events summary data (now contains summed totals for last 7 days)
   const feedingEventsSummary = feedingEventsSummaryData;
+
+  const feedNameLookup = useMemo(
+    () =>
+      new Map(
+        feedTypes.map((feed) => [feed.id, feed.name || `Feed #${feed.id}`])
+      ),
+    [feedTypes]
+  );
+
+  const containerLookup = useMemo(
+    () =>
+      new Map(
+        containers.map((container) => [container.id, container])
+      ),
+    [containers]
+  );
+
+  const searchTerm =
+    typeof filters.searchTerm === "string" ? filters.searchTerm.trim() : "";
+  const normalizedSearchTerm = searchTerm.toLowerCase();
+  const hasSearch = normalizedSearchTerm.length > 0;
+
+  const filteredFeedTypes = hasSearch
+    ? feedTypes.filter((feed) => {
+        const name = feed.name?.toLowerCase() ?? "";
+        const brand = feed.brand?.toLowerCase() ?? "";
+        return (
+          name.includes(normalizedSearchTerm) ||
+          brand.includes(normalizedSearchTerm)
+        );
+      })
+    : feedTypes;
+
+  const filteredPurchases = hasSearch
+    ? purchases.filter((purchase) => {
+        const supplier = purchase.supplier?.toLowerCase() ?? "";
+        const feedName = feedNameLookup.get(purchase.feed)?.toLowerCase() ?? "";
+        return (
+          supplier.includes(normalizedSearchTerm) ||
+          feedName.includes(normalizedSearchTerm)
+        );
+      })
+    : purchases;
+
+  const filteredFeedingEvents = hasSearch
+    ? feedingEvents.filter((event) => {
+        const feedName = feedNameLookup.get(event.feed)?.toLowerCase() ?? "";
+        const containerName =
+          containerLookup.get(event.container)?.name?.toLowerCase() ?? "";
+        const batchId = String(event.batch ?? "");
+        return (
+          feedName.includes(normalizedSearchTerm) ||
+          containerName.includes(normalizedSearchTerm) ||
+          batchId.includes(normalizedSearchTerm)
+        );
+      })
+    : feedingEvents;
 
   // Extract real data from API responses
   const geographies = infrastructureData?.[0]?.results || [];
@@ -426,83 +341,23 @@ export default function Inventory() {
   // - totalFeedStock: Sum of all inventory_feedcontainerstock.quantity_kg (FIFO inventory)
   // - Result: Percentage showing how full feed containers are across all locations
   // - Note: FeedStock model deprecated, now using FeedContainerStock (FIFO)
-  const totalFeedCapacity = containers.reduce((sum: number, c: any) => sum + parseFloat(c.capacity), 0);
-  const totalFeedStock = containerStock.reduce((sum: number, s: any) => sum + parseFloat(s.quantity_kg || s.currentQuantityKg || '0'), 0);
-  const capacityUtilization = totalFeedCapacity > 0 
-    ? Math.round((totalFeedStock / totalFeedCapacity) * 100) 
-    : 0;
-
-  // Calculate dashboard metrics
-  const totalInventoryValue = containerStock.reduce((sum, item) => 
-    sum + (parseFloat(item.quantityKg) * parseFloat(item.costPerKg)), 0
+  const totalFeedCapacity = containers.reduce(
+    (sum: number, container) => sum + (container.capacityKg ?? 0),
+    0
   );
+  const totalFeedStock = stockSummary?.total_quantity_kg ?? 0;
+  const capacityUtilization =
+    totalFeedCapacity > 0
+      ? Math.min(100, Math.round((totalFeedStock / totalFeedCapacity) * 100))
+      : 0;
 
-  const totalQuantity = containerStock.reduce((sum, item) => sum + parseFloat(item.quantityKg), 0);
+  // Calculate dashboard metrics using aggregation summary
+  const totalInventoryValue = stockSummary?.total_value ?? 0;
+  const totalQuantity = totalFeedStock;
 
-  const averageFCR = summaries.length > 0
-    ? summaries.reduce((sum, s) => parseFloat(s.fcr || "0"), 0) / summaries.length
-    : null; // Let UI handle missing FCR data
-
-  const recentFeedingEvents = feedingEvents
+  const recentFeedingEvents = [...filteredFeedingEvents]
     .sort((a, b) => new Date(b.feedingDate).getTime() - new Date(a.feedingDate).getTime())
     .slice(0, 10);
-
-  // Form handling
-  const feedForm = useForm<z.infer<typeof feedSchema>>({
-    resolver: zodResolver(feedSchema),
-    defaultValues: {
-      name: "",
-      brand: "",
-      sizeCategory: "SMALL",
-      pelletSizeMm: "",
-      proteinPercentage: "",
-      fatPercentage: "",
-      carbohydratePercentage: "",
-      description: "",
-    },
-  });
-
-  const purchaseForm = useForm<z.infer<typeof purchaseSchema>>({
-    resolver: zodResolver(purchaseSchema),
-    defaultValues: {
-      feed: "",
-      purchaseDate: "",
-      quantityKg: "",
-      costPerKg: "",
-      supplier: "",
-      batchNumber: "",
-      expiryDate: "",
-      notes: "",
-    },
-  });
-
-  const distributionForm = useForm<z.infer<typeof feedDistributionSchema>>({
-    resolver: zodResolver(feedDistributionSchema),
-    defaultValues: {
-      feedPurchase: "",
-      targetContainer: "",
-      amountKg: "",
-      distributionDate: "",
-      notes: "",
-    },
-  });
-
-  const feedingForm = useForm<z.infer<typeof feedingEventSchema>>({
-    resolver: zodResolver(feedingEventSchema),
-    defaultValues: {
-      batch: "",
-      feedContainer: "",
-      feed: "",
-      feedingDate: "",
-      feedingTime: "",
-      amountKg: "",
-      batchBiomassKg: "",
-      method: "MANUAL",
-      notes: "",
-    },
-  });
-
-  const [filters, setFilters] = useState({});
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(newFilters);
@@ -522,7 +377,7 @@ export default function Inventory() {
   // Check if any data is still loading
   const isLoading = feedTypesLoading || purchasesLoading || containersLoading ||
                    feedingEventsLoading || feedingEventsSummaryLoading ||
-                   containerStockLoading || summariesLoading;
+                   containerStockLoading;
 
   if (isLoading) {
     return (
@@ -593,10 +448,10 @@ export default function Inventory() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ${totalInventoryValue.toLocaleString()}
+              {formatCurrency(totalInventoryValue)}
             </div>
             <p className="text-xs text-muted-foreground">
-              FIFO calculated value
+              Aggregated FIFO valuation across all containers
             </p>
           </CardContent>
         </Card>
@@ -608,7 +463,7 @@ export default function Inventory() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {(totalQuantity / 1000).toFixed(1)}k kg
+              {formatWeight(totalQuantity, 1)}
             </div>
             <p className="text-xs text-muted-foreground">
               Across {containers.filter(c => c.isActive).length} feed containers
@@ -640,10 +495,10 @@ export default function Inventory() {
             <div className="text-2xl font-bold text-orange-600">
               {feedingEventsSummaryLoading 
                 ? "..." 
-                : formatCount(feedingEventsSummaryData?.events_count)}
+                : formatCount(feedingEventsSummary?.events_count ?? null)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Last 7 days ({formatWeight(feedingEventsSummaryData?.total_feed_kg)})
+              Last 7 days ({formatWeight(feedingEventsSummary?.total_feed_kg ?? null)})
             </p>
           </CardContent>
         </Card>
@@ -661,7 +516,7 @@ export default function Inventory() {
               <SelectValue>
                 <div className="flex items-center space-x-2">
                   {navigationSections.find(s => s.id === activeSection)?.icon &&
-                    React.createElement(navigationSections.find(s => s.id === activeSection)!.icon, { className: "h-4 w-4" })
+                    createElement(navigationSections.find(s => s.id === activeSection)!.icon, { className: "h-4 w-4" })
                   }
                   <span>{navigationSections.find(s => s.id === activeSection)?.label}</span>
                 </div>
@@ -742,10 +597,10 @@ export default function Inventory() {
                     <div key={stock.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">Container {stock.feedContainer}</p>
-                        <p className="text-sm text-gray-600">{parseFloat(stock.quantityKg).toLocaleString()} kg</p>
+                        <p className="text-sm text-gray-600">{formatWeight(stock.quantityKg, 0)}</p>
                       </div>
                       <Progress
-                        value={Math.min(100, (parseFloat(stock.quantityKg) / 1000) * 10)}
+                        value={totalQuantity > 0 ? Math.min(100, (stock.quantityKg / totalQuantity) * 100) : 0}
                         className="w-20"
                       />
                     </div>
@@ -757,18 +612,58 @@ export default function Inventory() {
         </div>
       )}
 
-      {/* Other sections */}
-      {activeSection !== "dashboard" && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Coming Soon</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>This section is under development.</p>
-            </CardContent>
-          </Card>
-        </div>
+      {activeSection === "feed-types" && (
+        <FeedTypesTabContent
+          feeds={filteredFeedTypes}
+          isLoading={feedTypesLoading}
+          searchTerm={searchTerm || undefined}
+        />
+      )}
+
+      {activeSection === "purchases" && (
+        <FeedPurchasesTabContent
+          purchases={filteredPurchases}
+          feedsLookup={feedNameLookup}
+          isLoading={purchasesLoading}
+        />
+      )}
+
+      {activeSection === "distribution" && (
+        <DistributionTabContent
+          stockSummary={stockSummary}
+          containersLookup={containerLookup}
+          isLoading={stockSummaryLoading}
+        />
+      )}
+
+      {activeSection === "feeding-events" && (
+        <FeedingEventsTabContent
+          events={filteredFeedingEvents}
+          isLoadingEvents={feedingEventsLoading}
+          summary={feedingEventsSummary}
+          isLoadingSummary={feedingEventsSummaryLoading}
+          feedsLookup={feedNameLookup}
+          containersLookup={containerLookup}
+        />
+      )}
+
+      {activeSection === "container-stock" && (
+        <StockLevelsTabContent
+          stockSummary={stockSummary}
+          isLoading={stockSummaryLoading}
+          feedsLookup={feedNameLookup}
+          containersLookup={containerLookup}
+        />
+      )}
+
+      {activeSection === "fcr-analysis" && (
+        <InventoryAnalyticsTabContent
+          report={financeReport}
+          isLoading={financeReportLoading}
+          feedsLookup={feedNameLookup}
+          dateRangeLabel={analyticsRange.label}
+          onRefresh={refetchFinanceReport}
+        />
       )}
     </div>
   );

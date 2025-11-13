@@ -20,18 +20,23 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
 import { useCreationWorkflows } from '../api';
+import { CreateBatchCreationWizard } from '../components/CreateBatchCreationWizard';
 
 export function CreationWorkflowListPage() {
   const [, navigate] = useLocation();
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [eggSourceFilter, setEggSourceFilter] = useState<string>('');
   
-  const { data, isLoading } = useCreationWorkflows({
+  const { data, isLoading, refetch } = useCreationWorkflows({
     status: statusFilter || undefined,
     egg_source_type: eggSourceFilter || undefined,
   });
   
   const workflows = data?.results || [];
+  
+  const handleWorkflowCreated = () => {
+    refetch();
+  };
   
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -52,10 +57,12 @@ export function CreationWorkflowListPage() {
           <h1 className="text-3xl font-bold">Batch Creation Workflows</h1>
           <p className="text-muted-foreground">Manage egg delivery and batch creation operations</p>
         </div>
-        <Button onClick={() => navigate('/batch-creation-workflows/new')}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Workflow
-        </Button>
+        <CreateBatchCreationWizard onSuccess={handleWorkflowCreated}>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Workflow
+          </Button>
+        </CreateBatchCreationWizard>
       </div>
       
       {/* Filters */}
@@ -67,12 +74,11 @@ export function CreationWorkflowListPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter || undefined} onValueChange={(value) => setStatusFilter(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
                   <SelectItem value="DRAFT">Draft</SelectItem>
                   <SelectItem value="PLANNED">Planned</SelectItem>
                   <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
@@ -80,20 +86,39 @@ export function CreationWorkflowListPage() {
                   <SelectItem value="CANCELLED">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
+              {statusFilter && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setStatusFilter('')}
+                  className="mt-1 h-6 px-2 text-xs"
+                >
+                  Clear filter
+                </Button>
+              )}
             </div>
             
             <div>
               <label className="text-sm font-medium mb-2 block">Egg Source</label>
-              <Select value={eggSourceFilter} onValueChange={setEggSourceFilter}>
+              <Select value={eggSourceFilter || undefined} onValueChange={(value) => setEggSourceFilter(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Sources" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Sources</SelectItem>
                   <SelectItem value="INTERNAL">Internal Broodstock</SelectItem>
                   <SelectItem value="EXTERNAL">External Supplier</SelectItem>
                 </SelectContent>
               </Select>
+              {eggSourceFilter && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setEggSourceFilter('')}
+                  className="mt-1 h-6 px-2 text-xs"
+                >
+                  Clear filter
+                </Button>
+              )}
             </div>
           </div>
         </CardContent>

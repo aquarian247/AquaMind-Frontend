@@ -26,6 +26,63 @@ export interface FeedingEventsSummary {
   total_feed_kg: number;
 }
 
+export interface FeedContainerStockSummaryItemByFeedType {
+  feed_id?: number;
+  feed_name?: string;
+  total_quantity_kg?: number;
+  total_value?: number;
+  container_count?: number;
+}
+
+export interface FeedContainerStockSummaryItemByContainer {
+  container_id?: number;
+  container_name?: string;
+  total_quantity_kg?: number;
+  total_value?: number;
+  feed_type_count?: number;
+}
+
+export interface FeedContainerStockSummary {
+  total_quantity_kg?: number;
+  total_value?: number;
+  unique_feed_types?: number;
+  unique_containers?: number;
+  by_feed_type?: FeedContainerStockSummaryItemByFeedType[];
+  by_container?: FeedContainerStockSummaryItemByContainer[];
+}
+
+export interface FeedingEventsFinanceReport {
+  summary?: {
+    total_feed_kg?: number;
+    total_feed_cost?: number;
+    events_count?: number;
+    date_range?: {
+      start?: string;
+      end?: string;
+    };
+  };
+  by_feed_type?: Array<{
+    feed_id?: number;
+    feed_name?: string;
+    brand?: string;
+    protein_percentage?: number;
+    fat_percentage?: number;
+    total_kg?: number;
+    total_cost?: number;
+    events_count?: number;
+  }>;
+  by_container?: Array<{
+    container_id?: number;
+    container_name?: string;
+    total_kg?: number;
+    total_cost?: number;
+    events_count?: number;
+  }>;
+  by_geography?: any[];
+  by_area?: any[];
+  time_series?: Array<Record<string, unknown>>;
+}
+
 // Common query options for inventory
 const INVENTORY_QUERY_OPTIONS = {
   staleTime: 5 * 60 * 1000, // 5 minutes
@@ -92,6 +149,93 @@ export function useFeedingEventsSummaryLastDays(
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
   return useFeedingEventsSummary(startDate, endDate, batchId);
+}
+
+/**
+ * Hook to fetch aggregated feed container stock summary data.
+ */
+export function useFeedContainerStockSummary(filters?: {
+  feedContainerId?: number;
+  feedTypeId?: number;
+}): UseQueryResult<FeedContainerStockSummary, Error> {
+  return useQuery({
+    queryKey: ["inventory", "feed-container-stock-summary", filters],
+    queryFn: () =>
+      ApiService.apiV1InventoryFeedContainerStockSummaryRetrieve(
+        filters?.feedContainerId,
+        filters?.feedTypeId
+      ),
+    ...INVENTORY_QUERY_OPTIONS,
+  });
+}
+
+interface FeedingEventsFinanceReportOptions {
+  startDate: string;
+  endDate: string;
+  groupBy?: "day" | "week" | "month";
+  includeBreakdowns?: boolean;
+  includeTimeSeries?: boolean;
+  filters?: {
+    area?: number;
+    areaIds?: number[];
+    feed?: number;
+    feedIds?: number[];
+    geography?: number;
+    geographyIds?: number[];
+    freshwaterStation?: number;
+    feedCostGte?: number;
+    feedCostLte?: number;
+  };
+}
+
+/**
+ * Hook to fetch the comprehensive feeding events finance report.
+ */
+export function useFeedingEventsFinanceReport(
+  options: FeedingEventsFinanceReportOptions
+): UseQueryResult<FeedingEventsFinanceReport, Error> {
+  const {
+    startDate,
+    endDate,
+    groupBy = "week",
+    includeBreakdowns = true,
+    includeTimeSeries = true,
+    filters,
+  } = options;
+
+  return useQuery({
+    queryKey: [
+      "inventory",
+      "feeding-events-finance-report",
+      { startDate, endDate, groupBy, includeBreakdowns, includeTimeSeries, filters },
+    ],
+    queryFn: () =>
+      ApiService.feedingEventsFinanceReport(
+        endDate,
+        startDate,
+        filters?.area,
+        filters?.areaIds,
+        filters?.feed,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        filters?.feedIds,
+        undefined,
+        undefined,
+        undefined,
+        filters?.feedCostGte,
+        filters?.feedCostLte,
+        filters?.freshwaterStation,
+        filters?.geography,
+        filters?.geographyIds,
+        groupBy,
+        includeBreakdowns,
+        includeTimeSeries
+      ),
+    enabled: Boolean(startDate && endDate),
+    ...INVENTORY_QUERY_OPTIONS,
+  });
 }
 
 /**
