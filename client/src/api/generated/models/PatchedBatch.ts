@@ -34,11 +34,14 @@ export type PatchedBatch = {
     /**
      * Current status of the batch. Refer to model choices (e.g., 'Planned', 'Active', 'Harvested').
      *
+     * * `PLANNED` - Planned - Awaiting Delivery
+     * * `RECEIVING` - Receiving - Partial Delivery
      * * `ACTIVE` - Active
      * * `COMPLETED` - Completed
      * * `TERMINATED` - Terminated
+     * * `CANCELLED` - Cancelled - Never Delivered
      */
-    status?: 'ACTIVE' | 'COMPLETED' | 'TERMINATED';
+    status?: 'PLANNED' | 'RECEIVING' | 'ACTIVE' | 'COMPLETED' | 'TERMINATED' | 'CANCELLED';
     /**
      * Type or category of the batch. Refer to model choices (e.g., 'Production', 'Experimental').
      *

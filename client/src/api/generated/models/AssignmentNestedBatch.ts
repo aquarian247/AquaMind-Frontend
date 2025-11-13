@@ -9,10 +9,13 @@ export type AssignmentNestedBatch = {
     readonly id: number;
     batch_number: string;
     /**
+     * * `PLANNED` - Planned - Awaiting Delivery
+     * * `RECEIVING` - Receiving - Partial Delivery
      * * `ACTIVE` - Active
      * * `COMPLETED` - Completed
      * * `TERMINATED` - Terminated
+     * * `CANCELLED` - Cancelled - Never Delivered
      */
-    status?: 'ACTIVE' | 'COMPLETED' | 'TERMINATED';
+    status?: 'PLANNED' | 'RECEIVING' | 'ACTIVE' | 'COMPLETED' | 'TERMINATED' | 'CANCELLED';
 };
 

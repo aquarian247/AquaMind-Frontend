@@ -15,8 +15,9 @@ export type IntercompanyPolicySummary = {
      *
      * * `grade` - Product Grade (Harvest)
      * * `lifecycle` - Lifecycle Stage (Transfer)
+     * * `egg_delivery` - Egg Delivery (Creation)
      */
-    readonly pricing_basis: 'grade' | 'lifecycle';
+    readonly pricing_basis: 'grade' | 'lifecycle' | 'egg_delivery';
     /**
      * * `market` - Market
      * * `cost_plus` - Cost Plus

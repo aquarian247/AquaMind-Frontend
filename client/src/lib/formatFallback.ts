@@ -139,9 +139,19 @@ export function formatCurrency(
   if (value === null || value === undefined) {
     return "N/A";
   }
-  // Always format currency with decimal places
-  const formatted = typeof value === "number" ? value.toFixed(precision) : formatFallback(value, undefined, { precision });
-  return `$${formatted}`;
+  const numericValue =
+    typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+
+  if (Number.isNaN(numericValue)) {
+    return "N/A";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: precision,
+    maximumFractionDigits: precision,
+  }).format(numericValue);
 }
 
 /**

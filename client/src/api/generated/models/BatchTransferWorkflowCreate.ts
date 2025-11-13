@@ -28,9 +28,8 @@ export type BatchTransferWorkflowCreate = {
      * * `LIFECYCLE_TRANSITION` - Lifecycle Stage Transition
      * * `CONTAINER_REDISTRIBUTION` - Container Redistribution
      * * `EMERGENCY_CASCADE` - Emergency Cascading Transfer
-     * * `PARTIAL_HARVEST` - Partial Harvest Preparation
      */
-    workflow_type?: 'LIFECYCLE_TRANSITION' | 'CONTAINER_REDISTRIBUTION' | 'EMERGENCY_CASCADE' | 'PARTIAL_HARVEST';
+    workflow_type?: 'LIFECYCLE_TRANSITION' | 'CONTAINER_REDISTRIBUTION' | 'EMERGENCY_CASCADE';
     /**
      * * `DRAFT` - Draft - Planning
      * * `PLANNED` - Planned - Ready to Execute

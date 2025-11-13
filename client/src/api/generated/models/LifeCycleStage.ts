@@ -30,6 +30,10 @@ export type LifeCycleStage = {
      * Maximum expected length in centimeters
      */
     expected_length_max_cm?: string | null;
+    /**
+     * Typical duration for this stage (days) - used for capacity planning
+     */
+    typical_duration_days?: number | null;
     readonly created_at: string;
     readonly updated_at: string;
     species: number;

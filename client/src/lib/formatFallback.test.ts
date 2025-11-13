@@ -121,7 +121,7 @@ describe("formatCurrency", () => {
   it("should format currency values with $ sign", () => {
     expect(formatCurrency(100)).toBe("$100.00");
     expect(formatCurrency(99.99)).toBe("$99.99");
-    expect(formatCurrency(1234.567, 1)).toBe("$1234.6");
+    expect(formatCurrency(1234.567, 1)).toBe("$1,234.6");
   });
 
   it("should return 'N/A' for null/undefined", () => {
