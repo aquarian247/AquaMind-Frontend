@@ -92,42 +92,54 @@ export const INVENTORY_QUERY_OPTIONS = {
   retryDelay: 1000,
 } as const;
 
+// Geography filter options for inventory hooks
+export interface GeographyFilters {
+  geography?: number;
+  geographyIds?: number[];
+  area?: number;
+  areaIds?: number[];
+  hall?: number;
+  hallIds?: number[];
+  freshwaterStation?: number;
+  freshwaterStationIds?: number[];
+}
+
 /**
  * Hook to fetch feeding events summary for a date range
  * @param startDate - Start date for the summary (ISO format)
  * @param endDate - End date for the summary (ISO format)
  * @param batchId - Optional batch ID to filter by
+ * @param geographyFilters - Optional geography/location filters
  * @returns Query result with feeding events summary
  */
 export function useFeedingEventsSummary(
   startDate: string | undefined,
   endDate: string | undefined,
-  batchId?: number
+  batchId?: number,
+  geographyFilters?: GeographyFilters
 ): UseQueryResult<FeedingEventsSummary, Error> {
   return useQuery({
-    queryKey: ["inventory", "feeding-events-summary", { startDate, endDate, batchId }],
+    queryKey: ["inventory", "feeding-events-summary", { startDate, endDate, batchId, geographyFilters }],
     queryFn: async () => {
       if (!startDate || !endDate) {
         throw new Error("Start date and end date are required");
       }
-      
-      // The API endpoint expects query parameters
-      const params = new URLSearchParams({
-        start_date: startDate,
-        end_date: endDate,
-      });
-      
-      if (batchId) {
-        params.append("batch", batchId.toString());
-      }
 
-      // Use the generated API service method
-      // Parameters: batch, container, date, endDate, startDate
+      // Use the generated API service method with geography filters
       return await ApiService.feedingEventsSummary(
+        geographyFilters?.area,
+        geographyFilters?.areaIds,
         batchId,
         undefined, // container
+        undefined, // containerIn
         undefined, // date (single date)
         endDate,
+        geographyFilters?.freshwaterStation,
+        geographyFilters?.freshwaterStationIds,
+        geographyFilters?.geography,
+        geographyFilters?.geographyIds,
+        geographyFilters?.hall,
+        geographyFilters?.hallIds,
         startDate
       ) as FeedingEventsSummary;
     },
@@ -140,31 +152,43 @@ export function useFeedingEventsSummary(
  * Hook to fetch feeding events summary for the last N days
  * @param days - Number of days to look back (default: 7)
  * @param batchId - Optional batch ID to filter by
+ * @param geographyFilters - Optional geography/location filters
  * @returns Query result with feeding events summary
  */
 export function useFeedingEventsSummaryLastDays(
   days: number = 7,
-  batchId?: number
+  batchId?: number,
+  geographyFilters?: GeographyFilters
 ): UseQueryResult<FeedingEventsSummary, Error> {
   const endDate = new Date().toISOString().split("T")[0];
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  return useFeedingEventsSummary(startDate, endDate, batchId);
+  return useFeedingEventsSummary(startDate, endDate, batchId, geographyFilters);
 }
 
 /**
  * Hook to fetch aggregated feed container stock summary data.
+ * @param filters - Optional filters including feed container, feed type, and geography
+ * @returns Query result with feed container stock summary
  */
 export function useFeedContainerStockSummary(filters?: {
   feedContainerId?: number;
   feedTypeId?: number;
+  geography?: number;
+  area?: number;
+  hall?: number;
+  freshwaterStation?: number;
 }): UseQueryResult<FeedContainerStockSummary, Error> {
   return useQuery({
     queryKey: ["inventory", "feed-container-stock-summary", filters],
     queryFn: () =>
       ApiService.apiV1InventoryFeedContainerStockSummaryRetrieve(
+        filters?.area,
         filters?.feedContainerId,
-        filters?.feedTypeId
+        filters?.feedTypeId,
+        filters?.freshwaterStation,
+        filters?.geography,
+        filters?.hall
       ),
     ...INVENTORY_QUERY_OPTIONS,
   });
@@ -303,22 +327,26 @@ export function useBatchFeedingSummariesByBatch(): UseQueryResult<PaginatedBatch
 /**
  * Hook to fetch feeding summaries for today
  * @param batchId - Optional batch ID to filter by
+ * @param geographyFilters - Optional geography/location filters
  * @returns Query result with today's feeding summary
  */
 export function useTodayFeedingSummary(
-  batchId?: number
+  batchId?: number,
+  geographyFilters?: GeographyFilters
 ): UseQueryResult<FeedingEventsSummary, Error> {
   const today = new Date().toISOString().split("T")[0];
-  return useFeedingEventsSummary(today, today, batchId);
+  return useFeedingEventsSummary(today, today, batchId, geographyFilters);
 }
 
 /**
  * Hook to fetch feeding summaries for this month
  * @param batchId - Optional batch ID to filter by
+ * @param geographyFilters - Optional geography/location filters
  * @returns Query result with this month's feeding summary
  */
 export function useMonthlyFeedingSummary(
-  batchId?: number
+  batchId?: number,
+  geographyFilters?: GeographyFilters
 ): UseQueryResult<FeedingEventsSummary, Error> {
   const now = new Date();
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -327,7 +355,7 @@ export function useMonthlyFeedingSummary(
   const startDate = firstDayOfMonth.toISOString().split("T")[0];
   const endDate = lastDayOfMonth.toISOString().split("T")[0];
   
-  return useFeedingEventsSummary(startDate, endDate, batchId);
+  return useFeedingEventsSummary(startDate, endDate, batchId, geographyFilters);
 }
 
 // Export utility to invalidate inventory queries
