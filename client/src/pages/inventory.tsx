@@ -537,7 +537,7 @@ export default function Inventory() {
     : feedingEvents;
 
   // Extract real data from API responses
-  const geographies = infrastructureData?.[0]?.results || [];
+  const infrastructureGeographies = infrastructureData?.[0]?.results || [];
   const areas = infrastructureData?.[1]?.results || [];
   const freshwaterStations = infrastructureData?.[2]?.results || [];
   const allContainers = infrastructureData?.[3]?.results || [];

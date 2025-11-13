@@ -84,10 +84,19 @@ export function useBatchFeedHistoryData(
         // Use the generated ApiService with batch filter and invalid date to bypass date filtering and get ALL events
         // The Django backend ignores invalid dates, giving us all events for the batch
         const response = await ApiService.feedingEventsSummary(
+          undefined,  // area
+          undefined,  // areaIn
           batchId,    // batch - filter by specific batch
           undefined,  // container
+          undefined,  // containerIn
           'invalid',  // date - invalid date to bypass filtering
           undefined,  // endDate
+          undefined,  // freshwaterStation
+          undefined,  // freshwaterStationIn
+          undefined,  // geography
+          undefined,  // geographyIn
+          undefined,  // hall
+          undefined,  // hallIn
           undefined   // startDate
         );
 
