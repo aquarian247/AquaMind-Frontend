@@ -15,7 +15,14 @@ import { optionalDecimalString, positiveDecimalString } from './utils/coercion'
 /**
  * Batch status enum.
  */
-export const batchStatusEnum = z.enum(['ACTIVE', 'COMPLETED', 'TERMINATED'])
+export const batchStatusEnum = z.enum([
+  'PLANNED',
+  'RECEIVING',
+  'ACTIVE',
+  'COMPLETED',
+  'TERMINATED',
+  'CANCELLED',
+])
 
 /**
  * Batch type enum.

@@ -62,7 +62,7 @@ export function useWorkflows(filters?: WorkflowFilters) {
         undefined, // sourceSubsidiary
         filters?.status as 'DRAFT' | 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | undefined, // status
         undefined, // statusIn
-        filters?.workflow_type as 'LIFECYCLE_TRANSITION' | 'CONTAINER_REDISTRIBUTION' | 'EMERGENCY_CASCADE' | 'PARTIAL_HARVEST' | undefined, // workflowType
+        filters?.workflow_type as 'LIFECYCLE_TRANSITION' | 'CONTAINER_REDISTRIBUTION' | 'EMERGENCY_CASCADE' | undefined, // workflowType
         undefined, // workflowTypeIn
       );
       

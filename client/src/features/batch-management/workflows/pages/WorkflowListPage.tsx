@@ -130,9 +130,6 @@ export function WorkflowListPage() {
                   <SelectItem value="EMERGENCY_CASCADE">
                     Emergency Cascade
                   </SelectItem>
-                  <SelectItem value="PARTIAL_HARVEST">
-                    Partial Harvest
-                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -243,7 +243,14 @@ avg_weight_g: optionalDecimalString({
 
 ```ts
 // Extract enum from generated model
-export const batchStatusEnum = z.enum(['ACTIVE', 'COMPLETED', 'TERMINATED'])
+export const batchStatusEnum = z.enum([
+  'PLANNED',
+  'RECEIVING',
+  'ACTIVE',
+  'COMPLETED',
+  'TERMINATED',
+  'CANCELLED',
+])
 
 // Use in schema
 status: batchStatusEnum.default('ACTIVE')
