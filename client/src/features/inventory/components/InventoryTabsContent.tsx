@@ -43,6 +43,7 @@ import type {
 } from "@/features/inventory/types";
 import type {
   FeedContainerStockSummary,
+  FeedPurchasesSummary,
   FeedingEventsSummary,
   FeedingEventsFinanceReport,
 } from "@/features/inventory/api";
@@ -176,18 +177,26 @@ interface FeedPurchasesTabContentProps {
   purchases: FeedPurchaseRecord[];
   feedsLookup: Map<number, string>;
   isLoading: boolean;
+  summary?: FeedPurchasesSummary;
+  summaryLoading?: boolean;
+  totalCount?: number;
 }
 
 export function FeedPurchasesTabContent({
   purchases,
   feedsLookup,
   isLoading,
+  summary,
+  summaryLoading,
+  totalCount,
 }: FeedPurchasesTabContentProps) {
-  if (isLoading) {
+  if (isLoading && summaryLoading) {
     return <LoadingCard title="Feed purchases" />;
   }
 
-  if (!purchases.length) {
+  const hasPurchases = (totalCount ?? purchases.length) > 0;
+
+  if (!isLoading && !summaryLoading && !hasPurchases) {
     return (
       <EmptyState
         title="No purchases recorded"
@@ -196,45 +205,44 @@ export function FeedPurchasesTabContent({
     );
   }
 
-  const totalKg = purchases.reduce((sum, purchase) => sum + purchase.quantityKg, 0);
-  const totalCost = purchases.reduce(
-    (sum, purchase) => sum + purchase.quantityKg * purchase.costPerKg,
-    0
-  );
-  const averagePrice = totalKg > 0 ? totalCost / totalKg : 0;
+  const totalQuantity = summary?.total_quantity_kg ?? null;
+  const totalSpend = summary?.total_spend ?? null;
+  const averageCost = summary?.average_cost_per_kg ?? null;
 
   const recentPurchases = purchases.slice(0, MAX_ROWS_DEFAULT);
+  const visibleCount = recentPurchases.length;
+  const allCount = totalCount ?? purchases.length;
 
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
-          title="Total quantity (recent)"
-          value={formatWeight(totalKg, 1)}
+          title="Total quantity (filtered)"
+          value={summaryLoading ? "..." : formatWeight(totalQuantity, 1)}
           icon={Package}
           accent="text-blue-600"
-          description="Based on the latest records"
+          description="Across filtered purchases"
         />
         <SummaryCard
-          title="Recent spend"
-          value={formatCurrency(totalCost)}
+          title="Total spend (filtered)"
+          value={summaryLoading ? "..." : formatCurrency(totalSpend)}
           icon={DollarSign}
           accent="text-green-600"
-          description="Sum of visible purchases"
+          description="Across filtered purchases"
         />
         <SummaryCard
-          title="Average price"
-          value={formatCurrency(Number.isFinite(averagePrice) ? averagePrice : null)}
+          title="Average cost per kg"
+          value={summaryLoading ? "..." : formatCurrency(averageCost)}
           icon={TrendingUp}
           accent="text-purple-600"
           description="Per kilogram"
         />
         <SummaryCard
           title="Purchase records"
-          value={formatCount(purchases.length)}
+          value={summaryLoading ? "..." : formatCount(allCount ?? null)}
           icon={FileText}
           accent="text-slate-600"
-          description="Latest entries first"
+          description="Filtered dataset"
         />
       </div>
 
@@ -242,9 +250,9 @@ export function FeedPurchasesTabContent({
         <CardHeader>
           <CardTitle>Recent purchases</CardTitle>
           <CardDescription>
-            {purchases.length > MAX_ROWS_DEFAULT
-              ? `Showing ${MAX_ROWS_DEFAULT} of ${purchases.length} recent transactions`
-              : `Showing ${purchases.length} recent transactions`}
+            {allCount > MAX_ROWS_DEFAULT
+              ? `Showing ${visibleCount} of ${allCount} filtered transactions`
+              : `Showing ${visibleCount} filtered transactions`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -320,7 +328,31 @@ export function DistributionTabContent({
   }
 
   const totalQuantity = stockSummary.total_quantity_kg ?? 0;
-  const containers = stockSummary.by_container.slice(0, MAX_ROWS_DEFAULT);
+  const containers = (stockSummary.by_container ?? []).filter(
+    (container) => container.container_id != null
+  );
+
+  if (containers.length === 0) {
+    return (
+      <EmptyState
+        title="No container data"
+        description="We could not match stock records to active feed containers."
+      />
+    );
+  }
+
+  const getProgressColorClass = (percent: number) => {
+    if (percent < 20) {
+      return "[&>div]:bg-red-500";
+    }
+    if (percent < 40) {
+      return "[&>div]:bg-orange-500";
+    }
+    if (percent < 60) {
+      return "[&>div]:bg-yellow-400";
+    }
+    return "[&>div]:bg-green-500";
+  };
 
   return (
     <div className="space-y-4">
@@ -359,7 +391,7 @@ export function DistributionTabContent({
         <CardHeader>
           <CardTitle>Stock distribution by container</CardTitle>
           <CardDescription>
-            Top containers by current quantity · Percentages calculated against the total stock
+            Fill level against container capacity with share of total stock
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -372,7 +404,17 @@ export function DistributionTabContent({
               `Container #${container.container_id}`;
             const containerLocation = containerDetails?.location;
             const quantity = container.total_quantity_kg ?? 0;
-            const percent = totalQuantity > 0 ? Math.round((quantity / totalQuantity) * 100) : 0;
+            const capacityKg = containerDetails?.capacityKg ?? null;
+            const fillPercent =
+              capacityKg && capacityKg > 0
+                ? Math.min(100, Math.round((quantity / capacityKg) * 100))
+                : null;
+            const sharePercent =
+              totalQuantity > 0 ? Math.round((quantity / totalQuantity) * 100) : null;
+            const progressColorClass =
+              fillPercent == null
+                ? "[&>div]:bg-muted-foreground/40"
+                : getProgressColorClass(fillPercent);
             return (
               <div key={container.container_id ?? containerName} className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -386,10 +428,13 @@ export function DistributionTabContent({
                     {formatWeight(quantity, 1)} · {formatCurrency(container.total_value ?? null)}
                   </div>
                 </div>
-                <Progress value={percent} />
+                <Progress value={fillPercent ?? 0} className={progressColorClass} />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{percent}% of total stock</span>
                   <span>
+                    {fillPercent != null ? `${fillPercent}% full` : "Fill: N/A"}
+                  </span>
+                  <span>
+                    {sharePercent != null ? `${sharePercent}% of inventory · ` : ""}
                     {formatCount(container.feed_type_count ?? 0, "feed types")}
                   </span>
                 </div>
@@ -467,11 +512,15 @@ export function FeedingEventsTabContent({
           description="Feed per logged event"
         />
         <SummaryCard
-          title="Recent records"
-          value={formatCount(events.length)}
-          icon={FileText}
-          accent="text-slate-600"
-          description="Most recent entries shown first"
+          title="Feed cost (7d)"
+          value={
+            isLoadingSummary
+              ? "..."
+              : formatCurrency(summary?.total_feed_cost ?? null)
+          }
+          icon={DollarSign}
+          accent="text-amber-600"
+          description="Cost of feed recorded over last seven days"
         />
       </div>
 
@@ -506,29 +555,41 @@ export function FeedingEventsTabContent({
                 </TableHeader>
                 <TableBody>
                   {visibleEvents.map((event) => {
-                    const feedName = feedsLookup.get(event.feed) ?? `Feed #${event.feed}`;
-                    const container = containersLookup.get(event.container);
+                    const feedName =
+                      event.feedName ??
+                      feedsLookup.get(event.feed) ??
+                      `Feed #${event.feed}`;
+                    const containerDetails = containersLookup.get(event.container);
+                    const containerName =
+                      event.containerName ?? containerDetails?.name ?? null;
+                    const containerLocation = containerDetails?.location ?? null;
+                    const batchLabel = event.batchName ?? `Batch ${event.batch}`;
                     return (
                       <TableRow key={event.id}>
                         <TableCell>
                           <div className="font-medium">{formatDateFallback(event.feedingDate)}</div>
-                          <div className="text-xs text-muted-foreground">{event.feedingTime}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {event.feedingTime}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">{feedName}</div>
-                          {event.feedCost && (
+                          <div className="text-xs text-muted-foreground">
+                            {batchLabel}
+                          </div>
+                          {event.feedCost != null && (
                             <div className="text-xs text-muted-foreground">
                               Cost: {formatCurrency(event.feedCost)}
                             </div>
                           )}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {container ? (
+                          {containerName ? (
                             <div>
-                              <div className="font-medium">{container.name}</div>
-                              {container.location && (
+                              <div className="font-medium">{containerName}</div>
+                              {containerLocation && (
                                 <div className="text-xs text-muted-foreground">
-                                  {container.location}
+                                  {containerLocation}
                                 </div>
                               )}
                             </div>

@@ -25,9 +25,11 @@ import {
 import { ApiService } from "@/api/generated/services/ApiService";
 import HierarchicalFilter, { OperationsOverview } from "@/components/layout/hierarchical-filter";
 import {
+  INVENTORY_QUERY_OPTIONS,
   useFeedingEventsSummaryLastDays,
   useFeedContainerStockSummary,
   useFeedingEventsFinanceReport,
+  useFeedPurchasesSummary,
 } from "@/features/inventory/api";
 import {
   FeedTypesTabContent,
@@ -72,9 +74,27 @@ const api = {
     }
   },
 
-  async getFeedPurchases(): Promise<{ results: FeedPurchaseRecord[] }> {
+  async getFeedPurchases(filters?: {
+    endDate?: string;
+    feed?: number;
+    ordering?: string;
+    page?: number;
+    purchaseDate?: string;
+    search?: string;
+    startDate?: string;
+    supplier?: string;
+  }): Promise<{ results: FeedPurchaseRecord[]; count: number }> {
     try {
-      const response = await ApiService.apiV1InventoryFeedPurchasesList();
+      const response = await ApiService.apiV1InventoryFeedPurchasesList(
+        filters?.endDate,
+        filters?.feed,
+        filters?.ordering,
+        filters?.page,
+        filters?.purchaseDate,
+        filters?.search,
+        filters?.startDate,
+        filters?.supplier
+      );
       const list: any[] = (response as any)?.results ?? [];
       const mapped: FeedPurchaseRecord[] = list.map((p: any) => ({
         id: p.id ?? p.feed_purchase_id,
@@ -89,31 +109,99 @@ const api = {
         createdAt: p.created_at ?? new Date().toISOString(),
         updatedAt: p.updated_at ?? new Date().toISOString(),
       }));
-      return { results: mapped };
+      const count = Number((response as any)?.count ?? mapped.length);
+      return { results: mapped, count };
     } catch (error) {
       console.error("Failed to fetch feed purchases:", error);
       throw new Error("Failed to fetch feed purchases");
     }
   },
 
-  async getFeedContainers(): Promise<{ results: FeedContainerRecord[] }> {
+  async getFeedContainers(): Promise<{
+    results: FeedContainerRecord[];
+    totalCount: number;
+    activeCount: number;
+    totalCapacityKg: number;
+    activeByType: Record<string, number>;
+  }> {
     try {
-      const response = await ApiService.apiV1InfrastructureFeedContainersList();
-      const list: any[] = (response as any)?.results ?? [];
-      const mapped: FeedContainerRecord[] = list.map((c: any) => ({
+      const aggregatedResults: any[] = [];
+      let totalCount = 0;
+      let page = 1;
+      const MAX_PAGES = 100;
+
+      while (page <= MAX_PAGES) {
+        const response: any = await ApiService.apiV1InfrastructureFeedContainersList(
+          undefined, // active
+          undefined, // area
+          undefined, // areaIn
+          undefined, // containerType
+          undefined, // containerTypeIn
+          undefined, // hall
+          undefined, // hallIn
+          undefined, // name
+          undefined, // ordering
+          page,
+          undefined // search
+        );
+
+        const pageResults: any[] = response?.results ?? [];
+        if (page === 1) {
+          totalCount = response?.count ?? pageResults.length;
+        }
+
+        aggregatedResults.push(...pageResults);
+
+        const next = response?.next;
+        if (!next || !pageResults.length) {
+          break;
+        }
+
+        page += 1;
+      }
+
+      const mapped: FeedContainerRecord[] = aggregatedResults.map((c: any) => ({
         id: c.id ?? c.feed_container_id,
         name: c.name ?? "Container",
         capacityKg: Number(c.capacity_kg ?? c.capacity ?? 0),
         location: c.location ?? c.hall_name ?? undefined,
-        containerType: c.container_type ?? "BARGE", // Backend returns 'SILO' | 'BARGE' | 'TANK' | 'OTHER' (uppercase)
+        containerType: c.container_type ?? "BARGE",
         isActive: Boolean(c.active ?? c.is_active ?? true),
         createdAt: c.created_at ?? new Date().toISOString(),
         updatedAt: c.updated_at ?? new Date().toISOString(),
       }));
-      return { results: mapped };
+
+      const activeContainers = mapped.filter((container) => container.isActive);
+      const totalCapacityKg = mapped.reduce(
+        (sum, container) => sum + (container.capacityKg ?? 0),
+        0
+      );
+
+      const activeByType = activeContainers.reduce<Record<string, number>>(
+        (acc, container) => {
+          const typeKey = container.containerType?.toUpperCase() ?? "UNKNOWN";
+          acc[typeKey] = (acc[typeKey] ?? 0) + 1;
+          return acc;
+        },
+        {}
+      );
+
+      return {
+        results: mapped,
+        totalCount: totalCount || mapped.length,
+        activeCount: activeContainers.length,
+        totalCapacityKg,
+        activeByType,
+      };
     } catch (error) {
       console.error("Failed to fetch feed containers:", error);
-      throw new Error("Failed to fetch feed containers");
+      return {
+        results: [],
+        totalCount: 0,
+        activeCount: 0,
+        totalCapacityKg: 0,
+        activeByType: {},
+      };
     }
   },
 
@@ -126,8 +214,11 @@ const api = {
       const mapped: FeedingEventRecord[] = list.map((e: any) => ({
         id: e.id ?? e.feeding_event_id,
         batch: e.batch ?? 0,
+        batchName: e.batch_name ?? undefined,
         container: e.container ?? 0,
+        containerName: e.container_name ?? undefined,
         feed: e.feed ?? 0,
+        feedName: e.feed_name ?? undefined,
         feedingDate: e.feeding_date ?? e.date ?? new Date().toISOString(),
         feedingTime: e.feeding_time ?? "08:00",
         amountKg: Number(e.amount_kg ?? e.amount ?? 0),
@@ -137,6 +228,7 @@ const api = {
         method: e.method ?? "MANUAL",
         notes: e.notes ?? undefined,
         recordedBy: e.recorded_by ?? undefined,
+        recordedByName: e.recorded_by_username ?? undefined,
         createdAt: e.created_at ?? new Date().toISOString(),
         updatedAt: e.updated_at ?? new Date().toISOString(),
       }));
@@ -174,6 +266,41 @@ export default function Inventory() {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
   const [selectedGeography, setSelectedGeography] = useState("all");
   const [, setLocation] = useLocation();
+  const [filters, setFilters] = useState<Record<string, any>>({});
+
+  const searchTerm =
+    typeof filters.searchTerm === "string" ? filters.searchTerm.trim() : "";
+  const normalizedSearchTerm = searchTerm.toLowerCase();
+  const hasSearch = normalizedSearchTerm.length > 0;
+
+  const purchaseFilters = useMemo(() => {
+    const base: {
+      search?: string;
+      startDate?: string;
+      endDate?: string;
+      supplier?: string;
+      feed?: number;
+      purchaseDate?: string;
+    } = {};
+
+    if (normalizedSearchTerm) {
+      base.search = normalizedSearchTerm;
+    }
+
+    return base;
+  }, [normalizedSearchTerm]);
+
+  const feedPurchasesSummaryFilters = useMemo(
+    () => ({
+      search: purchaseFilters.search,
+      startDate: purchaseFilters.startDate,
+      endDate: purchaseFilters.endDate,
+      supplier: purchaseFilters.supplier,
+      feed: purchaseFilters.feed,
+      purchaseDate: purchaseFilters.purchaseDate,
+    }),
+    [purchaseFilters]
+  );
   // Data queries
   const { data: feedTypesData, isLoading: feedTypesLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feeds/"],
@@ -181,8 +308,15 @@ export default function Inventory() {
   });
 
   const { data: purchasesData, isLoading: purchasesLoading } = useQuery({
-    queryKey: ["/api/v1/inventory/feed-purchases/"],
-    queryFn: api.getFeedPurchases,
+    queryKey: ["/api/v1/inventory/feed-purchases/", purchaseFilters],
+    queryFn: () => api.getFeedPurchases(purchaseFilters),
+  });
+
+  const {
+    data: purchasesSummary,
+    isLoading: purchasesSummaryLoading,
+  } = useFeedPurchasesSummary({
+    filters: feedPurchasesSummaryFilters,
   });
 
   const { data: containersData, isLoading: containersLoading } = useQuery({
@@ -209,7 +343,44 @@ export default function Inventory() {
     queryFn: api.getFeedContainerStock,
   });
 
-  const { data: stockSummary, isLoading: stockSummaryLoading } = useFeedContainerStockSummary();
+  const {
+    data: stockSummary,
+    isLoading: stockSummaryLoading,
+  } = useFeedContainerStockSummary();
+
+  const {
+    data: activeBatchesCountData,
+    isLoading: activeBatchesCountLoading,
+  } = useQuery({
+    queryKey: ["/api/v1/batch/batches/", "active-count"],
+    queryFn: async () => {
+      const response: any = await ApiService.apiV1BatchBatchesList(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        "ACTIVE",
+        undefined
+      );
+      return response?.count ?? (response?.results?.length ?? 0);
+    },
+    ...INVENTORY_QUERY_OPTIONS,
+  });
 
   const analyticsRange = useMemo(() => {
     const end = new Date();
@@ -251,11 +422,28 @@ export default function Inventory() {
 
   const feedTypes = feedTypesData?.results || [];
   const purchases = purchasesData?.results || [];
+  const totalPurchaseCount = purchasesData?.count ?? purchases.length;
   const containers = containersData?.results || [];
+  const activeContainerCountsByType = containersData?.activeByType ?? {};
+  const siloActiveCount = activeContainerCountsByType.SILO ?? 0;
+  const bargeActiveCount = activeContainerCountsByType.BARGE ?? 0;
+  const tankActiveCount = activeContainerCountsByType.TANK ?? 0;
+  const otherActiveCount = activeContainerCountsByType.OTHER ?? 0;
+  const activeContainerSummary = useMemo(() => {
+    const entries = [
+      ["Silo", siloActiveCount],
+      ["Barge", bargeActiveCount],
+      ["Tank", tankActiveCount],
+      ["Other", otherActiveCount],
+    ]
+      .filter(([, count]) => (count as number) > 0)
+      .map(([label, count]) => `${formatCount(count as number)} ${label}`);
+
+    return entries.length > 0 ? entries.join(", ") : null;
+  }, [siloActiveCount, bargeActiveCount, tankActiveCount, otherActiveCount]);
   // Note: feedStock removed (model deprecated in backend)
   const feedingEvents = feedingEventsData?.results || [];
   const containerStock = containerStockData?.results || [];
-  const [filters, setFilters] = useState<Record<string, any>>({});
   // Extract feeding events summary data (now contains summed totals for last 7 days)
   const feedingEventsSummary = feedingEventsSummaryData;
 
@@ -275,11 +463,6 @@ export default function Inventory() {
     [containers]
   );
 
-  const searchTerm =
-    typeof filters.searchTerm === "string" ? filters.searchTerm.trim() : "";
-  const normalizedSearchTerm = searchTerm.toLowerCase();
-  const hasSearch = normalizedSearchTerm.length > 0;
-
   const filteredFeedTypes = hasSearch
     ? feedTypes.filter((feed) => {
         const name = feed.name?.toLowerCase() ?? "";
@@ -291,22 +474,18 @@ export default function Inventory() {
       })
     : feedTypes;
 
-  const filteredPurchases = hasSearch
-    ? purchases.filter((purchase) => {
-        const supplier = purchase.supplier?.toLowerCase() ?? "";
-        const feedName = feedNameLookup.get(purchase.feed)?.toLowerCase() ?? "";
-        return (
-          supplier.includes(normalizedSearchTerm) ||
-          feedName.includes(normalizedSearchTerm)
-        );
-      })
-    : purchases;
+  const filteredPurchases = purchases;
 
   const filteredFeedingEvents = hasSearch
     ? feedingEvents.filter((event) => {
-        const feedName = feedNameLookup.get(event.feed)?.toLowerCase() ?? "";
+        const feedName =
+          (event.feedName ??
+            feedNameLookup.get(event.feed) ??
+            "")?.toLowerCase() ?? "";
         const containerName =
-          containerLookup.get(event.container)?.name?.toLowerCase() ?? "";
+          (event.containerName ??
+            containerLookup.get(event.container)?.name ??
+            "")?.toLowerCase() ?? "";
         const batchId = String(event.batch ?? "");
         return (
           feedName.includes(normalizedSearchTerm) ||
@@ -324,16 +503,21 @@ export default function Inventory() {
   const batches = infrastructureData?.[4]?.results || [];
 
   // Calculate real metrics for OperationsOverview (inventory-specific)
-  // Total Sites = Areas + Freshwater Stations (not geographies, as there are only 2 in production)
-  const totalSites = areas.length + freshwaterStations.length;
+  const totalSites =
+    (infrastructureData?.[1]?.count ?? areas.length) +
+    (infrastructureData?.[2]?.count ?? freshwaterStations.length);
   
   // Active infrastructure containers (for context)
-  const activePensTanks = allContainers.filter((c: any) => c.active).length;
+  const activePensTanks =
+    containersData?.activeCount ??
+    allContainers.filter((c: any) => c.active).length;
   
   // Active batches (check for ACTIVE status, case-insensitive)
-  const activeBatches = batches.filter((b: any) => 
-    b.status?.toUpperCase() === 'ACTIVE' || !b.status
-  ).length;
+  const activeBatches =
+    activeBatchesCountData ??
+    batches.filter((b: any) =>
+      b.status?.toUpperCase() === "ACTIVE" || !b.status
+    ).length;
   
   // Feed container capacity utilization (inventory focus, not infrastructure containers)
   // Calculates: (total feed currently in stock) / (total feed container capacity) * 100
@@ -341,10 +525,12 @@ export default function Inventory() {
   // - totalFeedStock: Sum of all inventory_feedcontainerstock.quantity_kg (FIFO inventory)
   // - Result: Percentage showing how full feed containers are across all locations
   // - Note: FeedStock model deprecated, now using FeedContainerStock (FIFO)
-  const totalFeedCapacity = containers.reduce(
-    (sum: number, container) => sum + (container.capacityKg ?? 0),
-    0
-  );
+  const totalFeedCapacity =
+    containersData?.totalCapacityKg ??
+    containers.reduce(
+      (sum: number, container) => sum + (container.capacityKg ?? 0),
+      0
+    );
   const totalFeedStock = stockSummary?.total_quantity_kg ?? 0;
   const capacityUtilization =
     totalFeedCapacity > 0
@@ -377,7 +563,7 @@ export default function Inventory() {
   // Check if any data is still loading
   const isLoading = feedTypesLoading || purchasesLoading || containersLoading ||
                    feedingEventsLoading || feedingEventsSummaryLoading ||
-                   containerStockLoading;
+                   containerStockLoading || stockSummaryLoading || activeBatchesCountLoading;
 
   if (isLoading) {
     return (
@@ -481,7 +667,7 @@ export default function Inventory() {
               {containers.filter(c => c.isActive).length}
             </div>
             <p className="text-xs text-muted-foreground">
-              {containers.filter(c => c.isActive && c.containerType === 'SILO').length} Silo, {containers.filter(c => c.isActive && c.containerType === 'BARGE').length} Barge
+              {activeContainerSummary ?? "No active containers available"}
             </p>
           </CardContent>
         </Card>
@@ -625,6 +811,9 @@ export default function Inventory() {
           purchases={filteredPurchases}
           feedsLookup={feedNameLookup}
           isLoading={purchasesLoading}
+          summary={purchasesSummary}
+          summaryLoading={purchasesSummaryLoading}
+          totalCount={totalPurchaseCount}
         />
       )}
 

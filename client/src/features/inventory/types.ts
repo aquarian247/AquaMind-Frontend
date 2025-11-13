@@ -60,8 +60,11 @@ export interface FeedContainerStockRecord {
 export interface FeedingEventRecord {
   id: number;
   batch: number;
+  batchName?: string;
   container: number;
+  containerName?: string;
   feed: number;
+  feedName?: string;
   feedingDate: string;
   feedingTime: string;
   amountKg: number;
@@ -71,6 +74,7 @@ export interface FeedingEventRecord {
   method: string;
   notes?: string;
   recordedBy?: number;
+  recordedByName?: string;
   createdAt: string;
   updatedAt: string;
 }

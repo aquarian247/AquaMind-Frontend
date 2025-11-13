@@ -24,6 +24,7 @@ import type {
 export interface FeedingEventsSummary {
   events_count: number;
   total_feed_kg: number;
+  total_feed_cost: number;
 }
 
 export interface FeedContainerStockSummaryItemByFeedType {
@@ -84,7 +85,7 @@ export interface FeedingEventsFinanceReport {
 }
 
 // Common query options for inventory
-const INVENTORY_QUERY_OPTIONS = {
+export const INVENTORY_QUERY_OPTIONS = {
   staleTime: 5 * 60 * 1000, // 5 minutes
   gcTime: 10 * 60 * 1000, // 10 minutes
   retry: 1,
@@ -342,6 +343,7 @@ export function getInventoryQueryKeys() {
     feeds: ["inventory", "feeds"] as const,
     feed: (id: number) => ["inventory", "feed", id] as const,
     feedPurchases: ["inventory", "feed-purchases"] as const,
+    feedPurchasesSummary: ["inventory", "feed-purchases-summary"] as const,
     feedPurchase: (id: number) => ["inventory", "feed-purchase", id] as const,
     feedContainerStock: ["inventory", "feed-container-stock"] as const,
     feedContainerStockItem: (id: number) => ["inventory", "feed-container-stock", id] as const,
@@ -434,27 +436,104 @@ export function useDeleteFeed() {
 }
 
 // ============================================================================
-// FeedPurchase CRUD Operations
+// FeedPurchase Aggregations & CRUD Operations
 // ============================================================================
+
+export interface FeedPurchasesSummaryBySupplier {
+  supplier?: string;
+  total_quantity_kg?: number;
+  total_spend?: number;
+  average_cost_per_kg?: number | null;
+}
+
+export interface FeedPurchasesSummaryByFeed {
+  feed_id?: number;
+  feed_name?: string;
+  total_quantity_kg?: number;
+  total_spend?: number;
+  average_cost_per_kg?: number | null;
+}
+
+export interface FeedPurchasesSummary {
+  total_quantity_kg?: number;
+  total_spend?: number;
+  average_cost_per_kg?: number | null;
+  supplier_breakdown?: FeedPurchasesSummaryBySupplier[];
+  feed_breakdown?: FeedPurchasesSummaryByFeed[];
+}
+
+export interface FeedPurchasesCommonFilters {
+  endDate?: string;
+  feed?: number;
+  purchaseDate?: string;
+  search?: string;
+  startDate?: string;
+  supplier?: string;
+}
+
+export interface FeedPurchasesSummaryFilters extends FeedPurchasesCommonFilters {}
+
+export interface FeedPurchasesListFilters extends FeedPurchasesCommonFilters {
+  ordering?: string;
+  page?: number;
+}
+
+interface UseFeedPurchasesSummaryOptions {
+  filters?: FeedPurchasesSummaryFilters;
+  includeFeedBreakdown?: boolean;
+  includeSupplierBreakdown?: boolean;
+  enabled?: boolean;
+}
+
+/**
+ * Hook to fetch aggregated feed purchase totals from the server.
+ * Mirrors the filters available on the list endpoint while allowing optional breakdowns.
+ */
+export function useFeedPurchasesSummary({
+  filters,
+  includeFeedBreakdown = false,
+  includeSupplierBreakdown = false,
+  enabled = true,
+}: UseFeedPurchasesSummaryOptions = {}): UseQueryResult<FeedPurchasesSummary, Error> {
+  return useQuery({
+    queryKey: [
+      "inventory",
+      "feed-purchases-summary",
+      { filters, includeFeedBreakdown, includeSupplierBreakdown },
+    ],
+    queryFn: () =>
+      ApiService.feedPurchasesSummary(
+        filters?.endDate,
+        filters?.feed,
+        includeFeedBreakdown,
+        includeSupplierBreakdown,
+        filters?.purchaseDate,
+        filters?.search,
+        filters?.startDate,
+        filters?.supplier
+      ),
+    enabled,
+    ...INVENTORY_QUERY_OPTIONS,
+  });
+}
 
 /**
  * Hook to fetch paginated list of feed purchases
  * @param filters - Optional filters for feed purchases
  * @returns Query result with paginated feed purchases
  */
-export function useFeedPurchases(filters?: {
-  feed?: number;
-  supplier?: string;
-  ordering?: string;
-  page?: number;
-}): UseQueryResult<PaginatedFeedPurchaseList, Error> {
+export function useFeedPurchases(filters?: FeedPurchasesListFilters): UseQueryResult<PaginatedFeedPurchaseList, Error> {
   return useQuery({
     queryKey: ["inventory", "feed-purchases", filters],
     queryFn: () =>
       ApiService.apiV1InventoryFeedPurchasesList(
+        filters?.endDate,
         filters?.feed,
         filters?.ordering,
         filters?.page,
+        filters?.purchaseDate,
+        filters?.search,
+        filters?.startDate,
         filters?.supplier
       ),
     ...INVENTORY_QUERY_OPTIONS,
