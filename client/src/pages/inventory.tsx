@@ -24,12 +24,15 @@ import {
 } from "lucide-react";
 import { ApiService } from "@/api/generated/services/ApiService";
 import HierarchicalFilter, { OperationsOverview } from "@/components/layout/hierarchical-filter";
+import { GeographyFilter } from "@/features/executive/components/GeographyFilter";
+import type { GeographyFilterValue, GeographyFilterOption } from "@/features/executive/types";
 import {
   INVENTORY_QUERY_OPTIONS,
   useFeedingEventsSummaryLastDays,
   useFeedContainerStockSummary,
   useFeedingEventsFinanceReport,
   useFeedPurchasesSummary,
+  type GeographyFilters,
 } from "@/features/inventory/api";
 import {
   FeedTypesTabContent,
@@ -264,7 +267,7 @@ const api = {
 
 export default function Inventory() {
   const [activeSection, setActiveSection] = useState<string>("dashboard");
-  const [selectedGeography, setSelectedGeography] = useState("all");
+  const [geography, setGeography] = useState<GeographyFilterValue>('global'); // Geography filter state
   const [, setLocation] = useLocation();
   const [filters, setFilters] = useState<Record<string, any>>({});
 
@@ -301,6 +304,37 @@ export default function Inventory() {
     }),
     [purchaseFilters]
   );
+
+  // Fetch available geographies for filter
+  const { data: geographiesData } = useQuery({
+    queryKey: ['geographies-list'],
+    queryFn: () => ApiService.apiV1InfrastructureGeographiesList(),
+    staleTime: 30 * 60 * 1000, // 30 minutes (relatively static data)
+  });
+
+  // Format geographies for filter component
+  const geographies = useMemo(() => {
+    const options: GeographyFilterOption[] = [{ id: 'global' as const, name: 'Global' }];
+    
+    if (geographiesData?.results) {
+      geographiesData.results.forEach((geo) => {
+        if (geo.id && geo.name) {
+          options.push({ id: geo.id as number, name: geo.name });
+        }
+      });
+    }
+    
+    return options;
+  }, [geographiesData]);
+
+  // Convert geography filter to API format
+  const geographyFilters: GeographyFilters | undefined = useMemo(() => {
+    if (geography === 'global' || !geography) {
+      return undefined; // Global = no filters
+    }
+    return { geography: geography as number };
+  }, [geography]);
+
   // Data queries
   const { data: feedTypesData, isLoading: feedTypesLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feeds/"],
@@ -333,20 +367,27 @@ export default function Inventory() {
 
   // ✅ SERVER-SIDE AGGREGATION: Get feeding events summary for the last 7 days
   // Replaces client-side daily queries + summation with single backend call
+  // Now with geography filtering support
   const { 
     data: feedingEventsSummaryData, 
     isLoading: feedingEventsSummaryLoading 
-  } = useFeedingEventsSummaryLastDays(7);
+  } = useFeedingEventsSummaryLastDays(7, undefined, geographyFilters);
 
   const { data: containerStockData, isLoading: containerStockLoading } = useQuery({
     queryKey: ["/api/v1/inventory/feed-container-stock/"],
     queryFn: api.getFeedContainerStock,
   });
 
+  // ✅ Feed container stock summary with geography filtering
   const {
     data: stockSummary,
     isLoading: stockSummaryLoading,
-  } = useFeedContainerStockSummary();
+  } = useFeedContainerStockSummary(geographyFilters ? {
+    geography: geographyFilters.geography,
+    area: geographyFilters.area,
+    hall: geographyFilters.hall,
+    freshwaterStation: geographyFilters.freshwaterStation,
+  } : undefined);
 
   const {
     data: activeBatchesCountData,
@@ -591,19 +632,15 @@ export default function Inventory() {
         </div>
 
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-          <Select value={selectedGeography} onValueChange={setSelectedGeography}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Geography" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Geographies</SelectItem>
-              {geographies.map((geo: any) => (
-                <SelectItem key={geo.id} value={geo.name.toLowerCase().replace(' ', '-')}>
-                  {geo.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Geography Filter */}
+          <div className="w-[180px]">
+            <GeographyFilter
+              value={geography}
+              onChange={setGeography}
+              geographies={geographies}
+              showLabel={false}
+            />
+          </div>
           <Button 
             className="bg-green-600 hover:bg-green-700"
             onClick={() => setLocation('/inventory/manage')}
