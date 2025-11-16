@@ -816,6 +816,208 @@ Use Faroe Islands test data (33 batches available):
 
 ---
 
+## 🧹 Cleanup & Existing Content (IMPORTANT!)
+
+### Current State Analysis
+
+**There is EXISTING growth content in two places**:
+
+#### 1. History → Growth Analysis (KEEP, but rename)
+
+**Location**: Batch Detail → History tab → "Growth Analysis" sub-tab
+
+**Current Content**:
+- **Chart**: "Growth Performance Analysis" - Average Weight + Condition Factor over time
+- **Table**: "Growth Sample Details" - Individual sample records with date, container, weight, length, K-factor
+
+**Purpose**: Historical records, sample-by-sample detail, health monitoring via K-factor
+
+**K-Factor Importance**:
+- Health indicator: K = 100 × (Weight / Length³)
+- K < 0.9: Emaciated, very poor condition
+- K 0.9-1.0: Poor condition
+- K 1.0-1.1: Fair condition  
+- K > 1.1: Positive performance, well-conditioned
+- K > 1.6: Possible deformity (spine curvature)
+
+**Value**: ✅ **KEEP THIS!** It's valuable for:
+- Operators checking fish health (K-factor monitoring)
+- Biologists reviewing sample history
+- Auditing which samples were taken when
+
+#### 2. Analytics → Growth (REPLACE)
+
+**Location**: Batch Detail → Analytics tab → "Growth" sub-tab
+
+**Current Content**:
+- Simple cards: Growth Rate (0.00%), Condition Factor trends
+- Weak visualization (just text metrics)
+
+**Purpose**: Growth metrics (but minimal)
+
+**Value**: ⚠️ **REPLACE THIS** - Weak content that will be superseded by new three-series chart
+
+---
+
+### Cleanup Actions (Zero Tech Debt)
+
+#### Action 1: Rename History Sub-Tab (2-line change)
+
+**File**: Find where History tabs are defined (likely `BatchTraceabilityView.tsx` or similar)
+
+**Change**:
+```tsx
+// BEFORE
+<TabsTrigger value="growth-analysis">Growth Analysis</TabsTrigger>
+<TabsContent value="growth-analysis">
+  {/* existing chart + table - NO CHANGES to content */}
+</TabsContent>
+
+// AFTER (just rename the tab)
+<TabsTrigger value="growth-samples">Growth Samples</TabsTrigger>
+<TabsContent value="growth-samples">
+  {/* existing chart + table - NO CHANGES to content */}
+</TabsContent>
+```
+
+**Why**: "Growth Samples" is more accurate and avoids confusion with Analytics → Growth
+
+**Content**: ✅ **NO CHANGES** - Keep the existing chart and table, just rename the tab
+
+---
+
+#### Action 2: Replace Analytics → Growth Content
+
+**File**: `client/src/components/batch-management/GrowthAnalyticsTab.tsx`
+
+**Current** (110 lines):
+```tsx
+export function GrowthAnalyticsTab({ 
+  growthMetrics, 
+  latestGrowthData, 
+  growthTrend 
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-6">
+      <Card>Growth Rate Analysis (simple cards)</Card>
+      <Card>Condition Factor (simple cards)</Card>
+    </div>
+  );
+}
+```
+
+**After Phase 7** (400+ lines):
+```tsx
+export function GrowthAnalyticsTab({ batchId }: { batchId: number }) {
+  const { data } = useCombinedGrowthData(batchId);
+  
+  return (
+    <div className="space-y-6">
+      {/* Optional: Keep K-factor as quick metric */}
+      <div className="grid grid-cols-3 gap-4">
+        <MetricCard title="Condition Factor" value={data.latest_k_factor} />
+        <MetricCard title="Growth Rate" value={data.latest_growth_rate} />
+        <MetricCard title="Current Variance" value={data.variance} />
+      </div>
+      
+      {/* NEW: Three-panel Growth Analysis (per PNG) */}
+      <div className="grid grid-cols-[280px_1fr_300px] gap-6">
+        <DataVisualizationControls />
+        <div className="space-y-6">
+          <GrowthAnalysisChart />
+          <VarianceAnalysis />
+        </div>
+        <ContainerDrilldown />
+      </div>
+    </div>
+  );
+}
+```
+
+**File Update**: `BatchAnalyticsView.tsx` (line ~192)
+```tsx
+// BEFORE
+<TabsContent value="growth">
+  <GrowthAnalyticsTab
+    growthMetrics={growthMetrics}
+    latestGrowthData={latestGrowthData}
+    growthTrend={growthTrend}
+  />
+</TabsContent>
+
+// AFTER (simpler props)
+<TabsContent value="growth">
+  <GrowthAnalyticsTab batchId={batchId} />
+</TabsContent>
+```
+
+---
+
+### Clear Separation of Concerns
+
+**After cleanup, these two areas serve different purposes**:
+
+| Aspect | History → Growth Samples | Analytics → Growth |
+|--------|-------------------------|-------------------|
+| **Purpose** | Historical records, raw data | Strategic analysis, performance |
+| **Shows** | Individual samples, K-factor health | 3-series comparison, variance |
+| **User** | Operators, biologists | Managers, farm planners |
+| **Question** | "What samples were taken?" | "Are we on track vs plan?" |
+| **Data** | Growth samples only | Samples + Scenario + Actual |
+| **Health** | K-factor monitoring (detailed) | Variance alerts |
+| **Action** | View historical records | Compare, pin scenario |
+
+**No Overlap**: They complement each other!
+
+---
+
+### Files to Modify
+
+**1. History Tab** (1 file, 2 lines):
+- Find: `BatchTraceabilityView.tsx` or wherever History tabs defined
+- Change: `"Growth Analysis"` → `"Growth Samples"`
+- Content: No changes (keep existing chart + table)
+
+**2. Analytics Tab** (2 files):
+- `GrowthAnalyticsTab.tsx`: Replace content with three-panel design
+- `BatchAnalyticsView.tsx`: Update props (batchId only)
+
+**Files to DELETE**: ❌ **NONE!** Zero tech debt.
+
+---
+
+### K-Factor Integration Decision
+
+**Option A**: Keep K-factor in History only (separate concern)
+- History monitors health (K-factor detail)
+- Analytics focuses on performance (variance)
+
+**Option B**: Add K-factor to Analytics chart as 4th series (optional)
+```tsx
+// In DataVisualizationControls
+● Growth Samples (weight) ☑
+● Scenario Projection ☑
+● Actual Daily State ☑
+● Condition Factor ☐  ← Optional health overlay
+```
+
+**My Recommendation**: **Option A** for Phase 7, can add Option B later if users request it.
+
+---
+
+## 🎯 Updated Success Criteria
+
+Add to Phase 7 checklist:
+
+- [ ] Rename History → "Growth Analysis" to "Growth Samples" (2-line change)
+- [ ] Verify existing History content still works (chart + table)
+- [ ] Replace Analytics → Growth with three-panel design
+- [ ] Verify no naming confusion between History and Analytics
+- [ ] Test that K-factor monitoring still accessible in History tab
+- [ ] Confirm zero dead code (no orphaned files)
+
+---
+
 ## 📦 Feature Folder Structure
 
 ```
