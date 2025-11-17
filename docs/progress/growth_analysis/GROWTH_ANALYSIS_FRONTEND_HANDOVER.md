@@ -245,6 +245,17 @@ This is **the crux of AquaMind** - giving farm managers day-to-day visibility in
    - Confirms pin action
    - Shows success toast
 
+8. **RefreshDataButton.tsx** (top toolbar, Manager+)
+   - Simple button that triggers 7-day recompute
+   - Shows loading spinner during refresh
+   - Auto-refreshes chart after 30 seconds
+   - Toast shows task ID
+
+9. **AdminRecomputeDialog.tsx** (admin menu, optional)
+   - Full modal with custom date range picker
+   - For advanced admin operations
+   - Can defer to Phase 8 if time-constrained
+
 ---
 
 ## 📚 Essential Reading
@@ -455,21 +466,60 @@ The Growth Analysis page is **mostly automatic**. The Actual Daily States are co
 
 **Component**: `ScenarioPinButton.tsx`
 
-### Action 2: Force Recompute 🔄 (Admin Only)
+### Action 2: Refresh Batch Data 🔄 (Manager+)
 
-**Location**: Three-dot menu or admin button
+**Location**: Top of Analytics → Growth tab, next to scenario selector
 
-**Purpose**: Manually trigger recomputation (for debugging, backfill, or after data corrections)
+**Purpose**: Refresh recent data (last 7 days) to pick up feeding events and other recent changes
 
 **User Flow**:
-1. Click "Force Recompute" (admin menu)
+1. Click "Refresh Data" button
+2. System recomputes last 7 days automatically
+3. Toast: "Refreshing... Task ID: abc-123"
+4. Chart auto-refreshes after 30 seconds
+5. Variance Analysis shows updated FCR and metrics
+
+**Why This Matters**:
+- Feeding events happen 1000s times per day (no real-time signal for performance)
+- Nightly catch-up runs at night (12-24 hour lag)
+- Managers want fresh FCR variance when reviewing batch
+- Batch-scoped (not company-wide) - minimal infrastructure load
+
+**API**: `POST /api/v1/batch/batches/{id}/recompute-daily-states/` with `{"start_date": "7 days ago", "end_date": "today"}`
+
+**Component**: Simple button with loading state
+
+```tsx
+<Button
+  variant="outline"
+  size="sm"
+  onClick={handleRefreshBatch}
+  disabled={isRefreshing}
+>
+  <RefreshCwIcon className={cn("h-4 w-4 mr-2", isRefreshing && "animate-spin")} />
+  {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+</Button>
+```
+
+### Action 3: Full Recompute 🔧 (Admin Only)
+
+**Location**: Admin menu (three-dot or toolbar)
+
+**Purpose**: Full recomputation with custom date range (for debugging, backfill, or major data corrections)
+
+**User Flow**:
+1. Click "Full Recompute" (admin menu)
 2. Modal opens with date range picker
 3. Select start/end dates (optional: specific containers)
 4. Click "Recompute"
 5. Toast: "Recompute task enqueued - Task ID: abc-123"
-6. (Optional) Poll for completion, auto-refresh chart
 
-**API**: `POST /api/v1/batch/batches/{id}/recompute-daily-states/`
+**Difference from Refresh**:
+- Admin only (Refresh is Manager+)
+- Custom date range (Refresh is fixed 7 days)
+- Full modal (Refresh is simple button)
+
+**API**: Same endpoint, different parameters
 
 **Component**: `AdminRecomputeDialog.tsx`
 
@@ -481,6 +531,30 @@ The Growth Analysis page is **mostly automatic**. The Actual Daily States are co
 - ❌ Cannot adjust confidence scores (automatic based on data sources)
 - ❌ Cannot override anchors (anchors come from real events)
 - ❌ Cannot modify provenance (tracks actual data sources)
+
+### Why Refresh Button Matters 🔄
+
+**FeedingEvents and FCR Updates**:
+
+**The Situation**:
+- Feeding events happen 1000s of times per day
+- Engine calculates `observed_fcr = feed / biomass_gain`
+- Variance Analysis compares actual FCR vs scenario FCR
+- **No real-time signal for feeding events** (too many tasks - infrastructure load)
+- Nightly catch-up updates data (12-24 hour lag)
+
+**The Compromise**:
+- **Refresh Data button** = On-demand recompute (last 7 days)
+- Manager clicks when they need fresh FCR variance
+- Batch-scoped (not company-wide) = minimal load
+- 30-second refresh time = fast enough
+- Uses existing API endpoint = zero backend changes
+
+**This balances**:
+- ✅ Real-time when needed (user-triggered)
+- ✅ Minimal infrastructure load (not automatic)
+- ✅ Accurate FCR variance for decision-making
+- ✅ Simple implementation (button + API call)
 
 ### Why It's Automatic ✅
 
@@ -1061,8 +1135,11 @@ Phase 7 is complete when:
 - [ ] Provenance tooltips show sources + confidence
 - [ ] Anchor points marked visually
 - [ ] Pin scenario dialog works
+- [ ] Refresh Data button works (Manager+)
+- [ ] Refresh triggers 7-day recompute and auto-updates chart
 - [ ] Loading/error/empty states handled
 - [ ] Manual testing with Faroe Islands batch
+- [ ] Test: Record feeding event → Click Refresh → Verify FCR variance updates
 - [ ] Unit tests for components (>80% coverage)
 
 **Time Estimate**: 6-8 hours
