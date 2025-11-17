@@ -47,5 +47,9 @@ export type BatchHistory = {
     readonly updated_at: string;
     species?: number | null;
     lifecycle_stage?: number | null;
+    /**
+     * Pinned scenario used for daily actual state calculations. Defaults to baseline scenario.
+     */
+    pinned_scenario?: number | null;
 };
 

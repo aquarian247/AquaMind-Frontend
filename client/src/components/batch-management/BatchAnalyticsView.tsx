@@ -19,7 +19,7 @@ import { FCRSummaryCard } from "./FCRSummaryCard";
 import { FCRTrendChart } from "./FCRTrendChart";
 import { PerformanceOverviewCards } from "./PerformanceOverviewCards";
 import { PerformanceMetricsTab } from "./PerformanceMetricsTab";
-import { GrowthAnalyticsTab } from "./GrowthAnalyticsTab";
+import { GrowthAnalysisTabContent } from "@/features/batch-management/components/growth-analysis/GrowthAnalysisTabContent";
 import { EnvironmentalImpactTab } from "./EnvironmentalImpactTab";
 import { PredictiveInsightsTab } from "./PredictiveInsightsTab";
 import { BenchmarkingTab } from "./BenchmarkingTab";
@@ -189,11 +189,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
         </TabsContent>
 
         <TabsContent value="growth" className="space-y-6">
-          <GrowthAnalyticsTab
-            growthMetrics={growthMetrics}
-            latestGrowthData={latestGrowthData}
-            growthTrend={growthTrend}
-          />
+          <GrowthAnalysisTabContent batchId={batchId} />
         </TabsContent>
 
         <TabsContent value="environmental" className="space-y-6">

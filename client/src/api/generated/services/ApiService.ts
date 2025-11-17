@@ -55,6 +55,7 @@ import type { FreshwaterStation } from '../models/FreshwaterStation';
 import type { FreshwaterStationHistory } from '../models/FreshwaterStationHistory';
 import type { Geography } from '../models/Geography';
 import type { GeographyHistory } from '../models/GeographyHistory';
+import type { GrowthAnalysisCombined } from '../models/GrowthAnalysisCombined';
 import type { GrowthSample } from '../models/GrowthSample';
 import type { GrowthSampleHistory } from '../models/GrowthSampleHistory';
 import type { Hall } from '../models/Hall';
@@ -75,6 +76,7 @@ import type { LiceType } from '../models/LiceType';
 import type { LiceTypeHistory } from '../models/LiceTypeHistory';
 import type { LifeCycleStage } from '../models/LifeCycleStage';
 import type { MaintenanceTask } from '../models/MaintenanceTask';
+import type { ManualRecompute } from '../models/ManualRecompute';
 import type { MortalityEvent } from '../models/MortalityEvent';
 import type { MortalityEventHistory } from '../models/MortalityEventHistory';
 import type { MortalityModel } from '../models/MortalityModel';
@@ -232,6 +234,7 @@ import type { PatchedUserProfileUpdate } from '../models/PatchedUserProfileUpdat
 import type { PatchedVaccinationType } from '../models/PatchedVaccinationType';
 import type { PatchedWeatherData } from '../models/PatchedWeatherData';
 import type { PhotoperiodData } from '../models/PhotoperiodData';
+import type { PinScenario } from '../models/PinScenario';
 import type { SampleType } from '../models/SampleType';
 import type { Scenario } from '../models/Scenario';
 import type { Sensor } from '../models/Sensor';
@@ -995,6 +998,49 @@ export class ApiService {
         });
     }
     /**
+     * Get combined growth data (samples, scenario, actual states)
+     * Returns all data needed for the Growth Analysis page:
+     * - Growth samples (measured anchors)
+     * - Scenario projection (planned/modeled)
+     * - Actual daily states (assimilated reality)
+     * - Container assignments (for drilldown)
+     *
+     * This is the primary endpoint for the frontend Growth Analysis chart.
+     * @param id A unique integer value identifying this batch.
+     * @param assignmentId Filter to specific container assignment (optional)
+     * @param endDate End date for data range (ISO 8601: YYYY-MM-DD). Default: today
+     * @param granularity Data granularity: 'daily' or 'weekly'. Default: daily
+     * @param startDate Start date for data range (ISO 8601: YYYY-MM-DD). Default: batch start date
+     * @returns GrowthAnalysisCombined
+     * @throws ApiError
+     */
+    public static batchCombinedGrowthData(
+        id: number,
+        assignmentId?: number,
+        endDate?: string,
+        granularity?: 'daily' | 'weekly',
+        startDate?: string,
+    ): CancelablePromise<GrowthAnalysisCombined> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/batch/batches/{id}/combined-growth-data/',
+            path: {
+                'id': id,
+            },
+            query: {
+                'assignment_id': assignmentId,
+                'end_date': endDate,
+                'granularity': granularity,
+                'start_date': startDate,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
      * Calculate and return growth analysis metrics for a batch over time.
      *
      * Returns metrics like:
@@ -1051,6 +1097,64 @@ export class ApiService {
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Pin a scenario to a batch
+     * Associate a specific scenario with this batch as the reference for
+     * growth assimilation calculations. Only one scenario can be pinned at a time.
+     * @param id A unique integer value identifying this batch.
+     * @param requestBody
+     * @returns any
+     * @throws ApiError
+     */
+    public static batchPinScenario(
+        id: number,
+        requestBody: PinScenario,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/batches/{id}/pin-scenario/',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Manually trigger recomputation of daily states (Admin)
+     * Trigger manual recomputation of ActualDailyAssignmentState for a date range.
+     * Enqueues Celery task(s) to recompute daily states.
+     *
+     * **Requires**: Admin or Manager role with can_recompute_daily_state permission.
+     * @param id A unique integer value identifying this batch.
+     * @param requestBody
+     * @returns any
+     * @throws ApiError
+     */
+    public static batchRecomputeDailyStates(
+        id: number,
+        requestBody: ManualRecompute,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/batches/{id}/recompute-daily-states/',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                401: `Unauthorized`,
                 404: `Not Found`,
                 500: `Internal Server Error`,
             },
