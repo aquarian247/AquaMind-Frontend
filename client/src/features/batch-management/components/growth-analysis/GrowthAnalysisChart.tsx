@@ -254,6 +254,10 @@ export function GrowthAnalysisChart({
   // Chart Rendering
   // ============================================================================
   
+  // Check if projection exceeds typical harvest size
+  const maxProjectedWeight = Math.max(...chartData.map(d => d.scenarioWeight || 0));
+  const exceedsHarvestSize = maxProjectedWeight > 6000;
+  
   return (
     <div className="space-y-4">
       <div>
@@ -261,6 +265,15 @@ export function GrowthAnalysisChart({
         <p className="text-sm text-muted-foreground">
           Comparing actual measurements, scenario projections, and growth samples
         </p>
+        {exceedsHarvestSize && (
+          <div className="mt-2 flex items-start gap-2 text-xs text-amber-600 bg-amber-50 dark:bg-amber-950 p-2 rounded">
+            <span className="font-semibold">⚠️</span>
+            <span>
+              Scenario projection exceeds typical harvest size (6kg). Results beyond this point are theoretical.
+              Atlantic salmon are typically harvested at 4-6kg for economic optimum.
+            </span>
+          </div>
+        )}
       </div>
       
       <ResponsiveContainer width="100%" height={400}>
