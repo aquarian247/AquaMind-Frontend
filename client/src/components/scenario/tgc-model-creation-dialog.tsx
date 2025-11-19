@@ -33,19 +33,14 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 // TGC Model Form Schema with validation based on PRD requirements
+// Uses standard aquaculture TGC formula (cube-root method)
 const tgcModelFormSchema = z.object({
   name: z.string().min(1, "Model name is required").max(100, "Name too long"),
   location: z.string().min(1, "Location is required"),
   releasePeriod: z.string().min(1, "Release period is required"),
   tgcValue: z.string()
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 2.0 && Number(val) <= 3.0, 
-      "TGC value must be between 2.0 and 3.0"),
-  exponentN: z.string()
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0.5 && Number(val) <= 2.0, 
-      "Temperature exponent (n) must be between 0.5 and 2.0"),
-  exponentM: z.string()
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0.1 && Number(val) <= 0.5, 
-      "Weight exponent (m) must be between 0.1 and 0.5"),
+    .refine((val) => !isNaN(Number(val)) && Number(val) >= 2.0 && Number(val) <= 3.5, 
+      "TGC value must be between 2.0 and 3.5"),
   profileId: z.number().min(1, "Temperature profile is required"),
   description: z.string().optional(),
 });
@@ -77,8 +72,6 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
       location: "",
       releasePeriod: "",
       tgcValue: "2.5",
-      exponentN: "1.0",
-      exponentM: "0.333",
       description: "",
     },
   });
@@ -96,8 +89,9 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
         location: data.location,
         releasePeriod: data.releasePeriod,
         tgcValue: data.tgcValue,
-        exponentN: data.exponentN,
-        exponentM: data.exponentM,
+        // Backend uses standard cube-root formula with fixed exponents
+        exponentN: "1.0",  // Linear temperature response (standard)
+        exponentM: "0.333",  // Cube root weight scaling (standard)
         profileId: data.profileId,
       };
 
@@ -266,8 +260,11 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
                   <Info className="h-4 w-4" />
                   TGC Formula
                 </CardTitle>
-                <CardDescription>
-                  Daily Growth = TGC × (Temperature)^n × (Current Weight)^m
+                <CardDescription className="space-y-1">
+                  <div>W_final^(1/3) = W_initial^(1/3) + (TGC/1000) × Temperature × Days</div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Standard aquaculture TGC formula (Iwama & Tautz, 1981)
+                  </div>
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -277,108 +274,38 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
               name="tgcValue"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>TGC Value (2.0 - 3.0) *</FormLabel>
+                  <FormLabel>TGC Value (2.0 - 3.5) *</FormLabel>
                   <FormControl>
                     <div className="space-y-2">
                       <Input 
                         type="number" 
                         step="0.1" 
                         min="2.0" 
-                        max="3.0" 
+                        max="3.5" 
                         placeholder="2.5"
                         {...field}
                       />
                       <Slider
                         value={[parseFloat(field.value) || 2.5]}
                         onValueChange={(value) => field.onChange(value[0].toString())}
-                        max={3.0}
+                        max={3.5}
                         min={2.0}
                         step={0.1}
                         className="w-full"
                       />
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>2.0 (Slower growth)</span>
-                        <span>3.0 (Faster growth)</span>
+                        <span>3.5 (Faster growth)</span>
                       </div>
                     </div>
                   </FormControl>
                   <FormDescription>
-                    Thermal Growth Coefficient - typically 2.0-3.0 for Atlantic salmon
+                    Thermal Growth Coefficient - typically 2.0-3.5 for Atlantic salmon (per 1000 degree-days)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="exponentN"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Temperature Exponent (n) *</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2">
-                        <Input 
-                          type="number" 
-                          step="0.1" 
-                          min="0.5" 
-                          max="2.0" 
-                          placeholder="1.0"
-                          {...field}
-                        />
-                        <Slider
-                          value={[parseFloat(field.value) || 1.0]}
-                          onValueChange={(value) => field.onChange(value[0].toString())}
-                          max={2.0}
-                          min={0.5}
-                          step={0.1}
-                          className="w-full"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Usually 1.0 for linear temperature response
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="exponentM"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Weight Exponent (m) *</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2">
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          min="0.1" 
-                          max="0.5" 
-                          placeholder="0.333"
-                          {...field}
-                        />
-                        <Slider
-                          value={[parseFloat(field.value) || 0.333]}
-                          onValueChange={(value) => field.onChange(value[0].toString())}
-                          max={0.5}
-                          min={0.1}
-                          step={0.001}
-                          className="w-full"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormDescription>
-                      Usually 0.333 (cube root) for metabolic scaling
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
           </div>
         );
 
@@ -456,7 +383,10 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
                 </div>
                 <div className="pt-2 border-t">
                   <p className="text-xs text-muted-foreground">
-                    Formula: Daily Growth = {form.watch("tgcValue") || "2.5"} × (Temperature)^{form.watch("exponentN") || "1.0"} × (Weight)^{form.watch("exponentM") || "0.333"}
+                    Formula: W^(1/3) = W₀^(1/3) + (TGC/1000) × T × days
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    TGC Value: {form.watch("tgcValue") || "2.5"} per 1000 degree-days
                   </p>
                 </div>
               </CardContent>
@@ -483,7 +413,7 @@ export function TgcModelCreationDialog({ children, onSuccess }: TgcModelCreation
       case 1:
         return form.watch("name") && form.watch("location") && form.watch("releasePeriod");
       case 2:
-        return form.watch("tgcValue") && form.watch("exponentN") && form.watch("exponentM");
+        return form.watch("tgcValue");
       case 3:
         return form.watch("profileId");
       default:
