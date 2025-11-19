@@ -208,3 +208,4 @@ _For contributors: see `docs/CONTRIBUTING.md` and `docs/code_organization_guidel
 ---
 
 **Built with ❤️ for sustainable salmon farming**
+
