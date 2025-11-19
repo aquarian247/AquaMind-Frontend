@@ -77,6 +77,34 @@ export type TransferActionDetail = {
      */
     oxygen_level?: string | null;
     /**
+     * Measured average weight during transfer (grams). Used as anchor for daily state calculations.
+     */
+    measured_avg_weight_g?: string | null;
+    /**
+     * Standard deviation of measured weights (grams).
+     */
+    measured_std_dev_weight_g?: string | null;
+    /**
+     * Number of fish sampled for weight measurement.
+     */
+    measured_sample_size?: number | null;
+    /**
+     * Measured average length during transfer (cm).
+     */
+    measured_avg_length_cm?: string | null;
+    /**
+     * Notes about the weight measurements taken during transfer.
+     */
+    measured_notes?: string;
+    /**
+     * Method used to select fish for transfer. Affects weight calculation bias.
+     *
+     * * `AVERAGE` - Average - Representative Sample
+     * * `LARGEST` - Largest - Selection Bias Towards Larger Fish
+     * * `SMALLEST` - Smallest - Selection Bias Towards Smaller Fish
+     */
+    selection_method?: 'AVERAGE' | 'LARGEST' | 'SMALLEST' | '';
+    /**
      * Duration of transfer in minutes
      */
     execution_duration_minutes?: number | null;

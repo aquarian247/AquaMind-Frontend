@@ -46,5 +46,9 @@ export type MortalityEventHistory = {
     readonly created_at: string;
     readonly updated_at: string;
     batch?: number | null;
+    /**
+     * Container-specific assignment where mortality occurred
+     */
+    assignment?: number | null;
 };
 

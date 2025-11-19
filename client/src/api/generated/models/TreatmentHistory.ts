@@ -60,6 +60,10 @@ export type TreatmentHistory = {
      */
     outcome?: 'pending' | 'successful' | 'partial' | 'unsuccessful';
     /**
+     * Whether this treatment included fish weighing. Used as anchor for daily state calculations.
+     */
+    includes_weighing?: boolean;
+    /**
      * The batch receiving the treatment.
      */
     batch?: number | null;
@@ -79,5 +83,13 @@ export type TreatmentHistory = {
      * Specific vaccination type, if applicable.
      */
     vaccination_type?: number | null;
+    /**
+     * Linked health sampling event, if weights were recorded.
+     */
+    sampling_event?: number | null;
+    /**
+     * Linked journal entry for traceability.
+     */
+    journal_entry?: number | null;
 };
 

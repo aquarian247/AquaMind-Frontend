@@ -460,7 +460,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
                   {activeView === "lifecycle" && "Lifecycle Progression"}
                   {activeView === "assignments" && "Container Assignments"}
                   {activeView === "transfers" && "Transfer History"}
-                  {activeView === "growth" && "Growth Analysis"}
+                  {activeView === "growth" && "Growth Samples"}
                   {activeView === "mortality" && "Mortality Events"}
                 </SelectValue>
               </SelectTrigger>
@@ -468,7 +468,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
                 <SelectItem value="lifecycle">Lifecycle Progression</SelectItem>
                 <SelectItem value="assignments">Container Assignments</SelectItem>
                 <SelectItem value="transfers">Transfer History</SelectItem>
-                <SelectItem value="growth">Growth Analysis</SelectItem>
+                <SelectItem value="growth">Growth Samples</SelectItem>
                 <SelectItem value="mortality">Mortality Events</SelectItem>
               </SelectContent>
             </Select>
@@ -478,7 +478,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
             <TabsTrigger value="lifecycle">Lifecycle Progression</TabsTrigger>
             <TabsTrigger value="assignments">Container Assignments</TabsTrigger>
             <TabsTrigger value="transfers">Transfer History</TabsTrigger>
-            <TabsTrigger value="growth">Growth Analysis</TabsTrigger>
+            <TabsTrigger value="growth">Growth Samples</TabsTrigger>
             <TabsTrigger value="mortality">Mortality Events</TabsTrigger>
           </TabsList>
         )}

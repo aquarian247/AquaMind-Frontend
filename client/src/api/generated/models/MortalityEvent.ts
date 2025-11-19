@@ -14,6 +14,10 @@ export type MortalityEvent = {
      */
     readonly batch_info: Record<string, any> | null;
     /**
+     * Get basic assignment information.
+     */
+    readonly assignment_info: Record<string, any> | null;
+    /**
      * Get basic container information.
      */
     readonly container_info: Record<string, any> | null;
@@ -43,5 +47,9 @@ export type MortalityEvent = {
     readonly created_at: string;
     readonly updated_at: string;
     batch: number;
+    /**
+     * Container-specific assignment where mortality occurred
+     */
+    assignment?: number | null;
 };
 

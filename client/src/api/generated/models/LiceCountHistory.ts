@@ -67,6 +67,10 @@ export type LiceCountHistory = {
      */
     batch?: number | null;
     /**
+     * Container-specific assignment where lice count was recorded
+     */
+    assignment?: number | null;
+    /**
      * The specific container, if applicable.
      */
     container?: number | null;
