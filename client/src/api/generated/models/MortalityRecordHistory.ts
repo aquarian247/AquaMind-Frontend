@@ -38,6 +38,10 @@ export type MortalityRecordHistory = {
      */
     batch?: number | null;
     /**
+     * Container-specific assignment where mortality occurred
+     */
+    assignment?: number | null;
+    /**
      * The specific container, if applicable.
      */
     container?: number | null;

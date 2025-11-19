@@ -18,6 +18,10 @@ export type LiceCount = {
      */
     batch: number;
     /**
+     * Container-specific assignment where lice count was recorded.
+     */
+    assignment?: number | null;
+    /**
      * The container where fish were sampled (optional).
      */
     container?: number | null;
