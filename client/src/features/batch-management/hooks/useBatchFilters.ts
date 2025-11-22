@@ -8,7 +8,6 @@ import type { ExtendedBatch } from '@/features/batch/types';
  */
 export function useBatchFilters(batches: ExtendedBatch[], stages: any[]) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
   const [stageFilter, setStageFilter] = useState("all");
 
   const filteredBatches = useMemo(() => {
@@ -17,23 +16,17 @@ export function useBatchFilters(batches: ExtendedBatch[], stages: any[]) {
         batch.batch_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         batch.species_name?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesStatus = 
-        statusFilter === "all" || 
-        batch.status === statusFilter;
-      
       const matchesStage = 
         stageFilter === "all" || 
         batch.current_lifecycle_stage?.name === stageFilter;
       
-      return matchesSearch && matchesStatus && matchesStage;
+      return matchesSearch && matchesStage;
     });
-  }, [batches, searchTerm, statusFilter, stageFilter]);
+  }, [batches, searchTerm, stageFilter]);
 
   return {
     searchTerm,
     setSearchTerm,
-    statusFilter,
-    setStatusFilter,
     stageFilter,
     setStageFilter,
     filteredBatches,

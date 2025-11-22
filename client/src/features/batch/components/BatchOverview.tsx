@@ -137,19 +137,26 @@ export function BatchOverview({
 
         <Select value={statusFilter} onValueChange={onStatusFilterChange}>
           <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue>
+              {statusFilter === "all" && "All Statuses"}
+              {statusFilter === "ACTIVE" && "Active"}
+              {statusFilter === "COMPLETED" && "Completed"}
+              {statusFilter === "TERMINATED" && "Terminated"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="harvested">Harvested</SelectItem>
-            <SelectItem value="transferred">Transferred</SelectItem>
+            <SelectItem value="ACTIVE">Active</SelectItem>
+            <SelectItem value="COMPLETED">Completed</SelectItem>
+            <SelectItem value="TERMINATED">Terminated</SelectItem>
           </SelectContent>
         </Select>
 
         <Select value={stageFilter} onValueChange={onStageFilterChange}>
           <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Stage" />
+            <SelectValue>
+              {stageFilter === "all" ? "All Stages" : stageFilter}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Stages</SelectItem>

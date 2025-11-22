@@ -57,10 +57,36 @@ export default function InfrastructureContainers() {
     queryFn: async () => InfrastructureService.infrastructureOverview(),
   });
 
-  // ✅ Fetch containers using generated API client
+  // ✅ Fetch containers using generated API client (ALL PAGES for 2K containers)
   const { data: containersData, isLoading: containersLoading } = useQuery({
     queryKey: ["infrastructure", "containers", "list"],
-    queryFn: async () => ApiService.apiV1InfrastructureContainersList(),
+    queryFn: async () => {
+      console.log('🏢 Fetching ALL containers...');
+      let allContainers: any[] = [];
+      let page = 1;
+      let hasMore = true;
+      
+      while (hasMore && page <= 150) { // Safety: 150 pages = 3K containers
+        const response = await ApiService.apiV1InfrastructureContainersList(
+          undefined, // active
+          undefined, // area
+          undefined, // areaIn
+          undefined, // containerType
+          undefined, // hall
+          undefined, // hallIn
+          undefined, // name
+          undefined, // ordering
+          page,      // page
+          undefined  // search
+        );
+        allContainers = [...allContainers, ...(response.results || [])];
+        hasMore = response.next !== null;
+        page++;
+      }
+      
+      console.log(`✅ Fetched ${allContainers.length} containers across ${page - 1} pages`);
+      return { results: allContainers, count: allContainers.length };
+    },
   });
 
   const isLoading = containersLoading || overviewLoading;

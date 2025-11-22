@@ -43,13 +43,30 @@ import { CreateWorkflowWizard } from '../components/CreateWorkflowWizard';
 export function WorkflowListPage() {
   const [, navigate] = useLocation();
   const [filters, setFilters] = useState<WorkflowFilters>({});
+  const [currentPage, setCurrentPage] = useState(1);
   
-  const { data, isLoading, error } = useWorkflows(filters);
+  const { data, isLoading, error } = useWorkflows({ ...filters, page: currentPage });
   
-  // Fetch batches for dropdown
+  // Fetch batches for dropdown (ALL pages - only 144 batches)
   const { data: batchesData } = useQuery({
     queryKey: ['batches'],
-    queryFn: () => ApiService.apiV1BatchBatchesList(),
+    queryFn: async () => {
+      let allBatches: any[] = [];
+      let page = 1;
+      let hasMore = true;
+      
+      while (hasMore && page <= 10) {
+        const response = await ApiService.apiV1BatchBatchesList(
+          undefined, undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+          undefined, undefined, undefined, page
+        );
+        allBatches = [...allBatches, ...(response.results || [])];
+        hasMore = response.next !== null;
+        page++;
+      }
+      
+      return { results: allBatches };
+    },
   });
 
   const updateFilter = (key: keyof WorkflowFilters, value: any) => {
@@ -57,6 +74,8 @@ export function WorkflowListPage() {
       ...prev,
       [key]: value || undefined,
     }));
+    // Reset to page 1 when filters change to avoid empty results
+    setCurrentPage(1);
   };
 
   return (
@@ -263,6 +282,36 @@ export function WorkflowListPage() {
                 ))}
               </TableBody>
             </Table>
+          )}
+          
+          {/* Pagination Controls */}
+          {data && data.count > 20 && (
+            <div className="flex items-center justify-between px-4 py-4 border-t">
+              <div className="text-sm text-muted-foreground">
+                Showing {Math.min((currentPage - 1) * 20 + 1, data.count)} to {Math.min(currentPage * 20, data.count)} of {data.count} workflows
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </Button>
+                <div className="flex items-center gap-2 px-3">
+                  Page {currentPage} of {Math.ceil(data.count / 20)}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={!data.next}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

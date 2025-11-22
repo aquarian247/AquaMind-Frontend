@@ -168,7 +168,30 @@ export const api = {
   // Batch management endpoints
   batch: {
     async getAll(filters?: any) {
-      return ApiService.apiV1BatchBatchesList();
+      // Pass filters to the generated API service
+      return ApiService.apiV1BatchBatchesList(
+        filters?.batchNumber,
+        filters?.batchNumberIcontains,
+        filters?.batchType,
+        filters?.batchTypeIn,
+        filters?.biomassMax,
+        filters?.biomassMin,
+        filters?.endDateAfter,
+        filters?.endDateBefore,
+        filters?.lifecycleStage,
+        filters?.lifecycleStageIn,
+        filters?.ordering,
+        filters?.page,
+        filters?.populationMax,
+        filters?.populationMin,
+        filters?.search,
+        filters?.species,
+        filters?.speciesIn,
+        filters?.startDateAfter,
+        filters?.startDateBefore,
+        filters?.status,
+        filters?.statusIn
+      );
     },
 
     async getById(id: number) {
