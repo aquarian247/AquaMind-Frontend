@@ -2,13 +2,28 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { ExtendedBatch } from "../types";
 
-export function useBatchData(selectedGeography: string) {
+export function useBatchData(selectedGeography: string, statusFilter?: string) {
   const batchesQuery = useQuery<ExtendedBatch[]>({
-    queryKey: ["batch/batches", selectedGeography],
+    queryKey: ["batch/batches", selectedGeography, statusFilter],
     queryFn: async () => {
-      const res = await api.batch.getAll();
-      const items = res.results || [];
-      return items.map((b: any) => ({
+      // Fetch ALL pages of batches
+      let allBatches: any[] = [];
+      let page = 1;
+      let hasMore = true;
+      
+      while (hasMore && page <= 100) {
+        const filters: any = { page };
+        if (statusFilter && statusFilter !== "all") {
+          filters.status = statusFilter;
+        }
+        
+        const res = await api.batch.getAll(filters);
+        allBatches = [...allBatches, ...(res.results || [])];
+        hasMore = res.next !== null && res.next !== undefined;
+        page++;
+      }
+      
+      return allBatches.map((b: any) => ({
         ...b,
         // Ensure required/core fields exist with safe defaults
         status: b.status || "ACTIVE",

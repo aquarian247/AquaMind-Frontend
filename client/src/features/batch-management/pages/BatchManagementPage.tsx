@@ -35,16 +35,15 @@ const SelectBatchPlaceholder = ({ message }: { message: string }) => (
 export default function BatchManagementPage() {
   const [selectedBatch, setSelectedBatch] = useState<ExtendedBatch | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [statusFilter, setStatusFilter] = useState("ACTIVE"); // Default to ACTIVE
   const isMobile = useIsMobile();
 
-  // Data hooks
-  const { batches, species, stages, containers, broodstockPairs, eggSuppliers, isLoading, batchesLoading } = useBatchData("all");
+  // Data hooks - pass status filter to API
+  const { batches, species, stages, containers, broodstockPairs, eggSuppliers, isLoading, batchesLoading } = useBatchData("all", statusFilter);
   const { kpis } = useBatchKPIs(batches);
   const { 
     searchTerm, 
     setSearchTerm, 
-    statusFilter, 
-    setStatusFilter, 
     stageFilter, 
     setStageFilter, 
     filteredBatches 
