@@ -74,6 +74,8 @@ export function WorkflowListPage() {
       ...prev,
       [key]: value || undefined,
     }));
+    // Reset to page 1 when filters change to avoid empty results
+    setCurrentPage(1);
   };
 
   return (
