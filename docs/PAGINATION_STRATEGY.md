@@ -244,3 +244,9 @@ When reviewing a data-fetching hook, ask:
 
 **Key Insight:** Most large datasets already have server-side aggregation endpoints. Check `AGGREGATION_ENDPOINTS_CATALOG.md` before implementing any data fetching!
 
+
+
+
+
+
+

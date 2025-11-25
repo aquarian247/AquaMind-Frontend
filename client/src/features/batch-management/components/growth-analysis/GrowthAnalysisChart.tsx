@@ -137,11 +137,12 @@ export function GrowthAnalysisChart({
       // Group by day for batch-level aggregation
       const statesByDay = new Map<number, ActualDailyState[]>();
       
-      // Create a set of assignments to exclude (departing on their departure date)
-      const departingAssignments = new Map<number, Date>();
+      // Create a map of assignment_id -> departure_date (as string to avoid timezone issues)
+      // IMPORTANT: Keep dates as strings (YYYY-MM-DD) - converting to Date causes timezone bugs
+      const departingAssignments = new Map<number, string>();
       data.container_assignments.forEach((assignment) => {
         if (assignment.departure_date) {
-          departingAssignments.set(assignment.id, new Date(assignment.departure_date));
+          departingAssignments.set(assignment.id, assignment.departure_date);
         }
       });
       
@@ -153,15 +154,10 @@ export function GrowthAnalysisChart({
         
         // CRITICAL: Exclude departing assignments on their departure day
         // to prevent double-counting during transfers
-        const departureDate = departingAssignments.get(state.assignment_id);
-        if (departureDate) {
-          // Compare dates using ISO strings (ignores time component)
-          const stateDateStr = state.date; // Already ISO string from API
-          const departureDateStr = departureDate.toISOString().split('T')[0];
-          if (stateDateStr === departureDateStr) {
-            // This is the last day for departing assignment - skip to avoid double-count
-            return;
-          }
+        // Compare strings directly (both are YYYY-MM-DD format from API)
+        const departureDateStr = departingAssignments.get(state.assignment_id);
+        if (departureDateStr && state.date === departureDateStr) {
+          return;
         }
         
         if (!statesByDay.has(state.day_number)) {
@@ -181,19 +177,6 @@ export function GrowthAnalysisChart({
         const totalPopulation = states.reduce((sum, s) => sum + s.population, 0);
         const weightedSum = states.reduce((sum, s) => sum + (s.population * s.avg_weight_g), 0);
         const batchAvgWeight = totalPopulation > 0 ? weightedSum / totalPopulation : 0;
-        
-        // Debug: Log transfer days and detect double-counting
-        if ([90, 180, 270, 360, 450].includes(dayNumber)) {
-          console.log(`Day ${dayNumber}: ${states.length} containers, ${totalPopulation.toLocaleString()} fish, ${batchAvgWeight.toFixed(1)}g avg`);
-          if (totalPopulation > 6000000) {
-            console.warn(`⚠️ Day ${dayNumber}: Population ${totalPopulation.toLocaleString()} seems double-counted! (Expected ~3M)`);
-          }
-        }
-        
-        // Sanity check: Catch absurd aggregations
-        if (batchAvgWeight > 2500 || batchAvgWeight < 0) {
-          console.warn(`⚠️ Day ${dayNumber}: Unusual weight ${batchAvgWeight.toFixed(1)}g (${states.length} containers)`, states);
-        }
         
         // Sum biomass and population across all containers
         const totalBiomass = states.reduce((sum, s) => sum + s.biomass_kg, 0);
