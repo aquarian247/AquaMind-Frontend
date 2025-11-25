@@ -137,3 +137,13 @@ e2e-results.json
 e2e/artifacts/*.png
 e2e/artifacts/*.log
 e2e/artifacts/*.txt
+
+# Prevent backend (Django/Python) files from sneaking in via multi-workspace
+apps/
+aquamind/
+*.py
+*.pyc
+__pycache__/
+# Exception: scripts that are legitimately JS/TS
+!scripts/*.ts
+!scripts/*.js
