@@ -155,18 +155,21 @@ describe('BatchAnalyticsView', () => {
   });
 
   it('handles API error gracefully', async () => {
-    // Override fetch mock for growth samples to return error
+    // Override fetch mock to return error for combined-growth-data endpoint
     vi.spyOn(globalThis, 'fetch').mockImplementation((url: string) => {
-      if (typeof url === 'string' && url.includes('/api/v1/batch/growth-samples')) {
+      // Mock combined-growth-data to fail
+      if (typeof url === 'string' && url.includes('/combined-growth-data')) {
         return Promise.resolve(new Response(null, { status: 500 }));
       }
 
-      // Return empty paginated shapes for other endpoints
+      // Return empty paginated shapes for other endpoints  
       if (url.includes('/api/v1/inventory/batch-feeding-summaries') ||
           url.includes('/api/v1/environmental/readings') ||
           url.includes('/api/v1/scenario/scenarios') ||
           url.includes('/api/v1/batch/batch-container-assignments') ||
-          url.includes('/api/v1/batch/batches/growth-analysis')) {
+          url.includes('/api/v1/batch/growth-samples') ||
+          url.includes('/api/v1/batch/batches') && url.includes('/growth-analysis') ||
+          url.includes('/api/v1/batch/batches') && url.includes('/performance-metrics')) {
         return Promise.resolve(json({ results: [] }));
       }
 

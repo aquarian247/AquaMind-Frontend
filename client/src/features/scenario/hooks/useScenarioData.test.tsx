@@ -157,11 +157,13 @@ describe('useScenarioData', () => {
 
     // Verify API was called with search term
     expect(ApiService.apiV1ScenarioScenariosList).toHaveBeenCalledWith(
-      undefined,
-      undefined,
-      undefined,
-      'Scotland',
-      undefined
+      true,      // all (hook passes true to show all scenarios)
+      undefined, // createdBy
+      undefined, // ordering
+      undefined, // page
+      'Scotland', // search
+      undefined, // startDate (statusFilter is 'all' so undefined)
+      undefined  // tgcModelLocation
     );
   });
 
@@ -187,11 +189,13 @@ describe('useScenarioData', () => {
 
     // Verify API was called with status filter
     expect(ApiService.apiV1ScenarioScenariosList).toHaveBeenCalledWith(
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      'completed'
+      true,       // all (hook passes true to show all scenarios)
+      undefined,  // createdBy
+      undefined,  // ordering
+      undefined,  // page
+      undefined,  // search (searchTerm is '')
+      'completed', // startDate (statusFilter passed here when not 'all')
+      undefined   // tgcModelLocation
     );
   });
 
