@@ -32,12 +32,18 @@ export interface BatchAssignment {
 
 /**
  * Feeding summary data
+ * 
+ * Uses the backend-calculated weighted_avg_fcr which properly accounts
+ * for all container data. Client-side FCR calculation is unreliable
+ * due to pagination limiting the data available.
  */
 export interface FeedingSummary {
   total_feed_kg?: string | number;
   total_feed_consumed_kg?: string | number;
   total_biomass_gain_kg?: string | number;
   fcr?: string | number;
+  /** Backend-calculated weighted average FCR - USE THIS instead of client-side calculation */
+  weighted_avg_fcr?: string | number | null;
 }
 
 /**
@@ -94,52 +100,54 @@ export function calculateAverageGrowthRate(
 }
 
 /**
- * Calculate Feed Conversion Ratio (FCR) from feeding data
+ * Get Feed Conversion Ratio (FCR) from feeding summaries
+ * 
+ * IMPORTANT: This function prioritizes the backend-calculated weighted_avg_fcr
+ * which is computed from ALL feeding data. Client-side calculation is unreliable
+ * because the frontend only receives paginated data (typically 20 items per page),
+ * which can result in absurdly high FCR values when biomass gain is minimal.
  * 
  * FCR = Total Feed / Biomass Gain
  * Lower FCR is better (more efficient)
+ * Typical salmon FCR range: 1.0 - 1.5
  * 
- * @param feedingSummaries - Array of feeding summaries
- * @param latestAssignment - Latest batch assignment (end state)
- * @param earliestAssignment - Earliest batch assignment (start state)
- * @returns FCR value, or 0 if insufficient data or zero biomass gain
+ * @param feedingSummaries - Array of feeding summaries (should contain weighted_avg_fcr)
+ * @param _latestAssignment - DEPRECATED: No longer used, kept for API compatibility
+ * @param _earliestAssignment - DEPRECATED: No longer used, kept for API compatibility
+ * @returns FCR value from backend, or 0 if no data available
  * 
  * @example
- * calculateFCR(
- *   [{total_feed_kg: "100"}], 
- *   {biomass_kg: "150"}, 
- *   {biomass_kg: "50"}
- * ) // => 1.0 (100kg feed / 100kg gain)
+ * calculateFCR([{weighted_avg_fcr: "1.2"}]) // => 1.2
+ * calculateFCR([{weighted_avg_fcr: "1.1"}, {weighted_avg_fcr: "1.3"}]) // => 1.3 (latest)
  */
 export function calculateFCR(
   feedingSummaries: FeedingSummary[],
-  latestAssignment: BatchAssignment | null | undefined,
-  earliestAssignment: BatchAssignment | null | undefined
+  _latestAssignment?: BatchAssignment | null | undefined,
+  _earliestAssignment?: BatchAssignment | null | undefined
 ): number {
   if (!feedingSummaries || feedingSummaries.length === 0) return 0;
-  if (!latestAssignment || !earliestAssignment) return 0;
 
-  // Sum total feed
-  const totalFeed = feedingSummaries.reduce((sum, summary) => {
-    const feedAmount = summary.total_feed_kg 
-      ? parseFloat(String(summary.total_feed_kg)) 
-      : 0;
-    return sum + feedAmount;
-  }, 0);
+  // Use backend-calculated weighted_avg_fcr from the latest feeding summary
+  // This value is properly computed from ALL container data on the server side
+  const latestSummary = feedingSummaries[feedingSummaries.length - 1];
+  
+  if (latestSummary.weighted_avg_fcr !== null && latestSummary.weighted_avg_fcr !== undefined) {
+    const fcr = parseFloat(String(latestSummary.weighted_avg_fcr));
+    if (!isNaN(fcr) && fcr > 0) {
+      return fcr;
+    }
+  }
 
-  // Calculate biomass gain
-  const latestBiomass = latestAssignment.biomass_kg 
-    ? parseFloat(String(latestAssignment.biomass_kg)) 
-    : 0;
-  const earliestBiomass = earliestAssignment.biomass_kg 
-    ? parseFloat(String(earliestAssignment.biomass_kg)) 
-    : 0;
-  const biomassGain = latestBiomass - earliestBiomass;
+  // Fallback: try the legacy fcr field
+  if (latestSummary.fcr !== null && latestSummary.fcr !== undefined) {
+    const fcr = parseFloat(String(latestSummary.fcr));
+    if (!isNaN(fcr) && fcr > 0) {
+      return fcr;
+    }
+  }
 
-  // FCR is only valid if there's biomass gain
-  if (biomassGain <= 0) return 0;
-
-  return totalFeed / biomassGain;
+  // No valid FCR available
+  return 0;
 }
 
 /**
@@ -321,11 +329,10 @@ export function calculatePerformanceMetrics({
 
   const avgGrowthRate = calculateAverageGrowthRate(growthMetrics);
 
-  const feedConversionRatio = calculateFCR(
-    feedingSummaries,
-    latestAssignment,
-    earliestAssignment
-  );
+  // Use backend-calculated FCR from feeding summaries
+  // This avoids the pagination issue where client-side calculation
+  // only sees partial data (20 items per page vs 870+ total records)
+  const feedConversionRatio = calculateFCR(feedingSummaries);
 
   const avgCondition = calculateAverageCondition(growthMetrics);
   const healthScore = calculateHealthScore(survivalRate, avgCondition);

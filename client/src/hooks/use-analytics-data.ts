@@ -32,6 +32,8 @@ interface EnvironmentalReading {
 interface Scenario {
   name: string;
   duration_days: number;
+  // We might get scenarios with different shapes, handling partials
+  [key: string]: any; 
 }
 
 export interface GrowthMetrics {
@@ -76,248 +78,268 @@ export interface Benchmark {
   status: 'above' | 'below' | 'on-target';
 }
 
-export function useAnalyticsData({
-  growthSamplesData,
-  batchAssignments,
-  feedingSummaries,
-  environmentalReadings,
-  scenarios,
-  growthMetrics
-}: {
-  growthSamplesData: import("@/api/generated/models/GrowthSample").GrowthSample[];
-  batchAssignments: import("@/api/generated/models/BatchContainerAssignment").BatchContainerAssignment[];
-  feedingSummaries: FeedingSummary[];
-  environmentalReadings: import("@/api/generated/models/EnvironmentalReading").EnvironmentalReading[];
+interface Props {
+  growthAnalysis: any;
+  performanceMetricsRaw: any;
+  feedingStats: any;
+  latestFeedingSummary?: any;
   scenarios: Scenario[];
-  growthMetrics: GrowthMetrics[];
-}) {
+}
 
-  // Transform growth samples into growth metrics format
+export function useAnalyticsData({
+  growthAnalysis,
+  performanceMetricsRaw,
+  feedingStats,
+  latestFeedingSummary,
+  scenarios,
+}: Props) {
+
+  const aggregatedDailyStates = useMemo((): GrowthMetrics[] => {
+    if (!growthAnalysis?.actual_daily_states?.length) return [];
+
+    const grouped = new Map<
+      string,
+      {
+        totalPopulation: number;
+        weightedWeight: number;
+        totalBiomass: number;
+        conditionSum: number;
+        conditionCount: number;
+      }
+    >();
+
+    growthAnalysis.actual_daily_states.forEach((state: any) => {
+      if (!state?.date) return;
+      const population = Number(state.population) || 0;
+      const avgWeight = Number(state.avg_weight_g) || 0;
+      const biomass = Number(state.biomass_kg) || 0;
+      const condition = Number(state.condition_factor);
+
+      if (!grouped.has(state.date)) {
+        grouped.set(state.date, {
+          totalPopulation: 0,
+          weightedWeight: 0,
+          totalBiomass: 0,
+          conditionSum: 0,
+          conditionCount: 0,
+        });
+      }
+
+      const entry = grouped.get(state.date)!;
+      entry.totalPopulation += population;
+      entry.weightedWeight += avgWeight * population;
+      entry.totalBiomass += biomass;
+
+      if (!Number.isNaN(condition) && condition > 0) {
+        entry.conditionSum += condition;
+        entry.conditionCount += 1;
+      }
+    });
+
+    return Array.from(grouped.entries())
+      .map(([date, entry]) => ({
+        date,
+        averageWeight: entry.totalPopulation > 0 ? entry.weightedWeight / entry.totalPopulation : 0,
+        totalBiomass: entry.totalBiomass,
+        populationCount: entry.totalPopulation,
+        growthRate: 0,
+        condition: entry.conditionCount > 0 ? entry.conditionSum / entry.conditionCount : 1.0,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [growthAnalysis]);
+
+  // Transform server-provided metrics or fall back to aggregated daily states
   const calculatedGrowthMetrics = useMemo((): GrowthMetrics[] => {
-    return growthSamplesData
-      .sort((a, b) => {
-        const dateA = a.sample_date ? new Date(a.sample_date).getTime() : 0;
-        const dateB = b.sample_date ? new Date(b.sample_date).getTime() : 0;
-        return dateA - dateB;
-      })
-      .map((sample, index, samples) => {
-        const avgWeight = sample.avg_weight_g ? parseFloat(sample.avg_weight_g) : 0;
-        const avgLength = sample.avg_length_cm ? parseFloat(sample.avg_length_cm) : 0;
-
-        // Calculate growth rate if we have previous samples
-        let growthRate = 0;
-        if (index > 0) {
-          const prevSample = samples[index - 1];
-          if (sample.sample_date && prevSample.sample_date) {
-            const daysDiff = differenceInDays(
-              new Date(sample.sample_date),
-              new Date(prevSample.sample_date)
-            );
-
-            if (daysDiff > 0) {
-              const prevWeight = prevSample.avg_weight_g ? parseFloat(prevSample.avg_weight_g) : 0;
-              if (prevWeight > 0) {
-                const weightDiff = avgWeight - prevWeight;
-                growthRate = (weightDiff / prevWeight) * (7 / daysDiff) * 100; // Weekly growth rate
-              }
-            }
-          }
-        }
-
-        // Calculate K-factor (condition) if length is available
-        const condition = avgLength > 0 && avgWeight > 0
-          ? (avgWeight / Math.pow(avgLength, 3)) * 100
-          : 1.0;
-
-        // Get assignment data for population count and biomass
-        const assignment = batchAssignments.find(a => a.id === sample.assignment);
-        const populationCount = assignment?.population_count || 0;
-        const totalBiomass = assignment?.biomass_kg
-          ? parseFloat(String(assignment.biomass_kg))
-          : (avgWeight * populationCount / 1000);
-
-        return {
-          date: sample.sample_date || '',
-          averageWeight: avgWeight,
-          totalBiomass: totalBiomass,
-          populationCount: populationCount,
-          growthRate: growthRate,
-          condition: condition
-        };
-      });
-  }, [growthSamplesData, batchAssignments]);
-
-  // Calculate performance metrics from available data using extracted pure functions
-  const performanceMetrics = useMemo(
-    (): PerformanceMetrics | null =>
-      calculatePerformanceMetrics({
-        growthMetrics: calculatedGrowthMetrics,
-        batchAssignments,
-        feedingSummaries,
-        growthSamplesData
-      }),
-    [calculatedGrowthMetrics, batchAssignments, feedingSummaries, growthSamplesData]
-  );
-
-  // Calculate environmental correlations
-  const environmentalCorrelations = useMemo((): EnvironmentalCorrelation[] => {
-    if (environmentalReadings.length === 0 || calculatedGrowthMetrics.length === 0) {
-      return [];
+    if (growthAnalysis?.growth_metrics?.length) {
+      return growthAnalysis.growth_metrics
+        .map((metric: any) => ({
+          date: metric.date,
+          averageWeight: metric.avg_weight_g || 0,
+          totalBiomass: metric.total_biomass_kg || 0,
+          populationCount: metric.population_count || 0,
+          growthRate: metric.growth_rate || 0,
+          condition: metric.condition_factor || 1.0,
+        }))
+        .sort((a: GrowthMetrics, b: GrowthMetrics) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }
 
-    // Group readings by parameter
-    const parameterGroups = environmentalReadings.reduce((groups, reading) => {
-      let parameterName = 'Unknown';
+    return aggregatedDailyStates;
+  }, [growthAnalysis, aggregatedDailyStates]);
 
-      if (reading.parameter !== null && reading.parameter !== undefined) {
-        if (typeof reading.parameter === 'object' && reading.parameter !== null) {
-          const maybeName = (reading.parameter as any).name;
-          parameterName =
-            typeof maybeName === "string" && maybeName.trim().length > 0
-              ? maybeName
-              : "Parameter Object";
-        } else if (typeof reading.parameter === 'string') {
-          parameterName = reading.parameter;
-        } else if (typeof reading.parameter === 'number') {
-          parameterName = 'Parameter ' + reading.parameter;
-        } else {
-          parameterName = 'Parameter ' + String(reading.parameter);
+  const lifetimeFeedTotals = feedingStats?.lifetime || null;
+  const periodFeedTotals = feedingStats?.period || null;
+
+  // Calculate performance metrics from available data
+  const performanceMetrics = useMemo((): PerformanceMetrics | null => {
+    if (!performanceMetricsRaw && !growthAnalysis) return null;
+
+    // 1. Survival Rate
+    const survivalRate = performanceMetricsRaw?.mortality_metrics?.survival_rate 
+      ?? (100 - (performanceMetricsRaw?.mortality_metrics?.mortality_rate || 0));
+      
+    // 2. Growth Rate (Weekly Growth Rate %)
+    // Calculated from Actual Daily States to match Growth Graph
+    // Formula: ((Weight_Now - Weight_7_Days_Ago) / Weight_7_Days_Ago) * 100
+    let growthRate = 0;
+    const states = calculatedGrowthMetrics;
+    
+    if (states.length >= 2) {
+      // Ensure we have at least 2 points to calculate growth
+      const latest = states[states.length - 1];
+      const dateLatest = latest?.date ? new Date(latest.date) : null;
+
+      if (dateLatest && latest?.averageWeight > 0) {
+        let previousIndex = states.length - 2;
+        let previous: GrowthMetrics | null = null;
+        let daysDiff = 0;
+
+        while (previousIndex >= 0) {
+          const candidate = states[previousIndex];
+          if (candidate?.date && candidate.averageWeight > 0) {
+            const candidateDate = new Date(candidate.date);
+            const diff = differenceInDays(dateLatest, candidateDate);
+            if (diff > 0) {
+              previous = candidate;
+              daysDiff = diff;
+              break;
+            }
+          }
+          previousIndex -= 1;
+        }
+
+        if (previous && daysDiff > 0) {
+          const weightDiff = latest.averageWeight - previous.averageWeight;
+          growthRate = ((weightDiff / previous.averageWeight) / daysDiff) * 7 * 100;
         }
       }
+    }
+    
+    // Fallback to pre-calculated average if daily states unavailable or calc failed
+    if (growthRate === 0) {
+       growthRate = growthAnalysis?.growth_summary?.avg_growth_rate 
+        ?? performanceMetricsRaw?.current_metrics?.avg_growth_rate 
+        ?? 0;
+    }
 
-      if (!groups[parameterName]) {
-        groups[parameterName] = [];
-      }
-      groups[parameterName].push(reading);
-      return groups;
-    }, {} as Record<string, EnvironmentalReading[]>);
+    // 3. FCR
+    // Use weighted_avg_fcr from the latest batch feeding summary
+    // This is the most accurate "current" FCR
+    let feedConversionRatio = 0;
+    if (latestFeedingSummary?.weighted_avg_fcr) {
+      feedConversionRatio = parseFloat(latestFeedingSummary.weighted_avg_fcr);
+    } else if (latestFeedingSummary?.fcr) {
+      feedConversionRatio = parseFloat(latestFeedingSummary.fcr);
+    } else if (feedingStats?.period?.avg_fcr) {
+       // Fallback to aggregated avg (period)
+      feedConversionRatio = parseFloat(feedingStats.period.avg_fcr);
+    }
 
-    // Calculate simple correlations with growth
-    return Object.entries(parameterGroups).map(([parameter, readings]) => {
-      // Mock correlation calculation (in a real app, would use statistical methods)
-      const correlation = Math.random() * 0.8 + 0.1; // Random between 0.1 and 0.9
+    // 4. Health Score
+    const avgCondition = calculatedGrowthMetrics.length > 0 
+      ? calculatedGrowthMetrics.reduce((acc, m) => acc + m.condition, 0) / calculatedGrowthMetrics.length
+      : 1.0;
+    const conditionScore = avgCondition * 20; 
+    const healthScore = Math.min(Math.round((survivalRate * 0.6) + (conditionScore * 0.4)), 100);
 
-      // Determine impact based on parameter
-      let impact: 'positive' | 'negative' | 'neutral' = 'neutral';
-      if (parameter === 'Temperature' || parameter === 'Oxygen') {
-        impact = correlation > 0.5 ? 'positive' : 'negative';
-      } else if (parameter === 'pH' || parameter === 'Salinity') {
-        impact = correlation > 0.7 ? 'negative' : 'positive';
-      }
+    // 5. Productivity (Biomass gain per day * 100)
+    let productivity = 0;
+    if (performanceMetricsRaw?.days_active > 0 && performanceMetricsRaw?.current_metrics?.biomass_kg) {
+      productivity = (performanceMetricsRaw.current_metrics.biomass_kg / performanceMetricsRaw.days_active) * 100;
+    }
 
-      // Determine significance
-      const significance = correlation > 0.7 ? 'high' : correlation > 0.4 ? 'medium' : 'low';
+    // 6. Efficiency (Growth Rate / FCR * 10)
+    // If FCR is 3.00 and Growth Rate is 1.5, Efficiency = (1.5 / 3.0) * 10 = 5.0
+    const efficiency = feedConversionRatio > 0 ? (growthRate / feedConversionRatio) * 10 : growthRate;
 
-      return {
-        parameter,
-        correlation,
-        impact,
-        significance
-      };
-    });
-  }, [environmentalReadings, calculatedGrowthMetrics]);
+    return {
+      survivalRate,
+      growthRate,
+      feedConversionRatio,
+      healthScore,
+      productivity,
+      efficiency
+    };
+  }, [growthAnalysis, performanceMetricsRaw, feedingStats, latestFeedingSummary, calculatedGrowthMetrics]);
 
-  // Generate predictive insights from scenarios or growth trends
+  // Calculate environmental correlations (MOCK - placeholder for future implementation)
+  const environmentalCorrelations = useMemo((): EnvironmentalCorrelation[] => {
+    return [];
+  }, []);
+
+  // Generate predictive insights
   const predictiveInsights = useMemo((): PredictiveInsight[] => {
     if (scenarios.length > 0) {
-      // Use scenario projections if available
-      return scenarios.map(scenario => {
-        const latestWeight = calculatedGrowthMetrics.length > 0 ? calculatedGrowthMetrics[calculatedGrowthMetrics.length - 1].averageWeight : 0;
-        const mockProjectedWeight = latestWeight * (1 + ((performanceMetrics?.growthRate || 0) / 100) * (scenario.duration_days || 30) / 7);
+      const latestWeight = calculatedGrowthMetrics.length > 0 ? calculatedGrowthMetrics[calculatedGrowthMetrics.length - 1].averageWeight : 0;
+      
+      return scenarios.slice(0, 3).map(scenario => {
+        const duration = scenario.duration_days || 30;
+        // Simple projection logic
+        const mockProjectedWeight = latestWeight * (1 + ((performanceMetrics?.growthRate || 0) / 100) * duration / 7);
 
         return {
           metric: scenario.name || 'Growth Projection',
           currentValue: latestWeight,
           predictedValue: mockProjectedWeight,
           trend: mockProjectedWeight > latestWeight ? 'improving' : 'declining',
-          confidence: 85, // Mock confidence level
-          timeframe: `${scenario.duration_days || 30} days`
+          confidence: 85,
+          timeframe: `${duration} days`
         };
       });
-    } else if (calculatedGrowthMetrics.length >= 3) {
-      // Generate simple projections based on growth trends
-      const latestMetric = calculatedGrowthMetrics[calculatedGrowthMetrics.length - 1];
-      const avgGrowthRate = performanceMetrics?.growthRate || 0;
-
-      // Project weight in 30 days
-      const projectedWeight30Days = latestMetric.averageWeight * (1 + (avgGrowthRate / 100) * (30 / 7));
-
-      // Project weight in 90 days
-      const projectedWeight90Days = latestMetric.averageWeight * (1 + (avgGrowthRate / 100) * (90 / 7));
-
-      return [
-        {
-          metric: 'Average Weight (30 days)',
-          currentValue: latestMetric.averageWeight,
-          predictedValue: projectedWeight30Days,
-          trend: 'improving',
-          confidence: 80,
-          timeframe: '30 days'
-        },
-        {
-          metric: 'Average Weight (90 days)',
-          currentValue: latestMetric.averageWeight,
-          predictedValue: projectedWeight90Days,
-          trend: 'improving',
-          confidence: 65,
-          timeframe: '90 days'
-        }
-      ];
-    }
-
+    } 
+    
     return [];
   }, [scenarios, calculatedGrowthMetrics, performanceMetrics]);
 
-  // Generate benchmarks based on available data and industry standards
+  // Generate benchmarks
   const benchmarks = useMemo((): Benchmark[] => {
-    if (calculatedGrowthMetrics.length === 0) return [];
+    if (!performanceMetrics) return [];
 
-    const latestMetric = calculatedGrowthMetrics[calculatedGrowthMetrics.length - 1];
-
-    // Mock industry standards
     const industryStandards = {
       fcr: 1.2,
-      growthRate: 12,
+      growthRate: 1.5, 
       survivalRate: 92,
       condition: 1.1
     };
 
-    // Mock target values (slightly better than industry)
     const targetValues = {
       fcr: 1.1,
-      growthRate: 14,
+      growthRate: 1.7,
       survivalRate: 95,
       condition: 1.2
     };
+    
+    const latestCondition = calculatedGrowthMetrics.length > 0 
+      ? calculatedGrowthMetrics[calculatedGrowthMetrics.length - 1].condition 
+      : 1.0;
 
     return [
       {
         metric: 'Feed Conversion Ratio',
-        current: performanceMetrics?.feedConversionRatio || 0,
+        current: performanceMetrics.feedConversionRatio || 0,
         target: targetValues.fcr,
         industry: industryStandards.fcr,
-        status: (performanceMetrics?.feedConversionRatio || 0) <= targetValues.fcr ? 'above' : 'below'
+        status: (performanceMetrics.feedConversionRatio || 0) <= targetValues.fcr ? 'above' : 'below'
       },
       {
         metric: 'Growth Rate (%)',
-        current: performanceMetrics?.growthRate || 0,
+        current: performanceMetrics.growthRate || 0,
         target: targetValues.growthRate,
         industry: industryStandards.growthRate,
-        status: (performanceMetrics?.growthRate || 0) >= targetValues.growthRate ? 'above' : 'below'
+        status: (performanceMetrics.growthRate || 0) >= targetValues.growthRate ? 'above' : 'below'
       },
       {
         metric: 'Survival Rate (%)',
-        current: performanceMetrics?.survivalRate || 0,
+        current: performanceMetrics.survivalRate || 0,
         target: targetValues.survivalRate,
         industry: industryStandards.survivalRate,
-        status: (performanceMetrics?.survivalRate || 0) >= targetValues.survivalRate ? 'above' : 'below'
+        status: (performanceMetrics.survivalRate || 0) >= targetValues.survivalRate ? 'above' : 'below'
       },
       {
         metric: 'Condition Factor',
-        current: latestMetric.condition || 0,
+        current: latestCondition,
         target: targetValues.condition,
         industry: industryStandards.condition,
-        status: (latestMetric.condition || 0) >= targetValues.condition ? 'above' : 'below'
+        status: latestCondition >= targetValues.condition ? 'above' : 'below'
       }
     ];
   }, [calculatedGrowthMetrics, performanceMetrics]);
@@ -328,9 +350,21 @@ export function useAnalyticsData({
     ? (calculatedGrowthMetrics[calculatedGrowthMetrics.length - 1].growthRate - calculatedGrowthMetrics[calculatedGrowthMetrics.length - 2].growthRate)
     : 0;
 
+  const lifetimeBiomassKg = performanceMetricsRaw?.current_metrics?.biomass_kg || null;
+  const lifetimeFeedKg = lifetimeFeedTotals?.total_feed_kg || null;
+  const lifetimeFeedCost = lifetimeFeedTotals?.total_feed_cost || null;
+  const lifetimeFCR = lifetimeFeedKg && lifetimeBiomassKg && lifetimeBiomassKg > 0
+    ? lifetimeFeedKg / lifetimeBiomassKg
+    : null;
+
   return {
     growthMetrics: calculatedGrowthMetrics,
     performanceMetrics,
+    periodFeedTotals,
+    lifetimeFeedTotals,
+    lifetimeFCR,
+    lifetimeFeedCost,
+    lifetimeBiomassKg,
     environmentalCorrelations,
     predictiveInsights,
     benchmarks,

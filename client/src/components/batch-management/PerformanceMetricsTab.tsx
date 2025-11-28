@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 import { format } from "date-fns";
 
 interface PerformanceMetrics {
@@ -42,7 +44,8 @@ export function PerformanceMetricsTab({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <TooltipProvider delayDuration={200}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Performance Breakdown</CardTitle>
@@ -57,10 +60,29 @@ export function PerformanceMetricsTab({
             <Progress value={performanceMetrics.survivalRate || 0} className="h-2" />
 
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Growth Efficiency</span>
+              <span className="text-sm font-medium flex items-center gap-1">
+                Growth Efficiency
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="What is Growth Efficiency?"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs text-xs">
+                    Growth delivered per unit of feed. Calculated as (weekly growth ÷ FCR) × 10.
+                  </TooltipContent>
+                </Tooltip>
+              </span>
               <span className="font-bold">{performanceMetrics.efficiency?.toFixed(1) || '0.0'}%</span>
             </div>
             <Progress value={performanceMetrics.efficiency || 0} className="h-2" />
+            <p className="text-[11px] text-muted-foreground">
+              Adjusts growth rate by feed conversion—lower FCR drives higher efficiency.
+            </p>
 
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Productivity</span>
@@ -97,6 +119,7 @@ export function PerformanceMetricsTab({
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }

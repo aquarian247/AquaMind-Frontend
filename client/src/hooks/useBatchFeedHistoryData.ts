@@ -81,30 +81,35 @@ export function useBatchFeedHistoryData(
       try {
         console.log(`📊 Fetching feeding events summary for batch ${batchId} (ALL dates)...`);
 
-        // Use the generated ApiService with batch filter and invalid date to bypass date filtering and get ALL events
-        // The Django backend ignores invalid dates, giving us all events for the batch
-        const response = await ApiService.feedingEventsSummary(
-          undefined,  // area
-          undefined,  // areaIn
-          batchId,    // batch - filter by specific batch
-          undefined,  // container
-          undefined,  // containerIn
-          'invalid',  // date - invalid date to bypass filtering
-          undefined,  // endDate
-          undefined,  // freshwaterStation
-          undefined,  // freshwaterStationIn
-          undefined,  // geography
-          undefined,  // geographyIn
-          undefined,  // hall
-          undefined,  // hallIn
-          undefined   // startDate
-        );
+        const [periodSummary, lifetimeSummary] = await Promise.all([
+          ApiService.feedingEventsSummary(
+            undefined,
+            undefined,
+            batchId
+          ),
+          ApiService.feedingEventsSummary(
+            undefined,
+            undefined,
+            batchId,
+            undefined,
+            undefined,
+            "invalid"
+          )
+        ]);
 
-        console.log('📊 Feeding Events Summary Response:', response);
+        console.log('📊 Feeding Events Summary Response:', { periodSummary, lifetimeSummary });
 
         return {
-          eventsCount: Number(response.events_count || 0),
-          totalFeedKg: Number(response.total_feed_kg || 0)
+          period: {
+            eventsCount: Number(periodSummary.events_count || 0),
+            totalFeedKg: Number(periodSummary.total_feed_kg || 0),
+            totalFeedCost: Number(periodSummary.total_feed_cost || 0)
+          },
+          lifetime: {
+            eventsCount: Number(lifetimeSummary.events_count || 0),
+            totalFeedKg: Number(lifetimeSummary.total_feed_kg || 0),
+            totalFeedCost: Number(lifetimeSummary.total_feed_cost || 0)
+          }
         };
       } catch (error) {
         console.error("❌ Failed to fetch feeding events summary:", error);

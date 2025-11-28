@@ -157,6 +157,7 @@ import type { PaginatedMortalityRecordHistoryList } from '../models/PaginatedMor
 import type { PaginatedMortalityRecordList } from '../models/PaginatedMortalityRecordList';
 import type { PaginatedParameterScoreDefinitionList } from '../models/PaginatedParameterScoreDefinitionList';
 import type { PaginatedPhotoperiodDataList } from '../models/PaginatedPhotoperiodDataList';
+import type { PaginatedProjectionRunListList } from '../models/PaginatedProjectionRunListList';
 import type { PaginatedSampleTypeList } from '../models/PaginatedSampleTypeList';
 import type { PaginatedScenarioList } from '../models/PaginatedScenarioList';
 import type { PaginatedScenarioProjectionList } from '../models/PaginatedScenarioProjectionList';
@@ -234,7 +235,8 @@ import type { PatchedUserProfileUpdate } from '../models/PatchedUserProfileUpdat
 import type { PatchedVaccinationType } from '../models/PatchedVaccinationType';
 import type { PatchedWeatherData } from '../models/PatchedWeatherData';
 import type { PhotoperiodData } from '../models/PhotoperiodData';
-import type { PinScenario } from '../models/PinScenario';
+import type { ProjectionRunDetail } from '../models/ProjectionRunDetail';
+import type { ProjectionRunList } from '../models/ProjectionRunList';
 import type { SampleType } from '../models/SampleType';
 import type { Scenario } from '../models/Scenario';
 import type { Sensor } from '../models/Sensor';
@@ -1103,18 +1105,54 @@ export class ApiService {
         });
     }
     /**
-     * Pin a scenario to a batch
-     * Associate a specific scenario with this batch as the reference for
-     * growth assimilation calculations. Only one scenario can be pinned at a time.
+     * Pin a projection run to this batch
+     * Pin a specific projection run to this batch for growth analysis.
+     * Provides version control for scenario projections.
      * @param id A unique integer value identifying this batch.
      * @param requestBody
      * @returns any
      * @throws ApiError
      */
-    public static batchPinScenario(
+    public static batchPinProjectionRun(
         id: number,
-        requestBody: PinScenario,
+        requestBody: {
+            /**
+             * ID of the projection run to pin
+             */
+            projection_run_id: number;
+        },
     ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/batches/{id}/pin-projection-run/',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * DEPRECATED: Use pin_projection_run instead.
+     *
+     * This endpoint pins the LATEST projection run for the given scenario.
+     *
+     * URL: POST /api/v1/batch/batches/{pk}/pin-scenario/
+     * Body: {"scenario_id": 123}
+     * @param id A unique integer value identifying this batch.
+     * @param requestBody
+     * @returns Batch
+     * @throws ApiError
+     */
+    public static apiV1BatchBatchesPinScenarioCreate(
+        id: number,
+        requestBody: Batch,
+    ): CancelablePromise<Batch> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/batch/batches/{id}/pin-scenario/',
@@ -1124,8 +1162,10 @@ export class ApiService {
             body: requestBody,
             mediaType: 'application/json',
             errors: {
+                400: `Bad request (validation error)`,
                 401: `Unauthorized`,
                 403: `Forbidden`,
+                404: `Not Found`,
                 500: `Internal Server Error`,
             },
         });
@@ -17224,7 +17264,92 @@ export class ApiService {
             });
         }
         /**
-         * Enhanced ViewSet for scenarios with audit trail support.
+         * Read-only ViewSet for ProjectionRun.
+         *
+         * Creating runs is done via Scenario.run_projection action.
+         * Deleting runs requires Manager+ role.
+         * @param ordering Which field to use when ordering the results.
+         * @param page A page number within the paginated result set.
+         * @param scenario
+         * @param search A search term.
+         * @returns PaginatedProjectionRunListList
+         * @throws ApiError
+         */
+        public static apiV1ScenarioProjectionRunsList(
+            ordering?: string,
+            page?: number,
+            scenario?: number,
+            search?: string,
+        ): CancelablePromise<PaginatedProjectionRunListList> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/scenario/projection-runs/',
+                query: {
+                    'ordering': ordering,
+                    'page': page,
+                    'scenario': scenario,
+                    'search': search,
+                },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Read-only ViewSet for ProjectionRun.
+         *
+         * Creating runs is done via Scenario.run_projection action.
+         * Deleting runs requires Manager+ role.
+         * @param runId A unique integer value identifying this Projection Run.
+         * @returns ProjectionRunDetail
+         * @throws ApiError
+         */
+        public static apiV1ScenarioProjectionRunsRetrieve(
+            runId: number,
+        ): CancelablePromise<ProjectionRunDetail> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/scenario/projection-runs/{run_id}/',
+                path: {
+                    'run_id': runId,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Get all projection data for this run.
+         * @param runId A unique integer value identifying this Projection Run.
+         * @returns ProjectionRunList
+         * @throws ApiError
+         */
+        public static apiV1ScenarioProjectionRunsProjectionsRetrieve(
+            runId: number,
+        ): CancelablePromise<ProjectionRunList> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/scenario/projection-runs/{run_id}/projections/',
+                path: {
+                    'run_id': runId,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * List scenarios with optional filter to show all users' scenarios.
+         * @param all If true, returns all scenarios. By default, only returns scenarios created by the current user.
          * @param createdBy
          * @param ordering Which field to use when ordering the results.
          * @param page A page number within the paginated result set.
@@ -17235,6 +17360,7 @@ export class ApiService {
          * @throws ApiError
          */
         public static apiV1ScenarioScenariosList(
+            all: boolean = false,
             createdBy?: number,
             ordering?: string,
             page?: number,
@@ -17246,6 +17372,7 @@ export class ApiService {
                 method: 'GET',
                 url: '/api/v1/scenario/scenarios/',
                 query: {
+                    'all': all,
                     'created_by': createdBy,
                     'ordering': ordering,
                     'page': page,
@@ -17386,7 +17513,7 @@ export class ApiService {
             });
         }
         /**
-         * Get projection data formatted for charts.
+         * Get projection data formatted for charts (from latest run).
          * @param scenarioId A unique integer value identifying this Scenario.
          * @param aggregation Temporal aggregation for chart data (daily, weekly, monthly).
          * @param chartType Chart visualization type (line, area, or bar).
@@ -17455,7 +17582,7 @@ export class ApiService {
                 });
             }
             /**
-             * Export projections as CSV.
+             * Export projections as CSV (from latest run).
              * @param scenarioId A unique integer value identifying this Scenario.
              * @returns Scenario
              * @throws ApiError
@@ -17478,7 +17605,30 @@ export class ApiService {
                 });
             }
             /**
-             * Get projections for a scenario with optional filtering.
+             * List all projection runs for a scenario.
+             * @param scenarioId A unique integer value identifying this Scenario.
+             * @returns Scenario
+             * @throws ApiError
+             */
+            public static apiV1ScenarioScenariosProjectionRunsRetrieve(
+                scenarioId: number,
+            ): CancelablePromise<Scenario> {
+                return __request(OpenAPI, {
+                    method: 'GET',
+                    url: '/api/v1/scenario/scenarios/{scenario_id}/projection_runs/',
+                    path: {
+                        'scenario_id': scenarioId,
+                    },
+                    errors: {
+                        401: `Unauthorized`,
+                        403: `Forbidden`,
+                        404: `Not Found`,
+                        500: `Internal Server Error`,
+                    },
+                });
+            }
+            /**
+             * Get projections for a scenario (from latest run) with optional filtering.
              * @param scenarioId A unique integer value identifying this Scenario.
              * @param aggregation Aggregation granularity for projections (daily, weekly, monthly).
              * @param createdBy
@@ -17528,233 +17678,68 @@ export class ApiService {
                 });
             }
             /**
-             * Run projection calculation for a scenario.
+             * Run projection - creates NEW ProjectionRun.
              *
-             * Returns projection summary and saves results to database.
-             * @param scenarioId A unique integer value identifying this Scenario.
-             * @param requestBody
-             * @returns Scenario
-             * @throws ApiError
-             */
-            public static apiV1ScenarioScenariosRunProjectionCreate(
-                scenarioId: number,
-                requestBody: Scenario,
-            ): CancelablePromise<Scenario> {
-                return __request(OpenAPI, {
-                    method: 'POST',
-                    url: '/api/v1/scenario/scenarios/{scenario_id}/run_projection/',
-                    path: {
-                        'scenario_id': scenarioId,
-                    },
-                    body: requestBody,
-                    mediaType: 'application/json',
-                    errors: {
-                        400: `Bad request (validation error)`,
-                        401: `Unauthorized`,
-                        403: `Forbidden`,
-                        404: `Not Found`,
-                        500: `Internal Server Error`,
-                    },
-                });
-            }
-            /**
-             * Run sensitivity analysis on a scenario parameter.
-             *
-             * Request body:
+             * Request body (optional):
              * {
-                 * "parameter": "tgc",  // or "fcr" or "mortality"
-                 * "variations": [-10, -5, 0, 5, 10]  // percentage variations
+                 * "label": "Updated TGC model"  // Optional label for this run
                  * }
-                 * @param scenarioId A unique integer value identifying this Scenario.
-                 * @param requestBody
-                 * @returns Scenario
-                 * @throws ApiError
-                 */
-                public static apiV1ScenarioScenariosSensitivityAnalysisCreate(
-                    scenarioId: number,
-                    requestBody: Scenario,
-                ): CancelablePromise<Scenario> {
-                    return __request(OpenAPI, {
-                        method: 'POST',
-                        url: '/api/v1/scenario/scenarios/{scenario_id}/sensitivity_analysis/',
-                        path: {
-                            'scenario_id': scenarioId,
-                        },
-                        body: requestBody,
-                        mediaType: 'application/json',
-                        errors: {
-                            400: `Bad request (validation error)`,
-                            401: `Unauthorized`,
-                            403: `Forbidden`,
-                            404: `Not Found`,
-                            500: `Internal Server Error`,
-                        },
-                    });
-                }
-                /**
-                 * Compare multiple scenarios.
                  *
-                 * Request body:
+                 * Returns:
                  * {
-                     * "scenario_ids": [1, 2, 3],
-                     * "comparison_metrics": ["final_weight", "final_biomass", "fcr_overall"]
+                     * "success": true,
+                     * "projection_run_id": 123,
+                     * "run_number": 2,
+                     * "message": "Projection run #2 created."
                      * }
+                     * @param scenarioId A unique integer value identifying this Scenario.
                      * @param requestBody
                      * @returns Scenario
                      * @throws ApiError
                      */
-                    public static apiV1ScenarioScenariosCompareCreate(
+                    public static apiV1ScenarioScenariosRunProjectionCreate(
+                        scenarioId: number,
                         requestBody: Scenario,
                     ): CancelablePromise<Scenario> {
                         return __request(OpenAPI, {
                             method: 'POST',
-                            url: '/api/v1/scenario/scenarios/compare/',
+                            url: '/api/v1/scenario/scenarios/{scenario_id}/run_projection/',
+                            path: {
+                                'scenario_id': scenarioId,
+                            },
                             body: requestBody,
                             mediaType: 'application/json',
                             errors: {
                                 400: `Bad request (validation error)`,
                                 401: `Unauthorized`,
                                 403: `Forbidden`,
+                                404: `Not Found`,
                                 500: `Internal Server Error`,
                             },
                         });
                     }
                     /**
-                     * Create a scenario initialized from a batch.
+                     * Run sensitivity analysis on a scenario parameter.
                      *
                      * Request body:
                      * {
-                         * "batch_id": 123,
-                         * "scenario_name": "Batch 123 Projection",
-                         * "duration_days": 600,
-                         * "use_current_models": true
+                         * "parameter": "tgc",  // or "fcr" or "mortality"
+                         * "variations": [-10, -5, 0, 5, 10]  // percentage variations
                          * }
+                         * @param scenarioId A unique integer value identifying this Scenario.
                          * @param requestBody
                          * @returns Scenario
                          * @throws ApiError
                          */
-                        public static apiV1ScenarioScenariosFromBatchCreate(
+                        public static apiV1ScenarioScenariosSensitivityAnalysisCreate(
+                            scenarioId: number,
                             requestBody: Scenario,
                         ): CancelablePromise<Scenario> {
                             return __request(OpenAPI, {
                                 method: 'POST',
-                                url: '/api/v1/scenario/scenarios/from_batch/',
-                                body: requestBody,
-                                mediaType: 'application/json',
-                                errors: {
-                                    400: `Bad request (validation error)`,
-                                    401: `Unauthorized`,
-                                    403: `Forbidden`,
-                                    500: `Internal Server Error`,
-                                },
-                            });
-                        }
-                        /**
-                         * Get summary statistics for user's scenarios.
-                         * @returns Scenario
-                         * @throws ApiError
-                         */
-                        public static apiV1ScenarioScenariosSummaryStatsRetrieve(): CancelablePromise<Scenario> {
-                            return __request(OpenAPI, {
-                                method: 'GET',
-                                url: '/api/v1/scenario/scenarios/summary_stats/',
-                                errors: {
-                                    401: `Unauthorized`,
-                                    403: `Forbidden`,
-                                    500: `Internal Server Error`,
-                                },
-                            });
-                        }
-                        /**
-                         * ViewSet for temperature profiles with audit trail support.
-                         * @param ordering Which field to use when ordering the results.
-                         * @param page A page number within the paginated result set.
-                         * @param search A search term.
-                         * @returns PaginatedTemperatureProfileList
-                         * @throws ApiError
-                         */
-                        public static apiV1ScenarioTemperatureProfilesList(
-                            ordering?: string,
-                            page?: number,
-                            search?: string,
-                        ): CancelablePromise<PaginatedTemperatureProfileList> {
-                            return __request(OpenAPI, {
-                                method: 'GET',
-                                url: '/api/v1/scenario/temperature-profiles/',
-                                query: {
-                                    'ordering': ordering,
-                                    'page': page,
-                                    'search': search,
-                                },
-                                errors: {
-                                    400: `Bad request (validation error)`,
-                                    401: `Unauthorized`,
-                                    403: `Forbidden`,
-                                    500: `Internal Server Error`,
-                                },
-                            });
-                        }
-                        /**
-                         * ViewSet for temperature profiles with audit trail support.
-                         * @param requestBody
-                         * @returns TemperatureProfile
-                         * @throws ApiError
-                         */
-                        public static apiV1ScenarioTemperatureProfilesCreate(
-                            requestBody: TemperatureProfile,
-                        ): CancelablePromise<TemperatureProfile> {
-                            return __request(OpenAPI, {
-                                method: 'POST',
-                                url: '/api/v1/scenario/temperature-profiles/',
-                                body: requestBody,
-                                mediaType: 'application/json',
-                                errors: {
-                                    400: `Bad request (validation error)`,
-                                    401: `Unauthorized`,
-                                    403: `Forbidden`,
-                                    500: `Internal Server Error`,
-                                },
-                            });
-                        }
-                        /**
-                         * ViewSet for temperature profiles with audit trail support.
-                         * @param profileId A unique integer value identifying this Temperature Profile.
-                         * @returns TemperatureProfile
-                         * @throws ApiError
-                         */
-                        public static apiV1ScenarioTemperatureProfilesRetrieve(
-                            profileId: number,
-                        ): CancelablePromise<TemperatureProfile> {
-                            return __request(OpenAPI, {
-                                method: 'GET',
-                                url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
+                                url: '/api/v1/scenario/scenarios/{scenario_id}/sensitivity_analysis/',
                                 path: {
-                                    'profile_id': profileId,
-                                },
-                                errors: {
-                                    401: `Unauthorized`,
-                                    403: `Forbidden`,
-                                    404: `Not Found`,
-                                    500: `Internal Server Error`,
-                                },
-                            });
-                        }
-                        /**
-                         * ViewSet for temperature profiles with audit trail support.
-                         * @param profileId A unique integer value identifying this Temperature Profile.
-                         * @param requestBody
-                         * @returns TemperatureProfile
-                         * @throws ApiError
-                         */
-                        public static apiV1ScenarioTemperatureProfilesUpdate(
-                            profileId: number,
-                            requestBody: TemperatureProfile,
-                        ): CancelablePromise<TemperatureProfile> {
-                            return __request(OpenAPI, {
-                                method: 'PUT',
-                                url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
-                                path: {
-                                    'profile_id': profileId,
+                                    'scenario_id': scenarioId,
                                 },
                                 body: requestBody,
                                 mediaType: 'application/json',
@@ -17768,103 +17753,120 @@ export class ApiService {
                             });
                         }
                         /**
-                         * ViewSet for temperature profiles with audit trail support.
-                         * @param profileId A unique integer value identifying this Temperature Profile.
-                         * @param requestBody
-                         * @returns TemperatureProfile
-                         * @throws ApiError
-                         */
-                        public static apiV1ScenarioTemperatureProfilesPartialUpdate(
-                            profileId: number,
-                            requestBody?: PatchedTemperatureProfile,
-                        ): CancelablePromise<TemperatureProfile> {
-                            return __request(OpenAPI, {
-                                method: 'PATCH',
-                                url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
-                                path: {
-                                    'profile_id': profileId,
-                                },
-                                body: requestBody,
-                                mediaType: 'application/json',
-                                errors: {
-                                    400: `Bad request (validation error)`,
-                                    401: `Unauthorized`,
-                                    403: `Forbidden`,
-                                    404: `Not Found`,
-                                    500: `Internal Server Error`,
-                                },
-                            });
-                        }
-                        /**
-                         * ViewSet for temperature profiles with audit trail support.
-                         * @param profileId A unique integer value identifying this Temperature Profile.
-                         * @returns void
-                         * @throws ApiError
-                         */
-                        public static apiV1ScenarioTemperatureProfilesDestroy(
-                            profileId: number,
-                        ): CancelablePromise<void> {
-                            return __request(OpenAPI, {
-                                method: 'DELETE',
-                                url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
-                                path: {
-                                    'profile_id': profileId,
-                                },
-                                errors: {
-                                    401: `Unauthorized`,
-                                    403: `Forbidden`,
-                                    404: `Not Found`,
-                                    500: `Internal Server Error`,
-                                },
-                            });
-                        }
-                        /**
-                         * Get temperature statistics for a profile.
-                         * @param profileId A unique integer value identifying this Temperature Profile.
-                         * @returns TemperatureProfile
-                         * @throws ApiError
-                         */
-                        public static apiV1ScenarioTemperatureProfilesStatisticsRetrieve(
-                            profileId: number,
-                        ): CancelablePromise<TemperatureProfile> {
-                            return __request(OpenAPI, {
-                                method: 'GET',
-                                url: '/api/v1/scenario/temperature-profiles/{profile_id}/statistics/',
-                                path: {
-                                    'profile_id': profileId,
-                                },
-                                errors: {
-                                    401: `Unauthorized`,
-                                    403: `Forbidden`,
-                                    404: `Not Found`,
-                                    500: `Internal Server Error`,
-                                },
-                            });
-                        }
-                        /**
-                         * Create temperature profile from date ranges.
+                         * Compare multiple scenarios.
                          *
-                         * Example request:
+                         * Request body:
                          * {
-                             * "profile_name": "Winter 2024",
-                             * "ranges": [
-                                 * {"start_date": "2024-01-01", "end_date": "2024-01-31", "value": 8.5},
-                                 * {"start_date": "2024-02-01", "end_date": "2024-02-28", "value": 9.0}
-                                 * ],
-                                 * "merge_adjacent": true,
-                                 * "fill_gaps": true,
-                                 * "interpolation_method": "linear"
+                             * "scenario_ids": [1, 2, 3],
+                             * "comparison_metrics": ["final_weight", "final_biomass", "fcr_overall"]
+                             * }
+                             * @param requestBody
+                             * @returns Scenario
+                             * @throws ApiError
+                             */
+                            public static apiV1ScenarioScenariosCompareCreate(
+                                requestBody: Scenario,
+                            ): CancelablePromise<Scenario> {
+                                return __request(OpenAPI, {
+                                    method: 'POST',
+                                    url: '/api/v1/scenario/scenarios/compare/',
+                                    body: requestBody,
+                                    mediaType: 'application/json',
+                                    errors: {
+                                        400: `Bad request (validation error)`,
+                                        401: `Unauthorized`,
+                                        403: `Forbidden`,
+                                        500: `Internal Server Error`,
+                                    },
+                                });
+                            }
+                            /**
+                             * Create a scenario initialized from a batch.
+                             *
+                             * Request body:
+                             * {
+                                 * "batch_id": 123,
+                                 * "scenario_name": "Batch 123 Projection",
+                                 * "duration_days": 600,
+                                 * "use_current_models": true
                                  * }
+                                 * @param requestBody
+                                 * @returns Scenario
+                                 * @throws ApiError
+                                 */
+                                public static apiV1ScenarioScenariosFromBatchCreate(
+                                    requestBody: Scenario,
+                                ): CancelablePromise<Scenario> {
+                                    return __request(OpenAPI, {
+                                        method: 'POST',
+                                        url: '/api/v1/scenario/scenarios/from_batch/',
+                                        body: requestBody,
+                                        mediaType: 'application/json',
+                                        errors: {
+                                            400: `Bad request (validation error)`,
+                                            401: `Unauthorized`,
+                                            403: `Forbidden`,
+                                            500: `Internal Server Error`,
+                                        },
+                                    });
+                                }
+                                /**
+                                 * Get summary statistics for user's scenarios.
+                                 * @returns Scenario
+                                 * @throws ApiError
+                                 */
+                                public static apiV1ScenarioScenariosSummaryStatsRetrieve(): CancelablePromise<Scenario> {
+                                    return __request(OpenAPI, {
+                                        method: 'GET',
+                                        url: '/api/v1/scenario/scenarios/summary_stats/',
+                                        errors: {
+                                            401: `Unauthorized`,
+                                            403: `Forbidden`,
+                                            500: `Internal Server Error`,
+                                        },
+                                    });
+                                }
+                                /**
+                                 * ViewSet for temperature profiles with audit trail support.
+                                 * @param ordering Which field to use when ordering the results.
+                                 * @param page A page number within the paginated result set.
+                                 * @param search A search term.
+                                 * @returns PaginatedTemperatureProfileList
+                                 * @throws ApiError
+                                 */
+                                public static apiV1ScenarioTemperatureProfilesList(
+                                    ordering?: string,
+                                    page?: number,
+                                    search?: string,
+                                ): CancelablePromise<PaginatedTemperatureProfileList> {
+                                    return __request(OpenAPI, {
+                                        method: 'GET',
+                                        url: '/api/v1/scenario/temperature-profiles/',
+                                        query: {
+                                            'ordering': ordering,
+                                            'page': page,
+                                            'search': search,
+                                        },
+                                        errors: {
+                                            400: `Bad request (validation error)`,
+                                            401: `Unauthorized`,
+                                            403: `Forbidden`,
+                                            500: `Internal Server Error`,
+                                        },
+                                    });
+                                }
+                                /**
+                                 * ViewSet for temperature profiles with audit trail support.
                                  * @param requestBody
                                  * @returns TemperatureProfile
                                  * @throws ApiError
                                  */
-                                public static apiV1ScenarioTemperatureProfilesBulkDateRangesCreate(
+                                public static apiV1ScenarioTemperatureProfilesCreate(
                                     requestBody: TemperatureProfile,
                                 ): CancelablePromise<TemperatureProfile> {
                                     return __request(OpenAPI, {
                                         method: 'POST',
-                                        url: '/api/v1/scenario/temperature-profiles/bulk_date_ranges/',
+                                        url: '/api/v1/scenario/temperature-profiles/',
                                         body: requestBody,
                                         mediaType: 'application/json',
                                         errors: {
@@ -17876,119 +17878,19 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Download CSV template for temperature data.
+                                 * ViewSet for temperature profiles with audit trail support.
+                                 * @param profileId A unique integer value identifying this Temperature Profile.
                                  * @returns TemperatureProfile
                                  * @throws ApiError
                                  */
-                                public static apiV1ScenarioTemperatureProfilesDownloadTemplateRetrieve(): CancelablePromise<TemperatureProfile> {
-                                    return __request(OpenAPI, {
-                                        method: 'GET',
-                                        url: '/api/v1/scenario/temperature-profiles/download_template/',
-                                        errors: {
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Upload temperature data from CSV file.
-                                 *
-                                 * Expected CSV format:
-                                 * date,temperature
-                                 * 2024-01-01,8.5
-                                 * 2024-01-02,8.7
-                                 * @param formData
-                                 * @returns TemperatureProfile
-                                 * @throws ApiError
-                                 */
-                                public static apiV1ScenarioTemperatureProfilesUploadCsvCreate(
-                                    formData: TemperatureProfile,
+                                public static apiV1ScenarioTemperatureProfilesRetrieve(
+                                    profileId: number,
                                 ): CancelablePromise<TemperatureProfile> {
                                     return __request(OpenAPI, {
-                                        method: 'POST',
-                                        url: '/api/v1/scenario/temperature-profiles/upload_csv/',
-                                        formData: formData,
-                                        mediaType: 'multipart/form-data',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Enhanced ViewSet for TGC models with audit trail support.
-                                 * @param location
-                                 * @param ordering Which field to use when ordering the results.
-                                 * @param page A page number within the paginated result set.
-                                 * @param releasePeriod
-                                 * @param search A search term.
-                                 * @returns PaginatedTGCModelList
-                                 * @throws ApiError
-                                 */
-                                public static apiV1ScenarioTgcModelsList(
-                                    location?: string,
-                                    ordering?: string,
-                                    page?: number,
-                                    releasePeriod?: string,
-                                    search?: string,
-                                ): CancelablePromise<PaginatedTGCModelList> {
-                                    return __request(OpenAPI, {
                                         method: 'GET',
-                                        url: '/api/v1/scenario/tgc-models/',
-                                        query: {
-                                            'location': location,
-                                            'ordering': ordering,
-                                            'page': page,
-                                            'release_period': releasePeriod,
-                                            'search': search,
-                                        },
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Enhanced ViewSet for TGC models with audit trail support.
-                                 * @param requestBody
-                                 * @returns TGCModel
-                                 * @throws ApiError
-                                 */
-                                public static apiV1ScenarioTgcModelsCreate(
-                                    requestBody: TGCModel,
-                                ): CancelablePromise<TGCModel> {
-                                    return __request(OpenAPI, {
-                                        method: 'POST',
-                                        url: '/api/v1/scenario/tgc-models/',
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Enhanced ViewSet for TGC models with audit trail support.
-                                 * @param modelId A unique integer value identifying this TGC Model.
-                                 * @returns TGCModel
-                                 * @throws ApiError
-                                 */
-                                public static apiV1ScenarioTgcModelsRetrieve(
-                                    modelId: number,
-                                ): CancelablePromise<TGCModel> {
-                                    return __request(OpenAPI, {
-                                        method: 'GET',
-                                        url: '/api/v1/scenario/tgc-models/{model_id}/',
+                                        url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
                                         path: {
-                                            'model_id': modelId,
+                                            'profile_id': profileId,
                                         },
                                         errors: {
                                             401: `Unauthorized`,
@@ -17999,21 +17901,21 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models with audit trail support.
-                                 * @param modelId A unique integer value identifying this TGC Model.
+                                 * ViewSet for temperature profiles with audit trail support.
+                                 * @param profileId A unique integer value identifying this Temperature Profile.
                                  * @param requestBody
-                                 * @returns TGCModel
+                                 * @returns TemperatureProfile
                                  * @throws ApiError
                                  */
-                                public static apiV1ScenarioTgcModelsUpdate(
-                                    modelId: number,
-                                    requestBody: TGCModel,
-                                ): CancelablePromise<TGCModel> {
+                                public static apiV1ScenarioTemperatureProfilesUpdate(
+                                    profileId: number,
+                                    requestBody: TemperatureProfile,
+                                ): CancelablePromise<TemperatureProfile> {
                                     return __request(OpenAPI, {
                                         method: 'PUT',
-                                        url: '/api/v1/scenario/tgc-models/{model_id}/',
+                                        url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
                                         path: {
-                                            'model_id': modelId,
+                                            'profile_id': profileId,
                                         },
                                         body: requestBody,
                                         mediaType: 'application/json',
@@ -18027,21 +17929,21 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models with audit trail support.
-                                 * @param modelId A unique integer value identifying this TGC Model.
+                                 * ViewSet for temperature profiles with audit trail support.
+                                 * @param profileId A unique integer value identifying this Temperature Profile.
                                  * @param requestBody
-                                 * @returns TGCModel
+                                 * @returns TemperatureProfile
                                  * @throws ApiError
                                  */
-                                public static apiV1ScenarioTgcModelsPartialUpdate(
-                                    modelId: number,
-                                    requestBody?: PatchedTGCModel,
-                                ): CancelablePromise<TGCModel> {
+                                public static apiV1ScenarioTemperatureProfilesPartialUpdate(
+                                    profileId: number,
+                                    requestBody?: PatchedTemperatureProfile,
+                                ): CancelablePromise<TemperatureProfile> {
                                     return __request(OpenAPI, {
                                         method: 'PATCH',
-                                        url: '/api/v1/scenario/tgc-models/{model_id}/',
+                                        url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
                                         path: {
-                                            'model_id': modelId,
+                                            'profile_id': profileId,
                                         },
                                         body: requestBody,
                                         mediaType: 'application/json',
@@ -18055,19 +17957,19 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Enhanced ViewSet for TGC models with audit trail support.
-                                 * @param modelId A unique integer value identifying this TGC Model.
+                                 * ViewSet for temperature profiles with audit trail support.
+                                 * @param profileId A unique integer value identifying this Temperature Profile.
                                  * @returns void
                                  * @throws ApiError
                                  */
-                                public static apiV1ScenarioTgcModelsDestroy(
-                                    modelId: number,
+                                public static apiV1ScenarioTemperatureProfilesDestroy(
+                                    profileId: number,
                                 ): CancelablePromise<void> {
                                     return __request(OpenAPI, {
                                         method: 'DELETE',
-                                        url: '/api/v1/scenario/tgc-models/{model_id}/',
+                                        url: '/api/v1/scenario/temperature-profiles/{profile_id}/',
                                         path: {
-                                            'model_id': modelId,
+                                            'profile_id': profileId,
                                         },
                                         errors: {
                                             401: `Unauthorized`,
@@ -18078,252 +17980,19 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * Duplicate a TGC model with a new name.
-                                 * @param modelId A unique integer value identifying this TGC Model.
-                                 * @param requestBody
-                                 * @returns TGCModel
+                                 * Get temperature statistics for a profile.
+                                 * @param profileId A unique integer value identifying this Temperature Profile.
+                                 * @returns TemperatureProfile
                                  * @throws ApiError
                                  */
-                                public static apiV1ScenarioTgcModelsDuplicateCreate(
-                                    modelId: number,
-                                    requestBody: TGCModel,
-                                ): CancelablePromise<TGCModel> {
-                                    return __request(OpenAPI, {
-                                        method: 'POST',
-                                        url: '/api/v1/scenario/tgc-models/{model_id}/duplicate/',
-                                        path: {
-                                            'model_id': modelId,
-                                        },
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            404: `Not Found`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Get predefined TGC model templates.
-                                 * @returns TGCModel
-                                 * @throws ApiError
-                                 */
-                                public static apiV1ScenarioTgcModelsTemplatesRetrieve(): CancelablePromise<TGCModel> {
+                                public static apiV1ScenarioTemperatureProfilesStatisticsRetrieve(
+                                    profileId: number,
+                                ): CancelablePromise<TemperatureProfile> {
                                     return __request(OpenAPI, {
                                         method: 'GET',
-                                        url: '/api/v1/scenario/tgc-models/templates/',
-                                        errors: {
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint to view and update the user's profile with audit change reasons.
-                                 *
-                                 * Allows users to view and update their own profile information.
-                                 * @returns UserProfile
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersAuthProfileRetrieve(): CancelablePromise<UserProfile> {
-                                    return __request(OpenAPI, {
-                                        method: 'GET',
-                                        url: '/api/v1/users/auth/profile/',
-                                        errors: {
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint to view and update the user's profile with audit change reasons.
-                                 *
-                                 * Allows users to view and update their own profile information.
-                                 * @param requestBody
-                                 * @returns UserProfileUpdate
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersAuthProfileUpdate(
-                                    requestBody?: UserProfileUpdate,
-                                ): CancelablePromise<UserProfileUpdate> {
-                                    return __request(OpenAPI, {
-                                        method: 'PUT',
-                                        url: '/api/v1/users/auth/profile/',
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint to view and update the user's profile with audit change reasons.
-                                 *
-                                 * Allows users to view and update their own profile information.
-                                 * @param requestBody
-                                 * @returns UserProfileUpdate
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersAuthProfilePartialUpdate(
-                                    requestBody?: PatchedUserProfileUpdate,
-                                ): CancelablePromise<UserProfileUpdate> {
-                                    return __request(OpenAPI, {
-                                        method: 'PATCH',
-                                        url: '/api/v1/users/auth/profile/',
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Custom JWT token view that returns user information with tokens.
-                                 *
-                                 * Extends the standard JWT token endpoint to include user information
-                                 * in the response.
-                                 * @param requestBody
-                                 * @returns CustomTokenObtainPair
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersAuthTokenCreate(
-                                    requestBody: CustomTokenObtainPair,
-                                ): CancelablePromise<CustomTokenObtainPair> {
-                                    return __request(OpenAPI, {
-                                        method: 'POST',
-                                        url: '/api/v1/users/auth/token/',
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Takes a refresh type JSON web token and returns an access type JSON web
-                                 * token if the refresh token is valid.
-                                 * @param requestBody
-                                 * @returns TokenRefresh
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersAuthTokenRefreshCreate(
-                                    requestBody: TokenRefresh,
-                                ): CancelablePromise<TokenRefresh> {
-                                    return __request(OpenAPI, {
-                                        method: 'POST',
-                                        url: '/api/v1/users/auth/token/refresh/',
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * List historical records with enhanced OpenAPI documentation.
-                                 * @param dateFrom Filter records from this date onwards (inclusive)
-                                 * @param dateTo Filter records up to this date (inclusive)
-                                 * @param geography Geographic region access level
-                                 *
-                                 * * `FO` - Faroe Islands
-                                 * * `SC` - Scotland
-                                 * * `ALL` - All Geographies
-                                 * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
-                                 *
-                                 * * `+` - Created
-                                 * * `~` - Updated
-                                 * * `-` - Deleted
-                                 * @param historyUser Filter by username of the user who made the change
-                                 * @param ordering Which field to use when ordering the results.
-                                 * @param page A page number within the paginated result set.
-                                 * @param role User role and permission level
-                                 *
-                                 * * `ADMIN` - Administrator
-                                 * * `MGR` - Manager
-                                 * * `OPR` - Operator
-                                 * * `VET` - Veterinarian
-                                 * * `QA` - Quality Assurance
-                                 * * `FIN` - Finance
-                                 * * `VIEW` - Viewer
-                                 * @param search A search term.
-                                 * @param subsidiary Subsidiary access level
-                                 *
-                                 * * `BS` - Broodstock
-                                 * * `FW` - Freshwater
-                                 * * `FM` - Farming
-                                 * * `LG` - Logistics
-                                 * * `ALL` - All Subsidiaries
-                                 * @param user
-                                 * @returns PaginatedUserProfileHistoryList
-                                 * @throws ApiError
-                                 */
-                                public static listUsersUserProfileHistory(
-                                    dateFrom?: string,
-                                    dateTo?: string,
-                                    geography?: 'ALL' | 'FO' | 'SC',
-                                    historyType?: '+' | '-' | '~',
-                                    historyUser?: string,
-                                    ordering?: string,
-                                    page?: number,
-                                    role?: 'ADMIN' | 'FIN' | 'MGR' | 'OPR' | 'QA' | 'VET' | 'VIEW',
-                                    search?: string,
-                                    subsidiary?: 'ALL' | 'BS' | 'FM' | 'FW' | 'LG',
-                                    user?: number,
-                                ): CancelablePromise<PaginatedUserProfileHistoryList> {
-                                    return __request(OpenAPI, {
-                                        method: 'GET',
-                                        url: '/api/v1/users/history/user-profiles/',
-                                        query: {
-                                            'date_from': dateFrom,
-                                            'date_to': dateTo,
-                                            'geography': geography,
-                                            'history_type': historyType,
-                                            'history_user': historyUser,
-                                            'ordering': ordering,
-                                            'page': page,
-                                            'role': role,
-                                            'search': search,
-                                            'subsidiary': subsidiary,
-                                            'user': user,
-                                        },
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * ViewSet for UserProfile historical records.
-                                 * @param historyId A unique integer value identifying this historical user profile.
-                                 * @returns UserProfileHistory
-                                 * @throws ApiError
-                                 */
-                                public static retrieveUsersUserProfileHistoryDetail(
-                                    historyId: number,
-                                ): CancelablePromise<UserProfileHistory> {
-                                    return __request(OpenAPI, {
-                                        method: 'GET',
-                                        url: '/api/v1/users/history/user-profiles/{history_id}/',
+                                        url: '/api/v1/scenario/temperature-profiles/{profile_id}/statistics/',
                                         path: {
-                                            'history_id': historyId,
+                                            'profile_id': profileId,
                                         },
                                         errors: {
                                             401: `Unauthorized`,
@@ -18334,252 +18003,744 @@ export class ApiService {
                                     });
                                 }
                                 /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
+                                 * Create temperature profile from date ranges.
                                  *
-                                 * Provides CRUD operations for users with appropriate permission checks.
-                                 * @param ordering Which field to use when ordering the results.
-                                 * @param page A page number within the paginated result set.
-                                 * @param search A search term.
-                                 * @returns PaginatedUserList
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersList(
-                                    ordering?: string,
-                                    page?: number,
-                                    search?: string,
-                                ): CancelablePromise<PaginatedUserList> {
-                                    return __request(OpenAPI, {
-                                        method: 'GET',
-                                        url: '/api/v1/users/users/',
-                                        query: {
-                                            'ordering': ordering,
-                                            'page': page,
-                                            'search': search,
-                                        },
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
-                                 *
-                                 * Provides CRUD operations for users with appropriate permission checks.
-                                 * @param requestBody
-                                 * @returns UserCreate
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersCreate(
-                                    requestBody: UserCreate,
-                                ): CancelablePromise<UserCreate> {
-                                    return __request(OpenAPI, {
-                                        method: 'POST',
-                                        url: '/api/v1/users/users/',
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
-                                 *
-                                 * Provides CRUD operations for users with appropriate permission checks.
-                                 * @param id A unique integer value identifying this user.
-                                 * @returns User
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersRetrieve(
-                                    id: number,
-                                ): CancelablePromise<User> {
-                                    return __request(OpenAPI, {
-                                        method: 'GET',
-                                        url: '/api/v1/users/users/{id}/',
-                                        path: {
-                                            'id': id,
-                                        },
-                                        errors: {
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            404: `Not Found`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
-                                 *
-                                 * Provides CRUD operations for users with appropriate permission checks.
-                                 * @param id A unique integer value identifying this user.
-                                 * @param requestBody
-                                 * @returns User
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersUpdate(
-                                    id: number,
-                                    requestBody: User,
-                                ): CancelablePromise<User> {
-                                    return __request(OpenAPI, {
-                                        method: 'PUT',
-                                        url: '/api/v1/users/users/{id}/',
-                                        path: {
-                                            'id': id,
-                                        },
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            404: `Not Found`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
-                                 *
-                                 * Provides CRUD operations for users with appropriate permission checks.
-                                 * @param id A unique integer value identifying this user.
-                                 * @param requestBody
-                                 * @returns User
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersPartialUpdate(
-                                    id: number,
-                                    requestBody?: PatchedUser,
-                                ): CancelablePromise<User> {
-                                    return __request(OpenAPI, {
-                                        method: 'PATCH',
-                                        url: '/api/v1/users/users/{id}/',
-                                        path: {
-                                            'id': id,
-                                        },
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            404: `Not Found`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
-                                 *
-                                 * Provides CRUD operations for users with appropriate permission checks.
-                                 * @param id A unique integer value identifying this user.
-                                 * @returns void
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersDestroy(
-                                    id: number,
-                                ): CancelablePromise<void> {
-                                    return __request(OpenAPI, {
-                                        method: 'DELETE',
-                                        url: '/api/v1/users/users/{id}/',
-                                        path: {
-                                            'id': id,
-                                        },
-                                        errors: {
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            404: `Not Found`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Admin-only endpoint to update user profile including RBAC fields.
-                                 *
-                                 * Allows administrators to modify role, geography, and subsidiary
-                                 * fields which are restricted for regular users to prevent
-                                 * privilege escalation.
-                                 *
-                                 * Args:
-                                 * pk: User ID to update
-                                 *
-                                 * Returns:
-                                 * Response: Updated user profile data or error messages
-                                 * @param id A unique integer value identifying this user.
-                                 * @param requestBody
-                                 * @returns User
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersAdminUpdatePartialUpdate(
-                                    id: number,
-                                    requestBody?: PatchedUser,
-                                ): CancelablePromise<User> {
-                                    return __request(OpenAPI, {
-                                        method: 'PATCH',
-                                        url: '/api/v1/users/users/{id}/admin_update/',
-                                        path: {
-                                            'id': id,
-                                        },
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            404: `Not Found`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Endpoint to change user's password.
-                                 *
-                                 * Validates old password and updates with new password.
-                                 *
-                                 * Returns:
-                                 * Response: Success or error message
-                                 * @param requestBody
-                                 * @returns User
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersChangePasswordUpdate(
-                                    requestBody: User,
-                                ): CancelablePromise<User> {
-                                    return __request(OpenAPI, {
-                                        method: 'PUT',
-                                        url: '/api/v1/users/users/change_password/',
-                                        body: requestBody,
-                                        mediaType: 'application/json',
-                                        errors: {
-                                            400: `Bad request (validation error)`,
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                                /**
-                                 * Endpoint to retrieve the currently authenticated user.
-                                 *
-                                 * Returns:
-                                 * Response: Serialized data of the current user
-                                 * @returns User
-                                 * @throws ApiError
-                                 */
-                                public static apiV1UsersUsersMeRetrieve(): CancelablePromise<User> {
-                                    return __request(OpenAPI, {
-                                        method: 'GET',
-                                        url: '/api/v1/users/users/me/',
-                                        errors: {
-                                            401: `Unauthorized`,
-                                            403: `Forbidden`,
-                                            500: `Internal Server Error`,
-                                        },
-                                    });
-                                }
-                            }
+                                 * Example request:
+                                 * {
+                                     * "profile_name": "Winter 2024",
+                                     * "ranges": [
+                                         * {"start_date": "2024-01-01", "end_date": "2024-01-31", "value": 8.5},
+                                         * {"start_date": "2024-02-01", "end_date": "2024-02-28", "value": 9.0}
+                                         * ],
+                                         * "merge_adjacent": true,
+                                         * "fill_gaps": true,
+                                         * "interpolation_method": "linear"
+                                         * }
+                                         * @param requestBody
+                                         * @returns TemperatureProfile
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTemperatureProfilesBulkDateRangesCreate(
+                                            requestBody: TemperatureProfile,
+                                        ): CancelablePromise<TemperatureProfile> {
+                                            return __request(OpenAPI, {
+                                                method: 'POST',
+                                                url: '/api/v1/scenario/temperature-profiles/bulk_date_ranges/',
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Download CSV template for temperature data.
+                                         * @returns TemperatureProfile
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTemperatureProfilesDownloadTemplateRetrieve(): CancelablePromise<TemperatureProfile> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/scenario/temperature-profiles/download_template/',
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Upload temperature data from CSV file.
+                                         *
+                                         * Expected CSV format:
+                                         * date,temperature
+                                         * 2024-01-01,8.5
+                                         * 2024-01-02,8.7
+                                         * @param formData
+                                         * @returns TemperatureProfile
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTemperatureProfilesUploadCsvCreate(
+                                            formData: TemperatureProfile,
+                                        ): CancelablePromise<TemperatureProfile> {
+                                            return __request(OpenAPI, {
+                                                method: 'POST',
+                                                url: '/api/v1/scenario/temperature-profiles/upload_csv/',
+                                                formData: formData,
+                                                mediaType: 'multipart/form-data',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Enhanced ViewSet for TGC models with audit trail support.
+                                         * @param location
+                                         * @param ordering Which field to use when ordering the results.
+                                         * @param page A page number within the paginated result set.
+                                         * @param releasePeriod
+                                         * @param search A search term.
+                                         * @returns PaginatedTGCModelList
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTgcModelsList(
+                                            location?: string,
+                                            ordering?: string,
+                                            page?: number,
+                                            releasePeriod?: string,
+                                            search?: string,
+                                        ): CancelablePromise<PaginatedTGCModelList> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/scenario/tgc-models/',
+                                                query: {
+                                                    'location': location,
+                                                    'ordering': ordering,
+                                                    'page': page,
+                                                    'release_period': releasePeriod,
+                                                    'search': search,
+                                                },
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Enhanced ViewSet for TGC models with audit trail support.
+                                         * @param requestBody
+                                         * @returns TGCModel
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTgcModelsCreate(
+                                            requestBody: TGCModel,
+                                        ): CancelablePromise<TGCModel> {
+                                            return __request(OpenAPI, {
+                                                method: 'POST',
+                                                url: '/api/v1/scenario/tgc-models/',
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Enhanced ViewSet for TGC models with audit trail support.
+                                         * @param modelId A unique integer value identifying this TGC Model.
+                                         * @returns TGCModel
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTgcModelsRetrieve(
+                                            modelId: number,
+                                        ): CancelablePromise<TGCModel> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/scenario/tgc-models/{model_id}/',
+                                                path: {
+                                                    'model_id': modelId,
+                                                },
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Enhanced ViewSet for TGC models with audit trail support.
+                                         * @param modelId A unique integer value identifying this TGC Model.
+                                         * @param requestBody
+                                         * @returns TGCModel
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTgcModelsUpdate(
+                                            modelId: number,
+                                            requestBody: TGCModel,
+                                        ): CancelablePromise<TGCModel> {
+                                            return __request(OpenAPI, {
+                                                method: 'PUT',
+                                                url: '/api/v1/scenario/tgc-models/{model_id}/',
+                                                path: {
+                                                    'model_id': modelId,
+                                                },
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Enhanced ViewSet for TGC models with audit trail support.
+                                         * @param modelId A unique integer value identifying this TGC Model.
+                                         * @param requestBody
+                                         * @returns TGCModel
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTgcModelsPartialUpdate(
+                                            modelId: number,
+                                            requestBody?: PatchedTGCModel,
+                                        ): CancelablePromise<TGCModel> {
+                                            return __request(OpenAPI, {
+                                                method: 'PATCH',
+                                                url: '/api/v1/scenario/tgc-models/{model_id}/',
+                                                path: {
+                                                    'model_id': modelId,
+                                                },
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Enhanced ViewSet for TGC models with audit trail support.
+                                         * @param modelId A unique integer value identifying this TGC Model.
+                                         * @returns void
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTgcModelsDestroy(
+                                            modelId: number,
+                                        ): CancelablePromise<void> {
+                                            return __request(OpenAPI, {
+                                                method: 'DELETE',
+                                                url: '/api/v1/scenario/tgc-models/{model_id}/',
+                                                path: {
+                                                    'model_id': modelId,
+                                                },
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Duplicate a TGC model with a new name.
+                                         * @param modelId A unique integer value identifying this TGC Model.
+                                         * @param requestBody
+                                         * @returns TGCModel
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTgcModelsDuplicateCreate(
+                                            modelId: number,
+                                            requestBody: TGCModel,
+                                        ): CancelablePromise<TGCModel> {
+                                            return __request(OpenAPI, {
+                                                method: 'POST',
+                                                url: '/api/v1/scenario/tgc-models/{model_id}/duplicate/',
+                                                path: {
+                                                    'model_id': modelId,
+                                                },
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Get predefined TGC model templates.
+                                         * @returns TGCModel
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1ScenarioTgcModelsTemplatesRetrieve(): CancelablePromise<TGCModel> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/scenario/tgc-models/templates/',
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint to view and update the user's profile with audit change reasons.
+                                         *
+                                         * Allows users to view and update their own profile information.
+                                         * @returns UserProfile
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersAuthProfileRetrieve(): CancelablePromise<UserProfile> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/users/auth/profile/',
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint to view and update the user's profile with audit change reasons.
+                                         *
+                                         * Allows users to view and update their own profile information.
+                                         * @param requestBody
+                                         * @returns UserProfileUpdate
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersAuthProfileUpdate(
+                                            requestBody?: UserProfileUpdate,
+                                        ): CancelablePromise<UserProfileUpdate> {
+                                            return __request(OpenAPI, {
+                                                method: 'PUT',
+                                                url: '/api/v1/users/auth/profile/',
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint to view and update the user's profile with audit change reasons.
+                                         *
+                                         * Allows users to view and update their own profile information.
+                                         * @param requestBody
+                                         * @returns UserProfileUpdate
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersAuthProfilePartialUpdate(
+                                            requestBody?: PatchedUserProfileUpdate,
+                                        ): CancelablePromise<UserProfileUpdate> {
+                                            return __request(OpenAPI, {
+                                                method: 'PATCH',
+                                                url: '/api/v1/users/auth/profile/',
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Custom JWT token view that returns user information with tokens.
+                                         *
+                                         * Extends the standard JWT token endpoint to include user information
+                                         * in the response.
+                                         * @param requestBody
+                                         * @returns CustomTokenObtainPair
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersAuthTokenCreate(
+                                            requestBody: CustomTokenObtainPair,
+                                        ): CancelablePromise<CustomTokenObtainPair> {
+                                            return __request(OpenAPI, {
+                                                method: 'POST',
+                                                url: '/api/v1/users/auth/token/',
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Takes a refresh type JSON web token and returns an access type JSON web
+                                         * token if the refresh token is valid.
+                                         * @param requestBody
+                                         * @returns TokenRefresh
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersAuthTokenRefreshCreate(
+                                            requestBody: TokenRefresh,
+                                        ): CancelablePromise<TokenRefresh> {
+                                            return __request(OpenAPI, {
+                                                method: 'POST',
+                                                url: '/api/v1/users/auth/token/refresh/',
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * List historical records with enhanced OpenAPI documentation.
+                                         * @param dateFrom Filter records from this date onwards (inclusive)
+                                         * @param dateTo Filter records up to this date (inclusive)
+                                         * @param geography Geographic region access level
+                                         *
+                                         * * `FO` - Faroe Islands
+                                         * * `SC` - Scotland
+                                         * * `ALL` - All Geographies
+                                         * @param historyType Filter by type of change: + (Created), ~ (Updated), - (Deleted)
+                                         *
+                                         * * `+` - Created
+                                         * * `~` - Updated
+                                         * * `-` - Deleted
+                                         * @param historyUser Filter by username of the user who made the change
+                                         * @param ordering Which field to use when ordering the results.
+                                         * @param page A page number within the paginated result set.
+                                         * @param role User role and permission level
+                                         *
+                                         * * `ADMIN` - Administrator
+                                         * * `MGR` - Manager
+                                         * * `OPR` - Operator
+                                         * * `VET` - Veterinarian
+                                         * * `QA` - Quality Assurance
+                                         * * `FIN` - Finance
+                                         * * `VIEW` - Viewer
+                                         * @param search A search term.
+                                         * @param subsidiary Subsidiary access level
+                                         *
+                                         * * `BS` - Broodstock
+                                         * * `FW` - Freshwater
+                                         * * `FM` - Farming
+                                         * * `LG` - Logistics
+                                         * * `ALL` - All Subsidiaries
+                                         * @param user
+                                         * @returns PaginatedUserProfileHistoryList
+                                         * @throws ApiError
+                                         */
+                                        public static listUsersUserProfileHistory(
+                                            dateFrom?: string,
+                                            dateTo?: string,
+                                            geography?: 'ALL' | 'FO' | 'SC',
+                                            historyType?: '+' | '-' | '~',
+                                            historyUser?: string,
+                                            ordering?: string,
+                                            page?: number,
+                                            role?: 'ADMIN' | 'FIN' | 'MGR' | 'OPR' | 'QA' | 'VET' | 'VIEW',
+                                            search?: string,
+                                            subsidiary?: 'ALL' | 'BS' | 'FM' | 'FW' | 'LG',
+                                            user?: number,
+                                        ): CancelablePromise<PaginatedUserProfileHistoryList> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/users/history/user-profiles/',
+                                                query: {
+                                                    'date_from': dateFrom,
+                                                    'date_to': dateTo,
+                                                    'geography': geography,
+                                                    'history_type': historyType,
+                                                    'history_user': historyUser,
+                                                    'ordering': ordering,
+                                                    'page': page,
+                                                    'role': role,
+                                                    'search': search,
+                                                    'subsidiary': subsidiary,
+                                                    'user': user,
+                                                },
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * ViewSet for UserProfile historical records.
+                                         * @param historyId A unique integer value identifying this historical user profile.
+                                         * @returns UserProfileHistory
+                                         * @throws ApiError
+                                         */
+                                        public static retrieveUsersUserProfileHistoryDetail(
+                                            historyId: number,
+                                        ): CancelablePromise<UserProfileHistory> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/users/history/user-profiles/{history_id}/',
+                                                path: {
+                                                    'history_id': historyId,
+                                                },
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
+                                         *
+                                         * Provides CRUD operations for users with appropriate permission checks.
+                                         * @param ordering Which field to use when ordering the results.
+                                         * @param page A page number within the paginated result set.
+                                         * @param search A search term.
+                                         * @returns PaginatedUserList
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersList(
+                                            ordering?: string,
+                                            page?: number,
+                                            search?: string,
+                                        ): CancelablePromise<PaginatedUserList> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/users/users/',
+                                                query: {
+                                                    'ordering': ordering,
+                                                    'page': page,
+                                                    'search': search,
+                                                },
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
+                                         *
+                                         * Provides CRUD operations for users with appropriate permission checks.
+                                         * @param requestBody
+                                         * @returns UserCreate
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersCreate(
+                                            requestBody: UserCreate,
+                                        ): CancelablePromise<UserCreate> {
+                                            return __request(OpenAPI, {
+                                                method: 'POST',
+                                                url: '/api/v1/users/users/',
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
+                                         *
+                                         * Provides CRUD operations for users with appropriate permission checks.
+                                         * @param id A unique integer value identifying this user.
+                                         * @returns User
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersRetrieve(
+                                            id: number,
+                                        ): CancelablePromise<User> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/users/users/{id}/',
+                                                path: {
+                                                    'id': id,
+                                                },
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
+                                         *
+                                         * Provides CRUD operations for users with appropriate permission checks.
+                                         * @param id A unique integer value identifying this user.
+                                         * @param requestBody
+                                         * @returns User
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersUpdate(
+                                            id: number,
+                                            requestBody: User,
+                                        ): CancelablePromise<User> {
+                                            return __request(OpenAPI, {
+                                                method: 'PUT',
+                                                url: '/api/v1/users/users/{id}/',
+                                                path: {
+                                                    'id': id,
+                                                },
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
+                                         *
+                                         * Provides CRUD operations for users with appropriate permission checks.
+                                         * @param id A unique integer value identifying this user.
+                                         * @param requestBody
+                                         * @returns User
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersPartialUpdate(
+                                            id: number,
+                                            requestBody?: PatchedUser,
+                                        ): CancelablePromise<User> {
+                                            return __request(OpenAPI, {
+                                                method: 'PATCH',
+                                                url: '/api/v1/users/users/{id}/',
+                                                path: {
+                                                    'id': id,
+                                                },
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * API endpoint that allows users to be viewed, created, edited or deleted while capturing audit change reasons.
+                                         *
+                                         * Provides CRUD operations for users with appropriate permission checks.
+                                         * @param id A unique integer value identifying this user.
+                                         * @returns void
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersDestroy(
+                                            id: number,
+                                        ): CancelablePromise<void> {
+                                            return __request(OpenAPI, {
+                                                method: 'DELETE',
+                                                url: '/api/v1/users/users/{id}/',
+                                                path: {
+                                                    'id': id,
+                                                },
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Admin-only endpoint to update user profile including RBAC fields.
+                                         *
+                                         * Allows administrators to modify role, geography, and subsidiary
+                                         * fields which are restricted for regular users to prevent
+                                         * privilege escalation.
+                                         *
+                                         * Args:
+                                         * pk: User ID to update
+                                         *
+                                         * Returns:
+                                         * Response: Updated user profile data or error messages
+                                         * @param id A unique integer value identifying this user.
+                                         * @param requestBody
+                                         * @returns User
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersAdminUpdatePartialUpdate(
+                                            id: number,
+                                            requestBody?: PatchedUser,
+                                        ): CancelablePromise<User> {
+                                            return __request(OpenAPI, {
+                                                method: 'PATCH',
+                                                url: '/api/v1/users/users/{id}/admin_update/',
+                                                path: {
+                                                    'id': id,
+                                                },
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    404: `Not Found`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Endpoint to change user's password.
+                                         *
+                                         * Validates old password and updates with new password.
+                                         *
+                                         * Returns:
+                                         * Response: Success or error message
+                                         * @param requestBody
+                                         * @returns User
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersChangePasswordUpdate(
+                                            requestBody: User,
+                                        ): CancelablePromise<User> {
+                                            return __request(OpenAPI, {
+                                                method: 'PUT',
+                                                url: '/api/v1/users/users/change_password/',
+                                                body: requestBody,
+                                                mediaType: 'application/json',
+                                                errors: {
+                                                    400: `Bad request (validation error)`,
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                        /**
+                                         * Endpoint to retrieve the currently authenticated user.
+                                         *
+                                         * Returns:
+                                         * Response: Serialized data of the current user
+                                         * @returns User
+                                         * @throws ApiError
+                                         */
+                                        public static apiV1UsersUsersMeRetrieve(): CancelablePromise<User> {
+                                            return __request(OpenAPI, {
+                                                method: 'GET',
+                                                url: '/api/v1/users/users/me/',
+                                                errors: {
+                                                    401: `Unauthorized`,
+                                                    403: `Forbidden`,
+                                                    500: `Internal Server Error`,
+                                                },
+                                            });
+                                        }
+                                    }

@@ -654,6 +654,7 @@ export default function BatchDetails() {
             batchId={batch.id} 
             batchName={batch.batch_number} 
             batchStartDate={batch.start_date}
+            currentBiomassKg={batch.calculated_biomass_kg}
           />
         </TabsContent>
 

@@ -73,6 +73,7 @@ export function useScenarios(
     queryKey: ["scenario", "scenarios", { page, pageSize }],
     queryFn: async () => {
       return await ApiService.apiV1ScenarioScenariosList(
+        false,     // all
         undefined, // createdBy
         undefined, // ordering
         page,
@@ -155,6 +156,7 @@ export function useScenariosByBatch(
       // Note: The new API doesn't support batch filtering directly
       // This would need a different endpoint or backend support
       return await ApiService.apiV1ScenarioScenariosList(
+        false,     // all
         undefined, // createdBy
         undefined, // ordering
         page,
@@ -184,6 +186,7 @@ export function useScenariosByDateRange(
     queryKey: ["scenario", "scenarios-by-date", { startDate, endDate, page }],
     queryFn: async () => {
       return await ApiService.apiV1ScenarioScenariosList(
+        false,     // all
         undefined, // createdBy
         undefined, // ordering
         page,
@@ -214,6 +217,7 @@ export function useActiveScenarios(
       // Get scenarios where today is between start and end date
       // This might need backend support for proper filtering
       return await ApiService.apiV1ScenarioScenariosList(
+        false,     // all
         undefined, // createdBy
         undefined, // ordering
         page,
@@ -466,5 +470,91 @@ export function useTemperatureProfiles() {
   return useQuery({
     queryKey: ['scenario', 'temperature-profiles'],
     queryFn: () => ApiService.apiV1ScenarioTemperatureProfilesList(),
+  });
+}
+
+// ============================================================================
+// ProjectionRun API Hooks
+// ============================================================================
+
+// Type for ProjectionRun (matches backend serializer)
+export interface ProjectionRun {
+  run_id: number;
+  scenario: number;
+  scenario_name: string;
+  run_number: number;
+  label: string;
+  run_date: string;
+  total_projections: number;
+  final_weight_g: number | null;
+  final_biomass_kg: number | null;
+  pinned_batch_count: number;
+  parameters_snapshot?: Record<string, any>;
+  notes?: string;
+  created_by_name?: string;
+}
+
+/**
+ * Hook to fetch projection runs for a scenario
+ * @param scenarioId - The scenario ID to fetch runs for
+ * @returns Query result with projection runs
+ */
+export function useScenarioProjectionRuns(scenarioId: number | undefined) {
+  return useQuery({
+    queryKey: ['scenario', scenarioId, 'projection-runs'],
+    queryFn: async () => {
+      if (!scenarioId) throw new Error('Scenario ID required');
+      // The API returns an array, but TypeScript thinks it's a Scenario
+      const result = await ApiService.apiV1ScenarioScenariosProjectionRunsRetrieve(scenarioId);
+      return result as unknown as ProjectionRun[];
+    },
+    enabled: !!scenarioId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Hook to fetch a single projection run
+ * @param runId - The projection run ID
+ * @returns Query result with projection run details
+ */
+export function useProjectionRun(runId: number | undefined) {
+  return useQuery({
+    queryKey: ['projection-run', runId],
+    queryFn: async () => {
+      if (!runId) throw new Error('Run ID required');
+      return await ApiService.apiV1ScenarioProjectionRunsRetrieve(runId);
+    },
+    enabled: !!runId,
+  });
+}
+
+/**
+ * Hook to run projections (creates new run)
+ * @param scenarioId - The scenario ID to run projections for
+ * @returns Mutation hook for running projections
+ */
+export function useRunProjection(scenarioId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (label?: string) => {
+      // The API actually accepts {label?: string} but generated client types it as Scenario
+      // This is a known OpenAPI schema generation issue - the endpoint works correctly
+      return await ApiService.apiV1ScenarioScenariosRunProjectionCreate(
+        scenarioId,
+        { label: label || '' } as unknown as any
+      );
+    },
+    onSuccess: () => {
+      // Invalidate projection runs list
+      queryClient.invalidateQueries({
+        queryKey: ['scenario', scenarioId, 'projection-runs'],
+      });
+      toast.success('Projection run created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.body?.detail || 'Failed to run projection');
+    },
   });
 }

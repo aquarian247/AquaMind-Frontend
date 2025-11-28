@@ -10,6 +10,10 @@
  * - summary_stats endpoint exists but returns Scenario type (not summary stats)
  * - This is likely a backend spec issue where summary fields are added to Scenario
  * - Client-side fallback ensures robustness for UAT
+ * 
+ * NOTE: Backend filters scenarios by created_by user by default. We pass all=true
+ * to see all scenarios (for shared visibility). If user-only scenarios are needed,
+ * this can be made configurable via a prop.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -62,14 +66,18 @@ export function useScenarioData(searchTerm: string, statusFilter: string) {
   });
 
   // Fetch Scenarios with filtering
+  // NOTE: Backend filters by created_by user by default, so we pass all=true
+  // to see all scenarios for shared visibility.
   const scenariosQuery = useQuery({
     queryKey: ["scenario:scenarios", { search: searchTerm, status: statusFilter }],
     queryFn: () => ApiService.apiV1ScenarioScenariosList(
-      undefined,
-      undefined,
-      undefined,
-      searchTerm || undefined,
-      statusFilter !== 'all' ? statusFilter : undefined
+      true,  // all=true - show all scenarios, not just user's own
+      undefined,  // createdBy
+      undefined,  // ordering
+      undefined,  // page
+      searchTerm || undefined,  // search
+      statusFilter !== 'all' ? statusFilter : undefined,  // startDate
+      undefined  // tgcModelLocation
     )
   });
 
@@ -79,10 +87,12 @@ export function useScenarioData(searchTerm: string, statusFilter: string) {
 
   // TASK 3: Compute KPIs using extracted helper (CCN reduction from 18 to ≤12)
   // Delegates to pure function for testability and maintainability
+  // Pass totalCount from paginated API response for accurate scenario count
   const computedKpis: ScenarioPlanningKPIs = useMemo(
     () => calculateScenarioKPIs(
       summaryStatsQuery.data,
-      scenariosQuery.data?.results ?? []
+      scenariosQuery.data?.results ?? [],
+      scenariosQuery.data?.count  // Total count from pagination
     ),
     [summaryStatsQuery.data, scenariosQuery.data]
   );

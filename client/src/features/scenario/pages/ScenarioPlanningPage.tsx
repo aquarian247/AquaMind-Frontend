@@ -245,7 +245,7 @@ export default function ScenarioPlanningPage() {
           ) : (
             <div className="grid gap-4">
               {filteredScenarios.map((scenario: any) => (
-                <Card key={scenario.id}>
+                <Card key={scenario.scenario_id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -282,7 +282,7 @@ export default function ScenarioPlanningPage() {
                           <DropdownMenuItem 
                             onClick={async () => {
                               try {
-                                const response = await apiRequest("POST", `/api/v1/scenario/scenarios/${scenario.id}/duplicate/`, {});
+                                const response = await apiRequest("POST", `/api/v1/scenario/scenarios/${scenario.scenario_id}/duplicate/`, {});
                                 const result = await response.json();
                                 toast({
                                   title: "Scenario Duplicated",
@@ -303,7 +303,7 @@ export default function ScenarioPlanningPage() {
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="text-destructive"
-                            onClick={() => deleteScenario.mutate(scenario.id)}
+                            onClick={() => deleteScenario.mutate(scenario.scenario_id)}
                             disabled={deleteScenario.isPending}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -338,7 +338,7 @@ export default function ScenarioPlanningPage() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => setLocation(`/scenario-planning/scenarios/${scenario.id}`)}
+                          onClick={() => setLocation(`/scenario-planning/scenarios/${scenario.scenario_id}`)}
                         >
                           <LineChart className="h-4 w-4 mr-2" />
                           View Details
@@ -348,7 +348,7 @@ export default function ScenarioPlanningPage() {
                             size="sm"
                             onClick={async () => {
                               try {
-                                await apiRequest("POST", `/api/v1/scenario/scenarios/${scenario.id}/run_projection/`, {});
+                                await apiRequest("POST", `/api/v1/scenario/scenarios/${scenario.scenario_id}/run_projection/`, {});
                                 toast({
                                   title: "Projection Running",
                                   description: "Calculating growth projections...",

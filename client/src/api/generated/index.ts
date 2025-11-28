@@ -192,6 +192,7 @@ export type { PaginatedMortalityRecordHistoryList } from './models/PaginatedMort
 export type { PaginatedMortalityRecordList } from './models/PaginatedMortalityRecordList';
 export type { PaginatedParameterScoreDefinitionList } from './models/PaginatedParameterScoreDefinitionList';
 export type { PaginatedPhotoperiodDataList } from './models/PaginatedPhotoperiodDataList';
+export type { PaginatedProjectionRunListList } from './models/PaginatedProjectionRunListList';
 export type { PaginatedSampleTypeList } from './models/PaginatedSampleTypeList';
 export type { PaginatedScenarioList } from './models/PaginatedScenarioList';
 export type { PaginatedScenarioProjectionList } from './models/PaginatedScenarioProjectionList';
@@ -271,6 +272,8 @@ export type { PatchedWeatherData } from './models/PatchedWeatherData';
 export type { PhotoperiodData } from './models/PhotoperiodData';
 export type { PinScenario } from './models/PinScenario';
 export type { ProductGradeSummary } from './models/ProductGradeSummary';
+export type { ProjectionRunDetail } from './models/ProjectionRunDetail';
+export type { ProjectionRunList } from './models/ProjectionRunList';
 export type { SampleType } from './models/SampleType';
 export type { Scenario } from './models/Scenario';
 export type { ScenarioModelChange } from './models/ScenarioModelChange';

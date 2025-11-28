@@ -14,24 +14,21 @@ afterEach(() => {
 describe('API Wrapper', () => {
   describe('getDashboardKPIs', () => {
     it('returns correct KPI data when API calls succeed', async () => {
-      /* Mock underlying ApiService calls */
+      /* Mock underlying ApiService calls - now uses fetchAllPages so needs paginated format */
       vi.spyOn(ApiService, 'apiV1BatchBatchesList').mockResolvedValue({
-        /* minimal shape used by api.getDashboardKPIs() */
+        count: 2,
+        next: null, // Single page, no more data
+        previous: null,
         results: [
           { status: 'ACTIVE', calculated_population_count: 12500 },
           { status: 'COMPLETED', calculated_population_count: 10800 }
         ]
       } as any);
 
-      vi.spyOn(ApiService, 'apiV1EnvironmentalReadingsList').mockResolvedValue({
-        results: [
-          {
-            parameter_type: 'TEMPERATURE',
-            value: 13,
-            reading_time: '2025-07-01T00:00:00Z'
-          }
-        ]
-      } as any);
+      // Mock the stats endpoint (server-side aggregation for temperature)
+      vi.spyOn(ApiService, 'apiV1EnvironmentalReadingsStatsRetrieve').mockResolvedValue([
+        { parameter_type: 'TEMPERATURE', avg_value: 13 }
+      ] as any);
 
       // Call the API function directly
       const result = await api.getDashboardKPIs();
@@ -40,7 +37,7 @@ describe('API Wrapper', () => {
       expect(result).toEqual({
         totalFish: 23300, // Sum of batch populations (12500 + 10800)
         healthRate: 50, // 1 active out of 2 batches
-        avgWaterTemp: expect.any(Number),
+        avgWaterTemp: 13, // From stats endpoint
         nextFeedingHours: 0 // Let UI handle scheduling display
       });
     });
@@ -52,7 +49,7 @@ describe('API Wrapper', () => {
       vi.spyOn(ApiService, 'apiV1BatchBatchesList').mockRejectedValue(
         new Error('Network error')
       );
-      vi.spyOn(ApiService, 'apiV1EnvironmentalReadingsList').mockRejectedValue(
+      vi.spyOn(ApiService, 'apiV1EnvironmentalReadingsStatsRetrieve').mockRejectedValue(
         new Error('Network error')
       );
       
@@ -66,6 +63,39 @@ describe('API Wrapper', () => {
         avgWaterTemp: 0, // Let UI handle missing data appropriately
         nextFeedingHours: 0 // Let UI handle scheduling display
       });
+    });
+
+    it('handles multiple pages of batches correctly', async () => {
+      // First page
+      vi.spyOn(ApiService, 'apiV1BatchBatchesList')
+        .mockResolvedValueOnce({
+          count: 3,
+          next: 'http://api/batches?page=2',
+          previous: null,
+          results: [
+            { status: 'ACTIVE', calculated_population_count: 10000 },
+            { status: 'ACTIVE', calculated_population_count: 20000 }
+          ]
+        } as any)
+        // Second page
+        .mockResolvedValueOnce({
+          count: 3,
+          next: null,
+          previous: 'http://api/batches?page=1',
+          results: [
+            { status: 'COMPLETED', calculated_population_count: 30000 }
+          ]
+        } as any);
+
+      vi.spyOn(ApiService, 'apiV1EnvironmentalReadingsStatsRetrieve').mockResolvedValue([
+        { parameter_type: 'TEMPERATURE', avg_value: 15 }
+      ] as any);
+
+      const result = await api.getDashboardKPIs();
+      
+      // Should sum ALL batches across pages
+      expect(result.totalFish).toBe(60000); // 10000 + 20000 + 30000
+      expect(result.healthRate).toBeCloseTo(66.67, 1); // 2 active out of 3
     });
   });
   

@@ -117,11 +117,12 @@ export function calculateAverageProjectionDuration(scenarios: ScenarioData[]): n
  * Uses honest fallbacks (0) for empty data.
  * 
  * @param scenarios - Array of scenario objects from API
+ * @param totalCount - Total count from paginated API response (optional, defaults to array length)
  * @returns Computed ScenarioPlanningKPIs
  */
-export function calculateClientKPIs(scenarios: ScenarioData[]): ScenarioPlanningKPIs {
+export function calculateClientKPIs(scenarios: ScenarioData[], totalCount?: number): ScenarioPlanningKPIs {
   // Empty state: return zero values (honest fallback)
-  if (scenarios.length === 0) {
+  if (scenarios.length === 0 && (!totalCount || totalCount === 0)) {
     return {
       totalActiveScenarios: 0,
       scenariosInProgress: 0,
@@ -131,8 +132,9 @@ export function calculateClientKPIs(scenarios: ScenarioData[]): ScenarioPlanning
   }
 
   // Compute each KPI using focused helper functions
+  // Use totalCount from API if available, otherwise use array length
   return {
-    totalActiveScenarios: scenarios.length,
+    totalActiveScenarios: totalCount ?? scenarios.length,
     scenariosInProgress: countScenariosInProgress(scenarios),
     completedProjections: countCompletedProjections(scenarios),
     averageProjectionDuration: calculateAverageProjectionDuration(scenarios),
@@ -152,6 +154,7 @@ export function calculateClientKPIs(scenarios: ScenarioData[]): ScenarioPlanning
  * 
  * @param summaryData - Backend summary stats response (may contain summary fields)
  * @param scenariosList - Array of scenarios from API (fallback data source)
+ * @param totalCount - Total count from paginated API (for accurate totalActiveScenarios)
  * @returns Computed ScenarioPlanningKPIs
  * 
  * @example
@@ -159,19 +162,22 @@ export function calculateClientKPIs(scenarios: ScenarioData[]): ScenarioPlanning
  * // Backend provides summary fields
  * const kpis = calculateScenarioKPIs(
  *   { totalActiveScenarios: 10, scenariosInProgress: 3, ... },
- *   []
+ *   [],
+ *   0
  * );
  * 
  * // Backend doesn't provide summary - fallback to client calculation
  * const kpis = calculateScenarioKPIs(
  *   null,
- *   [{ status: 'running', duration_days: 30 }, ...]
+ *   [{ status: 'running', duration_days: 30 }, ...],
+ *   145  // Total count from API pagination
  * );
  * ```
  */
 export function calculateScenarioKPIs(
   summaryData: any,
-  scenariosList: ScenarioData[]
+  scenariosList: ScenarioData[],
+  totalCount?: number
 ): ScenarioPlanningKPIs {
   // Try backend-provided summary stats first
   if (hasBackendSummaryFields(summaryData)) {
@@ -179,6 +185,6 @@ export function calculateScenarioKPIs(
   }
 
   // Fallback: client-side calculation from scenarios list
-  return calculateClientKPIs(scenariosList);
+  return calculateClientKPIs(scenariosList, totalCount);
 }
 

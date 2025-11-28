@@ -25,9 +25,10 @@ interface BatchFeedHistoryViewProps {
   batchId: number;
   batchName: string;
   batchStartDate?: string; // Add start_date to props
+  currentBiomassKg?: number | null;
 }
 
-export function BatchFeedHistoryView({ batchId, batchName, batchStartDate }: BatchFeedHistoryViewProps) {
+export function BatchFeedHistoryView({ batchId, batchName, batchStartDate, currentBiomassKg }: BatchFeedHistoryViewProps) {
   const [activeTab, setActiveTab] = useState("events");
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [periodFilter, setPeriodFilter] = useState("30");
@@ -59,10 +60,17 @@ export function BatchFeedHistoryView({ batchId, batchName, batchStartDate }: Bat
   } = useBatchFeedHistoryData(batchId, currentPage, periodFilter, dateRange, containerFilter, feedTypeFilter);
 
   // Calculate derived metrics using helper functions
-  const totalFeedConsumed = feedingSummary?.totalFeedKg || 0;
-  const totalFeedCost = calculateTotalFeedCost(feedingEvents);
+  const lifetimeSummary = feedingSummary?.lifetime;
+  const periodSummary = feedingSummary?.period;
+
+  const totalFeedConsumed = lifetimeSummary?.totalFeedKg || 0;
+  const totalFeedCost = lifetimeSummary?.totalFeedCost
+    ?? calculateTotalFeedCost(feedingEvents);
   const averageDailyFeed = calculateAverageDailyFeed(totalFeedConsumed, daysSinceStart);
   const currentFCR = getCurrentFCR(feedingSummaries);
+  const lifetimeFCR = currentBiomassKg && currentBiomassKg > 0
+    ? totalFeedConsumed / currentBiomassKg
+    : null;
   const feedTypeUsage = groupFeedingEventsByType(feedingEvents);
 
   // Get unique values for filters (from current page events)
@@ -81,7 +89,8 @@ export function BatchFeedHistoryView({ batchId, batchName, batchStartDate }: Bat
     daysSinceStart,
     isLoadingSummary,
     totalEvents,
-    eventCount: feedingSummary?.eventsCount
+    lifetimeEventCount: lifetimeSummary?.eventsCount,
+    periodEventCount: periodSummary?.eventsCount
   });
 
   // Debug logging for filters
@@ -140,12 +149,12 @@ export function BatchFeedHistoryView({ batchId, batchName, batchStartDate }: Bat
       <FeedSummaryCards
         isLoadingSummary={isLoadingSummary}
         totalFeedConsumed={totalFeedConsumed}
-        feedingSummaryEventsCount={feedingSummary?.eventsCount || totalEvents}
+        feedingSummaryEventsCount={lifetimeSummary?.eventsCount || totalEvents}
         totalEvents={totalEvents}
         totalFeedCost={totalFeedCost}
         averageDailyFeed={averageDailyFeed}
         daysSinceStart={daysSinceStart}
-        currentFCR={currentFCR}
+        currentFCR={lifetimeFCR}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -212,7 +221,7 @@ export function BatchFeedHistoryView({ batchId, batchName, batchStartDate }: Bat
             setDateRange={setDateRange}
             feedingSummaries={feedingSummaries}
             totalFeedConsumed={totalFeedConsumed}
-            feedingSummary={feedingSummary}
+            feedingSummary={periodSummary}
             totalEvents={totalEvents}
             feedingEvents={feedingEvents}
             currentFCR={currentFCR}
@@ -225,11 +234,10 @@ export function BatchFeedHistoryView({ batchId, batchName, batchStartDate }: Bat
 
         <TabsContent value="efficiency" className="space-y-6">
           <FeedEfficiencyTab
-            currentFCR={currentFCR}
             totalFeedConsumed={totalFeedConsumed}
             totalFeedCost={totalFeedCost}
             feedTypeUsage={feedTypeUsage}
-            feedingSummaries={feedingSummaries}
+            currentBiomassKg={currentBiomassKg ?? null}
           />
         </TabsContent>
       </Tabs>

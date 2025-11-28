@@ -85,7 +85,18 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    // Build the full URL using the API config
+    const fullUrl = getApiUrl(queryKey[0] as string);
+    
+    // Add JWT authentication token
+    const headers: Record<string, string> = {};
+    const token = getAuthToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    
+    const res = await fetch(fullUrl, {
+      headers,
       credentials: "include",
     });
 

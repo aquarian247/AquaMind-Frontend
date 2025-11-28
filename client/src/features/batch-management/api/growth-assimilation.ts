@@ -9,6 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
 import type { GrowthAnalysisCombined } from '@/api/generated';
+import { toast } from 'sonner';
 
 // ============================================================================
 // TypeScript Interfaces (Properly typed from backend schema)
@@ -33,6 +34,13 @@ export interface ScenarioInfo {
   duration_days: number;
   initial_count: number;
   initial_weight: number;
+  // NEW: Projection run info
+  projection_run: {
+    run_id: number;
+    run_number: number;
+    label: string;
+    run_date: string;
+  } | null;
 }
 
 export interface ScenarioProjectionDay {
@@ -178,11 +186,12 @@ export function useCombinedGrowthData(
 /**
  * Pin a scenario to a batch
  * 
- * Associates a scenario with a batch for growth assimilation.
- * After pinning, the scenario's projection is used for variance analysis.
+ * DEPRECATED: Backend endpoint removed. Use usePinProjectionRun instead.
  * 
  * @param batchId - Batch ID
+ * @deprecated Use usePinProjectionRun for explicit version control
  */
+/* COMMENTED OUT - pin-scenario endpoint removed in backend
 export function usePinScenario(batchId: number) {
   const queryClient = useQueryClient();
   
@@ -203,6 +212,7 @@ export function usePinScenario(batchId: number) {
     },
   });
 }
+*/
 
 /**
  * Trigger manual recomputation of daily states
@@ -337,5 +347,39 @@ export function parseISODate(dateStr: string): Date {
  */
 export function formatISODate(date: Date): string {
   return date.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
+// ============================================================================
+// ProjectionRun Pin Mutation
+// ============================================================================
+
+export interface PinProjectionRunRequest {
+  projection_run_id: number;
+}
+
+/**
+ * Hook to pin a projection run to a batch
+ * @param batchId - The batch ID to pin to
+ * @returns Mutation hook for pinning projection run
+ */
+export function usePinProjectionRun(batchId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (request: PinProjectionRunRequest) => {
+      return await ApiService.batchPinProjectionRun(batchId, request);
+    },
+    onSuccess: () => {
+      // Invalidate all batch-related queries
+      queryClient.invalidateQueries({ queryKey: ['batch', batchId] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['batch', batchId, 'combined-growth-data'] 
+      });
+      toast.success('Projection run pinned successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error?.body?.error || 'Failed to pin projection run');
+    },
+  });
 }
 

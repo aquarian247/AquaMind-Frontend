@@ -2,6 +2,7 @@ import { API_CONFIG } from "./config";
 import { ApiService } from "../api/generated";
 import { setAuthToken } from "../api";
 import { AuthService, authenticatedFetch } from "../services/auth.service";
+import { fetchAllPages } from "./pagination";
 
 export interface DashboardKPIs {
   totalFish: number;
@@ -25,23 +26,49 @@ export const api = {
   // Dashboard endpoints
   async getDashboardKPIs(): Promise<DashboardKPIs> {
     try {
-      // Dashboard KPIs endpoint doesn't exist, calculate from individual endpoints
-      const batches = await ApiService.apiV1BatchBatchesList();
+      // FIXED: Fetch ALL batches using pagination (145 batches = ~8 pages)
+      // Previously only fetched first page (20 records), missing 71% of fish count!
+      const allBatches = await fetchAllPages(
+        (page) => ApiService.apiV1BatchBatchesList(
+          undefined, undefined, undefined, undefined, undefined,
+          undefined, undefined, undefined, page, undefined, undefined
+        ),
+        20 // Max 20 pages for safety (batches are ~145, so ~8 pages needed)
+      );
       
-      // Calculate KPIs from available data
-      const totalFish = batches.results.reduce(
-        (sum: any, batch: any) => sum + (batch.calculated_population_count ?? 0),
+      // Calculate KPIs from ALL batches
+      const totalFish = allBatches.reduce(
+        (sum: number, batch: any) => sum + (batch.calculated_population_count ?? 0),
         0,
       );
-      const healthyBatches = batches.results.filter((batch: any) => batch.status === 'ACTIVE').length;
-      const healthRate = batches.results.length > 0 ? (healthyBatches / batches.results.length) * 100 : 0;
+      const healthyBatches = allBatches.filter((batch: any) => batch.status === 'ACTIVE').length;
+      const healthRate = allBatches.length > 0 ? (healthyBatches / allBatches.length) * 100 : 0;
 
-      // Get environmental readings for water temperature
-      const envReadings = await ApiService.apiV1EnvironmentalReadingsList();
-      const tempReadings = envReadings.results.filter((r: any) => r.parameter_type === 'TEMPERATURE');
-      const avgWaterTemp = tempReadings.length > 0
-        ? tempReadings.reduce((sum: number, r: any) => sum + r.value, 0) / tempReadings.length
-        : 0; // Let UI handle missing data appropriately
+      // FIXED: Use server-side aggregation for temperature stats
+      // Previously fetched first page of 18.5M readings - completely wrong!
+      let avgWaterTemp = 0;
+      try {
+        const statsResponse = await ApiService.apiV1EnvironmentalReadingsStatsRetrieve({
+          days: 7,
+          groupBy: 'parameter'
+        } as any);
+        
+        // Find temperature stats in the response
+        const tempStats = Array.isArray(statsResponse) 
+          ? statsResponse.find((s: any) => 
+              s.parameter_type === 'TEMPERATURE' || 
+              s.parameter?.toLowerCase().includes('temp')
+            )
+          : null;
+        
+        if (tempStats && tempStats.avg_value !== undefined) {
+          avgWaterTemp = tempStats.avg_value;
+        } else if (tempStats && tempStats.value !== undefined) {
+          avgWaterTemp = tempStats.value;
+        }
+      } catch (statsError) {
+        console.warn('Environmental stats endpoint not available, temperature will be 0:', statsError);
+      }
 
       return {
         totalFish,

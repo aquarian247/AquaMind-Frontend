@@ -1,6 +1,20 @@
+/**
+ * @deprecated This hook has a pagination bug and is NOT used in the application.
+ * 
+ * BUG: Fetches only first page (20 records) of containers and assignments.
+ * Client-side aggregation on incomplete data will give wrong results.
+ * 
+ * USE INSTEAD:
+ * - Server-side aggregation: `/api/v1/infrastructure/freshwater-stations/{id}/summary/`
+ * - Returns: hall_count, tank_count, active_biomass_kg, capacity_utilization_percent
+ * 
+ * @see AGGREGATION_ENDPOINTS_CATALOG.md for available endpoints
+ * @see PAGINATION_STRATEGY.md for pagination guidelines
+ */
 import { useQuery } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated/services/ApiService';
 
+/** @deprecated Use /api/v1/infrastructure/freshwater-stations/{id}/summary/ endpoint instead */
 export const useStationKpi = (stationId: number) => {
   return useQuery({
     queryKey: ['station-kpi', stationId],

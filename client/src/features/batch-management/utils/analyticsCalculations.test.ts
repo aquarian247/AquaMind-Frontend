@@ -110,104 +110,90 @@ describe('calculateAverageGrowthRate', () => {
 });
 
 describe('calculateFCR', () => {
-  it('should calculate FCR correctly', () => {
-    const summaries: FeedingSummary[] = [{ total_feed_kg: "100" }];
-    const latest: BatchAssignment = { biomass_kg: "150" };
-    const earliest: BatchAssignment = { biomass_kg: "50" };
+  // Note: calculateFCR now uses backend-calculated weighted_avg_fcr
+  // Assignment parameters are deprecated but kept for API compatibility
+  
+  it('should return weighted_avg_fcr from latest feeding summary', () => {
+    const summaries: FeedingSummary[] = [{ weighted_avg_fcr: "1.2" }];
     
-    expect(calculateFCR(summaries, latest, earliest)).toBe(1.0);
+    expect(calculateFCR(summaries)).toBe(1.2);
+  });
+
+  it('should use the latest summary when multiple exist', () => {
+    const summaries: FeedingSummary[] = [
+      { weighted_avg_fcr: "1.0" },
+      { weighted_avg_fcr: "1.3" }
+    ];
+    
+    expect(calculateFCR(summaries)).toBe(1.3);
   });
 
   it('should return 0 for empty feeding summaries', () => {
-    const latest: BatchAssignment = { biomass_kg: "150" };
-    const earliest: BatchAssignment = { biomass_kg: "50" };
-    
-    expect(calculateFCR([], latest, earliest)).toBe(0);
+    expect(calculateFCR([])).toBe(0);
   });
 
   it('should return 0 for null feeding summaries', () => {
-    const latest: BatchAssignment = { biomass_kg: "150" };
-    const earliest: BatchAssignment = { biomass_kg: "50" };
-    
-    expect(calculateFCR(null as any, latest, earliest)).toBe(0);
+    expect(calculateFCR(null as any)).toBe(0);
   });
 
-  it('should return 0 when latest assignment is null', () => {
+  it('should handle numeric weighted_avg_fcr values', () => {
+    const summaries: FeedingSummary[] = [{ weighted_avg_fcr: 1.2 }];
+    
+    expect(calculateFCR(summaries)).toBe(1.2);
+  });
+
+  it('should handle null weighted_avg_fcr by falling back to fcr', () => {
+    const summaries: FeedingSummary[] = [{ 
+      weighted_avg_fcr: null,
+      fcr: "1.1"
+    }];
+    
+    expect(calculateFCR(summaries)).toBe(1.1);
+  });
+
+  it('should return 0 when weighted_avg_fcr is undefined and fcr is also missing', () => {
     const summaries: FeedingSummary[] = [{ total_feed_kg: "100" }];
-    const earliest: BatchAssignment = { biomass_kg: "50" };
     
-    expect(calculateFCR(summaries, null, earliest)).toBe(0);
+    expect(calculateFCR(summaries)).toBe(0);
   });
 
-  it('should return 0 when earliest assignment is null', () => {
-    const summaries: FeedingSummary[] = [{ total_feed_kg: "100" }];
-    const latest: BatchAssignment = { biomass_kg: "150" };
+  it('should return FCR for excellent efficiency (FCR < 1)', () => {
+    const summaries: FeedingSummary[] = [{ weighted_avg_fcr: "0.8" }];
     
-    expect(calculateFCR(summaries, latest, null)).toBe(0);
+    expect(calculateFCR(summaries)).toBe(0.8);
   });
 
-  it('should return 0 when biomass gain is zero', () => {
-    const summaries: FeedingSummary[] = [{ total_feed_kg: "100" }];
-    const latest: BatchAssignment = { biomass_kg: "100" };
-    const earliest: BatchAssignment = { biomass_kg: "100" };
+  it('should return FCR for poor efficiency (FCR > 2)', () => {
+    const summaries: FeedingSummary[] = [{ weighted_avg_fcr: "2.5" }];
     
-    expect(calculateFCR(summaries, latest, earliest)).toBe(0);
+    expect(calculateFCR(summaries)).toBe(2.5);
   });
 
-  it('should return 0 when biomass gain is negative', () => {
-    const summaries: FeedingSummary[] = [{ total_feed_kg: "100" }];
-    const latest: BatchAssignment = { biomass_kg: "50" };
-    const earliest: BatchAssignment = { biomass_kg: "100" };
+  it('should return 0 for invalid weighted_avg_fcr (NaN)', () => {
+    const summaries: FeedingSummary[] = [{ weighted_avg_fcr: "not-a-number" }];
     
-    expect(calculateFCR(summaries, latest, earliest)).toBe(0);
+    expect(calculateFCR(summaries)).toBe(0);
   });
 
-  it('should handle multiple feeding summaries', () => {
-    const summaries: FeedingSummary[] = [
-      { total_feed_kg: "50" },
-      { total_feed_kg: "30" },
-      { total_feed_kg: "20" }
-    ];
-    const latest: BatchAssignment = { biomass_kg: "150" };
-    const earliest: BatchAssignment = { biomass_kg: "50" };
+  it('should return 0 for zero weighted_avg_fcr', () => {
+    const summaries: FeedingSummary[] = [{ weighted_avg_fcr: "0" }];
     
-    expect(calculateFCR(summaries, latest, earliest)).toBe(1.0);
+    expect(calculateFCR(summaries)).toBe(0);
   });
 
-  it('should handle numeric biomass_kg values', () => {
-    const summaries: FeedingSummary[] = [{ total_feed_kg: 100 }];
-    const latest: BatchAssignment = { biomass_kg: 150 };
-    const earliest: BatchAssignment = { biomass_kg: 50 };
+  it('should handle typical salmon FCR values (1.0-1.5)', () => {
+    const summaries: FeedingSummary[] = [{ weighted_avg_fcr: "1.15" }];
     
-    expect(calculateFCR(summaries, latest, earliest)).toBe(1.0);
+    expect(calculateFCR(summaries)).toBe(1.15);
   });
 
-  it('should handle missing total_feed_kg', () => {
-    const summaries: FeedingSummary[] = [
-      { total_feed_kg: "50" },
-      {} as FeedingSummary,
-      { total_feed_kg: "50" }
-    ];
+  it('should ignore deprecated assignment parameters', () => {
+    const summaries: FeedingSummary[] = [{ weighted_avg_fcr: "1.2" }];
     const latest: BatchAssignment = { biomass_kg: "150" };
     const earliest: BatchAssignment = { biomass_kg: "50" };
     
-    expect(calculateFCR(summaries, latest, earliest)).toBe(1.0);
-  });
-
-  it('should calculate FCR for excellent efficiency (FCR < 1)', () => {
-    const summaries: FeedingSummary[] = [{ total_feed_kg: "80" }];
-    const latest: BatchAssignment = { biomass_kg: "150" };
-    const earliest: BatchAssignment = { biomass_kg: "50" };
-    
-    expect(calculateFCR(summaries, latest, earliest)).toBe(0.8);
-  });
-
-  it('should calculate FCR for poor efficiency (FCR > 2)', () => {
-    const summaries: FeedingSummary[] = [{ total_feed_kg: "250" }];
-    const latest: BatchAssignment = { biomass_kg: "150" };
-    const earliest: BatchAssignment = { biomass_kg: "50" };
-    
-    expect(calculateFCR(summaries, latest, earliest)).toBe(2.5);
+    // Even with assignments passed, should still use weighted_avg_fcr
+    expect(calculateFCR(summaries, latest, earliest)).toBe(1.2);
   });
 });
 
@@ -437,8 +423,8 @@ describe('calculatePerformanceMetrics', () => {
   ];
 
   const createFeedingSummaries = (): FeedingSummary[] => [
-    { total_feed_kg: "50" },
-    { total_feed_kg: "60" }
+    { total_feed_kg: "50", weighted_avg_fcr: "1.05" },
+    { total_feed_kg: "60", weighted_avg_fcr: "1.1" }  // Latest summary used for FCR
   ];
 
   const createGrowthSamplesData = () => [
@@ -534,7 +520,7 @@ describe('calculatePerformanceMetrics', () => {
       growthSamplesData
     });
 
-    // Total feed: 110kg, Biomass gain: 100kg, FCR = 1.1
+    // Uses backend-calculated weighted_avg_fcr from latest summary (1.1)
     expect(result?.feedConversionRatio).toBeCloseTo(1.1, 1);
   });
 

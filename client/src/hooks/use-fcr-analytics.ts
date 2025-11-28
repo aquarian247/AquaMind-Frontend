@@ -91,9 +91,10 @@ export interface UseFCRAnalyticsOptions {
   batchId?: number;
   filters?: FCRFilters;
   enabled?: boolean;
+  lifetimeFCR?: number | null;
 }
 
-export function useFCRAnalytics({ batchId, filters, enabled = true }: UseFCRAnalyticsOptions = {}) {
+export function useFCRAnalytics({ batchId, filters, enabled = true, lifetimeFCR = null }: UseFCRAnalyticsOptions = {}) {
   const [isUsingMockData, setIsUsingMockData] = useState(false);
 
   // Query for FCR trends data
@@ -111,17 +112,24 @@ export function useFCRAnalytics({ batchId, filters, enabled = true }: UseFCRAnal
         console.log("Fetching FCR trends for batch:", batchId);
 
         // Use the generated OperationalService
+        // Default to last 90 days if no date range provided to avoid loading 1 year of data
+        const defaultStartDate = new Date();
+        defaultStartDate.setDate(defaultStartDate.getDate() - 90);
+        
+        const startDate = filters?.startDate || defaultStartDate;
+        const endDate = filters?.endDate || new Date();
+        
         const response = await OperationalService.apiV1OperationalFcrTrendsList(
           undefined, // assignmentId
           batchId,
-          undefined, // endDate
+          endDate.toISOString().split('T')[0], // endDate - pass to limit query range
           undefined, // geographyId
           true, // includePredicted
           'WEEKLY', // interval
           undefined, // ordering
           undefined, // page
           undefined, // search
-          filters?.startDate?.toISOString().split('T')[0] // startDate
+          startDate.toISOString().split('T')[0] // startDate
         );
 
         // Transform the response - each FCRTrends object contains a series of FCRDataPoint
@@ -201,13 +209,20 @@ export function useFCRAnalytics({ batchId, filters, enabled = true }: UseFCRAnal
     comparisonPeriod: "Last 30 days",
     predictedFCR: null,
     deviation: null,
-    scenariosUsed: 0
+    scenariosUsed: 0,
+    periodStart: null,
+    periodEnd: null,
+    lifetimeFCR: lifetimeFCR ?? null,
   };
 
   // Calculate current FCR and confidence from feeding summaries
+  let latestSummary: any = null;
   if (feedingSummaries.length > 0) {
-    const latestSummary = feedingSummaries[feedingSummaries.length - 1];
+    latestSummary = feedingSummaries[feedingSummaries.length - 1];
     const currentFCR = latestSummary.weighted_avg_fcr ? parseFloat(latestSummary.weighted_avg_fcr) : null;
+
+    fcrSummary.periodStart = latestSummary.period_start ? new Date(latestSummary.period_start) : null;
+    fcrSummary.periodEnd = latestSummary.period_end ? new Date(latestSummary.period_end) : null;
 
     if (currentFCR !== null) {
       fcrSummary.currentFCR = currentFCR;
@@ -276,6 +291,7 @@ export function useFCRAnalytics({ batchId, filters, enabled = true }: UseFCRAnal
     fcrSummary,
     fcrTrendsData,
     feedingSummaries,
+    latestSummary,
 
     // Loading states
     isLoading: trendsLoading || feedingLoading,

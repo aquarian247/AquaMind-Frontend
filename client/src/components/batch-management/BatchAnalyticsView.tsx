@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import {
   BarChart3,
   AlertTriangle,
@@ -34,23 +35,13 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
   const [timeframe, setTimeframe] = useState("30");
   const isMobile = useIsMobile();
 
-  // FCR Analytics Hook
-  const {
-    fcrSummary,
-    fcrTrendsData,
-    isLoading: fcrLoading,
-    error: fcrError,
-    refresh: refreshFCR,
-    hasData: hasFCRData
-  } = useFCRAnalytics({ batchId });
-
   // Batch Analytics Data Hook - consolidates all data fetching
   const {
-    growthSamplesData,
-    feedingSummaries,
-    environmentalReadings,
+    growthAnalysis,
+    performanceMetricsRaw,
+    feedingStats,
+    latestFeedingSummary,
     scenarios,
-    batchAssignments,
     isLoading,
     hasError,
     hasNoData,
@@ -60,19 +51,32 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
   const {
     growthMetrics,
     performanceMetrics,
+    lifetimeFCR,
+    lifetimeBiomassKg,
+    lifetimeFeedTotals,
     environmentalCorrelations,
     predictiveInsights,
     benchmarks,
     latestGrowthData,
     growthTrend
   } = useAnalyticsData({
-    growthSamplesData,
-    batchAssignments,
-    feedingSummaries,
-    environmentalReadings,
+    growthAnalysis,
+    performanceMetricsRaw,
+    feedingStats,
+    latestFeedingSummary,
     scenarios,
-    growthMetrics: [] // This will be calculated inside the hook
   });
+
+  // FCR Analytics Hook
+  const {
+    fcrSummary,
+    fcrTrendsData,
+    isLoading: fcrLoading,
+    error: fcrError,
+    refresh: refreshFCR,
+    hasData: hasFCRData,
+    latestSummary: latestFcrSummary
+  } = useFCRAnalytics({ batchId, lifetimeFCR });
 
   if (isLoading) {
     return (
@@ -142,7 +146,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
       <PerformanceOverviewCards
         survivalRate={performanceMetrics?.survivalRate || 0}
         growthRate={performanceMetrics?.growthRate || 0}
-        feedConversionRatio={performanceMetrics?.feedConversionRatio || 0}
+        feedConversionRatio={lifetimeFCR ?? performanceMetrics?.feedConversionRatio ?? 0}
         healthScore={performanceMetrics?.healthScore || 0}
       />
 
@@ -201,7 +205,7 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
         </TabsContent>
 
         <TabsContent value="fcr" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* FCR Summary Card */}
             <div className="lg:col-span-1">
               <FCRSummaryCard
@@ -211,8 +215,14 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
               />
             </div>
 
+            {latestFcrSummary && (
+              <div className="lg:col-span-1">
+                <FCRPeriodSnapshotCard summary={latestFcrSummary} />
+              </div>
+            )}
+
             {/* FCR Trend Chart */}
-            <div className="lg:col-span-2">
+            <div className={cn(latestFcrSummary ? "lg:col-span-2" : "lg:col-span-3")}>
               <FCRTrendChart
                 data={fcrTrendsData}
                 title={`FCR Trends - ${batchName}`}
@@ -316,5 +326,89 @@ export function BatchAnalyticsView({ batchId, batchName }: BatchAnalyticsViewPro
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+function FCRPeriodSnapshotCard({ summary }: { summary: any }) {
+  if (!summary) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Period Snapshot</CardTitle>
+          <CardDescription>No recent summary available.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Refresh the data to retrieve the latest feed conversion records.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const formatNumber = (value: number, fraction = 0) =>
+    value.toLocaleString(undefined, { minimumFractionDigits: fraction, maximumFractionDigits: fraction });
+
+  const formatRangeLabel = () => {
+    if (summary.period_start && summary.period_end) {
+      const start = new Date(summary.period_start);
+      const end = new Date(summary.period_end);
+      const fmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+      return `${fmt.format(start)} → ${fmt.format(end)}`;
+    }
+    return "Latest period";
+  };
+
+  const periodFCR = summary.weighted_avg_fcr
+    ? parseFloat(summary.weighted_avg_fcr)
+    : summary.fcr
+    ? Number(summary.fcr)
+    : null;
+  const feedKg = Number(summary.total_feed_kg ?? summary.totalFeedKg ?? 0);
+  const biomassGainKg = Number(summary.total_biomass_gain_kg ?? summary.totalBiomassGainKg ?? 0);
+  const eventsCount = Number(summary.events_count ?? summary.feeding_events_count ?? summary.feedingEventsCount ?? 0);
+  const totalCost = Number(summary.total_cost ?? summary.feed_cost ?? 0);
+  const costPerKg = biomassGainKg > 0 ? totalCost / biomassGainKg : null;
+  const efficiency = feedKg > 0 && biomassGainKg > 0 ? (biomassGainKg / feedKg) * 100 : null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Period Snapshot</CardTitle>
+        <CardDescription>{formatRangeLabel()}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Period FCR</span>
+          <span className="font-semibold">
+            {periodFCR !== null ? periodFCR.toFixed(2) : "N/A"}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Feed Input</span>
+          <span className="font-semibold">{formatNumber(feedKg)} kg</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Biomass Gain</span>
+          <span className="font-semibold">{formatNumber(biomassGainKg)} kg</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Feeding Events</span>
+          <span className="font-semibold">{formatNumber(eventsCount)}</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Cost per kg of fish</span>
+          <span className="font-semibold">
+            {costPerKg !== null ? `$${costPerKg.toFixed(2)}` : "N/A"}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Conversion efficiency</span>
+          <span className="font-semibold">
+            {efficiency !== null ? `${efficiency.toFixed(1)}%` : "N/A"}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

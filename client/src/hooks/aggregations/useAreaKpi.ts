@@ -1,7 +1,21 @@
+/**
+ * @deprecated This hook has a pagination bug and is NOT used in the application.
+ * 
+ * BUG: Fetches only first page of assignments (page_size=500), but there may be more.
+ * Client-side aggregation on incomplete data will give wrong results.
+ * 
+ * USE INSTEAD:
+ * - Server-side aggregation: `/api/v1/infrastructure/areas/{id}/summary/`
+ * - Returns: container_count, active_biomass_kg, population_count, avg_weight_kg
+ * 
+ * @see AGGREGATION_ENDPOINTS_CATALOG.md for available endpoints
+ * @see PAGINATION_STRATEGY.md for pagination guidelines
+ */
 import { useQuery } from '@tanstack/react-query';
 import { AuthService, authenticatedFetch } from '@/services/auth.service';
 import { apiConfig } from '@/config/api.config';
 
+/** @deprecated Use /api/v1/infrastructure/areas/{id}/summary/ endpoint instead */
 export const useAreaKpi = (areaId: number) => {
   return useQuery({
     queryKey: ['area-kpi', areaId],

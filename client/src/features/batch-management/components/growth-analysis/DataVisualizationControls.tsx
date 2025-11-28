@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshDataButton } from './RefreshDataButton';
+import { ProjectionRunSelector } from './ProjectionRunSelector';
 import type { ScenarioInfo } from '../../api/growth-assimilation';
 
 interface SeriesVisibility {
@@ -140,11 +141,20 @@ export function DataVisualizationControls({
           Scenario
         </Label>
         {scenario ? (
-          <div className="space-y-1">
-            <p className="text-sm font-medium">{scenario.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {scenario.duration_days} days • {scenario.initial_count.toLocaleString()} fish • {scenario.initial_weight}g
-            </p>
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">{scenario.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {scenario.duration_days} days • {scenario.initial_count.toLocaleString()} fish • {scenario.initial_weight}g
+              </p>
+            </div>
+            
+            {/* Projection Run Selector */}
+            <ProjectionRunSelector
+              batchId={batchId}
+              currentRunId={scenario.projection_run?.run_id}
+              scenarioId={scenario.id}
+            />
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">No scenario pinned</p>

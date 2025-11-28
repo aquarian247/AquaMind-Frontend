@@ -1,6 +1,20 @@
+/**
+ * @deprecated This hook has a critical pagination bug and is NOT used in the application.
+ * 
+ * BUG: Fetches only the first page (20 records) of 1.6M feeding events, then tries
+ * to calculate FCR from that incomplete data - resulting in wildly incorrect values.
+ * 
+ * USE INSTEAD:
+ * - For batch FCR: Use `BatchFeedingSummary.weighted_avg_fcr` from the backend
+ * - For FCR trends: Use `/api/v1/operational/fcr-trends/batch-trends/` endpoint
+ * 
+ * @see analyticsCalculations.ts for the correct implementation
+ * @see PAGINATION_STRATEGY.md for pagination guidelines
+ */
 import { useQuery } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated/services/ApiService';
 
+/** @deprecated See file header for alternatives */
 export interface BatchFcrResult {
   fcr: number | null;
   totalFeedKg: number;
@@ -99,6 +113,7 @@ export async function calculateBiomassGain(
   return (weightGainGrams / 1000) * estimatedPopulation;
 }
 
+/** @deprecated See file header for alternatives - this hook has a critical pagination bug */
 export const useBatchFcr = (batchId: number, range?: DateRange) => {
   return useQuery<BatchFcrResult>({
     queryKey: ['batch-fcr', batchId, range?.from ?? null, range?.to ?? null],

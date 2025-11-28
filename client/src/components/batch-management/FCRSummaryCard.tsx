@@ -27,6 +27,9 @@ export interface FCRSummaryData {
   predictedFCR?: number | null;
   deviation?: number | null;
   scenariosUsed?: number;
+  periodStart?: Date | null;
+  periodEnd?: Date | null;
+  lifetimeFCR?: number | null;
 }
 
 interface FCRSummaryCardProps {
@@ -81,6 +84,70 @@ const getConfidenceConfig = (level: ConfidenceLevel) => {
   return confidenceConfig[normalizedLevel as keyof typeof confidenceConfig] || confidenceConfig.LOW;
 };
 
+const fcrPerformanceBands = [
+  {
+    max: 1.0,
+    label: 'Excellent',
+    description: 'Industry-leading efficiency',
+    bg: 'bg-emerald-100',
+    text: 'text-emerald-800',
+    border: 'border-emerald-200'
+  },
+  {
+    max: 1.2,
+    label: 'Good',
+    description: 'On-track feed performance',
+    bg: 'bg-blue-100',
+    text: 'text-blue-800',
+    border: 'border-blue-200'
+  },
+  {
+    max: 1.5,
+    label: 'Average',
+    description: 'Monitor for optimization',
+    bg: 'bg-amber-100',
+    text: 'text-amber-800',
+    border: 'border-amber-200'
+  },
+  {
+    max: Number.POSITIVE_INFINITY,
+    label: 'High (Inefficient)',
+    description: 'Feed usage above target',
+    bg: 'bg-red-100',
+    text: 'text-red-800',
+    border: 'border-red-200'
+  }
+];
+
+const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+
+const getFcrPerformance = (value: number | null) => {
+  if (value === null || Number.isNaN(value)) {
+    return {
+      label: 'No data',
+      description: 'Awaiting latest summary',
+      bg: 'bg-gray-100',
+      text: 'text-gray-700',
+      border: 'border-gray-200'
+    };
+  }
+
+  return fcrPerformanceBands.find(band => value < band.max) ?? fcrPerformanceBands[fcrPerformanceBands.length - 1];
+};
+
+const formatPeriodRange = (start?: Date | null, end?: Date | null) => {
+  if (start && end) {
+    return `${dateFormatter.format(start)} → ${dateFormatter.format(end)}`;
+  }
+  if (start) {
+    return `Since ${dateFormatter.format(start)}`;
+  }
+  if (end) {
+    return `Until ${dateFormatter.format(end)}`;
+  }
+  return null;
+};
+
 export function FCRSummaryCard({
   data,
   className,
@@ -91,6 +158,7 @@ export function FCRSummaryCard({
   const isMobile = useIsMobile();
 
   const config = getConfidenceConfig(data.confidenceLevel);
+  const fcrPerformance = getFcrPerformance(data.currentFCR);
   const IconComponent = config.icon;
 
   const handleRefresh = async () => {
@@ -159,13 +227,12 @@ export function FCRSummaryCard({
         )}>
           {getTrendIcon()}
           <Badge className={cn(
-            config.bgColor,
-            config.borderColor,
-            config.textColor,
+            fcrPerformance.bg,
+            fcrPerformance.border,
+            fcrPerformance.text,
             "text-xs border"
           )}>
-            <IconComponent className="h-3 w-3 mr-1" />
-            {config.label}
+            {fcrPerformance.label}
           </Badge>
         </div>
       </CardHeader>
@@ -188,8 +255,18 @@ export function FCRSummaryCard({
                 }
               </div>
               <p className="text-xs text-muted-foreground">
-                Current FCR value
+                {formatPeriodRange(data.periodStart, data.periodEnd) || "Latest period"}
               </p>
+              {data.currentFCR !== null && (
+                <p className={cn("text-xs font-medium", fcrPerformance.text)}>
+                  {fcrPerformance.label} · {fcrPerformance.description}
+                </p>
+              )}
+              {data.lifetimeFCR != null && (
+                <p className="text-xs text-muted-foreground">
+                  Lifetime FCR: <span className="font-semibold text-foreground">{data.lifetimeFCR!.toFixed(2)}</span>
+                </p>
+              )}
             </div>
             {data.predictedFCR !== null && data.currentFCR !== null && (
               <div className={cn(
@@ -220,7 +297,15 @@ export function FCRSummaryCard({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Data Confidence</span>
-              <span className="font-medium">{config.label}</span>
+              <Badge className={cn(
+                config.bgColor,
+                config.borderColor,
+                config.textColor,
+                "text-[11px] border"
+              )}>
+                <IconComponent className="h-3 w-3 mr-1" />
+                {config.label}
+              </Badge>
             </div>
             <div className="space-y-1">
               <Progress

@@ -4,88 +4,111 @@ import { ApiService } from "@/api/generated/services/ApiService";
 /**
  * Custom hook to fetch all data required for batch analytics view
  * 
- * Consolidates multiple API calls into a single hook for better reusability
- * and testability. Returns all data streams with individual loading/error states.
+ * REFACTORED: Now uses server-side aggregation endpoints instead of fetching
+ * large raw datasets. This significantly improves performance and reduces data transfer.
  * 
  * @param batchId - The batch ID to fetch analytics data for
- * @param timeframe - Time period for filtering data (in days)
- * @returns Object containing all analytics data and loading/error states
+ * @param timeframe - Time period for filtering data (in days) - Note: Aggregation endpoints handle time internally or return full history
+ * @returns Object containing aggregated analytics data and loading/error states
  */
 export function useBatchAnalyticsData(batchId: number, timeframe: string) {
-  // Fetch growth samples data
+  // Fetch growth analysis (Pre-aggregated growth metrics)
   const { 
-    data: growthSamplesData = [], 
+    data: growthAnalysis,
     isLoading: growthLoading, 
     error: growthError 
   } = useQuery({
-    queryKey: ["batch/growth-samples", batchId, timeframe],
+    queryKey: ["batch/growth-analysis", batchId],
     queryFn: async () => {
       try {
-        const response = await ApiService.apiV1BatchGrowthSamplesList(
-          batchId,
-          undefined,
-          undefined,
-          undefined,
-          undefined
-        );
-        return response.results || [];
+        // Use combined growth data endpoint to get actual_daily_states
+        const response = await ApiService.batchCombinedGrowthData(batchId);
+        return response;
       } catch (error) {
-        console.error("Failed to fetch growth samples:", error);
+        console.error("Failed to fetch growth analysis:", error);
         throw new Error("Failed to fetch growth metrics");
       }
     },
   });
 
-  // Fetch feeding summaries for FCR calculation
+  // Fetch performance metrics (Pre-aggregated mortality, population, biomass)
   const { 
-    data: feedingSummaries = [], 
-    isLoading: feedingLoading, 
-    error: feedingError 
+    data: performanceMetricsRaw,
+    isLoading: performanceLoading,
+    error: performanceError 
   } = useQuery({
-    queryKey: ["batch/feeding-summaries", batchId],
+    queryKey: ["batch/performance-metrics", batchId],
+    queryFn: async () => {
+      try {
+        const response = await ApiService.apiV1BatchBatchesPerformanceMetricsRetrieve(batchId);
+        return response;
+      } catch (error) {
+        console.error("Failed to fetch performance metrics:", error);
+        throw new Error("Failed to fetch performance metrics");
+      }
+    },
+  });
+
+  // Fetch total feeding stats (Cost, Count, Total KG)
+  const { 
+    data: feedingStats,
+    isLoading: feedingStatsLoading,
+    error: feedingStatsError 
+  } = useQuery({
+    queryKey: ["inventory/feeding-summary", batchId],
+    queryFn: async () => {
+      try {
+        const [periodSummary, lifetimeSummary] = await Promise.all([
+          ApiService.feedingEventsSummary(
+            undefined,
+            undefined,
+            batchId
+          ),
+          ApiService.feedingEventsSummary(
+            undefined,
+            undefined,
+            batchId,
+            undefined,
+            undefined,
+            "invalid"
+          )
+        ]);
+
+        return {
+          period: periodSummary,
+          lifetime: lifetimeSummary
+        };
+      } catch (error) {
+        console.error("Failed to fetch feeding summary:", error);
+        return null;
+      }
+    },
+  });
+
+  // Fetch LATEST batch feeding summary for FCR (weighted_avg_fcr)
+  // We fetch page 1 with ordering by period_end desc to get the latest one
+  const { 
+    data: latestFeedingSummary,
+    isLoading: latestSummaryLoading,
+    error: latestSummaryError 
+  } = useQuery({
+    queryKey: ["inventory/batch-feeding-summaries", batchId, "latest"],
     queryFn: async () => {
       try {
         const response = await ApiService.apiV1InventoryBatchFeedingSummariesList(
           batchId,
-          undefined,
-          undefined
+          '-period_end', // Ordering: latest first
+          1, // Page 1
         );
-        return response.results || [];
+        return response.results?.[0] || null;
       } catch (error) {
-        console.error("Failed to fetch feeding summaries:", error);
-        return [];
+        console.error("Failed to fetch latest feeding summary:", error);
+        return null;
       }
     },
   });
 
-  // Fetch environmental readings
-  const { 
-    data: environmentalReadings = [], 
-    isLoading: envLoading, 
-    error: envError 
-  } = useQuery({
-    queryKey: ["environmental/readings", batchId],
-    queryFn: async () => {
-      try {
-        const response = await ApiService.apiV1EnvironmentalReadingsList(
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined
-        );
-        return response.results || [];
-      } catch (error) {
-        console.error("Failed to fetch environmental readings:", error);
-        return [];
-      }
-    },
-  });
-
-  // Fetch scenarios for predictions
+  // Scenarios
   const { 
     data: scenarios = [], 
     isLoading: scenarioLoading, 
@@ -94,89 +117,58 @@ export function useBatchAnalyticsData(batchId: number, timeframe: string) {
     queryKey: ["scenario/scenarios", batchId],
     queryFn: async () => {
       try {
-        // Note: Scenarios endpoint doesn't have batch filter, so get all scenarios
-        // In the future, could add batch__id filter to scenario endpoint
-        const response = await ApiService.apiV1ScenarioScenariosList(
-          undefined, // createdBy (not batchId!)
-          undefined, // ordering
-          undefined, // page
-          undefined, // search
-          undefined  // startDate
-        );
+        const response = await ApiService.apiV1ScenarioScenariosList();
         return response.results || [];
       } catch (error) {
         console.error("Failed to fetch scenarios:", error);
         return [];
       }
     },
-  });
-
-  // Fetch batch container assignments to get population counts
-  const { 
-    data: batchAssignments = [], 
-    isLoading: assignmentsLoading 
-  } = useQuery({
-    queryKey: ["batch/container-assignments", batchId],
-    queryFn: async () => {
-      try {
-        const response = await ApiService.apiV1BatchContainerAssignmentsList(
-          undefined, // assignmentDate (not batchId!)
-          undefined, // assignmentDateAfter
-          undefined, // assignmentDateBefore
-          batchId,   // ✅ batch parameter (4th position)
-          undefined, // batchIn
-          undefined, // batchNumber
-          undefined  // biomassMax
-        );
-        return response.results || [];
-      } catch (error) {
-        console.error("Failed to fetch batch assignments:", error);
-        return [];
-      }
-    },
+    enabled: !!growthAnalysis
   });
 
   // Aggregate loading and error states
   const isLoading = 
     growthLoading || 
-    feedingLoading || 
-    envLoading || 
-    scenarioLoading || 
-    assignmentsLoading;
+    performanceLoading || 
+    feedingStatsLoading || 
+    latestSummaryLoading ||
+    scenarioLoading;
 
   const hasError = 
     growthError || 
-    feedingError || 
-    envError || 
+    performanceError || 
+    feedingStatsError || 
+    latestSummaryError ||
     scenarioError;
 
-  const hasNoData = growthSamplesData.length === 0;
+  const hasNoData = !growthAnalysis && !performanceMetricsRaw;
 
   return {
     // Data
-    growthSamplesData,
-    feedingSummaries,
-    environmentalReadings,
+    growthAnalysis,
+    performanceMetricsRaw,
+    feedingStats,
+    latestFeedingSummary, // Pass this new data
     scenarios,
-    batchAssignments,
 
-    // Loading states (individual)
+    // Loading states
     growthLoading,
-    feedingLoading,
-    envLoading,
+    performanceLoading,
+    feedingStatsLoading,
+    latestSummaryLoading,
     scenarioLoading,
-    assignmentsLoading,
 
     // Aggregate states
     isLoading,
     hasError,
     hasNoData,
 
-    // Error objects (for detailed error handling)
+    // Errors
     growthError,
-    feedingError,
-    envError,
+    performanceError,
+    feedingStatsError,
+    latestSummaryError,
     scenarioError,
   };
 }
-
