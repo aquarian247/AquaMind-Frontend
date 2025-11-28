@@ -1,8 +1,9 @@
 import { API_CONFIG } from "./config";
 import { ApiService } from "../api/generated";
+import type { Batch } from "../api/generated";
 import { setAuthToken } from "../api";
 import { AuthService, authenticatedFetch } from "../services/auth.service";
-import { fetchAllPages } from "./pagination";
+import { fetchAllPages, type PaginatedResponse } from "./pagination";
 
 export interface DashboardKPIs {
   totalFish: number;
@@ -32,7 +33,7 @@ export const api = {
         (page) => ApiService.apiV1BatchBatchesList(
           undefined, undefined, undefined, undefined, undefined,
           undefined, undefined, undefined, page, undefined, undefined
-        ),
+        ) as Promise<PaginatedResponse<Batch>>,
         20 // Max 20 pages for safety (batches are ~145, so ~8 pages needed)
       );
       
@@ -61,10 +62,12 @@ export const api = {
             )
           : null;
         
-        if (tempStats && tempStats.avg_value !== undefined) {
-          avgWaterTemp = tempStats.avg_value;
-        } else if (tempStats && tempStats.value !== undefined) {
-          avgWaterTemp = tempStats.value;
+        if (tempStats) {
+          // Handle different possible response formats
+          const tempValue = (tempStats as any).avg_value ?? (tempStats as any).value ?? (tempStats as any).average;
+          if (tempValue !== undefined) {
+            avgWaterTemp = typeof tempValue === 'string' ? parseFloat(tempValue) : tempValue;
+          }
         }
       } catch (statsError) {
         console.warn('Environmental stats endpoint not available, temperature will be 0:', statsError);

@@ -2,7 +2,7 @@
  * Utility functions for handling paginated API responses
  */
 
-interface PaginatedResponse<T> {
+export interface PaginatedResponse<T> {
   count: number;
   next: string | null;
   previous: string | null;
