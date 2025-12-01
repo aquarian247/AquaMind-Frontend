@@ -8,7 +8,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
-import type { GrowthAnalysisCombined } from '@/api/generated';
+import type { GrowthAnalysisCombined, PinScenario } from '@/api/generated';
 import { toast } from 'sonner';
 
 // ============================================================================
@@ -367,7 +367,12 @@ export function usePinProjectionRun(batchId: number) {
   
   return useMutation({
     mutationFn: async (request: PinProjectionRunRequest) => {
-      return await ApiService.batchPinProjectionRun(batchId, request);
+      // OpenAPI currently reuses PinScenario schema even though the backend expects projection_run_id.
+      // Cast the payload until the backend publishes the corrected schema.
+      return await ApiService.batchPinScenario(
+        batchId,
+        request as unknown as PinScenario
+      );
     },
     onSuccess: () => {
       // Invalidate all batch-related queries

@@ -539,12 +539,8 @@ export function useRunProjection(scenarioId: number) {
   
   return useMutation({
     mutationFn: async (label?: string) => {
-      // The API actually accepts {label?: string} but generated client types it as Scenario
-      // This is a known OpenAPI schema generation issue - the endpoint works correctly
-      return await ApiService.apiV1ScenarioScenariosRunProjectionCreate(
-        scenarioId,
-        { label: label || '' } as unknown as any
-      );
+      const payload = label ? { label } : undefined;
+      return await ApiService.scenarioRunProjection(scenarioId, payload);
     },
     onSuccess: () => {
       // Invalidate projection runs list
