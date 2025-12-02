@@ -41,10 +41,17 @@ export function ProductionPlannerPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Fetch scenarios for dropdown
+  // Using same pattern as Scenario Planning page
   const { data: scenariosResponse, isLoading: scenariosLoading } = useQuery({
-    queryKey: ['scenarios'],
+    queryKey: ['scenario:scenarios', { search: '', status: 'all' }],
     queryFn: () => ApiService.apiV1ScenarioScenariosList(
-      true, // all=true to get all scenarios (not just active)
+      true,  // all=true - show all scenarios, not just user's own
+      undefined,  // createdBy
+      undefined,  // ordering
+      undefined,  // page
+      undefined,  // search
+      undefined,  // startDate (used for status filtering)
+      undefined   // tgcModelLocation
     ),
   });
 
