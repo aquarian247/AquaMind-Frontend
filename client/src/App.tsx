@@ -60,6 +60,9 @@ import ScenarioPlanning from "@/pages/ScenarioPlanning";
 import { ScenarioDetailPage } from "@/pages/ScenarioDetailPage";
 import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModelManagementPage";
 
+// Production Planner (Operational Scheduling)
+import { ProductionPlannerPage } from "@/features/production-planner/pages/ProductionPlannerPage";
+
 // Executive & specialized
 import ExecutiveDashboardPage from "@/features/executive/pages/ExecutiveDashboardPage";
 import MortalityReporting from "@/pages/mortality-reporting";
@@ -430,6 +433,14 @@ function Router() {
             <Suspense fallback={<div>Loading...</div>}>
               <TemperatureDataView />
             </Suspense>
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/production-planner">
+        <ProtectedRoute>
+          <AppLayout>
+            <ProductionPlannerPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

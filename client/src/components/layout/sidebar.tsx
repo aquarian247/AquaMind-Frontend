@@ -69,6 +69,13 @@ const baseNavigationItems: NavigationItem[] = [
     path: "/scenario-planning",
   },
   {
+    id: 14,
+    label: "Production Planner",
+    icon: "fas fa-calendar-check",
+    path: "/production-planner",
+    requiresPermission: 'operational',
+  },
+  {
     id: 8,
     label: "Inventory",
     icon: "fas fa-boxes",
