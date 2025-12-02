@@ -336,6 +336,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Update OpenAPI client with new token
       setAuthToken(tokens.access);
 
+      // Fetch complete user profile BEFORE setting isLoading to false
+      const userProfile = await fetchUserProfile();
+
       setState({
         user: {
           id: decoded.user_id,
@@ -343,7 +346,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: decoded.email || '',
           is_active: true,
           date_joined: new Date().toISOString(),
-          profile: {} as UserProfile,
+          profile: userProfile || ({} as UserProfile),
         } as User,
         isAuthenticated: true,
         isLoading: false,
@@ -358,9 +361,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Schedule token refresh
       scheduleTokenRefresh(decoded.exp);
-
-      // Fetch complete user profile
-      await fetchUserProfile();
 
       return true;
     } catch (error) {

@@ -17,6 +17,7 @@ import {
 import { Plus, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
+import { PermissionGuard } from '@/components/rbac/PermissionGuard';
 import { ProductionPlannerKPIDashboard } from '../components/ProductionPlannerKPIDashboard';
 import { PlannedActivityFilters } from '../components/PlannedActivityFilters';
 import { ProductionPlannerTimeline } from '../components/ProductionPlannerTimeline';
@@ -78,9 +79,6 @@ export function ProductionPlannerPage() {
     return filterActivities(allActivities, filters);
   }, [allActivities, filters]);
 
-  // Note: Backend enforces RBAC - frontend just provides good UX
-  // If user lacks permission, backend will return 403 and we'll show error message
-
   const handleFilterChange = (newFilters: Partial<ActivityFilters>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
@@ -98,7 +96,8 @@ export function ProductionPlannerPage() {
   const canCreateActivities = !isViewer;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <PermissionGuard require="operational" resource="Production Planner">
+      <div className="container mx-auto py-6 space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -228,7 +227,8 @@ export function ProductionPlannerPage() {
           }}
         />
       )}
-    </div>
+      </div>
+    </PermissionGuard>
   );
 }
 

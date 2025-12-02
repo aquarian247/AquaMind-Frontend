@@ -69,7 +69,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   // Get user profile from auth context
   const profile = user?.profile as ExtendedUserProfile | null;
   
-  // Role checks
+  // Check if profile has actually been loaded (not just an empty object)
+  const isProfileLoaded = useMemo(() => {
+    return profile !== null && profile?.role !== undefined;
+  }, [profile]);
+  
+  // Role checks - only valid if profile is loaded
   const isAdmin = useMemo(() => profile?.role === 'ADMIN', [profile]);
   const isManager = useMemo(() => profile?.role === 'MGR', [profile]);
   const isOperator = useMemo(() => profile?.role === 'OPR', [profile]);
@@ -167,7 +172,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   
   const contextValue: UserContextType = {
     profile,
-    isLoading,
+    // Consider still loading if auth is loading OR profile hasn't been populated yet
+    isLoading: isLoading || !isProfileLoaded,
     
     // Role checks
     isAdmin,
