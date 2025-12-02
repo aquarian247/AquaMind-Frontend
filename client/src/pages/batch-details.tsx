@@ -14,6 +14,7 @@ import { BatchHealthView } from "../components/batch-management/BatchHealthView"
 import { BatchFeedHistoryView } from "../components/batch-management/BatchFeedHistoryView";
 import { BatchAnalyticsView } from "../components/batch-management/BatchAnalyticsView";
 import { BatchWorkflowsTab } from "../features/batch-management/workflows/components/BatchWorkflowsTab";
+import { BatchPlannedActivitiesTab } from "../features/production-planner/components/BatchPlannedActivitiesTab";
 import { api } from "../lib/api";
 import { ApiService } from "@/api/generated";
 import { formatFallback, formatCount } from "@/lib/formatFallback";
@@ -332,6 +333,7 @@ export default function BatchDetails() {
                 <SelectItem value="health">Health</SelectItem>
                 <SelectItem value="feed-history">Feed History</SelectItem>
                 <SelectItem value="analytics">Analytics</SelectItem>
+                <SelectItem value="activities">Activities</SelectItem>
                 <SelectItem value="traceability">
                   {isComplexBatch ? "Full Traceability" : "Batch History"}
                 </SelectItem>
@@ -339,13 +341,14 @@ export default function BatchDetails() {
             </Select>
           </div>
         ) : (
-          <TabsList className="grid w-full grid-cols-7">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="containers">Containers</TabsTrigger>
             <TabsTrigger value="transfers">Transfers</TabsTrigger>
             <TabsTrigger value="health">Health</TabsTrigger>
             <TabsTrigger value="feed-history">Feed History</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="activities">Activities</TabsTrigger>
             <TabsTrigger value="traceability">
               {isComplexBatch ? "Traceability" : "History"}
             </TabsTrigger>
@@ -660,6 +663,13 @@ export default function BatchDetails() {
 
         <TabsContent value="analytics" className="space-y-6">
           <BatchAnalyticsView batchId={batch.id} batchName={batch.batch_number} />
+        </TabsContent>
+
+        <TabsContent value="activities">
+          <BatchPlannedActivitiesTab 
+            batchId={batch.id}
+            batchNumber={batch.batch_number}
+          />
         </TabsContent>
 
         <TabsContent value="traceability">

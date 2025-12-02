@@ -54,16 +54,17 @@ export function ProductionPlannerPage() {
   }
 
   // Fetch activities for selected scenario
+  // Note: API returns array directly (not paginated), but generated type is incorrect
   const { data: activitiesResponse, isLoading: activitiesLoading } = useQuery({
     queryKey: ['planned-activities', 'scenario', selectedScenarioId],
     queryFn: async () => {
-      if (!selectedScenarioId) return { results: [] };
-      return await ApiService.apiV1ScenarioScenariosPlannedActivitiesRetrieve(selectedScenarioId);
+      if (!selectedScenarioId) return [];
+      return await ApiService.apiV1ScenarioScenariosPlannedActivitiesRetrieve(selectedScenarioId) as unknown as PlannedActivity[];
     },
     enabled: !!selectedScenarioId,
   });
 
-  const allActivities = (activitiesResponse?.results as PlannedActivity[]) || [];
+  const allActivities = (activitiesResponse as PlannedActivity[]) || [];
 
   // Fetch batches for filter dropdown
   const { data: batchesResponse } = useQuery({

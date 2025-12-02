@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { ChevronDown, ChevronRight, AlertCircle, Plus } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { MobileActivityCard } from './MobileActivityCard';
 import {
   groupActivitiesByBatch,
   sortActivitiesByDueDate,
@@ -32,6 +34,7 @@ export function ProductionPlannerTimeline({
   onCreateActivity,
 }: ProductionPlannerTimelineProps) {
   const [expandedBatches, setExpandedBatches] = useState<number[]>([]);
+  const isMobile = useIsMobile();
 
   // Group and sort activities
   const batchGroups = useMemo(() => {
@@ -79,6 +82,51 @@ export function ProductionPlannerTimeline({
     );
   }
 
+  // Mobile simple list view (no batch grouping)
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold">Activities</h3>
+            <Badge variant="outline">
+              {activities.length}
+            </Badge>
+          </div>
+        </div>
+
+        {activities.length === 0 ? (
+          <Card className="p-12 text-center">
+            <div className="mx-auto w-16 h-16 mb-4 flex items-center justify-center rounded-full bg-muted">
+              <AlertCircle className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold mb-2">No Activities</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              No activities match the current filters.
+            </p>
+            {onCreateActivity && (
+              <Button onClick={onCreateActivity} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Activity
+              </Button>
+            )}
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {sortActivitiesByDueDate(activities).map((activity) => (
+              <MobileActivityCard
+                key={activity.id}
+                activity={activity}
+                onClick={() => onActivityClick(activity)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop batch-grouped view
   return (
     <div className="space-y-4">
       {/* Timeline Header */}
