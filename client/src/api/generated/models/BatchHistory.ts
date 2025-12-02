@@ -48,10 +48,6 @@ export type BatchHistory = {
     species?: number | null;
     lifecycle_stage?: number | null;
     /**
-     * DEPRECATED: Use pinned_projection_run instead. Will be removed after data migration.
-     */
-    pinned_scenario?: number | null;
-    /**
      * Specific projection run used for growth analysis. Provides version control for projections.
      */
     pinned_projection_run?: number | null;

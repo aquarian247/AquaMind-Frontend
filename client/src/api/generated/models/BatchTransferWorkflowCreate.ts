@@ -109,6 +109,10 @@ export type BatchTransferWorkflowCreate = {
      */
     batch: number;
     /**
+     * Planned activity that spawned this workflow (if any)
+     */
+    planned_activity?: number | null;
+    /**
      * Source lifecycle stage
      */
     source_lifecycle_stage: number;

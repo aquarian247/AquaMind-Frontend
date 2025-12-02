@@ -17,45 +17,139 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class BatchService {
     /**
-     * Get containers with timeline-aware availability forecasting
-     * Returns containers enriched with occupancy forecasting for workflow planning. Shows which containers are immediately available, will be available by delivery date, or have conflicts (still occupied on delivery date).
-     * @param geography Filter by geography ID
-     * @param containerType Filter by container type name (e.g. TANK, PEN, TRAY)
-     * @param deliveryDate Date when action will execute (YYYY-MM-DD). Defaults to today.
-     * @param includeOccupied Include occupied containers (default: true)
-     * @param lifecycleStage Filter by compatible lifecycle stage ID
+     * List batch creation workflows
+     * Get a list of all batch creation workflows with filtering options.
+     * @param batch Filter by batch ID
+     * @param eggSourceType Filter by egg source type (INTERNAL/EXTERNAL)
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
      * @param search A search term.
-     * @returns PaginatedContainerAvailabilityResponseList
+     * @param status Filter by workflow status
+     * @returns PaginatedBatchCreationWorkflowListList
      * @throws ApiError
      */
-    public static listContainerAvailability(
-        geography: number,
-        containerType?: string,
-        deliveryDate?: string,
-        includeOccupied?: boolean,
-        lifecycleStage?: number,
+    public static listBatchCreationWorkflows(
+        batch?: number,
+        eggSourceType?: string,
         ordering?: string,
         page?: number,
         search?: string,
-    ): CancelablePromise<PaginatedContainerAvailabilityResponseList> {
+        status?: string,
+    ): CancelablePromise<PaginatedBatchCreationWorkflowListList> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/batch/containers/availability/',
+            url: '/api/v1/batch/creation-workflows/',
             query: {
-                'container_type': containerType,
-                'delivery_date': deliveryDate,
-                'geography': geography,
-                'include_occupied': includeOccupied,
-                'lifecycle_stage': lifecycleStage,
+                'batch': batch,
+                'egg_source_type': eggSourceType,
                 'ordering': ordering,
                 'page': page,
                 'search': search,
+                'status': status,
+            },
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Create new batch creation workflow
+     * Create a new workflow and automatically create the associated batch with PLANNED status.
+     * @param requestBody
+     * @returns BatchCreationWorkflowCreate
+     * @throws ApiError
+     */
+    public static createBatchCreationWorkflow(
+        requestBody: BatchCreationWorkflowCreate,
+    ): CancelablePromise<BatchCreationWorkflowCreate> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/creation-workflows/',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Get workflow details
+     * Retrieve detailed information about a specific batch creation workflow.
+     * @param id A unique integer value identifying this batch creation workflow.
+     * @returns BatchCreationWorkflowDetail
+     * @throws ApiError
+     */
+    public static retrieveBatchCreationWorkflow(
+        id: number,
+    ): CancelablePromise<BatchCreationWorkflowDetail> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/batch/creation-workflows/{id}/',
+            path: {
+                'id': id,
             },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Cancel workflow
+     * Cancel a workflow if no actions have been executed. Once eggs are delivered, workflow cannot be cancelled (physical eggs must be managed through normal batch operations).
+     * @param id A unique integer value identifying this batch creation workflow.
+     * @param requestBody
+     * @returns BatchCreationWorkflowDetail
+     * @throws ApiError
+     */
+    public static cancelBatchCreationWorkflow(
+        id: number,
+        requestBody: BatchCreationWorkflowCancel,
+    ): CancelablePromise<BatchCreationWorkflowDetail> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/creation-workflows/{id}/cancel/',
+            path: {
+                'id': id,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Plan workflow
+     * Lock workflow for execution by changing status from DRAFT to PLANNED. Requires at least one action to be added first.
+     * @param id A unique integer value identifying this batch creation workflow.
+     * @returns BatchCreationWorkflowDetail
+     * @throws ApiError
+     */
+    public static planBatchCreationWorkflow(
+        id: number,
+    ): CancelablePromise<BatchCreationWorkflowDetail> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/batch/creation-workflows/{id}/plan/',
+            path: {
+                'id': id,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
                 500: `Internal Server Error`,
             },
         });
@@ -200,139 +294,45 @@ export class BatchService {
         });
     }
     /**
-     * List batch creation workflows
-     * Get a list of all batch creation workflows with filtering options.
-     * @param batch Filter by batch ID
-     * @param eggSourceType Filter by egg source type (INTERNAL/EXTERNAL)
+     * Get containers with timeline-aware availability forecasting
+     * Returns containers enriched with occupancy forecasting for workflow planning. Shows which containers are immediately available, will be available by delivery date, or have conflicts (still occupied on delivery date).
+     * @param geography Filter by geography ID
+     * @param containerType Filter by container type name (e.g. TANK, PEN, TRAY)
+     * @param deliveryDate Date when action will execute (YYYY-MM-DD). Defaults to today.
+     * @param includeOccupied Include occupied containers (default: true)
+     * @param lifecycleStage Filter by compatible lifecycle stage ID
      * @param ordering Which field to use when ordering the results.
      * @param page A page number within the paginated result set.
      * @param search A search term.
-     * @param status Filter by workflow status
-     * @returns PaginatedBatchCreationWorkflowListList
+     * @returns PaginatedContainerAvailabilityResponseList
      * @throws ApiError
      */
-    public static listBatchCreationWorkflows(
-        batch?: number,
-        eggSourceType?: string,
+    public static listContainerAvailability(
+        geography: number,
+        containerType?: string,
+        deliveryDate?: string,
+        includeOccupied?: boolean,
+        lifecycleStage?: number,
         ordering?: string,
         page?: number,
         search?: string,
-        status?: string,
-    ): CancelablePromise<PaginatedBatchCreationWorkflowListList> {
+    ): CancelablePromise<PaginatedContainerAvailabilityResponseList> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/batch/creation-workflows/',
+            url: '/api/v1/batch/containers/availability/',
             query: {
-                'batch': batch,
-                'egg_source_type': eggSourceType,
+                'container_type': containerType,
+                'delivery_date': deliveryDate,
+                'geography': geography,
+                'include_occupied': includeOccupied,
+                'lifecycle_stage': lifecycleStage,
                 'ordering': ordering,
                 'page': page,
                 'search': search,
-                'status': status,
-            },
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * Create new batch creation workflow
-     * Create a new workflow and automatically create the associated batch with PLANNED status.
-     * @param requestBody
-     * @returns BatchCreationWorkflowCreate
-     * @throws ApiError
-     */
-    public static createBatchCreationWorkflow(
-        requestBody: BatchCreationWorkflowCreate,
-    ): CancelablePromise<BatchCreationWorkflowCreate> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/creation-workflows/',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `Bad request (validation error)`,
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * Get workflow details
-     * Retrieve detailed information about a specific batch creation workflow.
-     * @param id A unique integer value identifying this batch creation workflow.
-     * @returns BatchCreationWorkflowDetail
-     * @throws ApiError
-     */
-    public static retrieveBatchCreationWorkflow(
-        id: number,
-    ): CancelablePromise<BatchCreationWorkflowDetail> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/v1/batch/creation-workflows/{id}/',
-            path: {
-                'id': id,
             },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,
-                404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * Cancel workflow
-     * Cancel a workflow if no actions have been executed. Once eggs are delivered, workflow cannot be cancelled (physical eggs must be managed through normal batch operations).
-     * @param id A unique integer value identifying this batch creation workflow.
-     * @param requestBody
-     * @returns BatchCreationWorkflowDetail
-     * @throws ApiError
-     */
-    public static cancelBatchCreationWorkflow(
-        id: number,
-        requestBody: BatchCreationWorkflowCancel,
-    ): CancelablePromise<BatchCreationWorkflowDetail> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/creation-workflows/{id}/cancel/',
-            path: {
-                'id': id,
-            },
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
-    /**
-     * Plan workflow
-     * Lock workflow for execution by changing status from DRAFT to PLANNED. Requires at least one action to be added first.
-     * @param id A unique integer value identifying this batch creation workflow.
-     * @returns BatchCreationWorkflowDetail
-     * @throws ApiError
-     */
-    public static planBatchCreationWorkflow(
-        id: number,
-    ): CancelablePromise<BatchCreationWorkflowDetail> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/v1/batch/creation-workflows/{id}/plan/',
-            path: {
-                'id': id,
-            },
-            errors: {
-                401: `Unauthorized`,
-                403: `Forbidden`,
-                404: `Not Found`,
                 500: `Internal Server Error`,
             },
         });

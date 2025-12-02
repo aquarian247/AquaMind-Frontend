@@ -8,9 +8,9 @@
 export type ScenarioProjection = {
     readonly projection_id: number;
     /**
-     * DEPRECATED: Temporary field for migration
+     * The projection run this data belongs to
      */
-    scenario?: number | null;
+    projection_run?: number | null;
     /**
      * Projection date
      */
