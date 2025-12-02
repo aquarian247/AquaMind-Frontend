@@ -24,11 +24,10 @@ import { PlannedActivityDetailModal } from '../components/PlannedActivityDetailM
 import { PlannedActivityForm } from '../components/PlannedActivityForm';
 import { filterActivities } from '../utils/activityHelpers';
 import { useUser } from '@/contexts/UserContext';
-import { RBACEmptyState } from '@/components/rbac/RBACEmptyState';
 import type { ActivityFilters, PlannedActivity } from '../types';
 
 export function ProductionPlannerPage() {
-  const { hasOperationalAccess, isViewer } = useUser();
+  const { isViewer } = useUser();
   const [selectedScenarioId, setSelectedScenarioId] = useState<number | null>(null);
   const [filters, setFilters] = useState<ActivityFilters>({
     activityTypes: [],
@@ -79,14 +78,8 @@ export function ProductionPlannerPage() {
     return filterActivities(allActivities, filters);
   }, [allActivities, filters]);
 
-  // Permission check
-  if (!hasOperationalAccess) {
-    return (
-      <div className="container mx-auto py-8">
-        <RBACEmptyState />
-      </div>
-    );
-  }
+  // Note: Backend enforces RBAC - frontend just provides good UX
+  // If user lacks permission, backend will return 403 and we'll show error message
 
   const handleFilterChange = (newFilters: Partial<ActivityFilters>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
