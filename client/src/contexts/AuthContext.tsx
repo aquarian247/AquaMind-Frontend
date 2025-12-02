@@ -230,11 +230,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           // Schedule token refresh
           scheduleTokenRefresh(newDecoded.exp);
+          
+          // Fetch profile BEFORE setting isLoading=false
+          try {
+            const profile = await ApiService.apiV1UsersAuthProfileRetrieve();
+            setState(prev => ({
+              ...prev,
+              user: prev.user ? { ...prev.user, profile } : prev.user,
+            }));
+          } catch (profileError) {
+            console.error('Failed to fetch profile after token refresh:', profileError);
+          }
         } else {
-          // Valid token, set auth state
+          // Valid token, set auth state (but keep loading until profile is fetched)
           setAuthToken(accessToken);
 
-          // Set auth state with decoded token info
+          // Fetch profile BEFORE setting isLoading=false
+          let userProfile: UserProfile = {} as UserProfile;
+          try {
+            userProfile = await ApiService.apiV1UsersAuthProfileRetrieve();
+          } catch (profileError) {
+            console.error('Failed to fetch profile during init:', profileError);
+          }
+
+          // Set auth state with decoded token info and profile
           setState({
             user: {
               id: decoded.user_id,
@@ -242,7 +261,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               email: decoded.email || '',
               is_active: true,
               date_joined: new Date().toISOString(),
-              profile: {} as UserProfile,
+              profile: userProfile,
             } as User,
             isAuthenticated: true,
             isLoading: false,
@@ -258,9 +277,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Schedule token refresh
           scheduleTokenRefresh(decoded.exp);
         }
-
-        // Fetch complete user profile
-        fetchUserProfile();
       } catch (error) {
         console.error('Error initializing auth:', error);
         handleLogout();

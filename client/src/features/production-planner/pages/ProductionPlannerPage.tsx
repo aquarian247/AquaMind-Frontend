@@ -17,6 +17,7 @@ import {
 import { Plus, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
+import { apiRequest } from '@/lib/queryClient';
 import { PermissionGuard } from '@/components/rbac/PermissionGuard';
 import { ProductionPlannerKPIDashboard } from '../components/ProductionPlannerKPIDashboard';
 import { PlannedActivityFilters } from '../components/PlannedActivityFilters';
@@ -63,12 +64,17 @@ export function ProductionPlannerPage() {
   }
 
   // Fetch activities for selected scenario
-  // Note: API returns array directly (not paginated), but generated type is incorrect
+  // Note: Using apiRequest with ?all=true because the backend filters scenarios by creator
+  // unless all=true is passed. The generated client doesn't support query params for this endpoint.
   const { data: activitiesResponse, isLoading: activitiesLoading } = useQuery({
     queryKey: ['planned-activities', 'scenario', selectedScenarioId],
     queryFn: async () => {
       if (!selectedScenarioId) return [];
-      return await ApiService.apiV1ScenarioScenariosPlannedActivitiesRetrieve(selectedScenarioId) as unknown as PlannedActivity[];
+      const response = await apiRequest(
+        'GET',
+        `/api/v1/scenario/scenarios/${selectedScenarioId}/planned-activities/?all=true`
+      );
+      return await response.json() as PlannedActivity[];
     },
     enabled: !!selectedScenarioId,
   });
