@@ -282,16 +282,16 @@ export function PlannedActivityForm({
                   <FormControl>
                     <Select
                       onValueChange={(value) =>
-                        field.onChange(value ? Number(value) : undefined)
+                        field.onChange(value === '_none_' ? undefined : Number(value))
                       }
-                      value={field.value?.toString() || ''}
+                      value={field.value?.toString() || '_none_'}
                       disabled={containersLoading}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select container..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="_none_">None</SelectItem>
                         {containers.map((container) => (
                           <SelectItem
                             key={container.id}

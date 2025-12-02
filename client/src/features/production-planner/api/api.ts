@@ -220,13 +220,11 @@ export function useMarkActivityCompleted() {
       // Using 'any' cast as workaround for generated type signature
       ApiService.apiV1PlanningPlannedActivitiesMarkCompletedCreate(id, {} as any),
     onSuccess: (completedActivity, id) => {
-      // Invalidate detail query
-      queryClient.invalidateQueries({
-        queryKey: plannedActivityKeys.detail(id),
-      });
-      // Invalidate list queries
-      queryClient.invalidateQueries({ queryKey: plannedActivityKeys.lists() });
-      // Invalidate scenario and batch queries
+      // Invalidate ALL planned activities queries to ensure UI updates
+      // This is more aggressive but guarantees the timeline/KPIs refresh
+      queryClient.invalidateQueries({ queryKey: plannedActivityKeys.all });
+      
+      // Also invalidate scenario and batch queries if available
       if (completedActivity.scenario) {
         queryClient.invalidateQueries({
           queryKey: plannedActivityKeys.byScenario(completedActivity.scenario),
