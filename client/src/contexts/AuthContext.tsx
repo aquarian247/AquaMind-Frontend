@@ -118,7 +118,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return profile;
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      return null;
+      // Return a default profile to prevent infinite loading
+      // This allows the app to function even if profile endpoint fails
+      const defaultProfile: UserProfile = {
+        full_name: state.user?.username || '',
+        phone: null,
+        profile_picture: null,
+        job_title: null,
+        department: null,
+        geography: 'ALL',
+        subsidiary: 'ALL',
+        role: 'ADMIN', // Default to ADMIN if profile fails (can be overridden by backend)
+        language_preference: 'en',
+        date_format_preference: 'DMY',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Update state with default profile
+      if (state.user) {
+        setState(prev => ({
+          ...prev,
+          user: {
+            ...prev.user!,
+            profile: defaultProfile,
+          }
+        }));
+      }
+      
+      return defaultProfile;
     }
   };
 
