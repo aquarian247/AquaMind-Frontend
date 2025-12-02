@@ -357,6 +357,49 @@ features/production-planner/
 **Fix**: Cast empty object/request body to `any` with comment  
 **Impact**: Successful API calls
 
+### 4. Planned Activities 404 Error (Fixed December 2, 2025 - Session 1)
+**Issue**: `/api/v1/scenario/scenarios/{id}/planned-activities/` returned 404  
+**Root Cause**: Backend `ScenarioViewSet.get_queryset()` filters scenarios by `created_by=request.user` by default  
+**Fix**: Added `?all=true` query param in `ProductionPlannerPage.tsx` using `apiRequest()` instead of generated client  
+**Commit**: `4d45211`
+
+### 5. PermissionGuard Stuck in Loading State (Fixed December 2, 2025 - Session 1)
+**Issue**: Page showed infinite loading spinner, main content never rendered  
+**Root Cause**: `AuthContext.tsx` set `isLoading=false` BEFORE awaiting `fetchUserProfile()`, causing `profile.role` to be undefined  
+**Fix**: Await profile fetch before setting `isLoading=false`  
+**Commit**: `4d45211`
+
+### 6. Empty String SelectItem Error (Fixed December 2, 2025 - Session 2)
+**Issue**: Clicking "Create Activity" button threw console errors: `A <Select.Item /> must have a value prop that is not an empty string`  
+**Root Cause**: Container dropdown had `<SelectItem value="">None</SelectItem>` which is invalid for Radix UI  
+**Fix**: Changed to use sentinel value `_none_` instead of empty string:
+```tsx
+// Before
+value={field.value?.toString() || ''}
+<SelectItem value="">None</SelectItem>
+
+// After  
+value={field.value?.toString() || '_none_'}
+<SelectItem value="_none_">None</SelectItem>
+```
+**File**: `client/src/features/production-planner/components/PlannedActivityForm.tsx`  
+**Commit**: `cad40e0`
+
+### 7. Query Invalidation Not Working for Mark as Completed (Fixed December 2, 2025 - Session 2)
+**Issue**: After clicking "Mark as Completed", KPIs and timeline didn't update until page refresh  
+**Root Cause**: Query invalidation was too specific, not matching the query key used in `ProductionPlannerPage`  
+**Fix**: Changed to invalidate ALL planned activities queries:
+```tsx
+// Before - too specific
+queryClient.invalidateQueries({ queryKey: plannedActivityKeys.detail(id) });
+queryClient.invalidateQueries({ queryKey: plannedActivityKeys.lists() });
+
+// After - catches all related queries  
+queryClient.invalidateQueries({ queryKey: plannedActivityKeys.all });
+```
+**File**: `client/src/features/production-planner/api/api.ts`  
+**Commit**: `cad40e0`
+
 ---
 
 ## 📚 Documentation Created
@@ -412,13 +455,13 @@ features/production-planner/
 - [x] Scenario selector functional
 - [x] Create button present
 
-**Integration Testing** ⏭️ (Requires scenarios in database)
-- [ ] Create activity workflow
-- [ ] Mark activity as completed
-- [ ] Batch tab integration
-- [ ] Scenario tab integration
-- [ ] Mobile view testing
-- [ ] Filter functionality
+**Integration Testing** ✅ (Verified December 2, 2025)
+- [x] Create activity workflow ✅ (tested with Sampling activity)
+- [x] Mark activity as completed ✅ (real-time KPI updates working)
+- [ ] Batch tab integration (not yet tested)
+- [ ] Scenario tab integration (not yet tested)
+- [ ] Mobile view testing (not yet tested)
+- [ ] Filter functionality (not yet tested)
 
 **Backend Dependencies** ✅
 - [x] Backend planning endpoints live
@@ -647,9 +690,74 @@ From `BACKEND_HANDOVER.md`:
 
 ---
 
+## 🔧 Debugging Session Log (December 2, 2025)
+
+### Session 1: Initial Page Load Issues
+**Problems Found**:
+1. Planned Activities 404 - Backend filters scenarios by creator
+2. PermissionGuard infinite loading - Profile not awaited before isLoading=false
+
+**Solutions Applied**:
+1. Use `apiRequest()` with `?all=true` parameter instead of generated client
+2. Await `fetchUserProfile()` before setting `isLoading=false` in AuthContext
+
+**Commit**: `4d45211` - "Fix Production Planner page loading issues"
+
+### Session 2: Create Activity Dialog & Query Invalidation
+**Problems Found**:
+1. Create Activity dialog crashed with Radix UI error about empty string SelectItem value
+2. Mark as Completed succeeded but KPIs didn't update (required page refresh)
+
+**Solutions Applied**:
+1. Changed Container dropdown "None" option from `value=""` to `value="_none_"` with matching handler logic
+2. Changed `useMarkActivityCompleted` to use `plannedActivityKeys.all` for broader query invalidation
+
+**Commit**: `cad40e0` - "Fix Production Planner form and query invalidation bugs"
+
+### Current Branch State
+```bash
+git log --oneline -4
+cad40e0 Fix Production Planner form and query invalidation bugs
+4d45211 Fix Production Planner page loading issues
+32b3185 Sync OpenAPI spec with projection_run field in combined-growth-data response
+565739f fix: use same scenario query pattern as Scenario Planning page
+```
+
+### Files Modified This Session
+| File | Changes |
+|------|---------|
+| `client/src/contexts/AuthContext.tsx` | Await profile fetch before `isLoading=false` |
+| `client/src/features/production-planner/pages/ProductionPlannerPage.tsx` | Use `apiRequest()` with `?all=true` for planned-activities |
+| `client/src/features/production-planner/components/PlannedActivityForm.tsx` | Use `_none_` sentinel value for Container dropdown |
+| `client/src/features/production-planner/api/api.ts` | Broader query invalidation for Mark as Completed |
+
+### Verified Working ✅
+1. Page loads correctly with scenario dropdown
+2. Create Activity dialog opens without errors
+3. Container dropdown "None" option works
+4. Activity creation works with real-time KPI updates
+5. Mark as Completed works with real-time KPI updates
+6. Timeline expands/collapses correctly
+7. Activity detail modal displays correctly
+
+### Known Minor Issues (For Next Session)
+1. Console warning: "Select is changing from uncontrolled to controlled" - cosmetic React warning
+2. Console warning: "Missing Description for DialogContent" - accessibility warning, low priority
+3. Batch dropdown shows ALL batches - consider filtering to scenario's linked batch
+
+### Not Yet Tested
+1. Edit activity workflow
+2. Filter functionality (Activity Type, Status, Batch filters)
+3. Batch tab integration (`/batch-management/{id}` → Activities tab)
+4. Scenario tab integration (`/scenario-planning/{id}` → Planned Activities section)
+5. Mobile responsive layout
+6. Overdue activity filtering and display
+
+---
+
 ## 📊 Final Stats
 
-**Implementation Time**: ~4 hours (single session)  
+**Implementation Time**: ~4 hours (initial) + ~1 hour (debugging)  
 **Lines of Code**: ~3,000 production + ~700 tests  
 **Test Coverage**: Business logic and smoke tests  
 **Quality Gates**: All passing  
