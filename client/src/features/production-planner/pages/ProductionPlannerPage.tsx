@@ -43,7 +43,9 @@ export function ProductionPlannerPage() {
   // Fetch scenarios for dropdown
   const { data: scenariosResponse, isLoading: scenariosLoading } = useQuery({
     queryKey: ['scenarios'],
-    queryFn: () => ApiService.apiV1ScenarioScenariosList(),
+    queryFn: () => ApiService.apiV1ScenarioScenariosList(
+      true, // all=true to get all scenarios (not just active)
+    ),
   });
 
   const scenarios = scenariosResponse?.results || [];
