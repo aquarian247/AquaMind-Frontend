@@ -3,16 +3,20 @@ import Timeline, {
   TimelineHeaders,
   SidebarHeader,
   DateHeader,
-  TimelineGroup,
-  TimelineItem,
+  TimelineGroupBase,
+  TimelineItemBase,
 } from 'react-calendar-timeline';
 import 'react-calendar-timeline/dist/style.css';
-import moment from 'moment';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar } from 'lucide-react';
 import { getActivityColor } from '../utils/activityHelpers';
 import type { PlannedActivity } from '../types';
+
+// Custom item type extending the base
+interface ActivityTimelineItem extends TimelineItemBase<number> {
+  originalActivity: PlannedActivity;
+}
 
 // Helper to get start of day
 const startOfDay = (date: Date | string) => {
@@ -41,7 +45,7 @@ export function ProductionPlannerGanttView({
 }: ProductionPlannerGanttViewProps) {
   // 1. Transform batches into Timeline Groups
   const groups = useMemo(() => {
-    const batchMap = new Map<number, TimelineGroup>();
+    const batchMap = new Map<number, TimelineGroupBase>();
 
     activities.forEach((activity) => {
       if (!batchMap.has(activity.batch)) {
@@ -81,9 +85,9 @@ export function ProductionPlannerGanttView({
     }));
   }, [activities]);
 
-  // 3. Determine default visible time range
-  const defaultTimeStart = moment().add(-7, 'day');
-  const defaultTimeEnd = moment().add(30, 'day');
+  // 3. Determine default visible time range (as timestamps in milliseconds)
+  const defaultTimeStart = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7 days ago
+  const defaultTimeEnd = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days from now
 
   // Handle Item Click
   const handleItemSelect = (itemId: number, e: any, time: number) => {
