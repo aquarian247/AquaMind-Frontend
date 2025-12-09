@@ -8,6 +8,8 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { ActivityTemplate } from './models/ActivityTemplate';
+export type { ActivityTypeStats } from './models/ActivityTypeStats';
+export type { ActivityVarianceItem } from './models/ActivityVarianceItem';
 export type { Area } from './models/Area';
 export type { AreaHistory } from './models/AreaHistory';
 export type { AssignmentNestedBatch } from './models/AssignmentNestedBatch';
@@ -309,6 +311,9 @@ export type { UserProfileHistory } from './models/UserProfileHistory';
 export type { UserProfileUpdate } from './models/UserProfileUpdate';
 export type { UserSummary } from './models/UserSummary';
 export type { VaccinationType } from './models/VaccinationType';
+export type { VarianceReport } from './models/VarianceReport';
+export type { VarianceReportSummary } from './models/VarianceReportSummary';
+export type { VarianceTimeSeriesItem } from './models/VarianceTimeSeriesItem';
 export type { WeatherData } from './models/WeatherData';
 
 export { ApiService } from './services/ApiService';

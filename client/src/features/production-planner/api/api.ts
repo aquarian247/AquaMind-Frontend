@@ -40,6 +40,12 @@ export const activityTemplateKeys = {
   detail: (id: number) => [...activityTemplateKeys.details(), id] as const,
 };
 
+export const varianceReportKeys = {
+  all: ['variance-report'] as const,
+  report: (filters?: Record<string, any>) =>
+    [...varianceReportKeys.all, filters] as const,
+};
+
 // ============================================================================
 // QUERIES
 // ============================================================================
@@ -110,13 +116,37 @@ export function usePlannedActivitiesByBatch(batchId: number) {
 }
 
 /**
- * Fetch activity templates
+ * Fetch activity templates with optional filters
  */
-export function useActivityTemplates() {
+export function useActivityTemplates(params?: {
+  activityType?: 'VACCINATION' | 'TREATMENT' | 'CULL' | 'HARVEST' | 'SALE' | 'FEED_CHANGE' | 'TRANSFER' | 'MAINTENANCE' | 'SAMPLING' | 'OTHER';
+  triggerType?: 'DAY_OFFSET' | 'WEIGHT_THRESHOLD' | 'STAGE_TRANSITION';
+  isActive?: boolean;
+  page?: number;
+  search?: string;
+}) {
   return useQuery({
-    queryKey: activityTemplateKeys.lists(),
-    queryFn: () => ApiService.apiV1PlanningActivityTemplatesList(),
+    queryKey: activityTemplateKeys.list(params),
+    queryFn: () => ApiService.apiV1PlanningActivityTemplatesList(
+      params?.activityType,
+      params?.isActive,
+      undefined, // ordering
+      params?.page,
+      params?.search,
+      params?.triggerType,
+    ),
     staleTime: 10 * 60 * 1000, // 10 minutes (templates don't change often)
+  });
+}
+
+/**
+ * Fetch single activity template by ID
+ */
+export function useActivityTemplate(id: number) {
+  return useQuery({
+    queryKey: activityTemplateKeys.detail(id),
+    queryFn: () => ApiService.apiV1PlanningActivityTemplatesRetrieve(id),
+    enabled: !!id,
   });
 }
 
@@ -266,6 +296,127 @@ export function useSpawnWorkflow() {
       // Invalidate workflow queries (if they exist)
       queryClient.invalidateQueries({ queryKey: ['workflows'] });
     },
+  });
+}
+
+// ============================================================================
+// TEMPLATE MUTATIONS
+// ============================================================================
+
+/**
+ * Create a new activity template
+ */
+export function useCreateActivityTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Partial<ActivityTemplate>) =>
+      ApiService.apiV1PlanningActivityTemplatesCreate(data as ActivityTemplate),
+    onSuccess: () => {
+      // Invalidate all template queries
+      queryClient.invalidateQueries({ queryKey: activityTemplateKeys.all });
+    },
+  });
+}
+
+/**
+ * Update an existing activity template
+ */
+export function useUpdateActivityTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Partial<ActivityTemplate>;
+    }) =>
+      ApiService.apiV1PlanningActivityTemplatesPartialUpdate(
+        id,
+        data as ActivityTemplate
+      ),
+    onSuccess: (_, { id }) => {
+      // Invalidate detail query
+      queryClient.invalidateQueries({
+        queryKey: activityTemplateKeys.detail(id),
+      });
+      // Invalidate list queries
+      queryClient.invalidateQueries({ queryKey: activityTemplateKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Delete an activity template
+ */
+export function useDeleteActivityTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) =>
+      ApiService.apiV1PlanningActivityTemplatesDestroy(id),
+    onSuccess: () => {
+      // Invalidate all template queries
+      queryClient.invalidateQueries({ queryKey: activityTemplateKeys.all });
+    },
+  });
+}
+
+/**
+ * Generate planned activity from a template
+ */
+export function useGenerateFromTemplate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      templateId,
+      data,
+    }: {
+      templateId: number;
+      data: { scenario: number; batch: number; override_due_date?: string };
+    }) =>
+      // Backend expects scenario and batch IDs
+      ApiService.apiV1PlanningActivityTemplatesGenerateForBatchCreate(
+        templateId,
+        data as any
+      ),
+    onSuccess: () => {
+      // Invalidate planned activities queries (new activity created)
+      queryClient.invalidateQueries({ queryKey: plannedActivityKeys.all });
+    },
+  });
+}
+
+// ============================================================================
+// VARIANCE REPORT QUERIES
+// ============================================================================
+
+/**
+ * Fetch variance report for planned vs actual activity execution
+ */
+export function useVarianceReport(params?: {
+  scenario?: number;
+  activityType?: ActivityType;
+  dueDateAfter?: string;
+  dueDateBefore?: string;
+  groupBy?: 'month' | 'week';
+  includeDetails?: boolean;
+}) {
+  return useQuery({
+    queryKey: varianceReportKeys.report(params),
+    queryFn: () =>
+      ApiService.apiV1PlanningPlannedActivitiesVarianceReportRetrieve(
+        params?.activityType,
+        params?.dueDateAfter,
+        params?.dueDateBefore,
+        params?.groupBy ?? 'month',
+        params?.includeDetails ?? false,
+        params?.scenario
+      ),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 

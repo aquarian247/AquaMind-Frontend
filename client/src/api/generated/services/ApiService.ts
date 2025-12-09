@@ -266,6 +266,7 @@ import type { UserProfile } from '../models/UserProfile';
 import type { UserProfileHistory } from '../models/UserProfileHistory';
 import type { UserProfileUpdate } from '../models/UserProfileUpdate';
 import type { VaccinationType } from '../models/VaccinationType';
+import type { VarianceReport } from '../models/VarianceReport';
 import type { WeatherData } from '../models/WeatherData';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -16690,7 +16691,8 @@ export class ApiService {
          * * `VACCINATION` - Vaccination
          * * `TREATMENT` - Treatment/Health Intervention
          * * `CULL` - Culling
-         * * `SALE` - Sale/Harvest
+         * * `HARVEST` - Harvest
+         * * `SALE` - Sale/Commercial Handoff
          * * `FEED_CHANGE` - Feed Strategy Change
          * * `TRANSFER` - Transfer
          * * `MAINTENANCE` - Maintenance
@@ -16709,7 +16711,7 @@ export class ApiService {
          * @throws ApiError
          */
         public static apiV1PlanningActivityTemplatesList(
-            activityType?: 'CULL' | 'FEED_CHANGE' | 'MAINTENANCE' | 'OTHER' | 'SALE' | 'SAMPLING' | 'TRANSFER' | 'TREATMENT' | 'VACCINATION',
+            activityType?: 'CULL' | 'FEED_CHANGE' | 'HARVEST' | 'MAINTENANCE' | 'OTHER' | 'SALE' | 'SAMPLING' | 'TRANSFER' | 'TREATMENT' | 'VACCINATION',
             isActive?: boolean,
             ordering?: string,
             page?: number,
@@ -16894,7 +16896,8 @@ export class ApiService {
          * * `VACCINATION` - Vaccination
          * * `TREATMENT` - Treatment/Health Intervention
          * * `CULL` - Culling
-         * * `SALE` - Sale/Harvest
+         * * `HARVEST` - Harvest
+         * * `SALE` - Sale/Commercial Handoff
          * * `FEED_CHANGE` - Feed Strategy Change
          * * `TRANSFER` - Transfer
          * * `MAINTENANCE` - Maintenance
@@ -16916,7 +16919,7 @@ export class ApiService {
          * @throws ApiError
          */
         public static apiV1PlanningPlannedActivitiesList(
-            activityType?: 'CULL' | 'FEED_CHANGE' | 'MAINTENANCE' | 'OTHER' | 'SALE' | 'SAMPLING' | 'TRANSFER' | 'TREATMENT' | 'VACCINATION',
+            activityType?: 'CULL' | 'FEED_CHANGE' | 'HARVEST' | 'MAINTENANCE' | 'OTHER' | 'SALE' | 'SAMPLING' | 'TRANSFER' | 'TREATMENT' | 'VACCINATION',
             batch?: number,
             container?: number,
             ordering?: string,
@@ -17122,6 +17125,43 @@ export class ApiService {
                     401: `Unauthorized`,
                     403: `Forbidden`,
                     404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Generate variance report comparing planned vs actual activity execution.
+         * @param activityType Filter by activity type
+         * @param dueDateAfter Filter activities due on or after this date (YYYY-MM-DD)
+         * @param dueDateBefore Filter activities due on or before this date (YYYY-MM-DD)
+         * @param groupBy Time series grouping: "month" or "week"
+         * @param includeDetails Include individual activity details in response
+         * @param scenario Filter by scenario ID
+         * @returns VarianceReport
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesVarianceReportRetrieve(
+            activityType?: 'CULL' | 'FEED_CHANGE' | 'HARVEST' | 'MAINTENANCE' | 'OTHER' | 'SALE' | 'SAMPLING' | 'TRANSFER' | 'TREATMENT' | 'VACCINATION',
+            dueDateAfter?: string,
+            dueDateBefore?: string,
+            groupBy: 'month' | 'week' = 'month',
+            includeDetails: boolean = false,
+            scenario?: number,
+        ): CancelablePromise<VarianceReport> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/planning/planned-activities/variance-report/',
+                query: {
+                    'activity_type': activityType,
+                    'due_date_after': dueDateAfter,
+                    'due_date_before': dueDateBefore,
+                    'group_by': groupBy,
+                    'include_details': includeDetails,
+                    'scenario': scenario,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
                     500: `Internal Server Error`,
                 },
             });

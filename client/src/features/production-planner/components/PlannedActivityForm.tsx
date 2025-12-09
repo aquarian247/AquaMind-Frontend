@@ -53,6 +53,7 @@ const plannedActivitySchema = z.object({
       'VACCINATION',
       'TREATMENT',
       'CULL',
+      'HARVEST',
       'SALE',
       'FEED_CHANGE',
       'TRANSFER',
@@ -90,13 +91,45 @@ export function PlannedActivityForm({
 
   const isEditMode = !!activity;
 
-  // Fetch batches for dropdown
-  const { data: batchesResponse, isLoading: batchesLoading } = useQuery({
-    queryKey: ['batches'],
-    queryFn: () => ApiService.apiV1BatchBatchesList(),
-  });
+  // Fetch all ACTIVE batches for dropdown (uses pagination - ~59 batches across ~3 pages)
+  const { data: batches = [], isLoading: batchesLoading } = useQuery({
+    queryKey: ['batches', 'active', 'all'],
+    queryFn: async () => {
+      const allBatches: Array<{ id: number; batch_number: string }> = [];
+      let page = 1;
+      let hasMore = true;
+      const maxPages = 10;
 
-  const batches = batchesResponse?.results || [];
+      while (hasMore && page <= maxPages) {
+        const response = await ApiService.apiV1BatchBatchesList(
+          undefined, // batchNumber
+          undefined, // batchNumberIcontains
+          undefined, // batchType
+          undefined, // batchTypeIn
+          undefined, // biomassMax
+          undefined, // biomassMin
+          undefined, // endDateAfter
+          undefined, // endDateBefore
+          undefined, // lifecycleStage
+          undefined, // lifecycleStageIn
+          undefined, // ordering
+          page,      // page
+          undefined, // populationMax
+          undefined, // populationMin
+          undefined, // search
+          undefined, // species
+          undefined, // speciesIn
+          undefined, // startDateAfter
+          undefined, // startDateBefore
+          'ACTIVE'   // status - only ACTIVE batches can have planned activities
+        );
+        allBatches.push(...(response.results || []).map(b => ({ id: b.id, batch_number: b.batch_number })));
+        hasMore = !!response.next;
+        page++;
+      }
+      return allBatches;
+    },
+  });
 
   // Fetch containers for dropdown
   const { data: containersResponse, isLoading: containersLoading } = useQuery({
@@ -129,12 +162,30 @@ export function PlannedActivityForm({
         },
   });
 
-  // Reset form when activity changes or modal closes
+  // Reset form when modal opens with activity data (for edit mode)
   useEffect(() => {
-    if (!isOpen) {
-      form.reset();
+    if (isOpen && activity) {
+      // In edit mode, set form values from the activity
+      form.reset({
+        scenario: activity.scenario,
+        batch: activity.batch,
+        activity_type: activity.activity_type,
+        due_date: activity.due_date,
+        container: activity.container || undefined,
+        notes: activity.notes || '',
+      });
+    } else if (isOpen && !activity) {
+      // In create mode, reset to defaults
+      form.reset({
+        scenario: scenarioId,
+        batch: undefined,
+        activity_type: undefined,
+        due_date: format(new Date(), 'yyyy-MM-dd'),
+        container: undefined,
+        notes: '',
+      });
     }
-  }, [isOpen, form]);
+  }, [isOpen, activity, scenarioId, form]);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -191,65 +242,88 @@ export function PlannedActivityForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Batch Selection */}
-            <FormField
-              control={form.control}
-              name="batch"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Batch <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={(value) => field.onChange(Number(value))}
-                      value={field.value?.toString()}
-                      disabled={batchesLoading}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select batch..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {batches.map((batch) => (
-                          <SelectItem key={batch.id} value={batch.id.toString()}>
-                            {batch.batch_number}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* In Edit Mode: Show Batch & Activity Type as read-only info */}
+            {isEditMode && activity && (
+              <div className="rounded-lg bg-muted/50 p-4 space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Batch</p>
+                  <p className="text-base font-semibold">{activity.batch_number}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Activity Type</p>
+                  <p className="text-base font-semibold">
+                    {activityTypeOptions.find(o => o.value === activity.activity_type)?.label || activity.activity_type}
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground italic">
+                  To change batch or activity type, delete this activity and create a new one.
+                </p>
+              </div>
+            )}
 
-            {/* Activity Type Selection */}
-            <FormField
-              control={form.control}
-              name="activity_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Activity Type <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select activity type..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {activityTypeOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* In Create Mode: Show Batch dropdown */}
+            {!isEditMode && (
+              <FormField
+                control={form.control}
+                name="batch"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Batch <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        value={field.value?.toString()}
+                        disabled={batchesLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select batch..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {batches.map((batch) => (
+                            <SelectItem key={batch.id} value={batch.id.toString()}>
+                              {batch.batch_number}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {/* In Create Mode: Show Activity Type dropdown */}
+            {!isEditMode && (
+              <FormField
+                control={form.control}
+                name="activity_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Activity Type <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select activity type..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {activityTypeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Due Date */}
             <FormField
@@ -278,20 +352,20 @@ export function PlannedActivityForm({
               name="container"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Container (Optional)</FormLabel>
+                  <FormLabel>Target Container</FormLabel>
                   <FormControl>
                     <Select
                       onValueChange={(value) =>
-                        field.onChange(value === '_none_' ? undefined : Number(value))
+                        field.onChange(value === '_all_' ? undefined : Number(value))
                       }
-                      value={field.value?.toString() || '_none_'}
+                      value={field.value?.toString() || '_all_'}
                       disabled={containersLoading}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select container..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="_none_">None</SelectItem>
+                        <SelectItem value="_all_">All containers (entire batch)</SelectItem>
                         {containers.map((container) => (
                           <SelectItem
                             key={container.id}
@@ -303,6 +377,9 @@ export function PlannedActivityForm({
                       </SelectContent>
                     </Select>
                   </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    Leave as "All containers" for batch-wide activities (vaccination, harvest)
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}

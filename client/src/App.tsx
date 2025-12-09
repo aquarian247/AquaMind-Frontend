@@ -62,6 +62,8 @@ import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModel
 
 // Production Planner (Operational Scheduling)
 import { ProductionPlannerPage } from "@/features/production-planner/pages/ProductionPlannerPage";
+import { ActivityTemplateManagementPage } from "@/features/production-planner/pages/ActivityTemplateManagementPage";
+import { VarianceReportPage } from "@/features/production-planner/pages/VarianceReportPage";
 
 // Executive & specialized
 import ExecutiveDashboardPage from "@/features/executive/pages/ExecutiveDashboardPage";
@@ -441,6 +443,22 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <ProductionPlannerPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/activity-templates">
+        <ProtectedRoute>
+          <AppLayout>
+            <ActivityTemplateManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/variance-report">
+        <ProtectedRoute>
+          <AppLayout>
+            <VarianceReportPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

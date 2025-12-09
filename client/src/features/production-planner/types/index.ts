@@ -11,6 +11,8 @@ export type {
   PatchedPlannedActivity,
   PaginatedPlannedActivityList,
   ActivityTemplate,
+  PatchedActivityTemplate,
+  PaginatedActivityTemplateList,
 } from '@/api/generated';
 
 // Import for local use
@@ -21,6 +23,7 @@ export type ActivityType =
   | 'VACCINATION'
   | 'TREATMENT'
   | 'CULL'
+  | 'HARVEST'
   | 'SALE'
   | 'FEED_CHANGE'
   | 'TRANSFER'
@@ -77,5 +80,36 @@ export interface ActivityFormData {
   due_date: Date;
   container?: number | null;
   notes?: string;
+}
+
+// ============================================================================
+// Template Types
+// ============================================================================
+
+// Trigger type enum (matches backend exactly)
+export type TriggerType =
+  | 'DAY_OFFSET'
+  | 'WEIGHT_THRESHOLD'
+  | 'STAGE_TRANSITION';
+
+// Template form data (for Create/Edit)
+export interface TemplateFormData {
+  name: string;
+  description?: string | null;
+  activity_type: ActivityType;
+  trigger_type: TriggerType;
+  day_offset?: number | null;
+  weight_threshold_g?: string | null;
+  target_lifecycle_stage?: number | null;
+  notes_template?: string | null;
+  is_active?: boolean;
+}
+
+// Template filter state
+export interface TemplateFilters {
+  activityTypes: ActivityType[];
+  triggerTypes: TriggerType[];
+  isActive?: boolean | null;
+  search?: string;
 }
 

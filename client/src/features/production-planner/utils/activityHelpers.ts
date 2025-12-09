@@ -138,6 +138,7 @@ export function getActivityTypeBadgeVariant(
     VACCINATION: 'default',
     TREATMENT: 'secondary',
     CULL: 'destructive',
+    HARVEST: 'default',
     SALE: 'outline',
     FEED_CHANGE: 'secondary',
     TRANSFER: 'default',
@@ -198,6 +199,7 @@ export function formatActivityType(activityType: PlannedActivity['activity_type'
     VACCINATION: 'Vaccination',
     TREATMENT: 'Treatment',
     CULL: 'Culling',
+    HARVEST: 'Harvest',
     SALE: 'Sale',
     FEED_CHANGE: 'Feed Change',
     TRANSFER: 'Transfer',
@@ -210,6 +212,26 @@ export function formatActivityType(activityType: PlannedActivity['activity_type'
 }
 
 /**
+ * Get color hex for activity type (for Gantt chart)
+ */
+export function getActivityColor(activityType: PlannedActivity['activity_type']): string {
+  const colorMap: Record<PlannedActivity['activity_type'], string> = {
+    VACCINATION: '#3b82f6',    // blue-500
+    TREATMENT: '#ef4444',      // red-500
+    CULL: '#f97316',           // orange-500
+    HARVEST: '#16a34a',        // green-600 (distinct from SALE)
+    SALE: '#22c55e',           // green-500
+    FEED_CHANGE: '#eab308',    // yellow-500
+    TRANSFER: '#8b5cf6',       // violet-500
+    MAINTENANCE: '#64748b',    // slate-500
+    SAMPLING: '#06b6d4',       // cyan-500
+    OTHER: '#a8a29e',          // stone-400
+  };
+
+  return colorMap[activityType] || '#64748b';
+}
+
+/**
  * Get activity type options for dropdowns/filters
  */
 export function getActivityTypeOptions() {
@@ -217,7 +239,8 @@ export function getActivityTypeOptions() {
     { value: 'VACCINATION', label: 'Vaccination' },
     { value: 'TREATMENT', label: 'Treatment/Health Intervention' },
     { value: 'CULL', label: 'Culling' },
-    { value: 'SALE', label: 'Sale/Harvest' },
+    { value: 'HARVEST', label: 'Harvest' },
+    { value: 'SALE', label: 'Sale/Commercial Handoff' },
     { value: 'FEED_CHANGE', label: 'Feed Strategy Change' },
     { value: 'TRANSFER', label: 'Transfer' },
     { value: 'MAINTENANCE', label: 'Maintenance' },
@@ -236,5 +259,29 @@ export function getStatusOptions() {
     { value: 'COMPLETED', label: 'Completed' },
     { value: 'CANCELLED', label: 'Cancelled' },
   ];
+}
+
+/**
+ * Get trigger type options for template dropdowns/filters
+ */
+export function getTriggerTypeOptions() {
+  return [
+    { value: 'DAY_OFFSET', label: 'Day Offset', description: 'Days after batch creation' },
+    { value: 'WEIGHT_THRESHOLD', label: 'Weight Threshold', description: 'When fish reach target weight' },
+    { value: 'STAGE_TRANSITION', label: 'Stage Transition', description: 'When batch enters lifecycle stage' },
+  ];
+}
+
+/**
+ * Format trigger type display name
+ */
+export function formatTriggerType(triggerType: string): string {
+  const displayMap: Record<string, string> = {
+    DAY_OFFSET: 'Day Offset',
+    WEIGHT_THRESHOLD: 'Weight Threshold',
+    STAGE_TRANSITION: 'Stage Transition',
+  };
+
+  return displayMap[triggerType] || triggerType;
 }
 

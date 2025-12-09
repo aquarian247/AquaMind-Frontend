@@ -6,7 +6,9 @@
  */
 
 import { useState, useMemo } from 'react';
+import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Select,
   SelectContent,
@@ -14,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, LayoutList, Calendar, FileText, BarChart3 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
 import { apiRequest } from '@/lib/queryClient';
@@ -22,14 +24,17 @@ import { PermissionGuard } from '@/components/rbac/PermissionGuard';
 import { ProductionPlannerKPIDashboard } from '../components/ProductionPlannerKPIDashboard';
 import { PlannedActivityFilters } from '../components/PlannedActivityFilters';
 import { ProductionPlannerTimeline } from '../components/ProductionPlannerTimeline';
+import { ProductionPlannerGanttView } from '../components/ProductionPlannerGanttView';
 import { PlannedActivityDetailModal } from '../components/PlannedActivityDetailModal';
 import { PlannedActivityForm } from '../components/PlannedActivityForm';
+import { SpawnWorkflowDialog } from '../components/SpawnWorkflowDialog';
 import { filterActivities } from '../utils/activityHelpers';
 import { useUser } from '@/contexts/UserContext';
 import type { ActivityFilters, PlannedActivity } from '../types';
 
 export function ProductionPlannerPage() {
   const { isViewer } = useUser();
+  const [viewMode, setViewMode] = useState<'list' | 'gantt'>('list');
   const [selectedScenarioId, setSelectedScenarioId] = useState<number | null>(null);
   const [filters, setFilters] = useState<ActivityFilters>({
     activityTypes: [],
@@ -40,6 +45,8 @@ export function ProductionPlannerPage() {
   });
   const [selectedActivity, setSelectedActivity] = useState<PlannedActivity | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSpawnWorkflowDialogOpen, setIsSpawnWorkflowDialogOpen] = useState(false);
+  const [activityToSpawnWorkflow, setActivityToSpawnWorkflow] = useState<PlannedActivity | null>(null);
 
   // Fetch scenarios for dropdown
   // Using same pattern as Scenario Planning page
@@ -81,13 +88,45 @@ export function ProductionPlannerPage() {
 
   const allActivities = (activitiesResponse as PlannedActivity[]) || [];
 
-  // Fetch batches for filter dropdown
-  const { data: batchesResponse } = useQuery({
-    queryKey: ['batches'],
-    queryFn: () => ApiService.apiV1BatchBatchesList(),
-  });
+  // Fetch all ACTIVE batches for filter dropdown (uses pagination - ~59 batches across ~3 pages)
+  const { data: batches = [] } = useQuery({
+    queryKey: ['batches', 'active', 'all'],
+    queryFn: async () => {
+      const allBatches: Array<{ id: number; batch_number: string }> = [];
+      let page = 1;
+      let hasMore = true;
+      const maxPages = 10;
 
-  const batches = batchesResponse?.results || [];
+      while (hasMore && page <= maxPages) {
+        const response = await ApiService.apiV1BatchBatchesList(
+          undefined, // batchNumber
+          undefined, // batchNumberIcontains
+          undefined, // batchType
+          undefined, // batchTypeIn
+          undefined, // biomassMax
+          undefined, // biomassMin
+          undefined, // endDateAfter
+          undefined, // endDateBefore
+          undefined, // lifecycleStage
+          undefined, // lifecycleStageIn
+          undefined, // ordering
+          page,      // page
+          undefined, // populationMax
+          undefined, // populationMin
+          undefined, // search
+          undefined, // species
+          undefined, // speciesIn
+          undefined, // startDateAfter
+          undefined, // startDateBefore
+          'ACTIVE'   // status - only ACTIVE batches have planned activities
+        );
+        allBatches.push(...(response.results || []).map(b => ({ id: b.id, batch_number: b.batch_number })));
+        hasMore = !!response.next;
+        page++;
+      }
+      return allBatches;
+    },
+  });
 
   // Apply filters to activities
   const filteredActivities = useMemo(() => {
@@ -143,6 +182,24 @@ export function ProductionPlannerPage() {
             </SelectContent>
           </Select>
 
+          {/* Manage Templates Link */}
+          {canCreateActivities && (
+            <Link href="/activity-templates">
+              <Button variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Templates
+              </Button>
+            </Link>
+          )}
+
+          {/* Variance Report Link */}
+          <Link href="/variance-report">
+            <Button variant="outline">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Variance Report
+            </Button>
+          </Link>
+
           {/* Create Activity Button */}
           {canCreateActivities && (
             <Button onClick={handleCreateActivity} disabled={!selectedScenarioId}>
@@ -178,12 +235,29 @@ export function ProductionPlannerPage() {
             onFilterChange={handleFilterChange}
           />
 
-          {/* Filters */}
-          <PlannedActivityFilters
-            filters={filters}
-            onFilterChange={setFilters}
-            batches={batches}
-          />
+          {/* Filters & View Toggle */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+            <PlannedActivityFilters
+              filters={filters}
+              onFilterChange={setFilters}
+              batches={batches}
+            />
+            <ToggleGroup
+              type="single"
+              value={viewMode}
+              onValueChange={(value) => value && setViewMode(value as 'list' | 'gantt')}
+              className="bg-muted p-1 rounded-lg"
+            >
+              <ToggleGroupItem value="list" aria-label="List View" className="h-8 px-3">
+                <LayoutList className="h-4 w-4 mr-2" />
+                List
+              </ToggleGroupItem>
+              <ToggleGroupItem value="gantt" aria-label="Gantt View" className="h-8 px-3">
+                <Calendar className="h-4 w-4 mr-2" />
+                Gantt
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
 
           {/* Activities Loading */}
           {activitiesLoading && (
@@ -192,13 +266,21 @@ export function ProductionPlannerPage() {
             </div>
           )}
 
-          {/* Timeline View */}
+          {/* Timeline / Gantt View */}
           {!activitiesLoading && (
-            <ProductionPlannerTimeline
-              activities={filteredActivities}
-              onActivityClick={handleActivityClick}
-              onCreateActivity={canCreateActivities ? handleCreateActivity : undefined}
-            />
+            viewMode === 'list' ? (
+              <ProductionPlannerTimeline
+                activities={filteredActivities}
+                onActivityClick={handleActivityClick}
+                onCreateActivity={canCreateActivities ? handleCreateActivity : undefined}
+              />
+            ) : (
+              <ProductionPlannerGanttView
+                activities={filteredActivities}
+                onActivityClick={handleActivityClick}
+                onCreateActivity={canCreateActivities ? handleCreateActivity : undefined}
+              />
+            )
           )}
 
           {/* Footer Stats */}
@@ -222,8 +304,8 @@ export function ProductionPlannerPage() {
           // Activity form will handle edit mode via selectedActivity
         }}
         onSpawnWorkflow={() => {
-          // TODO: Implement spawn workflow dialog
-          console.log('Spawn workflow for activity:', selectedActivity?.id);
+          setActivityToSpawnWorkflow(selectedActivity);
+          setIsSpawnWorkflowDialogOpen(true);
         }}
       />
 
@@ -235,13 +317,27 @@ export function ProductionPlannerPage() {
           isOpen={isCreateModalOpen}
           onClose={() => {
             setIsCreateModalOpen(false);
-            setSelectedActivity(null);
+            // Don't clear selectedActivity here to allow returning to Detail Modal on cancel
           }}
           onSuccess={() => {
-            // Queries will auto-refresh via invalidation
+            setIsCreateModalOpen(false);
+            setSelectedActivity(null); // Close everything on success
           }}
         />
       )}
+
+      {/* Spawn Workflow Dialog */}
+      <SpawnWorkflowDialog
+        activity={activityToSpawnWorkflow}
+        isOpen={isSpawnWorkflowDialogOpen}
+        onClose={() => {
+          setIsSpawnWorkflowDialogOpen(false);
+          setActivityToSpawnWorkflow(null);
+        }}
+        onSuccess={() => {
+          setSelectedActivity(null); // Close detail modal after spawning workflow
+        }}
+      />
       </div>
     </PermissionGuard>
   );

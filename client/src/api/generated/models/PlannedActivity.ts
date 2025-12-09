@@ -23,14 +23,15 @@ export type PlannedActivity = {
      * * `VACCINATION` - Vaccination
      * * `TREATMENT` - Treatment/Health Intervention
      * * `CULL` - Culling
-     * * `SALE` - Sale/Harvest
+     * * `HARVEST` - Harvest
+     * * `SALE` - Sale/Commercial Handoff
      * * `FEED_CHANGE` - Feed Strategy Change
      * * `TRANSFER` - Transfer
      * * `MAINTENANCE` - Maintenance
      * * `SAMPLING` - Sampling
      * * `OTHER` - Other
      */
-    activity_type: 'VACCINATION' | 'TREATMENT' | 'CULL' | 'SALE' | 'FEED_CHANGE' | 'TRANSFER' | 'MAINTENANCE' | 'SAMPLING' | 'OTHER';
+    activity_type: 'VACCINATION' | 'TREATMENT' | 'CULL' | 'HARVEST' | 'SALE' | 'FEED_CHANGE' | 'TRANSFER' | 'MAINTENANCE' | 'SAMPLING' | 'OTHER';
     readonly activity_type_display: string;
     /**
      * Planned execution date
