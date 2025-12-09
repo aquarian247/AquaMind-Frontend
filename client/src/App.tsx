@@ -60,6 +60,11 @@ import ScenarioPlanning from "@/pages/ScenarioPlanning";
 import { ScenarioDetailPage } from "@/pages/ScenarioDetailPage";
 import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModelManagementPage";
 
+// Production Planner (Operational Scheduling)
+import { ProductionPlannerPage } from "@/features/production-planner/pages/ProductionPlannerPage";
+import { ActivityTemplateManagementPage } from "@/features/production-planner/pages/ActivityTemplateManagementPage";
+import { VarianceReportPage } from "@/features/production-planner/pages/VarianceReportPage";
+
 // Executive & specialized
 import ExecutiveDashboardPage from "@/features/executive/pages/ExecutiveDashboardPage";
 import MortalityReporting from "@/pages/mortality-reporting";
@@ -430,6 +435,30 @@ function Router() {
             <Suspense fallback={<div>Loading...</div>}>
               <TemperatureDataView />
             </Suspense>
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/production-planner">
+        <ProtectedRoute>
+          <AppLayout>
+            <ProductionPlannerPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/activity-templates">
+        <ProtectedRoute>
+          <AppLayout>
+            <ActivityTemplateManagementPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/variance-report">
+        <ProtectedRoute>
+          <AppLayout>
+            <VarianceReportPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ActivityTemplate } from '../models/ActivityTemplate';
 import type { Area } from '../models/Area';
 import type { AreaHistory } from '../models/AreaHistory';
 import type { Batch } from '../models/Batch';
@@ -85,6 +86,7 @@ import type { MortalityRecord } from '../models/MortalityRecord';
 import type { MortalityRecordHistory } from '../models/MortalityRecordHistory';
 import type { NavExportBatch } from '../models/NavExportBatch';
 import type { NavExportBatchCreate } from '../models/NavExportBatchCreate';
+import type { PaginatedActivityTemplateList } from '../models/PaginatedActivityTemplateList';
 import type { PaginatedAreaHistoryList } from '../models/PaginatedAreaHistoryList';
 import type { PaginatedAreaList } from '../models/PaginatedAreaList';
 import type { PaginatedBatchCompositionList } from '../models/PaginatedBatchCompositionList';
@@ -157,6 +159,7 @@ import type { PaginatedMortalityRecordHistoryList } from '../models/PaginatedMor
 import type { PaginatedMortalityRecordList } from '../models/PaginatedMortalityRecordList';
 import type { PaginatedParameterScoreDefinitionList } from '../models/PaginatedParameterScoreDefinitionList';
 import type { PaginatedPhotoperiodDataList } from '../models/PaginatedPhotoperiodDataList';
+import type { PaginatedPlannedActivityList } from '../models/PaginatedPlannedActivityList';
 import type { PaginatedProjectionRunListList } from '../models/PaginatedProjectionRunListList';
 import type { PaginatedSampleTypeList } from '../models/PaginatedSampleTypeList';
 import type { PaginatedScenarioList } from '../models/PaginatedScenarioList';
@@ -175,6 +178,7 @@ import type { PaginatedUserProfileHistoryList } from '../models/PaginatedUserPro
 import type { PaginatedVaccinationTypeList } from '../models/PaginatedVaccinationTypeList';
 import type { PaginatedWeatherDataList } from '../models/PaginatedWeatherDataList';
 import type { ParameterScoreDefinition } from '../models/ParameterScoreDefinition';
+import type { PatchedActivityTemplate } from '../models/PatchedActivityTemplate';
 import type { PatchedArea } from '../models/PatchedArea';
 import type { PatchedBatch } from '../models/PatchedBatch';
 import type { PatchedBatchComposition } from '../models/PatchedBatchComposition';
@@ -221,6 +225,7 @@ import type { PatchedMortalityReason } from '../models/PatchedMortalityReason';
 import type { PatchedMortalityRecord } from '../models/PatchedMortalityRecord';
 import type { PatchedParameterScoreDefinition } from '../models/PatchedParameterScoreDefinition';
 import type { PatchedPhotoperiodData } from '../models/PatchedPhotoperiodData';
+import type { PatchedPlannedActivity } from '../models/PatchedPlannedActivity';
 import type { PatchedSampleType } from '../models/PatchedSampleType';
 import type { PatchedScenario } from '../models/PatchedScenario';
 import type { PatchedSensor } from '../models/PatchedSensor';
@@ -236,6 +241,7 @@ import type { PatchedVaccinationType } from '../models/PatchedVaccinationType';
 import type { PatchedWeatherData } from '../models/PatchedWeatherData';
 import type { PhotoperiodData } from '../models/PhotoperiodData';
 import type { PinScenario } from '../models/PinScenario';
+import type { PlannedActivity } from '../models/PlannedActivity';
 import type { ProjectionRunDetail } from '../models/ProjectionRunDetail';
 import type { ProjectionRunList } from '../models/ProjectionRunList';
 import type { SampleType } from '../models/SampleType';
@@ -260,6 +266,7 @@ import type { UserProfile } from '../models/UserProfile';
 import type { UserProfileHistory } from '../models/UserProfileHistory';
 import type { UserProfileUpdate } from '../models/UserProfileUpdate';
 import type { VaccinationType } from '../models/VaccinationType';
+import type { VarianceReport } from '../models/VarianceReport';
 import type { WeatherData } from '../models/WeatherData';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -1159,6 +1166,29 @@ export class ApiService {
             mediaType: 'application/json',
             errors: {
                 400: `Bad request (validation error)`,
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Retrieve all planned activities for this batch across all scenarios.
+     * @param id A unique integer value identifying this batch.
+     * @returns Batch
+     * @throws ApiError
+     */
+    public static apiV1BatchBatchesPlannedActivitiesRetrieve(
+        id: number,
+    ): CancelablePromise<Batch> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/batch/batches/{id}/planned-activities/',
+            path: {
+                'id': id,
+            },
+            errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,
                 404: `Not Found`,
@@ -16655,6 +16685,488 @@ export class ApiService {
             });
         }
         /**
+         * ViewSet for ActivityTemplate model.
+         * @param activityType Type of activity to generate
+         *
+         * * `VACCINATION` - Vaccination
+         * * `TREATMENT` - Treatment/Health Intervention
+         * * `CULL` - Culling
+         * * `HARVEST` - Harvest
+         * * `SALE` - Sale/Commercial Handoff
+         * * `FEED_CHANGE` - Feed Strategy Change
+         * * `TRANSFER` - Transfer
+         * * `MAINTENANCE` - Maintenance
+         * * `SAMPLING` - Sampling
+         * * `OTHER` - Other
+         * @param isActive
+         * @param ordering Which field to use when ordering the results.
+         * @param page A page number within the paginated result set.
+         * @param search A search term.
+         * @param triggerType When to create the activity
+         *
+         * * `DAY_OFFSET` - Day Offset
+         * * `WEIGHT_THRESHOLD` - Weight Threshold
+         * * `STAGE_TRANSITION` - Stage Transition
+         * @returns PaginatedActivityTemplateList
+         * @throws ApiError
+         */
+        public static apiV1PlanningActivityTemplatesList(
+            activityType?: 'CULL' | 'FEED_CHANGE' | 'HARVEST' | 'MAINTENANCE' | 'OTHER' | 'SALE' | 'SAMPLING' | 'TRANSFER' | 'TREATMENT' | 'VACCINATION',
+            isActive?: boolean,
+            ordering?: string,
+            page?: number,
+            search?: string,
+            triggerType?: 'DAY_OFFSET' | 'STAGE_TRANSITION' | 'WEIGHT_THRESHOLD',
+        ): CancelablePromise<PaginatedActivityTemplateList> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/planning/activity-templates/',
+                query: {
+                    'activity_type': activityType,
+                    'is_active': isActive,
+                    'ordering': ordering,
+                    'page': page,
+                    'search': search,
+                    'trigger_type': triggerType,
+                },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for ActivityTemplate model.
+         * @param requestBody
+         * @returns ActivityTemplate
+         * @throws ApiError
+         */
+        public static apiV1PlanningActivityTemplatesCreate(
+            requestBody: ActivityTemplate,
+        ): CancelablePromise<ActivityTemplate> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/planning/activity-templates/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for ActivityTemplate model.
+         * @param id A unique integer value identifying this Activity Template.
+         * @returns ActivityTemplate
+         * @throws ApiError
+         */
+        public static apiV1PlanningActivityTemplatesRetrieve(
+            id: number,
+        ): CancelablePromise<ActivityTemplate> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/planning/activity-templates/{id}/',
+                path: {
+                    'id': id,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for ActivityTemplate model.
+         * @param id A unique integer value identifying this Activity Template.
+         * @param requestBody
+         * @returns ActivityTemplate
+         * @throws ApiError
+         */
+        public static apiV1PlanningActivityTemplatesUpdate(
+            id: number,
+            requestBody: ActivityTemplate,
+        ): CancelablePromise<ActivityTemplate> {
+            return __request(OpenAPI, {
+                method: 'PUT',
+                url: '/api/v1/planning/activity-templates/{id}/',
+                path: {
+                    'id': id,
+                },
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for ActivityTemplate model.
+         * @param id A unique integer value identifying this Activity Template.
+         * @param requestBody
+         * @returns ActivityTemplate
+         * @throws ApiError
+         */
+        public static apiV1PlanningActivityTemplatesPartialUpdate(
+            id: number,
+            requestBody?: PatchedActivityTemplate,
+        ): CancelablePromise<ActivityTemplate> {
+            return __request(OpenAPI, {
+                method: 'PATCH',
+                url: '/api/v1/planning/activity-templates/{id}/',
+                path: {
+                    'id': id,
+                },
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for ActivityTemplate model.
+         * @param id A unique integer value identifying this Activity Template.
+         * @returns void
+         * @throws ApiError
+         */
+        public static apiV1PlanningActivityTemplatesDestroy(
+            id: number,
+        ): CancelablePromise<void> {
+            return __request(OpenAPI, {
+                method: 'DELETE',
+                url: '/api/v1/planning/activity-templates/{id}/',
+                path: {
+                    'id': id,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Generate a PlannedActivity from this template for a specific batch.
+         * @param id A unique integer value identifying this Activity Template.
+         * @param requestBody
+         * @returns ActivityTemplate
+         * @throws ApiError
+         */
+        public static apiV1PlanningActivityTemplatesGenerateForBatchCreate(
+            id: number,
+            requestBody: ActivityTemplate,
+        ): CancelablePromise<ActivityTemplate> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/planning/activity-templates/{id}/generate-for-batch/',
+                path: {
+                    'id': id,
+                },
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for PlannedActivity model.
+         * @param activityType Type of operational activity
+         *
+         * * `VACCINATION` - Vaccination
+         * * `TREATMENT` - Treatment/Health Intervention
+         * * `CULL` - Culling
+         * * `HARVEST` - Harvest
+         * * `SALE` - Sale/Commercial Handoff
+         * * `FEED_CHANGE` - Feed Strategy Change
+         * * `TRANSFER` - Transfer
+         * * `MAINTENANCE` - Maintenance
+         * * `SAMPLING` - Sampling
+         * * `OTHER` - Other
+         * @param batch
+         * @param container
+         * @param ordering Which field to use when ordering the results.
+         * @param page A page number within the paginated result set.
+         * @param scenario
+         * @param search A search term.
+         * @param status Current status of the activity
+         *
+         * * `PENDING` - Pending
+         * * `IN_PROGRESS` - In Progress
+         * * `COMPLETED` - Completed
+         * * `CANCELLED` - Cancelled
+         * @returns PaginatedPlannedActivityList
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesList(
+            activityType?: 'CULL' | 'FEED_CHANGE' | 'HARVEST' | 'MAINTENANCE' | 'OTHER' | 'SALE' | 'SAMPLING' | 'TRANSFER' | 'TREATMENT' | 'VACCINATION',
+            batch?: number,
+            container?: number,
+            ordering?: string,
+            page?: number,
+            scenario?: number,
+            search?: string,
+            status?: 'CANCELLED' | 'COMPLETED' | 'IN_PROGRESS' | 'PENDING',
+        ): CancelablePromise<PaginatedPlannedActivityList> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/planning/planned-activities/',
+                query: {
+                    'activity_type': activityType,
+                    'batch': batch,
+                    'container': container,
+                    'ordering': ordering,
+                    'page': page,
+                    'scenario': scenario,
+                    'search': search,
+                    'status': status,
+                },
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for PlannedActivity model.
+         * @param requestBody
+         * @returns PlannedActivity
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesCreate(
+            requestBody: PlannedActivity,
+        ): CancelablePromise<PlannedActivity> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/planning/planned-activities/',
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for PlannedActivity model.
+         * @param id A unique integer value identifying this Planned Activity.
+         * @returns PlannedActivity
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesRetrieve(
+            id: number,
+        ): CancelablePromise<PlannedActivity> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/planning/planned-activities/{id}/',
+                path: {
+                    'id': id,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for PlannedActivity model.
+         * @param id A unique integer value identifying this Planned Activity.
+         * @param requestBody
+         * @returns PlannedActivity
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesUpdate(
+            id: number,
+            requestBody: PlannedActivity,
+        ): CancelablePromise<PlannedActivity> {
+            return __request(OpenAPI, {
+                method: 'PUT',
+                url: '/api/v1/planning/planned-activities/{id}/',
+                path: {
+                    'id': id,
+                },
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for PlannedActivity model.
+         * @param id A unique integer value identifying this Planned Activity.
+         * @param requestBody
+         * @returns PlannedActivity
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesPartialUpdate(
+            id: number,
+            requestBody?: PatchedPlannedActivity,
+        ): CancelablePromise<PlannedActivity> {
+            return __request(OpenAPI, {
+                method: 'PATCH',
+                url: '/api/v1/planning/planned-activities/{id}/',
+                path: {
+                    'id': id,
+                },
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * ViewSet for PlannedActivity model.
+         * @param id A unique integer value identifying this Planned Activity.
+         * @returns void
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesDestroy(
+            id: number,
+        ): CancelablePromise<void> {
+            return __request(OpenAPI, {
+                method: 'DELETE',
+                url: '/api/v1/planning/planned-activities/{id}/',
+                path: {
+                    'id': id,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Mark activity as completed.
+         * @param id A unique integer value identifying this Planned Activity.
+         * @param requestBody
+         * @returns PlannedActivity
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesMarkCompletedCreate(
+            id: number,
+            requestBody: PlannedActivity,
+        ): CancelablePromise<PlannedActivity> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/planning/planned-activities/{id}/mark-completed/',
+                path: {
+                    'id': id,
+                },
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Spawn a Transfer Workflow from this planned activity.
+         * @param id A unique integer value identifying this Planned Activity.
+         * @param requestBody
+         * @returns PlannedActivity
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesSpawnWorkflowCreate(
+            id: number,
+            requestBody: PlannedActivity,
+        ): CancelablePromise<PlannedActivity> {
+            return __request(OpenAPI, {
+                method: 'POST',
+                url: '/api/v1/planning/planned-activities/{id}/spawn-workflow/',
+                path: {
+                    'id': id,
+                },
+                body: requestBody,
+                mediaType: 'application/json',
+                errors: {
+                    400: `Bad request (validation error)`,
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    404: `Not Found`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
+         * Generate variance report comparing planned vs actual activity execution.
+         * @param activityType Filter by activity type
+         * @param dueDateAfter Filter activities due on or after this date (YYYY-MM-DD)
+         * @param dueDateBefore Filter activities due on or before this date (YYYY-MM-DD)
+         * @param groupBy Time series grouping: "month" or "week"
+         * @param includeDetails Include individual activity details in response
+         * @param scenario Filter by scenario ID
+         * @returns VarianceReport
+         * @throws ApiError
+         */
+        public static apiV1PlanningPlannedActivitiesVarianceReportRetrieve(
+            activityType?: 'CULL' | 'FEED_CHANGE' | 'HARVEST' | 'MAINTENANCE' | 'OTHER' | 'SALE' | 'SAMPLING' | 'TRANSFER' | 'TREATMENT' | 'VACCINATION',
+            dueDateAfter?: string,
+            dueDateBefore?: string,
+            groupBy: 'month' | 'week' = 'month',
+            includeDetails: boolean = false,
+            scenario?: number,
+        ): CancelablePromise<VarianceReport> {
+            return __request(OpenAPI, {
+                method: 'GET',
+                url: '/api/v1/planning/planned-activities/variance-report/',
+                query: {
+                    'activity_type': activityType,
+                    'due_date_after': dueDateAfter,
+                    'due_date_before': dueDateBefore,
+                    'group_by': groupBy,
+                    'include_details': includeDetails,
+                    'scenario': scenario,
+                },
+                errors: {
+                    401: `Unauthorized`,
+                    403: `Forbidden`,
+                    500: `Internal Server Error`,
+                },
+            });
+        }
+        /**
          * ViewSet for biological constraints with audit trail support.
          * @param isActive
          * @param page A page number within the paginated result set.
@@ -17589,6 +18101,29 @@ export class ApiService {
                 return __request(OpenAPI, {
                     method: 'GET',
                     url: '/api/v1/scenario/scenarios/{scenario_id}/export_projections/',
+                    path: {
+                        'scenario_id': scenarioId,
+                    },
+                    errors: {
+                        401: `Unauthorized`,
+                        403: `Forbidden`,
+                        404: `Not Found`,
+                        500: `Internal Server Error`,
+                    },
+                });
+            }
+            /**
+             * Retrieve all planned activities for this scenario.
+             * @param scenarioId A unique integer value identifying this Scenario.
+             * @returns Scenario
+             * @throws ApiError
+             */
+            public static apiV1ScenarioScenariosPlannedActivitiesRetrieve(
+                scenarioId: number,
+            ): CancelablePromise<Scenario> {
+                return __request(OpenAPI, {
+                    method: 'GET',
+                    url: '/api/v1/scenario/scenarios/{scenario_id}/planned-activities/',
                     path: {
                         'scenario_id': scenarioId,
                     },

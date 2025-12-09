@@ -1412,6 +1412,39 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
+  /api/v1/batch/batches/{id}/planned-activities/:
+    get:
+      operationId: api_v1_batch_batches_planned_activities_retrieve
+      description: Retrieve all planned activities for this batch across all scenarios.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/batch/batches/{id}/recompute-daily-states/:
     post:
       operationId: batch-recompute-daily-states
@@ -25762,6 +25795,796 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/planning/activity-templates/:
+    get:
+      operationId: api_v1_planning_activity_templates_list
+      description: ViewSet for ActivityTemplate model.
+      parameters:
+      - in: query
+        name: activity_type
+        schema:
+          type: string
+          x-spec-enum-id: f708e2744b31c829
+          enum:
+          - CULL
+          - FEED_CHANGE
+          - HARVEST
+          - MAINTENANCE
+          - OTHER
+          - SALE
+          - SAMPLING
+          - TRANSFER
+          - TREATMENT
+          - VACCINATION
+        description: |-
+          Type of activity to generate
+
+          * `VACCINATION` - Vaccination
+          * `TREATMENT` - Treatment/Health Intervention
+          * `CULL` - Culling
+          * `HARVEST` - Harvest
+          * `SALE` - Sale/Commercial Handoff
+          * `FEED_CHANGE` - Feed Strategy Change
+          * `TRANSFER` - Transfer
+          * `MAINTENANCE` - Maintenance
+          * `SAMPLING` - Sampling
+          * `OTHER` - Other
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: trigger_type
+        schema:
+          type: string
+          x-spec-enum-id: 4d642f51fb1ebfed
+          enum:
+          - DAY_OFFSET
+          - STAGE_TRANSITION
+          - WEIGHT_THRESHOLD
+        description: |-
+          When to create the activity
+
+          * `DAY_OFFSET` - Day Offset
+          * `WEIGHT_THRESHOLD` - Weight Threshold
+          * `STAGE_TRANSITION` - Stage Transition
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedActivityTemplateList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+    post:
+      operationId: api_v1_planning_activity_templates_create
+      description: ViewSet for ActivityTemplate model.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityTemplate'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/planning/activity-templates/{id}/:
+    get:
+      operationId: api_v1_planning_activity_templates_retrieve
+      description: ViewSet for ActivityTemplate model.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Activity Template.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityTemplate'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    put:
+      operationId: api_v1_planning_activity_templates_update
+      description: ViewSet for ActivityTemplate model.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Activity Template.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityTemplate'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+    patch:
+      operationId: api_v1_planning_activity_templates_partial_update
+      description: ViewSet for ActivityTemplate model.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Activity Template.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedActivityTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedActivityTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedActivityTemplate'
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityTemplate'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+    delete:
+      operationId: api_v1_planning_activity_templates_destroy
+      description: ViewSet for ActivityTemplate model.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Activity Template.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/planning/activity-templates/{id}/generate-for-batch/:
+    post:
+      operationId: api_v1_planning_activity_templates_generate_for_batch_create
+      description: Generate a PlannedActivity from this template for a specific batch.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Activity Template.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActivityTemplate'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityTemplate'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/planning/planned-activities/:
+    get:
+      operationId: api_v1_planning_planned_activities_list
+      description: ViewSet for PlannedActivity model.
+      parameters:
+      - in: query
+        name: activity_type
+        schema:
+          type: string
+          x-spec-enum-id: f708e2744b31c829
+          enum:
+          - CULL
+          - FEED_CHANGE
+          - HARVEST
+          - MAINTENANCE
+          - OTHER
+          - SALE
+          - SAMPLING
+          - TRANSFER
+          - TREATMENT
+          - VACCINATION
+        description: |-
+          Type of operational activity
+
+          * `VACCINATION` - Vaccination
+          * `TREATMENT` - Treatment/Health Intervention
+          * `CULL` - Culling
+          * `HARVEST` - Harvest
+          * `SALE` - Sale/Commercial Handoff
+          * `FEED_CHANGE` - Feed Strategy Change
+          * `TRANSFER` - Transfer
+          * `MAINTENANCE` - Maintenance
+          * `SAMPLING` - Sampling
+          * `OTHER` - Other
+      - in: query
+        name: batch
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: container
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - in: query
+        name: scenario
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          x-spec-enum-id: a1159508116cf8d3
+          enum:
+          - CANCELLED
+          - COMPLETED
+          - IN_PROGRESS
+          - PENDING
+        description: |-
+          Current status of the activity
+
+          * `PENDING` - Pending
+          * `IN_PROGRESS` - In Progress
+          * `COMPLETED` - Completed
+          * `CANCELLED` - Cancelled
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPlannedActivityList'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+    post:
+      operationId: api_v1_planning_planned_activities_create
+      description: ViewSet for PlannedActivity model.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedActivity'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/planning/planned-activities/{id}/:
+    get:
+      operationId: api_v1_planning_planned_activities_retrieve
+      description: ViewSet for PlannedActivity model.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Planned Activity.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedActivity'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+    put:
+      operationId: api_v1_planning_planned_activities_update
+      description: ViewSet for PlannedActivity model.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Planned Activity.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedActivity'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+    patch:
+      operationId: api_v1_planning_planned_activities_partial_update
+      description: ViewSet for PlannedActivity model.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Planned Activity.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlannedActivity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlannedActivity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlannedActivity'
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedActivity'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+    delete:
+      operationId: api_v1_planning_planned_activities_destroy
+      description: ViewSet for PlannedActivity model.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Planned Activity.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/planning/planned-activities/{id}/mark-completed/:
+    post:
+      operationId: api_v1_planning_planned_activities_mark_completed_create
+      description: Mark activity as completed.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Planned Activity.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedActivity'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/planning/planned-activities/{id}/spawn-workflow/:
+    post:
+      operationId: api_v1_planning_planned_activities_spawn_workflow_create
+      description: Spawn a Transfer Workflow from this planned activity.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Planned Activity.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlannedActivity'
+        required: true
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedActivity'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+        '400':
+          description: Bad request (validation error)
+  /api/v1/planning/planned-activities/variance-report/:
+    get:
+      operationId: api_v1_planning_planned_activities_variance_report_retrieve
+      description: Generate variance report comparing planned vs actual activity execution.
+      parameters:
+      - in: query
+        name: activity_type
+        schema:
+          type: string
+          enum:
+          - CULL
+          - FEED_CHANGE
+          - HARVEST
+          - MAINTENANCE
+          - OTHER
+          - SALE
+          - SAMPLING
+          - TRANSFER
+          - TREATMENT
+          - VACCINATION
+        description: Filter by activity type
+      - in: query
+        name: due_date_after
+        schema:
+          type: string
+          format: date
+        description: Filter activities due on or after this date (YYYY-MM-DD)
+      - in: query
+        name: due_date_before
+        schema:
+          type: string
+          format: date
+        description: Filter activities due on or before this date (YYYY-MM-DD)
+      - in: query
+        name: group_by
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+          default: month
+        description: 'Time series grouping: "month" or "week"'
+      - in: query
+        name: include_details
+        schema:
+          type: boolean
+          default: false
+        description: Include individual activity details in response
+      - in: query
+        name: scenario
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by scenario ID
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VarianceReport'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/scenario/biological-constraints/:
     get:
       operationId: api_v1_scenario_biological_constraints_list
@@ -27172,6 +27995,39 @@ paths:
     get:
       operationId: api_v1_scenario_scenarios_export_projections_retrieve
       description: Export projections as CSV (from latest run).
+      parameters:
+      - in: path
+        name: scenario_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Scenario.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Scenario'
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/scenario/scenarios/{scenario_id}/planned-activities/:
+    get:
+      operationId: api_v1_scenario_scenarios_planned_activities_retrieve
+      description: Retrieve all planned activities for this scenario.
       parameters:
       - in: path
         name: scenario_id
@@ -28977,6 +29833,236 @@ paths:
           description: Internal Server Error
 components:
   schemas:
+    ActivityTemplate:
+      type: object
+      description: Serializer for ActivityTemplate model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        name:
+          type: string
+          description: Template name (e.g., 'Standard Atlantic Salmon Lifecycle')
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          description: Template description
+        activity_type:
+          enum:
+          - VACCINATION
+          - TREATMENT
+          - CULL
+          - HARVEST
+          - SALE
+          - FEED_CHANGE
+          - TRANSFER
+          - MAINTENANCE
+          - SAMPLING
+          - OTHER
+          type: string
+          x-spec-enum-id: f708e2744b31c829
+          description: |-
+            Type of activity to generate
+
+            * `VACCINATION` - Vaccination
+            * `TREATMENT` - Treatment/Health Intervention
+            * `CULL` - Culling
+            * `HARVEST` - Harvest
+            * `SALE` - Sale/Commercial Handoff
+            * `FEED_CHANGE` - Feed Strategy Change
+            * `TRANSFER` - Transfer
+            * `MAINTENANCE` - Maintenance
+            * `SAMPLING` - Sampling
+            * `OTHER` - Other
+        activity_type_display:
+          type: string
+          readOnly: true
+        trigger_type:
+          enum:
+          - DAY_OFFSET
+          - WEIGHT_THRESHOLD
+          - STAGE_TRANSITION
+          type: string
+          x-spec-enum-id: 4d642f51fb1ebfed
+          description: |-
+            When to create the activity
+
+            * `DAY_OFFSET` - Day Offset
+            * `WEIGHT_THRESHOLD` - Weight Threshold
+            * `STAGE_TRANSITION` - Stage Transition
+        trigger_type_display:
+          type: string
+          readOnly: true
+        day_offset:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          description: Days after batch creation (for DAY_OFFSET trigger)
+        weight_threshold_g:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Average weight threshold (for WEIGHT_THRESHOLD trigger)
+        target_lifecycle_stage:
+          type: integer
+          nullable: true
+          description: Target stage for STAGE_TRANSITION trigger
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        notes_template:
+          type: string
+          nullable: true
+          description: Template for activity notes
+        is_active:
+          type: boolean
+          description: Whether template is active
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - activity_type
+      - activity_type_display
+      - created_at
+      - id
+      - name
+      - trigger_type
+      - trigger_type_display
+      - updated_at
+    ActivityTypeStats:
+      type: object
+      description: Serializer for variance statistics grouped by activity type.
+      properties:
+        activity_type:
+          type: string
+        activity_type_display:
+          type: string
+        total_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completed_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        pending_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        cancelled_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completion_rate:
+          type: number
+          format: double
+          description: Percentage of activities completed (excluding cancelled)
+        on_time_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        late_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        early_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        on_time_rate:
+          type: number
+          format: double
+          description: Percentage of completed activities that were on-time or early
+        avg_variance_days:
+          type: number
+          format: double
+          nullable: true
+          description: Average variance in days for completed activities
+        min_variance_days:
+          type: integer
+          nullable: true
+          description: Minimum variance (most early)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        max_variance_days:
+          type: integer
+          nullable: true
+          description: Maximum variance (most late)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      required:
+      - activity_type
+      - activity_type_display
+      - avg_variance_days
+      - cancelled_count
+      - completed_count
+      - completion_rate
+      - early_count
+      - late_count
+      - max_variance_days
+      - min_variance_days
+      - on_time_count
+      - on_time_rate
+      - pending_count
+      - total_count
+    ActivityVarianceItem:
+      type: object
+      description: Serializer for individual activity variance data.
+      properties:
+        id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+        batch_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        activity_type:
+          type: string
+        activity_type_display:
+          type: string
+        due_date:
+          type: string
+          format: date
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+        variance_days:
+          type: integer
+          nullable: true
+          description: Days between due_date and completion. Negative=early, 0=on-time,
+            Positive=late
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        is_on_time:
+          type: boolean
+          nullable: true
+          description: True if completed on or before due_date
+      required:
+      - activity_type
+      - activity_type_display
+      - batch_id
+      - batch_number
+      - completed_at
+      - due_date
+      - id
+      - is_on_time
+      - status
+      - variance_days
     Area:
       type: object
       description: Serializer for the Area model.
@@ -30276,14 +31362,6 @@ components:
           nullable: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
-        pinned_scenario:
-          type: integer
-          nullable: true
-          title: Pinned Scenario (Deprecated)
-          description: 'DEPRECATED: Use pinned_projection_run instead. Will be removed
-            after data migration.'
-          maximum: 9223372036854775807
-          minimum: -9223372036854775808
         pinned_projection_run:
           type: integer
           nullable: true
@@ -30575,6 +31653,12 @@ components:
           description: Batch being transferred
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        planned_activity:
+          type: integer
+          nullable: true
+          description: Planned activity that spawned this workflow (if any)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
         source_lifecycle_stage:
           type: integer
           description: Source lifecycle stage
@@ -30795,6 +31879,12 @@ components:
         batch:
           type: integer
           description: Batch being transferred
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        planned_activity:
+          type: integer
+          nullable: true
+          description: Planned activity that spawned this workflow (if any)
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         source_lifecycle_stage:
@@ -34133,6 +35223,10 @@ components:
           type: object
           additionalProperties: {}
           nullable: true
+        projection_run:
+          type: object
+          additionalProperties: {}
+          nullable: true
         growth_samples:
           type: array
           items:
@@ -36847,6 +37941,31 @@ components:
       required:
       - id
       - name
+    PaginatedActivityTemplateList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityTemplate'
     PaginatedAreaHistoryList:
       type: object
       required:
@@ -38747,6 +39866,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PhotoperiodData'
+    PaginatedPlannedActivityList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlannedActivity'
     PaginatedProjectionRunListList:
       type: object
       required:
@@ -39218,6 +40362,102 @@ components:
       - parameter
       - score_value
       - updated_at
+    PatchedActivityTemplate:
+      type: object
+      description: Serializer for ActivityTemplate model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        name:
+          type: string
+          description: Template name (e.g., 'Standard Atlantic Salmon Lifecycle')
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+          description: Template description
+        activity_type:
+          enum:
+          - VACCINATION
+          - TREATMENT
+          - CULL
+          - HARVEST
+          - SALE
+          - FEED_CHANGE
+          - TRANSFER
+          - MAINTENANCE
+          - SAMPLING
+          - OTHER
+          type: string
+          x-spec-enum-id: f708e2744b31c829
+          description: |-
+            Type of activity to generate
+
+            * `VACCINATION` - Vaccination
+            * `TREATMENT` - Treatment/Health Intervention
+            * `CULL` - Culling
+            * `HARVEST` - Harvest
+            * `SALE` - Sale/Commercial Handoff
+            * `FEED_CHANGE` - Feed Strategy Change
+            * `TRANSFER` - Transfer
+            * `MAINTENANCE` - Maintenance
+            * `SAMPLING` - Sampling
+            * `OTHER` - Other
+        activity_type_display:
+          type: string
+          readOnly: true
+        trigger_type:
+          enum:
+          - DAY_OFFSET
+          - WEIGHT_THRESHOLD
+          - STAGE_TRANSITION
+          type: string
+          x-spec-enum-id: 4d642f51fb1ebfed
+          description: |-
+            When to create the activity
+
+            * `DAY_OFFSET` - Day Offset
+            * `WEIGHT_THRESHOLD` - Weight Threshold
+            * `STAGE_TRANSITION` - Stage Transition
+        trigger_type_display:
+          type: string
+          readOnly: true
+        day_offset:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          description: Days after batch creation (for DAY_OFFSET trigger)
+        weight_threshold_g:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Average weight threshold (for WEIGHT_THRESHOLD trigger)
+        target_lifecycle_stage:
+          type: integer
+          nullable: true
+          description: Target stage for STAGE_TRANSITION trigger
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        notes_template:
+          type: string
+          nullable: true
+          description: Template for activity notes
+        is_active:
+          type: boolean
+          description: Whether template is active
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     PatchedArea:
       type: object
       description: Serializer for the Area model.
@@ -39925,6 +41165,12 @@ components:
         batch:
           type: integer
           description: Batch being transferred
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        planned_activity:
+          type: integer
+          nullable: true
+          description: Planned activity that spawned this workflow (if any)
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         source_lifecycle_stage:
@@ -42491,6 +43737,140 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedPlannedActivity:
+      type: object
+      description: Serializer for PlannedActivity model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario:
+          type: integer
+          description: Scenario this activity belongs to
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario_name:
+          type: string
+          readOnly: true
+        batch:
+          type: integer
+          description: Batch this activity is planned for
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+          readOnly: true
+        activity_type:
+          enum:
+          - VACCINATION
+          - TREATMENT
+          - CULL
+          - HARVEST
+          - SALE
+          - FEED_CHANGE
+          - TRANSFER
+          - MAINTENANCE
+          - SAMPLING
+          - OTHER
+          type: string
+          x-spec-enum-id: f708e2744b31c829
+          description: |-
+            Type of operational activity
+
+            * `VACCINATION` - Vaccination
+            * `TREATMENT` - Treatment/Health Intervention
+            * `CULL` - Culling
+            * `HARVEST` - Harvest
+            * `SALE` - Sale/Commercial Handoff
+            * `FEED_CHANGE` - Feed Strategy Change
+            * `TRANSFER` - Transfer
+            * `MAINTENANCE` - Maintenance
+            * `SAMPLING` - Sampling
+            * `OTHER` - Other
+        activity_type_display:
+          type: string
+          readOnly: true
+        due_date:
+          type: string
+          format: date
+          description: Planned execution date
+        status:
+          enum:
+          - PENDING
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+          type: string
+          x-spec-enum-id: a1159508116cf8d3
+          description: |-
+            Current status of the activity
+
+            * `PENDING` - Pending
+            * `IN_PROGRESS` - In Progress
+            * `COMPLETED` - Completed
+            * `CANCELLED` - Cancelled
+        status_display:
+          type: string
+          readOnly: true
+        container:
+          type: integer
+          nullable: true
+          description: Target container (optional)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        container_name:
+          type: string
+          readOnly: true
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+          description: Free-text notes for context
+        created_by:
+          type: integer
+          readOnly: true
+          description: User who created this activity
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        created_by_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: Timestamp when activity was completed
+        completed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: User who marked activity as completed
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completed_by_name:
+          type: string
+          readOnly: true
+        transfer_workflow:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Spawned Transfer Workflow (for TRANSFER activities)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        is_overdue:
+          type: string
+          readOnly: true
     PatchedSampleType:
       type: object
       description: |-
@@ -43529,6 +44909,160 @@ components:
           minimum: -9223372036854775808
       required:
       - scenario_id
+    PlannedActivity:
+      type: object
+      description: Serializer for PlannedActivity model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario:
+          type: integer
+          description: Scenario this activity belongs to
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario_name:
+          type: string
+          readOnly: true
+        batch:
+          type: integer
+          description: Batch this activity is planned for
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        batch_number:
+          type: string
+          readOnly: true
+        activity_type:
+          enum:
+          - VACCINATION
+          - TREATMENT
+          - CULL
+          - HARVEST
+          - SALE
+          - FEED_CHANGE
+          - TRANSFER
+          - MAINTENANCE
+          - SAMPLING
+          - OTHER
+          type: string
+          x-spec-enum-id: f708e2744b31c829
+          description: |-
+            Type of operational activity
+
+            * `VACCINATION` - Vaccination
+            * `TREATMENT` - Treatment/Health Intervention
+            * `CULL` - Culling
+            * `HARVEST` - Harvest
+            * `SALE` - Sale/Commercial Handoff
+            * `FEED_CHANGE` - Feed Strategy Change
+            * `TRANSFER` - Transfer
+            * `MAINTENANCE` - Maintenance
+            * `SAMPLING` - Sampling
+            * `OTHER` - Other
+        activity_type_display:
+          type: string
+          readOnly: true
+        due_date:
+          type: string
+          format: date
+          description: Planned execution date
+        status:
+          enum:
+          - PENDING
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+          type: string
+          x-spec-enum-id: a1159508116cf8d3
+          description: |-
+            Current status of the activity
+
+            * `PENDING` - Pending
+            * `IN_PROGRESS` - In Progress
+            * `COMPLETED` - Completed
+            * `CANCELLED` - Cancelled
+        status_display:
+          type: string
+          readOnly: true
+        container:
+          type: integer
+          nullable: true
+          description: Target container (optional)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        container_name:
+          type: string
+          readOnly: true
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+          description: Free-text notes for context
+        created_by:
+          type: integer
+          readOnly: true
+          description: User who created this activity
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        created_by_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: Timestamp when activity was completed
+        completed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: User who marked activity as completed
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completed_by_name:
+          type: string
+          readOnly: true
+        transfer_workflow:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Spawned Transfer Workflow (for TRANSFER activities)
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        is_overdue:
+          type: string
+          readOnly: true
+      required:
+      - activity_type
+      - activity_type_display
+      - batch
+      - batch_number
+      - completed_at
+      - completed_by
+      - completed_by_name
+      - container_name
+      - created_at
+      - created_by
+      - created_by_name
+      - due_date
+      - id
+      - is_overdue
+      - scenario
+      - scenario_name
+      - status_display
+      - transfer_workflow
+      - updated_at
     ProductGradeSummary:
       type: object
       description: Compact representation of a harvest product grade.
@@ -43897,10 +45431,10 @@ components:
           readOnly: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
-        scenario:
+        projection_run:
           type: integer
           nullable: true
-          description: 'DEPRECATED: Temporary field for migration'
+          description: The projection run this data belongs to
           maximum: 9223372036854775807
           minimum: -9223372036854775808
         projection_date:
@@ -45767,6 +47301,161 @@ components:
       - id
       - manufacturer
       - name
+    VarianceReport:
+      type: object
+      description: |-
+        Main serializer for the complete variance report response.
+
+        Contains summary statistics, per-activity-type breakdown,
+        time series data, and optionally individual activity details.
+      properties:
+        report_generated_at:
+          type: string
+          format: date-time
+        scenario_id:
+          type: integer
+          nullable: true
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        scenario_name:
+          type: string
+          nullable: true
+        date_range_start:
+          type: string
+          format: date
+          nullable: true
+        date_range_end:
+          type: string
+          format: date
+          nullable: true
+        summary:
+          $ref: '#/components/schemas/VarianceReportSummary'
+        by_activity_type:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityTypeStats'
+        time_series:
+          type: array
+          items:
+            $ref: '#/components/schemas/VarianceTimeSeriesItem'
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityVarianceItem'
+          description: Individual activity details (only included if include_details=true)
+      required:
+      - by_activity_type
+      - date_range_end
+      - date_range_start
+      - report_generated_at
+      - scenario_id
+      - scenario_name
+      - summary
+      - time_series
+    VarianceReportSummary:
+      type: object
+      description: Serializer for overall variance report summary.
+      properties:
+        total_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completed_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        pending_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        cancelled_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        overdue_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        overall_completion_rate:
+          type: number
+          format: double
+          description: Percentage of total activities completed
+        on_time_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        late_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        early_activities:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        overall_on_time_rate:
+          type: number
+          format: double
+          description: Percentage of completed activities that were on-time or early
+        avg_variance_days:
+          type: number
+          format: double
+          nullable: true
+          description: Average variance in days across all completed activities
+      required:
+      - avg_variance_days
+      - cancelled_activities
+      - completed_activities
+      - early_activities
+      - late_activities
+      - on_time_activities
+      - overall_completion_rate
+      - overall_on_time_rate
+      - overdue_activities
+      - pending_activities
+      - total_activities
+    VarianceTimeSeriesItem:
+      type: object
+      description: Serializer for time series variance data point.
+      properties:
+        period:
+          type: string
+          description: Period identifier (e.g., '2025-01' for month, '2025-W01' for
+            week)
+        total_due:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completed:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        on_time:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        late:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        early:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        completion_rate:
+          type: number
+          format: double
+        on_time_rate:
+          type: number
+          format: double
+      required:
+      - completed
+      - completion_rate
+      - early
+      - late
+      - on_time
+      - on_time_rate
+      - period
+      - total_due
     WeatherData:
       type: object
       description: |-

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScenarioProjectionsChart } from "@/components/scenario/scenario-projections-chart";
+import { ScenarioPlannedActivitiesSummary } from "@/features/production-planner/components/ScenarioPlannedActivitiesSummary";
 // Temperature data view will be implemented inline
 
 // Define interfaces for API response types
@@ -332,6 +333,12 @@ export function ScenarioDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Planned Activities Summary */}
+          <ScenarioPlannedActivitiesSummary
+            scenarioId={parseInt(id!)}
+            scenarioName={scenarioData.name}
+          />
         </TabsContent>
 
         <TabsContent value="projections" className="space-y-6">

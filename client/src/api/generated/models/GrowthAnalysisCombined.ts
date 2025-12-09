@@ -22,6 +22,7 @@ export type GrowthAnalysisCombined = {
     start_date: string;
     status: string;
     scenario?: Record<string, any> | null;
+    projection_run?: Record<string, any> | null;
     growth_samples: Array<Record<string, any>>;
     scenario_projection: Array<Record<string, any>>;
     actual_daily_states: Array<Record<string, any>>;

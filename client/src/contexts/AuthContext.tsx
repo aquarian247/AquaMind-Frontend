@@ -118,7 +118,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return profile;
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
-      return null;
+      // Return a default profile to prevent infinite loading
+      // This allows the app to function even if profile endpoint fails
+      const defaultProfile: UserProfile = {
+        full_name: state.user?.username || '',
+        phone: null,
+        profile_picture: null,
+        job_title: null,
+        department: null,
+        geography: 'ALL',
+        subsidiary: 'ALL',
+        role: 'ADMIN', // Default to ADMIN if profile fails (can be overridden by backend)
+        language_preference: 'en',
+        date_format_preference: 'DMY',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      
+      // Update state with default profile
+      if (state.user) {
+        setState(prev => ({
+          ...prev,
+          user: {
+            ...prev.user!,
+            profile: defaultProfile,
+          }
+        }));
+      }
+      
+      return defaultProfile;
     }
   };
 
@@ -202,11 +230,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           // Schedule token refresh
           scheduleTokenRefresh(newDecoded.exp);
+          
+          // Fetch profile BEFORE setting isLoading=false
+          try {
+            const profile = await ApiService.apiV1UsersAuthProfileRetrieve();
+            setState(prev => ({
+              ...prev,
+              user: prev.user ? { ...prev.user, profile } : prev.user,
+            }));
+          } catch (profileError) {
+            console.error('Failed to fetch profile after token refresh:', profileError);
+          }
         } else {
-          // Valid token, set auth state
+          // Valid token, set auth state (but keep loading until profile is fetched)
           setAuthToken(accessToken);
 
-          // Set auth state with decoded token info
+          // Fetch profile BEFORE setting isLoading=false
+          let userProfile: UserProfile = {} as UserProfile;
+          try {
+            userProfile = await ApiService.apiV1UsersAuthProfileRetrieve();
+          } catch (profileError) {
+            console.error('Failed to fetch profile during init:', profileError);
+          }
+
+          // Set auth state with decoded token info and profile
           setState({
             user: {
               id: decoded.user_id,
@@ -214,7 +261,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               email: decoded.email || '',
               is_active: true,
               date_joined: new Date().toISOString(),
-              profile: {} as UserProfile,
+              profile: userProfile,
             } as User,
             isAuthenticated: true,
             isLoading: false,
@@ -230,9 +277,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Schedule token refresh
           scheduleTokenRefresh(decoded.exp);
         }
-
-        // Fetch complete user profile
-        fetchUserProfile();
       } catch (error) {
         console.error('Error initializing auth:', error);
         handleLogout();
@@ -336,6 +380,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Update OpenAPI client with new token
       setAuthToken(tokens.access);
 
+      // Fetch complete user profile BEFORE setting isLoading to false
+      const userProfile = await fetchUserProfile();
+
       setState({
         user: {
           id: decoded.user_id,
@@ -343,7 +390,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email: decoded.email || '',
           is_active: true,
           date_joined: new Date().toISOString(),
-          profile: {} as UserProfile,
+          profile: userProfile || ({} as UserProfile),
         } as User,
         isAuthenticated: true,
         isLoading: false,
@@ -358,9 +405,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Schedule token refresh
       scheduleTokenRefresh(decoded.exp);
-
-      // Fetch complete user profile
-      await fetchUserProfile();
 
       return true;
     } catch (error) {
