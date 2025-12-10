@@ -54,21 +54,21 @@ import { useVarianceReport } from '../api/api';
 import { getActivityTypeOptions } from '../utils/activityHelpers';
 import type { VarianceReport as VarianceReportType } from '@/api/generated/models/VarianceReport';
 
-// FCR status thresholds for color coding
-const FCR_THRESHOLDS = {
+// FCR status thresholds for color coding (exported for testing)
+export const FCR_THRESHOLDS = {
   excellent: 1.2,  // Green: FCR <= 1.2
   acceptable: 1.5, // Yellow: 1.2 < FCR <= 1.5
   // Red: FCR > 1.5
-};
+} as const;
 
-function getFCRStatusColor(fcr: number | null): string {
+export function getFCRStatusColor(fcr: number | null): string {
   if (fcr === null) return 'text-muted-foreground';
   if (fcr <= FCR_THRESHOLDS.excellent) return 'text-emerald-600';
   if (fcr <= FCR_THRESHOLDS.acceptable) return 'text-amber-600';
   return 'text-rose-600';
 }
 
-function getFCRStatusBgColor(fcr: number | null): string {
+export function getFCRStatusBgColor(fcr: number | null): string {
   if (fcr === null) return '#94a3b8';  // slate-400
   if (fcr <= FCR_THRESHOLDS.excellent) return '#10b981';  // emerald-500
   if (fcr <= FCR_THRESHOLDS.acceptable) return '#f59e0b';  // amber-500

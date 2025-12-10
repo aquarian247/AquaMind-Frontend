@@ -14,6 +14,11 @@ import {
   ProjectionPreviewTooltip,
   ProjectionPreviewIcon,
 } from '../components/ProjectionPreviewTooltip';
+import {
+  FCR_THRESHOLDS,
+  getFCRStatusColor,
+  getFCRStatusBgColor,
+} from '../pages/VarianceReportPage';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -162,34 +167,55 @@ describe('ProjectionPreviewIcon', () => {
 });
 
 describe('FCR Metrics Display', () => {
-  // These are unit tests for the FCR helper functions
-  
-  it('should classify FCR as excellent when <= 1.2', () => {
-    const fcr = 1.0;
-    const FCR_THRESHOLDS = { excellent: 1.2, acceptable: 1.5 };
-    
-    expect(fcr <= FCR_THRESHOLDS.excellent).toBe(true);
+  // Unit tests for the actual FCR helper functions from VarianceReportPage
+
+  describe('FCR_THRESHOLDS', () => {
+    it('should have correct threshold values', () => {
+      expect(FCR_THRESHOLDS.excellent).toBe(1.2);
+      expect(FCR_THRESHOLDS.acceptable).toBe(1.5);
+    });
   });
 
-  it('should classify FCR as acceptable when between 1.2 and 1.5', () => {
-    const fcr = 1.35;
-    const FCR_THRESHOLDS = { excellent: 1.2, acceptable: 1.5 };
-    
-    expect(fcr > FCR_THRESHOLDS.excellent).toBe(true);
-    expect(fcr <= FCR_THRESHOLDS.acceptable).toBe(true);
+  describe('getFCRStatusColor', () => {
+    it('should return emerald for excellent FCR (<= 1.2)', () => {
+      expect(getFCRStatusColor(1.0)).toBe('text-emerald-600');
+      expect(getFCRStatusColor(1.2)).toBe('text-emerald-600'); // boundary
+    });
+
+    it('should return amber for acceptable FCR (1.2 < fcr <= 1.5)', () => {
+      expect(getFCRStatusColor(1.21)).toBe('text-amber-600');
+      expect(getFCRStatusColor(1.35)).toBe('text-amber-600');
+      expect(getFCRStatusColor(1.5)).toBe('text-amber-600'); // boundary
+    });
+
+    it('should return rose for poor FCR (> 1.5)', () => {
+      expect(getFCRStatusColor(1.51)).toBe('text-rose-600');
+      expect(getFCRStatusColor(1.8)).toBe('text-rose-600');
+      expect(getFCRStatusColor(2.5)).toBe('text-rose-600');
+    });
+
+    it('should return muted for null FCR', () => {
+      expect(getFCRStatusColor(null)).toBe('text-muted-foreground');
+    });
   });
 
-  it('should classify FCR as needs attention when > 1.5', () => {
-    const fcr = 1.8;
-    const FCR_THRESHOLDS = { excellent: 1.2, acceptable: 1.5 };
-    
-    expect(fcr > FCR_THRESHOLDS.acceptable).toBe(true);
-  });
+  describe('getFCRStatusBgColor', () => {
+    it('should return emerald hex for excellent FCR', () => {
+      expect(getFCRStatusBgColor(1.0)).toBe('#10b981');
+      expect(getFCRStatusBgColor(1.2)).toBe('#10b981'); // boundary
+    });
 
-  it('should handle null FCR gracefully', () => {
-    const fcr = null;
-    const status = fcr === null ? 'unknown' : fcr <= 1.5 ? 'ok' : 'high';
-    
-    expect(status).toBe('unknown');
+    it('should return amber hex for acceptable FCR', () => {
+      expect(getFCRStatusBgColor(1.35)).toBe('#f59e0b');
+      expect(getFCRStatusBgColor(1.5)).toBe('#f59e0b'); // boundary
+    });
+
+    it('should return red hex for poor FCR', () => {
+      expect(getFCRStatusBgColor(1.8)).toBe('#ef4444');
+    });
+
+    it('should return slate hex for null FCR', () => {
+      expect(getFCRStatusBgColor(null)).toBe('#94a3b8');
+    });
   });
 });
