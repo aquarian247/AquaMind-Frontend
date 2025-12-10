@@ -46,6 +46,12 @@ export const varianceReportKeys = {
     [...varianceReportKeys.all, filters] as const,
 };
 
+export const projectionPreviewKeys = {
+  all: ['projection-preview'] as const,
+  activity: (activityId: number) =>
+    [...projectionPreviewKeys.all, activityId] as const,
+};
+
 // ============================================================================
 // QUERIES
 // ============================================================================
@@ -147,6 +153,52 @@ export function useActivityTemplate(id: number) {
     queryKey: activityTemplateKeys.detail(id),
     queryFn: () => ApiService.apiV1PlanningActivityTemplatesRetrieve(id),
     enabled: !!id,
+  });
+}
+
+// ============================================================================
+// PROJECTION PREVIEW (Phase 8.5)
+// ============================================================================
+
+/**
+ * Response type for projection preview endpoint
+ */
+export interface ProjectionPreviewResponse {
+  activity_id: number;
+  due_date: string;
+  scenario_id: number;
+  scenario_name: string;
+  projected_weight_g: number | null;
+  projected_population: number | null;
+  projected_biomass_kg: number | null;
+  day_number: number | null;
+  rationale: string;
+}
+
+/**
+ * Fetch projection preview for a planned activity
+ * 
+ * Returns scenario-based rationale for the activity's due date,
+ * including projected weight and population from the scenario.
+ * Used by the ProjectionPreviewTooltip component.
+ */
+export function useProjectionPreview(activityId: number, enabled = true) {
+  return useQuery({
+    queryKey: projectionPreviewKeys.activity(activityId),
+    queryFn: async (): Promise<ProjectionPreviewResponse> => {
+      const response = await fetch(`/api/v1/planning/planned-activities/${activityId}/projection-preview/`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch projection preview');
+      }
+      return response.json();
+    },
+    enabled: enabled && !!activityId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
