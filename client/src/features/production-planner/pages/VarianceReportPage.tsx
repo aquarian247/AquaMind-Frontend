@@ -48,10 +48,32 @@ import {
   Activity,
   TrendingUp,
   Calendar,
+  Fish,
 } from 'lucide-react';
 import { useVarianceReport } from '../api/api';
 import { getActivityTypeOptions } from '../utils/activityHelpers';
 import type { VarianceReport as VarianceReportType } from '@/api/generated/models/VarianceReport';
+
+// FCR status thresholds for color coding (exported for testing)
+export const FCR_THRESHOLDS = {
+  excellent: 1.2,  // Green: FCR <= 1.2
+  acceptable: 1.5, // Yellow: 1.2 < FCR <= 1.5
+  // Red: FCR > 1.5
+} as const;
+
+export function getFCRStatusColor(fcr: number | null): string {
+  if (fcr === null) return 'text-muted-foreground';
+  if (fcr <= FCR_THRESHOLDS.excellent) return 'text-emerald-600';
+  if (fcr <= FCR_THRESHOLDS.acceptable) return 'text-amber-600';
+  return 'text-rose-600';
+}
+
+export function getFCRStatusBgColor(fcr: number | null): string {
+  if (fcr === null) return '#94a3b8';  // slate-400
+  if (fcr <= FCR_THRESHOLDS.excellent) return '#10b981';  // emerald-500
+  if (fcr <= FCR_THRESHOLDS.acceptable) return '#f59e0b';  // amber-500
+  return '#ef4444';  // red-500
+}
 
 // ============================================================================
 // TYPES
@@ -342,6 +364,79 @@ function VarianceDistributionChart({
   );
 }
 
+/**
+ * FCR Metrics Card - Phase 8.5 Feature
+ * 
+ * Displays FCR reference information and color legend for FCR status.
+ * Shows example FCR thresholds used for color coding in the variance report.
+ */
+function FCRMetricsCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Fish className="h-5 w-5" />
+          FCR Performance Guide
+        </CardTitle>
+        <CardDescription>
+          Feed Conversion Ratio thresholds for aquaculture operations
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* FCR Legend */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-950 rounded-lg">
+              <div className="w-4 h-4 rounded-full bg-emerald-500" />
+              <div>
+                <p className="font-medium text-emerald-700 dark:text-emerald-300">
+                  Excellent
+                </p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                  FCR ≤ {FCR_THRESHOLDS.excellent}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg">
+              <div className="w-4 h-4 rounded-full bg-amber-500" />
+              <div>
+                <p className="font-medium text-amber-700 dark:text-amber-300">
+                  Acceptable
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  {FCR_THRESHOLDS.excellent} &lt; FCR ≤ {FCR_THRESHOLDS.acceptable}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-3 bg-rose-50 dark:bg-rose-950 rounded-lg">
+              <div className="w-4 h-4 rounded-full bg-rose-500" />
+              <div>
+                <p className="font-medium text-rose-700 dark:text-rose-300">
+                  Needs Attention
+                </p>
+                <p className="text-xs text-rose-600 dark:text-rose-400">
+                  FCR &gt; {FCR_THRESHOLDS.acceptable}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Info Text */}
+          <div className="text-sm text-muted-foreground border-t pt-3">
+            <p>
+              <strong>FCR (Feed Conversion Ratio)</strong> measures feed efficiency.
+              Lower values indicate better conversion of feed to fish biomass.
+            </p>
+            <p className="mt-1">
+              Typical Atlantic salmon FCR: 1.0-1.3 (excellent), 1.3-1.5 (normal).
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ============================================================================
 // FILTERS
 // ============================================================================
@@ -581,6 +676,9 @@ export function VarianceReportPage() {
           {data.time_series.length > 0 && (
             <TimeSeriesChart data={data.time_series} groupBy={filters.groupBy} />
           )}
+
+          {/* FCR Performance Guide - Phase 8.5 */}
+          <FCRMetricsCard />
 
           {/* Activity Type Details Table */}
           {data.by_activity_type.length > 0 && (
