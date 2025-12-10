@@ -7,6 +7,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
+import { getAuthToken } from '@/lib/config';
 import type {
   PlannedActivity,
   ActivityTemplate,
@@ -186,10 +187,17 @@ export function useProjectionPreview(activityId: number, enabled = true) {
   return useQuery({
     queryKey: projectionPreviewKeys.activity(activityId),
     queryFn: async (): Promise<ProjectionPreviewResponse> => {
+      // Build headers with JWT auth token (same pattern as ApiService)
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      const token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`/api/v1/planning/planned-activities/${activityId}/projection-preview/`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include',
       });
       if (!response.ok) {
