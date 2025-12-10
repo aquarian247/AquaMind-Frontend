@@ -72,7 +72,8 @@ export function ProjectionPreviewTooltip({
               {/* Date info */}
               <div className="text-xs text-muted-foreground">
                 Due: {format(new Date(data.due_date), 'MMM d, yyyy')}
-                {data.day_number && <span className="ml-2">(Day {data.day_number})</span>}
+                {/* Use != null to handle day 0 (stocking day) - truthy check would hide it */}
+                {data.day_number != null && <span className="ml-2">(Day {data.day_number})</span>}
               </div>
 
               {/* Projected metrics */}
