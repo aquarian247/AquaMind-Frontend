@@ -165,7 +165,7 @@ export interface CapacityUtilization {
 }
 
 /**
- * Harvest forecast for Strategic Tab
+ * Harvest forecast for Strategic Tab (legacy placeholder structure)
  */
 export interface HarvestForecast {
   geography_id: number | null;
@@ -174,6 +174,109 @@ export interface HarvestForecast {
     tonnes: number | null;
     revenue_estimate: number | null;
   }[];
+}
+
+/**
+ * Harvest forecast summary from the new forecast endpoint
+ */
+export interface HarvestForecastSummary {
+  total_batches: number;
+  harvest_ready_count: number;
+  avg_days_to_harvest: number | null;
+  total_projected_biomass_tonnes: number;
+}
+
+/**
+ * Individual batch harvest forecast data
+ */
+export interface UpcomingHarvest {
+  batch_id: number;
+  batch_number: string;
+  species: string;
+  facility: string;
+  current_weight_g: number | null;
+  target_weight_g: number;
+  projected_harvest_date: string | null;
+  days_until_harvest: number | null;
+  projected_biomass_kg: number | null;
+  confidence: number | null;
+  planned_activity_id: number | null;
+  planned_activity_status: string | null;
+}
+
+/**
+ * Quarterly aggregation for harvests
+ */
+export interface HarvestQuarterlyData {
+  count: number;
+  biomass_tonnes: number;
+}
+
+/**
+ * Full harvest forecast response from backend
+ */
+export interface HarvestForecastResponse {
+  summary: HarvestForecastSummary;
+  upcoming: UpcomingHarvest[];
+  by_quarter: Record<string, HarvestQuarterlyData>;
+}
+
+/**
+ * Sea-transfer forecast summary
+ */
+export interface SeaTransferForecastSummary {
+  total_freshwater_batches: number;
+  transfer_ready_count: number;
+  avg_days_to_transfer: number | null;
+}
+
+/**
+ * Individual batch sea-transfer forecast data
+ */
+export interface UpcomingSeaTransfer {
+  batch_id: number;
+  batch_number: string;
+  current_stage: string;
+  target_stage: string;
+  current_facility: string;
+  target_facility: string | null;
+  projected_transfer_date: string | null;
+  days_until_transfer: number | null;
+  current_weight_g: number | null;
+  target_weight_g: number;
+  confidence: number | null;
+  planned_activity_id: number | null;
+}
+
+/**
+ * Monthly aggregation for sea-transfers
+ */
+export interface SeaTransferMonthlyData {
+  count: number;
+}
+
+/**
+ * Full sea-transfer forecast response from backend
+ */
+export interface SeaTransferForecastResponse {
+  summary: SeaTransferForecastSummary;
+  upcoming: UpcomingSeaTransfer[];
+  by_month: Record<string, SeaTransferMonthlyData>;
+}
+
+/**
+ * Confidence level thresholds for color coding
+ */
+export type ConfidenceLevel = 'high' | 'medium' | 'low';
+
+/**
+ * Forecast filter options
+ */
+export interface ForecastFilters {
+  species_id?: number;
+  from_date?: string;
+  to_date?: string;
+  min_confidence?: number;
 }
 
 /**

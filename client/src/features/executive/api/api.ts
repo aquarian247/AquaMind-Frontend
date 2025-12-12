@@ -16,6 +16,9 @@ import type {
   FCRTrendPoint,
   TrendInterval,
   GeographyFilterValue,
+  HarvestForecastResponse,
+  SeaTransferForecastResponse,
+  ForecastFilters,
 } from '../types';
 import {
   getLiceAlertLevel,
@@ -485,6 +488,74 @@ export function useMarketPrices(): UseQueryResult<MarketPrice, Error> {
     staleTime: Infinity,
     gcTime: Infinity,
     enabled: false, // Disabled until real endpoint available
+  });
+}
+
+/**
+ * Hook: useHarvestForecast
+ * 
+ * Fetches harvest forecast data showing batches approaching harvest weight.
+ * Returns projected harvest dates, confidence levels, and quarterly aggregations.
+ * 
+ * @param geography - Geography ID or 'global' for all geographies
+ * @param filters - Optional filters for species, date range, min confidence
+ */
+export function useHarvestForecast(
+  geography: GeographyFilterValue,
+  filters?: ForecastFilters
+): UseQueryResult<HarvestForecastResponse, Error> {
+  return useQuery({
+    queryKey: ['batch-forecast', 'harvest', geography, filters],
+    queryFn: async (): Promise<HarvestForecastResponse> => {
+      const geographyId = geography === 'global' ? undefined : geography;
+      
+      const response = await ApiService.forecastviewsetHarvest(
+        filters?.from_date,
+        geographyId,
+        filters?.min_confidence,
+        filters?.species_id,
+        filters?.to_date
+      );
+      
+      // Cast response to our typed interface
+      return response as unknown as HarvestForecastResponse;
+    },
+    staleTime: 60 * 1000, // 1 minute (matches backend cache)
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook: useSeaTransferForecast
+ * 
+ * Fetches sea-transfer forecast data showing freshwater batches
+ * approaching smolt stage for transfer to sea cages.
+ * 
+ * @param geography - Geography ID or 'global' for all geographies
+ * @param filters - Optional filters for species, date range, min confidence
+ */
+export function useSeaTransferForecast(
+  geography: GeographyFilterValue,
+  filters?: ForecastFilters
+): UseQueryResult<SeaTransferForecastResponse, Error> {
+  return useQuery({
+    queryKey: ['batch-forecast', 'sea-transfer', geography, filters],
+    queryFn: async (): Promise<SeaTransferForecastResponse> => {
+      const geographyId = geography === 'global' ? undefined : geography;
+      
+      const response = await ApiService.forecastviewsetSeaTransfer(
+        filters?.from_date,
+        geographyId,
+        filters?.min_confidence,
+        filters?.species_id,
+        filters?.to_date
+      );
+      
+      // Cast response to our typed interface
+      return response as unknown as SeaTransferForecastResponse;
+    },
+    staleTime: 60 * 1000, // 1 minute (matches backend cache)
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
