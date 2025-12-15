@@ -2,8 +2,10 @@
  * Data Visualization Controls
  * 
  * Left panel with series toggles, granularity selector, and scenario management.
+ * Now includes 4th toggle for Live Forward Projection.
  * 
  * Issue: #112 - Phase 7
+ * Issue: Live Forward Projection Feature
  */
 
 import React from 'react';
@@ -14,12 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RefreshDataButton } from './RefreshDataButton';
 import { ProjectionRunSelector } from './ProjectionRunSelector';
 import type { ScenarioInfo } from '../../api/growth-assimilation';
-
-interface SeriesVisibility {
-  samples: boolean;
-  scenario: boolean;
-  actual: boolean;
-}
+import type { SeriesVisibility } from './GrowthAnalysisChart';
 
 interface DataVisualizationControlsProps {
   batchId: number;
@@ -108,6 +105,28 @@ export function DataVisualizationControls({
             </div>
           </div>
         </div>
+        
+        {/* Live Forward Projection - NEW */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="series-live-projection"
+              checked={seriesVisibility.liveProjection}
+              onCheckedChange={() => onSeriesToggle('liveProjection')}
+            />
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <Label htmlFor="series-live-projection" className="text-sm font-normal cursor-pointer">
+                Live Projection
+              </Label>
+            </div>
+          </div>
+        </div>
+        
+        <p className="text-xs text-muted-foreground mt-2 bg-purple-50 dark:bg-purple-950/30 p-2 rounded">
+          <span className="font-medium">Live Projection:</span> Forward forecast from current state 
+          using temperature bias from recent sensor data.
+        </p>
       </div>
       
       <Separator />

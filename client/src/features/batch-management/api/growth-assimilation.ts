@@ -113,6 +113,38 @@ export interface GrowthAnalysisData {
 }
 
 // ============================================================================
+// Live Forward Projection Types
+// ============================================================================
+
+export interface LiveProjectionProvenance {
+  temp_profile_id: number | null;
+  temp_profile_name: string;
+  temp_bias_c: number;
+  temp_bias_window_days: number;
+  temp_bias_clamp_min_c: number;
+  temp_bias_clamp_max_c: number;
+  tgc_value: number;
+}
+
+export interface LiveProjectionPoint {
+  projection_date: string;
+  day_number: number;
+  projected_weight_g: number;
+  projected_population: number;
+  projected_biomass_kg: number;
+  temperature_used_c: number;
+}
+
+export interface LiveForwardProjectionData {
+  assignment_id: number;
+  batch_number: string;
+  container_name: string;
+  computed_date: string;
+  provenance: LiveProjectionProvenance;
+  projections: LiveProjectionPoint[];
+}
+
+// ============================================================================
 // Query Options
 // ============================================================================
 
@@ -347,6 +379,109 @@ export function parseISODate(dateStr: string): Date {
  */
 export function formatISODate(date: Date): string {
   return date.toISOString().split('T')[0]; // YYYY-MM-DD
+}
+
+// ============================================================================
+// Live Forward Projection Hook
+// ============================================================================
+
+/**
+ * Fetch live forward projection for a specific assignment
+ * 
+ * Returns projected growth trajectory from current state,
+ * with full provenance about temperature bias and model inputs.
+ * 
+ * @param assignmentId - Container assignment ID
+ * @param computedDate - Optional specific computation date (default: latest)
+ */
+export function useLiveForwardProjection(
+  assignmentId: number | undefined,
+  computedDate?: string
+) {
+  return useQuery({
+    queryKey: ['assignment', assignmentId, 'live-forward-projection', computedDate],
+    queryFn: async (): Promise<LiveForwardProjectionData> => {
+      if (!assignmentId) throw new Error('Assignment ID is required');
+      
+      // Build URL with query params
+      const baseUrl = `/api/v1/batch/container-assignments/${assignmentId}/live-forward-projection/`;
+      const url = computedDate 
+        ? `${baseUrl}?computed_date=${computedDate}`
+        : baseUrl;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No projections available - return null-like response
+          throw new Error('No live projections available');
+        }
+        throw new Error(`Failed to fetch live projection: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
+    enabled: !!assignmentId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false, // Don't retry on 404
+  });
+}
+
+/**
+ * Fetch live forward projections for all assignments of a batch
+ * 
+ * Aggregates projections across all active assignments for batch-level view.
+ * 
+ * @param batchId - Batch ID
+ * @param containerAssignments - Array of assignment IDs to fetch
+ */
+export function useBatchLiveForwardProjections(
+  batchId: number | undefined,
+  containerAssignments: ContainerAssignment[]
+) {
+  // Get active assignment IDs
+  const activeAssignmentIds = containerAssignments
+    .filter(a => !a.departure_date)
+    .map(a => a.id);
+  
+  return useQuery({
+    queryKey: ['batch', batchId, 'live-forward-projections', activeAssignmentIds],
+    queryFn: async (): Promise<LiveForwardProjectionData[]> => {
+      if (!batchId || activeAssignmentIds.length === 0) {
+        return [];
+      }
+      
+      // Fetch projections for each active assignment
+      const projections = await Promise.allSettled(
+        activeAssignmentIds.map(async (assignmentId) => {
+          const url = `/api/v1/batch/container-assignments/${assignmentId}/live-forward-projection/`;
+          const response = await fetch(url, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (!response.ok) return null;
+          return response.json() as Promise<LiveForwardProjectionData>;
+        })
+      );
+      
+      // Filter out failed requests
+      return projections
+        .filter((r): r is PromiseFulfilledResult<LiveForwardProjectionData> => 
+          r.status === 'fulfilled' && r.value !== null
+        )
+        .map(r => r.value);
+    },
+    enabled: !!batchId && activeAssignmentIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
 // ============================================================================

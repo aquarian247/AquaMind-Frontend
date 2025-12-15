@@ -14,22 +14,17 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   useCombinedGrowthData,
+  useBatchLiveForwardProjections,
   determineGranularity,
   type GrowthDataOptions,
 } from '../../api/growth-assimilation';
 import { DataVisualizationControls } from './DataVisualizationControls';
-import { GrowthAnalysisChart } from './GrowthAnalysisChart';
+import { GrowthAnalysisChart, type SeriesVisibility } from './GrowthAnalysisChart';
 import { ContainerDrilldown } from './ContainerDrilldown';
 import { VarianceAnalysis } from './VarianceAnalysis';
 
 interface GrowthAnalysisTabContentProps {
   batchId: number;
-}
-
-interface SeriesVisibility {
-  samples: boolean;
-  scenario: boolean;
-  actual: boolean;
 }
 
 export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentProps) {
@@ -41,6 +36,7 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
     samples: true,
     scenario: true,
     actual: true,
+    liveProjection: true,  // Enable by default for the new feature
   });
   
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | undefined>();
@@ -73,6 +69,15 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
     error,
     refetch,
   } = useCombinedGrowthData(batchId, queryOptions);
+  
+  // Fetch live forward projections for 4th series
+  const {
+    data: liveProjections,
+    isLoading: liveProjectionsLoading,
+  } = useBatchLiveForwardProjections(
+    batchId,
+    data?.container_assignments || []
+  );
   
   // ============================================================================
   // Auto-adjust granularity for long date ranges
@@ -263,6 +268,7 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
               data={data}
               seriesVisibility={seriesVisibility}
               selectedAssignmentId={selectedAssignmentId}
+              liveProjections={liveProjections}
             />
           </Card>
           

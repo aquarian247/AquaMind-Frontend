@@ -1,14 +1,19 @@
 /**
  * Growth Analysis Chart
  * 
- * Main chart component displaying three data series:
+ * Main chart component displaying four data series:
  * - Growth Samples (blue scatter points)
  * - Scenario Projection (green line)
  * - Actual Daily States (orange line with markers)
+ * - Live Forward Projection (purple dashed line) - NEW
+ * 
+ * The 4th series shows predictive trajectory from current state,
+ * using temperature bias computed from recent sensor data.
  * 
  * Uses Recharts for rendering. Custom tooltip shows provenance data.
  * 
  * Issue: #112 - Phase 7
+ * Issue: Live Forward Projection Feature
  */
 
 import React, { useMemo } from 'react';
@@ -24,18 +29,26 @@ import {
   Legend,
 } from 'recharts';
 import { ProvenanceTooltip } from './ProvenanceTooltip';
-import type { GrowthAnalysisData, GrowthSample, ActualDailyState } from '../../api/growth-assimilation';
+import type { 
+  GrowthAnalysisData, 
+  GrowthSample, 
+  ActualDailyState,
+  LiveForwardProjectionData,
+  LiveProjectionProvenance,
+} from '../../api/growth-assimilation';
 
-interface SeriesVisibility {
+export interface SeriesVisibility {
   samples: boolean;
   scenario: boolean;
   actual: boolean;
+  liveProjection: boolean;
 }
 
 interface GrowthAnalysisChartProps {
   data: GrowthAnalysisData;
   seriesVisibility: SeriesVisibility;
   selectedAssignmentId?: number;
+  liveProjections?: LiveForwardProjectionData[];
 }
 
 interface ChartDataPoint {
@@ -58,12 +71,19 @@ interface ChartDataPoint {
   assignmentId?: number;
   containerName?: string;
   containerCount?: number;  // Number of containers aggregated for this day
+  // Live Forward Projection (new 4th series)
+  liveProjectionWeight?: number;
+  liveProjectionPopulation?: number;
+  liveProjectionBiomass?: number;
+  liveProjectionTemp?: number;
+  liveProjectionProvenance?: LiveProjectionProvenance;
 }
 
 export function GrowthAnalysisChart({
   data,
   seriesVisibility,
   selectedAssignmentId,
+  liveProjections,
 }: GrowthAnalysisChartProps) {
   
   // ============================================================================
@@ -210,12 +230,76 @@ export function GrowthAnalysisChart({
       });
     }
     
+    // Add live forward projections (4th series - purple dashed)
+    if (seriesVisibility.liveProjection && liveProjections && liveProjections.length > 0) {
+      // Aggregate projections across all assignments
+      const projectionsByDay = new Map<number, {
+        weights: number[];
+        populations: number[];
+        biomass: number[];
+        temps: number[];
+        provenance: LiveProjectionProvenance | null;
+      }>();
+      
+      liveProjections.forEach((projData) => {
+        // Filter by assignment if selected
+        if (selectedAssignmentId && projData.assignment_id !== selectedAssignmentId) {
+          return;
+        }
+        
+        projData.projections.forEach((proj) => {
+          if (!projectionsByDay.has(proj.day_number)) {
+            projectionsByDay.set(proj.day_number, {
+              weights: [],
+              populations: [],
+              biomass: [],
+              temps: [],
+              provenance: projData.provenance,
+            });
+          }
+          const dayData = projectionsByDay.get(proj.day_number)!;
+          dayData.weights.push(proj.projected_weight_g);
+          dayData.populations.push(proj.projected_population);
+          dayData.biomass.push(proj.projected_biomass_kg);
+          dayData.temps.push(proj.temperature_used_c);
+        });
+      });
+      
+      // Add aggregated projections to chart data
+      projectionsByDay.forEach((dayData, dayNumber) => {
+        const existing = dataByDay.get(dayNumber) || {
+          day: dayNumber,
+          date: '', // Will be computed from projection date
+        };
+        
+        // Population-weighted average for weight
+        const totalPop = dayData.populations.reduce((a, b) => a + b, 0);
+        const weightedWeight = totalPop > 0
+          ? dayData.weights.reduce((sum, w, i) => 
+              sum + w * dayData.populations[i], 0) / totalPop
+          : dayData.weights.reduce((a, b) => a + b, 0) / dayData.weights.length;
+        
+        const totalBiomass = dayData.biomass.reduce((a, b) => a + b, 0);
+        const avgTemp = dayData.temps.reduce((a, b) => a + b, 0) / dayData.temps.length;
+        
+        dataByDay.set(dayNumber, {
+          ...existing,
+          liveProjectionWeight: weightedWeight,
+          liveProjectionPopulation: totalPop,
+          liveProjectionBiomass: totalBiomass,
+          liveProjectionTemp: avgTemp,
+          liveProjectionProvenance: dayData.provenance ?? undefined,
+        });
+      });
+    }
+    
     // Convert map to array and sort by day
     return Array.from(dataByDay.values()).sort((a, b) => a.day - b.day);
   }, [
     data,
     seriesVisibility,
     selectedAssignmentId,
+    liveProjections,
   ]);
   
   // ============================================================================
@@ -350,16 +434,61 @@ export function GrowthAnalysisChart({
               }}
             />
           )}
+          
+          {/* Live Forward Projection Line (Purple Dashed) - NEW */}
+          {seriesVisibility.liveProjection && (
+            <Line
+              type="monotone"
+              dataKey="liveProjectionWeight"
+              stroke="#a855f7"
+              strokeWidth={2}
+              strokeDasharray="5 3"
+              dot={false}
+              name="Live Projection"
+              connectNulls
+            />
+          )}
         </ComposedChart>
       </ResponsiveContainer>
       
       {/* Chart Legend Explanation */}
       <div className="text-xs text-muted-foreground space-y-1 pl-4 border-l-2 border-muted">
-        <p>• <span className="font-medium">Growth Samples</span>: Measured weights from sampling events</p>
-        <p>• <span className="font-medium">Scenario Projection</span>: Planned growth based on TGC model</p>
-        <p>• <span className="font-medium">Actual Daily State</span>: Reality-based assimilation from measurements + models</p>
+        <p>• <span className="font-medium text-blue-500">Growth Samples</span>: Measured weights from sampling events</p>
+        <p>• <span className="font-medium text-green-500">Scenario Projection</span>: Planned growth based on TGC model</p>
+        <p>• <span className="font-medium text-orange-500">Actual Daily State</span>: Reality-based assimilation from measurements + models</p>
+        <p>• <span className="font-medium text-purple-500">Live Projection</span>: Forward projection from current state with temperature bias</p>
         <p>• <span className="font-medium">Anchor Points</span> (circles with dots): Growth samples, transfers, or vaccinations that reset weight calculations</p>
       </div>
+      
+      {/* Live Projection Provenance Info */}
+      {seriesVisibility.liveProjection && liveProjections && liveProjections.length > 0 && (
+        <div className="text-xs bg-purple-50 dark:bg-purple-950/30 p-3 rounded-md border border-purple-200 dark:border-purple-800">
+          <p className="font-medium text-purple-700 dark:text-purple-300 mb-1">
+            📊 Live Projection Provenance
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-muted-foreground">
+            <div>
+              <span className="font-medium">Profile:</span>{' '}
+              {liveProjections[0]?.provenance?.temp_profile_name || 'N/A'}
+            </div>
+            <div>
+              <span className="font-medium">Temp Bias:</span>{' '}
+              {liveProjections[0]?.provenance?.temp_bias_c?.toFixed(2) || '0.00'}°C
+            </div>
+            <div>
+              <span className="font-medium">Bias Window:</span>{' '}
+              {liveProjections[0]?.provenance?.temp_bias_window_days || 14} days
+            </div>
+            <div>
+              <span className="font-medium">TGC:</span>{' '}
+              {liveProjections[0]?.provenance?.tgc_value?.toFixed(4) || 'N/A'}
+            </div>
+          </div>
+          <p className="mt-1 text-muted-foreground/70">
+            Computed: {liveProjections[0]?.computed_date || 'Unknown'}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
