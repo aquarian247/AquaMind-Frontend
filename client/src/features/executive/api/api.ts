@@ -488,3 +488,79 @@ export function useMarketPrices(): UseQueryResult<MarketPrice, Error> {
   });
 }
 
+// ============================================================================
+// Live Forward Projection - Tiered Harvest Forecast
+// ============================================================================
+
+/**
+ * Tiered Harvest Forecast response from backend
+ */
+export interface TieredForecastItem {
+  tier: 'PLANNED' | 'PROJECTED' | 'NEEDS_PLANNING';
+  batch_id: number;
+  batch_number: string;
+  container_id: number | null;
+  container_name: string;
+  current_weight_g: number | null;
+  planned_date: string | null;
+  projected_date: string | null;
+  days_to_harvest: number | null;
+  variance_days: number | null;
+  confidence: number | null;
+  computed_date: string | null;
+  source: string;
+}
+
+export interface TieredHarvestForecastResponse {
+  summary: {
+    planned_count: number;
+    projected_count: number;
+    needs_attention_count: number;
+  };
+  forecasts: TieredForecastItem[];
+}
+
+/**
+ * Hook: useTieredHarvestForecast
+ * 
+ * Fetches tiered harvest forecast from Live Forward Projections.
+ * Returns three tiers:
+ * - PLANNED (Tier 1): Confirmed PlannedActivity records
+ * - PROJECTED (Tier 2): Live projections without plans  
+ * - NEEDS_PLANNING (Tier 3): Approaching threshold without plan
+ * 
+ * @param geographyId - Optional geography ID filter
+ * @param daysHorizon - Days to look ahead (default 90)
+ */
+export function useTieredHarvestForecast(
+  geographyId?: number,
+  daysHorizon: number = 90
+): UseQueryResult<TieredHarvestForecastResponse, Error> {
+  return useQuery({
+    queryKey: ['tiered-harvest-forecast', geographyId, daysHorizon],
+    queryFn: async (): Promise<TieredHarvestForecastResponse> => {
+      // Build URL with query params
+      const params = new URLSearchParams();
+      if (geographyId) params.append('geography_id', String(geographyId));
+      params.append('days_horizon', String(daysHorizon));
+      
+      const url = `/api/v1/batch/forecast/tiered-harvest/?${params.toString()}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch tiered forecast: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
