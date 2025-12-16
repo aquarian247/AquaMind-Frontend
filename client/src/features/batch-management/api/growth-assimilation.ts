@@ -9,6 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
 import type { GrowthAnalysisCombined } from '@/api/generated';
+import { apiRequest } from '@/lib/queryClient';
 
 // ============================================================================
 // TypeScript Interfaces (Properly typed from backend schema)
@@ -395,8 +396,8 @@ export function useLiveForwardProjection(assignmentId: number | undefined) {
 /**
  * Fetch live forward projections for an entire batch
  * 
- * Uses the generated ApiService for assignments, then fetches projections
- * with proper authentication headers.
+ * Uses the generated ApiService for assignments, then uses apiRequest()
+ * for the live-forward-projection endpoint (not yet in generated client).
  * 
  * @param batchId - Batch ID
  */
@@ -431,29 +432,16 @@ export function useBatchLiveProjections(batchId: number | undefined) {
       
       console.log(`[LiveProjection] Found ${assignments.length} active assignments for batch ${batchId}`);
       
-      // Get auth token for fetch
-      const token = localStorage.getItem('auth_token');
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      // Fetch projections for first assignment to get the projection data
+      // Fetch projections for first assignment using apiRequest (proper auth)
       // (all assignments in same batch should have similar day ranges)
       const firstAssignment = assignments[0];
       
       try {
-        const response = await fetch(
-          `/api/v1/batch/container-assignments/${firstAssignment.id}/live-forward-projection/`,
-          { headers, credentials: 'include' }
+        // Use apiRequest for endpoints not in generated client (has proper auth)
+        const response = await apiRequest(
+          'GET',
+          `/api/v1/batch/container-assignments/${firstAssignment.id}/live-forward-projection/`
         );
-        
-        if (!response.ok) {
-          console.warn(`[LiveProjection] API returned ${response.status} for assignment ${firstAssignment.id}`);
-          return [];
-        }
         
         const data = await response.json();
         const projections: LiveProjectionPoint[] = data.projections || [];

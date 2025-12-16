@@ -7,6 +7,7 @@
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
+import { apiRequest } from '@/lib/queryClient';
 import type {
   ExecutiveSummary,
   FacilitySummary,
@@ -539,20 +540,11 @@ export function useTieredHarvestForecast(
       params.append('days_horizon', String(daysHorizon));
       if (tierFilter) params.append('tier', tierFilter);
       
-      // Fetch from backend
-      const response = await fetch(
-        `/api/v1/batch/forecast/tiered-harvest/?${params.toString()}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        }
+      // Use apiRequest for endpoints not in generated client (has proper auth)
+      const response = await apiRequest(
+        'GET',
+        `/api/v1/batch/forecast/tiered-harvest/?${params.toString()}`
       );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tiered harvest forecast: ${response.status}`);
-      }
       
       const data = await response.json();
       return data as TieredHarvestForecast[];
