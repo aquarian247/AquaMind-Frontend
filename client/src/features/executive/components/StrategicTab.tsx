@@ -21,7 +21,6 @@ import { formatKPI } from '../utils/kpiCalculations';
 
 export interface StrategicTabProps {
   geography: GeographyFilterValue;
-  onNavigateToScenario?: () => void;
 }
 
 /**
@@ -31,13 +30,10 @@ export interface StrategicTabProps {
  * 
  * @example
  * ```tsx
- * <StrategicTab
- *   geography="global"
- *   onNavigateToScenario={() => navigate('/scenario-planning')}
- * />
+ * <StrategicTab geography="global" />
  * ```
  */
-export function StrategicTab({ geography, onNavigateToScenario }: StrategicTabProps) {
+export function StrategicTab({ geography }: StrategicTabProps) {
   const { data: summary } = useExecutiveSummary(geography);
   const { data: forecasts, isLoading: forecastsLoading } = useTieredHarvestForecast(geography, 90);
 

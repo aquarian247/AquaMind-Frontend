@@ -206,6 +206,37 @@ export function usePinScenario(batchId: number) {
 }
 
 /**
+ * Pin a projection run to a batch
+ * 
+ * Associates a specific projection run with a batch for version-controlled
+ * variance analysis. Re-running projections won't affect pinned analyses.
+ * 
+ * @param batchId - Batch ID
+ */
+export function usePinProjectionRun(batchId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (request: { projection_run_id: number }) => {
+      // Use apiRequest for endpoint not correctly typed in generated client
+      const response = await apiRequest(
+        'POST',
+        `/api/v1/batch/batches/${batchId}/pin-projection-run/`,
+        request
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate all batch-related queries
+      queryClient.invalidateQueries({ queryKey: ['batch', batchId] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['batch', batchId, 'combined-growth-data'] 
+      });
+    },
+  });
+}
+
+/**
  * Trigger manual recomputation of daily states
  * 
  * Manager+ action to recompute actual daily states for a date range.
@@ -372,17 +403,11 @@ export function useLiveForwardProjection(assignmentId: number | undefined) {
     queryFn: async (): Promise<LiveProjectionPoint[]> => {
       if (!assignmentId) throw new Error('Assignment ID is required');
       
-      const response = await fetch(
-        `/api/v1/batch/container-assignments/${assignmentId}/live-forward-projection/`,
-        {
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        }
+      // Use apiRequest for proper JWT authentication
+      const response = await apiRequest(
+        'GET',
+        `/api/v1/batch/container-assignments/${assignmentId}/live-forward-projection/`
       );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch live projections: ${response.status}`);
-      }
       
       const data = await response.json();
       return data.projections || [];
@@ -435,11 +460,8 @@ export function useBatchLiveProjections(batchId: number | undefined) {
       const assignments = assignmentsData.results || [];
       
       if (assignments.length === 0) {
-        console.log('[LiveProjection] No active assignments found for batch', batchId);
         return [];
       }
-      
-      console.log(`[LiveProjection] Found ${assignments.length} active assignments for batch ${batchId}`);
       
       // Fetch projections for first assignment using apiRequest (proper auth)
       // (all assignments in same batch should have similar day ranges)
@@ -455,14 +477,8 @@ export function useBatchLiveProjections(batchId: number | undefined) {
         const data = await response.json();
         const projections: LiveProjectionPoint[] = data.projections || [];
         
-        console.log(`[LiveProjection] Loaded ${projections.length} projections for assignment ${firstAssignment.id}`);
-        if (projections.length > 0) {
-          console.log(`[LiveProjection] Day range: ${projections[0].day_number} to ${projections[projections.length - 1].day_number}`);
-        }
-        
         return projections;
-      } catch (e) {
-        console.warn(`[LiveProjection] Failed to fetch projections for batch ${batchId}:`, e);
+      } catch {
         return [];
       }
     },
