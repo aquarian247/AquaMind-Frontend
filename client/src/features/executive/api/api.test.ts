@@ -13,7 +13,7 @@ import {
   useLiceTrends,
 } from './api';
 
-// Mock the generated ApiService
+// Mock the generated ApiService and OpenAPI config
 vi.mock('@/api/generated', () => ({
   ApiService: {
     apiV1InfrastructureGeographiesSummaryRetrieve: vi.fn(),
@@ -23,6 +23,10 @@ vi.mock('@/api/generated', () => ({
     apiV1HealthLiceCountsSummaryRetrieve: vi.fn(),
     apiV1HealthLiceCountsTrendsRetrieve: vi.fn(),
     apiV1OperationalFcrTrendsGeographyTrendsRetrieve: vi.fn(),
+  },
+  OpenAPI: {
+    BASE: '',
+    TOKEN: '',
   },
 }));
 
