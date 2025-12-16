@@ -10,7 +10,7 @@ export type PatchedPlannedActivity = {
     /**
      * Scenario this activity belongs to
      */
-    scenario?: number;
+    scenario?: number | null;
     readonly scenario_name?: string;
     /**
      * Batch this activity is planned for
