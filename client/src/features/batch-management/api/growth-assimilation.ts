@@ -407,20 +407,29 @@ export function useBatchLiveProjections(batchId: number | undefined) {
     queryFn: async (): Promise<LiveProjectionPoint[]> => {
       if (!batchId) throw new Error('Batch ID is required');
       
-      // Use ApiService to get assignments with proper auth
-      const assignmentsData = await ApiService.batchContainerAssignmentsList(
-        undefined, // area
+      // Use ApiService to get active assignments with proper auth
+      // apiV1BatchContainerAssignmentsList params are in alphabetical order
+      const assignmentsData = await ApiService.apiV1BatchContainerAssignmentsList(
+        undefined, // assignmentDate
+        undefined, // assignmentDateAfter
+        undefined, // assignmentDateBefore
         batchId,   // batch
+        undefined, // batchIn
+        undefined, // batchNumber
+        undefined, // biomassMax
+        undefined, // biomassMin
+        undefined, // container
+        undefined, // containerIn
+        undefined, // containerName
         undefined, // containerType
-        undefined, // geography
-        undefined, // hall
         true,      // isActive
         undefined, // lifecycleStage
-        undefined, // limit
-        undefined, // offset
         undefined, // ordering
+        undefined, // page
+        undefined, // populationMax
+        undefined, // populationMin
         undefined, // search
-        undefined  // station
+        undefined, // species
       );
       
       const assignments = assignmentsData.results || [];
