@@ -182,6 +182,9 @@ export function useCombinedGrowthData(
  * Associates a scenario with a batch for growth assimilation.
  * After pinning, the scenario's projection is used for variance analysis.
  * 
+ * NOTE: Generated ApiService.batchPinScenario points to wrong endpoint,
+ * so we use apiRequest directly for correct URL.
+ * 
  * @param batchId - Batch ID
  */
 export function usePinScenario(batchId: number) {
@@ -189,7 +192,13 @@ export function usePinScenario(batchId: number) {
   
   return useMutation({
     mutationFn: async (request: PinScenarioRequest) => {
-      return ApiService.batchPinScenario(batchId, request);
+      // Use apiRequest - generated client points to wrong endpoint
+      const response = await apiRequest(
+        'POST',
+        `/api/v1/batch/batches/${batchId}/pin-scenario/`,
+        request
+      );
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate combined data query to refetch with new scenario
