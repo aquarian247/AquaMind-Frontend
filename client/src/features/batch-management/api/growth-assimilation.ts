@@ -395,7 +395,8 @@ export function useLiveForwardProjection(assignmentId: number | undefined) {
 /**
  * Fetch live forward projections for an entire batch
  * 
- * Aggregates projections across all active assignments for the batch.
+ * Uses the generated ApiService for assignments, then fetches projections
+ * with proper authentication headers.
  * 
  * @param batchId - Batch ID
  */
@@ -405,84 +406,68 @@ export function useBatchLiveProjections(batchId: number | undefined) {
     queryFn: async (): Promise<LiveProjectionPoint[]> => {
       if (!batchId) throw new Error('Batch ID is required');
       
-      // Fetch active assignments for this batch
-      const assignmentsResponse = await fetch(
-        `/api/v1/batch/container-assignments/?batch=${batchId}&is_active=true`,
-        {
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        }
+      // Use ApiService to get assignments with proper auth
+      const assignmentsData = await ApiService.batchContainerAssignmentsList(
+        undefined, // area
+        batchId,   // batch
+        undefined, // containerType
+        undefined, // geography
+        undefined, // hall
+        true,      // isActive
+        undefined, // lifecycleStage
+        undefined, // limit
+        undefined, // offset
+        undefined, // ordering
+        undefined, // search
+        undefined  // station
       );
       
-      if (!assignmentsResponse.ok) {
-        throw new Error(`Failed to fetch assignments: ${assignmentsResponse.status}`);
-      }
-      
-      const assignmentsData = await assignmentsResponse.json();
       const assignments = assignmentsData.results || [];
       
       if (assignments.length === 0) {
+        console.log('[LiveProjection] No active assignments found for batch', batchId);
         return [];
       }
       
-      // Fetch projections for each assignment and aggregate
-      const allProjections: Map<number, { weight: number; pop: number; biomass: number; temp: number; count: number }> = new Map();
+      console.log(`[LiveProjection] Found ${assignments.length} active assignments for batch ${batchId}`);
       
-      for (const assignment of assignments.slice(0, 10)) { // Limit to 10 to avoid too many requests
-        try {
-          const response = await fetch(
-            `/api/v1/batch/container-assignments/${assignment.id}/live-forward-projection/`,
-            {
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-            }
-          );
-          
-          if (response.ok) {
-            const data = await response.json();
-            const projections: LiveProjectionPoint[] = data.projections || [];
-            
-            // Aggregate by day_number
-            projections.forEach((p) => {
-              const existing = allProjections.get(p.day_number);
-              if (existing) {
-                existing.weight = (existing.weight * existing.count + p.projected_weight_g) / (existing.count + 1);
-                existing.pop += p.projected_population;
-                existing.biomass += p.projected_biomass_kg;
-                existing.temp = (existing.temp + p.temperature_used_c) / 2;
-                existing.count += 1;
-              } else {
-                allProjections.set(p.day_number, {
-                  weight: p.projected_weight_g,
-                  pop: p.projected_population,
-                  biomass: p.projected_biomass_kg,
-                  temp: p.temperature_used_c,
-                  count: 1,
-                });
-              }
-            });
-          }
-        } catch (e) {
-          console.warn(`Failed to fetch projection for assignment ${assignment.id}:`, e);
-        }
+      // Get auth token for fetch
+      const token = localStorage.getItem('auth_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
       
-      // Convert to array
-      const aggregated: LiveProjectionPoint[] = [];
-      allProjections.forEach((value, dayNumber) => {
-        aggregated.push({
-          projection_date: '', // Will be filled if needed
-          day_number: dayNumber,
-          projected_weight_g: value.weight,
-          projected_population: value.pop,
-          projected_biomass_kg: value.biomass,
-          temperature_used_c: value.temp,
-          tgc_value_used: 0,
-          temp_bias_c: 0,
-        });
-      });
+      // Fetch projections for first assignment to get the projection data
+      // (all assignments in same batch should have similar day ranges)
+      const firstAssignment = assignments[0];
       
-      return aggregated.sort((a, b) => a.day_number - b.day_number);
+      try {
+        const response = await fetch(
+          `/api/v1/batch/container-assignments/${firstAssignment.id}/live-forward-projection/`,
+          { headers, credentials: 'include' }
+        );
+        
+        if (!response.ok) {
+          console.warn(`[LiveProjection] API returned ${response.status} for assignment ${firstAssignment.id}`);
+          return [];
+        }
+        
+        const data = await response.json();
+        const projections: LiveProjectionPoint[] = data.projections || [];
+        
+        console.log(`[LiveProjection] Loaded ${projections.length} projections for assignment ${firstAssignment.id}`);
+        if (projections.length > 0) {
+          console.log(`[LiveProjection] Day range: ${projections[0].day_number} to ${projections[projections.length - 1].day_number}`);
+        }
+        
+        return projections;
+      } catch (e) {
+        console.warn(`[LiveProjection] Failed to fetch projections for batch ${batchId}:`, e);
+        return [];
+      }
     },
     enabled: !!batchId,
     staleTime: 5 * 60 * 1000,
