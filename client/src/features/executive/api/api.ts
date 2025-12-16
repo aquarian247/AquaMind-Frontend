@@ -7,6 +7,7 @@
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
+import { apiRequest } from '@/lib/queryClient';
 import type {
   ExecutiveSummary,
   FacilitySummary,
@@ -485,6 +486,72 @@ export function useMarketPrices(): UseQueryResult<MarketPrice, Error> {
     staleTime: Infinity,
     gcTime: Infinity,
     enabled: false, // Disabled until real endpoint available
+  });
+}
+
+// ============================================================================
+// Live Forward Projection Hooks
+// ============================================================================
+
+/**
+ * Tiered Harvest Forecast item from the API
+ */
+export interface TieredHarvestForecast {
+  tier: 'PLANNED' | 'PROJECTED' | 'NEEDS_PLANNING';
+  batch_id: number;
+  batch_number: string;
+  container_id: number | null;
+  container_name: string | null;
+  current_weight_g: number | null;
+  planned_date: string | null;
+  projected_date: string | null;
+  days_to_harvest: number | null;
+  variance_days: number | null;
+  confidence: number | null;
+  computed_date: string | null;
+  source: string;
+}
+
+/**
+ * Hook: useTieredHarvestForecast
+ * 
+ * Fetches live forward projection forecasts organized by tier:
+ * - PLANNED: Confirmed PlannedActivity records (authoritative)
+ * - PROJECTED: Live projections based on ActualDailyAssignmentState
+ * - NEEDS_PLANNING: Approaching harvest threshold without a plan
+ * 
+ * @param geography - Geography ID or 'global'
+ * @param daysHorizon - Number of days to look ahead (default 90)
+ * @param tierFilter - Optional filter by tier
+ */
+export function useTieredHarvestForecast(
+  geography: GeographyFilterValue,
+  daysHorizon: number = 90,
+  tierFilter?: 'PLANNED' | 'PROJECTED' | 'NEEDS_PLANNING'
+): UseQueryResult<TieredHarvestForecast[], Error> {
+  return useQuery({
+    queryKey: ['tiered-harvest-forecast', geography, daysHorizon, tierFilter],
+    queryFn: async (): Promise<TieredHarvestForecast[]> => {
+      const geographyId = geography === 'global' ? undefined : geography;
+      
+      // Build query params
+      const params = new URLSearchParams();
+      if (geographyId) params.append('geography_id', String(geographyId));
+      params.append('days_horizon', String(daysHorizon));
+      if (tierFilter) params.append('tier', tierFilter);
+      
+      // Use apiRequest for endpoints not in generated client (has proper auth)
+      const response = await apiRequest(
+        'GET',
+        `/api/v1/batch/forecast/tiered-harvest/?${params.toString()}`
+      );
+      
+      const data = await response.json();
+      // API returns { summary: {...}, forecasts: [...] }
+      return (data.forecasts || []) as TieredHarvestForecast[];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,
   });
 }
 

@@ -8,8 +8,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
-import type { GrowthAnalysisCombined, PinScenario } from '@/api/generated';
-import { toast } from 'sonner';
+import type { GrowthAnalysisCombined } from '@/api/generated';
+import { apiRequest } from '@/lib/queryClient';
 
 // ============================================================================
 // TypeScript Interfaces (Properly typed from backend schema)
@@ -34,13 +34,6 @@ export interface ScenarioInfo {
   duration_days: number;
   initial_count: number;
   initial_weight: number;
-  // NEW: Projection run info
-  projection_run: {
-    run_id: number;
-    run_number: number;
-    label: string;
-    run_date: string;
-  } | null;
 }
 
 export interface ScenarioProjectionDay {
@@ -186,18 +179,26 @@ export function useCombinedGrowthData(
 /**
  * Pin a scenario to a batch
  * 
- * DEPRECATED: Backend endpoint removed. Use usePinProjectionRun instead.
+ * Associates a scenario with a batch for growth assimilation.
+ * After pinning, the scenario's projection is used for variance analysis.
+ * 
+ * NOTE: Generated ApiService.batchPinScenario points to wrong endpoint,
+ * so we use apiRequest directly for correct URL.
  * 
  * @param batchId - Batch ID
- * @deprecated Use usePinProjectionRun for explicit version control
  */
-/* COMMENTED OUT - pin-scenario endpoint removed in backend
 export function usePinScenario(batchId: number) {
   const queryClient = useQueryClient();
   
   return useMutation({
     mutationFn: async (request: PinScenarioRequest) => {
-      return ApiService.batchPinScenario(batchId, request);
+      // Use apiRequest - generated client points to wrong endpoint
+      const response = await apiRequest(
+        'POST',
+        `/api/v1/batch/batches/${batchId}/pin-scenario/`,
+        request
+      );
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate combined data query to refetch with new scenario
@@ -212,7 +213,37 @@ export function usePinScenario(batchId: number) {
     },
   });
 }
-*/
+
+/**
+ * Pin a projection run to a batch
+ * 
+ * Associates a specific projection run with a batch for version-controlled
+ * variance analysis. Re-running projections won't affect pinned analyses.
+ * 
+ * @param batchId - Batch ID
+ */
+export function usePinProjectionRun(batchId: number) {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (request: { projection_run_id: number }) => {
+      // Use apiRequest for endpoint not correctly typed in generated client
+      const response = await apiRequest(
+        'POST',
+        `/api/v1/batch/batches/${batchId}/pin-projection-run/`,
+        request
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate all batch-related queries
+      queryClient.invalidateQueries({ queryKey: ['batch', batchId] });
+      queryClient.invalidateQueries({ 
+        queryKey: ['batch', batchId, 'combined-growth-data'] 
+      });
+    },
+  });
+}
 
 /**
  * Trigger manual recomputation of daily states
@@ -350,41 +381,118 @@ export function formatISODate(date: Date): string {
 }
 
 // ============================================================================
-// ProjectionRun Pin Mutation
+// Live Forward Projection Types and Hooks
 // ============================================================================
 
-export interface PinProjectionRunRequest {
-  projection_run_id: number;
+/**
+ * Live Forward Projection point (from LiveForwardProjection model)
+ */
+export interface LiveProjectionPoint {
+  projection_date: string;
+  day_number: number;
+  projected_weight_g: number;
+  projected_population: number;
+  projected_biomass_kg: number;
+  temperature_used_c: number;
+  tgc_value_used: number;
+  temp_bias_c: number;
 }
 
 /**
- * Hook to pin a projection run to a batch
- * @param batchId - The batch ID to pin to
- * @returns Mutation hook for pinning projection run
+ * Fetch live forward projections for a specific assignment
+ * 
+ * Returns day-by-day projected states from the latest anchor point
+ * to the end of the scenario.
+ * 
+ * @param assignmentId - Assignment ID
  */
-export function usePinProjectionRun(batchId: number) {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (request: PinProjectionRunRequest) => {
-      // OpenAPI currently reuses PinScenario schema even though the backend expects projection_run_id.
-      // Cast the payload until the backend publishes the corrected schema.
-      return await ApiService.batchPinScenario(
-        batchId,
-        request as unknown as PinScenario
+export function useLiveForwardProjection(assignmentId: number | undefined) {
+  return useQuery({
+    queryKey: ['assignment', assignmentId, 'live-forward-projection'],
+    queryFn: async (): Promise<LiveProjectionPoint[]> => {
+      if (!assignmentId) throw new Error('Assignment ID is required');
+      
+      // Use apiRequest for proper JWT authentication
+      const response = await apiRequest(
+        'GET',
+        `/api/v1/batch/container-assignments/${assignmentId}/live-forward-projection/`
       );
+      
+      const data = await response.json();
+      return data.projections || [];
     },
-    onSuccess: () => {
-      // Invalidate all batch-related queries
-      queryClient.invalidateQueries({ queryKey: ['batch', batchId] });
-      queryClient.invalidateQueries({ 
-        queryKey: ['batch', batchId, 'combined-growth-data'] 
-      });
-      toast.success('Projection run pinned successfully');
-    },
-    onError: (error: any) => {
-      toast.error(error?.body?.error || 'Failed to pin projection run');
-    },
+    enabled: !!assignmentId,
+    staleTime: 5 * 60 * 1000, // 5 minutes (computed daily)
+    gcTime: 10 * 60 * 1000,
   });
 }
 
+/**
+ * Fetch live forward projections for an entire batch
+ * 
+ * Uses the generated ApiService for assignments, then uses apiRequest()
+ * for the live-forward-projection endpoint (not yet in generated client).
+ * 
+ * @param batchId - Batch ID
+ */
+export function useBatchLiveProjections(batchId: number | undefined) {
+  return useQuery({
+    queryKey: ['batch', batchId, 'live-projections'],
+    queryFn: async (): Promise<LiveProjectionPoint[]> => {
+      if (!batchId) throw new Error('Batch ID is required');
+      
+      // Use ApiService to get active assignments with proper auth
+      // apiV1BatchContainerAssignmentsList params are in alphabetical order
+      const assignmentsData = await ApiService.apiV1BatchContainerAssignmentsList(
+        undefined, // assignmentDate
+        undefined, // assignmentDateAfter
+        undefined, // assignmentDateBefore
+        batchId,   // batch
+        undefined, // batchIn
+        undefined, // batchNumber
+        undefined, // biomassMax
+        undefined, // biomassMin
+        undefined, // container
+        undefined, // containerIn
+        undefined, // containerName
+        undefined, // containerType
+        true,      // isActive
+        undefined, // lifecycleStage
+        undefined, // ordering
+        undefined, // page
+        undefined, // populationMax
+        undefined, // populationMin
+        undefined, // search
+        undefined, // species
+      );
+      
+      const assignments = assignmentsData.results || [];
+      
+      if (assignments.length === 0) {
+        return [];
+      }
+      
+      // Fetch projections for first assignment using apiRequest (proper auth)
+      // (all assignments in same batch should have similar day ranges)
+      const firstAssignment = assignments[0];
+      
+      try {
+        // Use apiRequest for endpoints not in generated client (has proper auth)
+        const response = await apiRequest(
+          'GET',
+          `/api/v1/batch/container-assignments/${firstAssignment.id}/live-forward-projection/`
+        );
+        
+        const data = await response.json();
+        const projections: LiveProjectionPoint[] = data.projections || [];
+        
+        return projections;
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!batchId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}

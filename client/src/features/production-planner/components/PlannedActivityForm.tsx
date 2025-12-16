@@ -145,11 +145,11 @@ export function PlannedActivityForm({
     resolver: zodResolver(plannedActivitySchema),
     defaultValues: activity
       ? {
-          scenario: activity.scenario,
+          scenario: activity.scenario ?? scenarioId, // Handle null from API
           batch: activity.batch,
           activity_type: activity.activity_type,
           due_date: activity.due_date, // Already ISO format from API
-          container: activity.container || undefined,
+          container: activity.container ?? undefined,
           notes: activity.notes || '',
         }
       : {
@@ -167,11 +167,11 @@ export function PlannedActivityForm({
     if (isOpen && activity) {
       // In edit mode, set form values from the activity
       form.reset({
-        scenario: activity.scenario,
+        scenario: activity.scenario ?? scenarioId, // Handle null from API
         batch: activity.batch,
         activity_type: activity.activity_type,
         due_date: activity.due_date,
-        container: activity.container || undefined,
+        container: activity.container ?? undefined,
         notes: activity.notes || '',
       });
     } else if (isOpen && !activity) {

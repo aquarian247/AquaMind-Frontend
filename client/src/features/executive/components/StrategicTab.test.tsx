@@ -4,7 +4,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { StrategicTab } from './StrategicTab';
@@ -13,6 +12,7 @@ import * as api from '../api/api';
 // Mock the API hooks
 vi.mock('../api/api', () => ({
   useExecutiveSummary: vi.fn(),
+  useTieredHarvestForecast: vi.fn(),
 }));
 
 function createWrapper() {
@@ -34,6 +34,12 @@ function createWrapper() {
 describe('StrategicTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Default mock for useTieredHarvestForecast
+    vi.mocked(api.useTieredHarvestForecast).mockReturnValue({
+      data: [],
+      isLoading: false,
+    } as any);
   });
 
   it('should render capacity utilization KPIs', () => {
@@ -76,7 +82,7 @@ describe('StrategicTab', () => {
     expect(screen.getByText('Hatcheries')).toBeInTheDocument();
   });
 
-  it('should render harvest forecast section with scenario button', () => {
+  it('should render harvest forecast section with tiered display', () => {
     vi.mocked(api.useExecutiveSummary).mockReturnValue({
       data: {
         capacity_utilization_percentage: 87.5,
@@ -84,6 +90,20 @@ describe('StrategicTab', () => {
         active_batches: 75,
         total_biomass_kg: 150000,
       },
+      isLoading: false,
+    } as any);
+
+    vi.mocked(api.useTieredHarvestForecast).mockReturnValue({
+      data: [
+        {
+          tier: 'PLANNED',
+          batch_id: 1,
+          batch_number: 'B001',
+          container_name: 'Tank-A',
+          planned_date: '2025-03-15',
+          days_to_harvest: 90,
+        },
+      ],
       isLoading: false,
     } as any);
 
@@ -91,13 +111,9 @@ describe('StrategicTab', () => {
     render(<StrategicTab geography="global" />, { wrapper });
 
     expect(screen.getByText('Harvest Forecast')).toBeInTheDocument();
-    expect(screen.getByText('Open Scenario Planner')).toBeInTheDocument();
   });
 
-  it('should call onNavigateToScenario when button clicked', async () => {
-    const user = userEvent.setup();
-    const onNavigate = vi.fn();
-
+  it('should display tiered forecast data', () => {
     vi.mocked(api.useExecutiveSummary).mockReturnValue({
       data: {
         capacity_utilization_percentage: 87.5,
@@ -108,13 +124,35 @@ describe('StrategicTab', () => {
       isLoading: false,
     } as any);
 
+    vi.mocked(api.useTieredHarvestForecast).mockReturnValue({
+      data: [
+        {
+          tier: 'PLANNED',
+          batch_id: 1,
+          batch_number: 'B001',
+          container_name: 'Tank-A',
+          planned_date: '2025-03-15',
+          days_to_harvest: 90,
+        },
+        {
+          tier: 'PROJECTED',
+          batch_id: 2,
+          batch_number: 'B002',
+          container_name: 'Tank-B',
+          projected_date: '2025-04-01',
+          days_to_harvest: 107,
+        },
+      ],
+      isLoading: false,
+    } as any);
+
     const wrapper = createWrapper();
-    render(<StrategicTab geography="global" onNavigateToScenario={onNavigate} />, { wrapper });
+    render(<StrategicTab geography="global" />, { wrapper });
 
-    const scenarioButton = screen.getByText('Open Scenario Planner');
-    await user.click(scenarioButton);
-
-    expect(onNavigate).toHaveBeenCalledTimes(1);
+    // Check for tier tabs (text includes count in parentheses)
+    expect(screen.getByText(/All \(/)).toBeInTheDocument();
+    expect(screen.getByText(/Planned \(/)).toBeInTheDocument();
+    expect(screen.getByText(/Projected \(/)).toBeInTheDocument();
   });
 
   it('should render market timing placeholder', () => {
@@ -135,4 +173,3 @@ describe('StrategicTab', () => {
     expect(screen.getByText(/Market timing analysis coming soon/)).toBeInTheDocument();
   });
 });
-

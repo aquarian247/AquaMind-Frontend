@@ -24,18 +24,20 @@ import {
   Legend,
 } from 'recharts';
 import { ProvenanceTooltip } from './ProvenanceTooltip';
-import type { GrowthAnalysisData, GrowthSample, ActualDailyState } from '../../api/growth-assimilation';
+import type { GrowthAnalysisData, GrowthSample, ActualDailyState, LiveProjectionPoint } from '../../api/growth-assimilation';
 
 interface SeriesVisibility {
   samples: boolean;
   scenario: boolean;
   actual: boolean;
+  liveProjection: boolean;
 }
 
 interface GrowthAnalysisChartProps {
   data: GrowthAnalysisData;
   seriesVisibility: SeriesVisibility;
   selectedAssignmentId?: number;
+  liveProjections?: LiveProjectionPoint[];
 }
 
 interface ChartDataPoint {
@@ -58,12 +60,16 @@ interface ChartDataPoint {
   assignmentId?: number;
   containerName?: string;
   containerCount?: number;  // Number of containers aggregated for this day
+  // Live Forward Projection
+  liveProjectionWeight?: number;
+  liveProjectionPopulation?: number;
 }
 
 export function GrowthAnalysisChart({
   data,
   seriesVisibility,
   selectedAssignmentId,
+  liveProjections,
 }: GrowthAnalysisChartProps) {
   
   // ============================================================================
@@ -137,7 +143,7 @@ export function GrowthAnalysisChart({
       // Group by day for batch-level aggregation
       const statesByDay = new Map<number, ActualDailyState[]>();
       
-      // Create a map of assignment_id -> departure_date (as string to avoid timezone issues)
+      // Create a set of assignments to exclude (departing on their departure date)
       // IMPORTANT: Keep dates as strings (YYYY-MM-DD) - converting to Date causes timezone bugs
       const departingAssignments = new Map<number, string>();
       data.container_assignments.forEach((assignment) => {
@@ -154,7 +160,7 @@ export function GrowthAnalysisChart({
         
         // CRITICAL: Exclude departing assignments on their departure day
         // to prevent double-counting during transfers
-        // Compare strings directly (both are YYYY-MM-DD format from API)
+        // IMPORTANT: Keep dates as strings (YYYY-MM-DD) - converting to Date causes timezone bugs
         const departureDateStr = departingAssignments.get(state.assignment_id);
         if (departureDateStr && state.date === departureDateStr) {
           return;
@@ -210,14 +216,79 @@ export function GrowthAnalysisChart({
       });
     }
     
+    // Add live forward projections
+    if (seriesVisibility.liveProjection && liveProjections && liveProjections.length > 0) {
+      liveProjections.forEach((proj) => {
+        const existing = dataByDay.get(proj.day_number) || {
+          day: proj.day_number,
+          date: proj.projection_date || '',
+        };
+        
+        dataByDay.set(proj.day_number, {
+          ...existing,
+          liveProjectionWeight: proj.projected_weight_g,
+          liveProjectionPopulation: proj.projected_population,
+        });
+      });
+    }
+    
     // Convert map to array and sort by day
     return Array.from(dataByDay.values()).sort((a, b) => a.day - b.day);
   }, [
     data,
     seriesVisibility,
     selectedAssignmentId,
+    liveProjections,
   ]);
   
+  // ============================================================================
+  // Calculate X-axis domain to include ALL data series (including future projections)
+  // ============================================================================
+  
+  const xAxisDomain = useMemo<[number, number]>(() => {
+    let minDay = Infinity;
+    let maxDay = -Infinity;
+    
+    // Include scenario projection range (should extend to full scenario duration)
+    if (data.scenario_projection && data.scenario_projection.length > 0) {
+      const scenarioDays = data.scenario_projection.map(p => p.day_number);
+      minDay = Math.min(minDay, ...scenarioDays);
+      maxDay = Math.max(maxDay, ...scenarioDays);
+    }
+    
+    // Include live projection range (extends into the future)
+    if (liveProjections && liveProjections.length > 0) {
+      const projDays = liveProjections.map(p => p.day_number);
+      minDay = Math.min(minDay, ...projDays);
+      maxDay = Math.max(maxDay, ...projDays);
+    }
+    
+    // Include actual daily states range
+    if (data.actual_daily_states && data.actual_daily_states.length > 0) {
+      const actualDays = data.actual_daily_states.map(s => s.day_number);
+      minDay = Math.min(minDay, ...actualDays);
+      maxDay = Math.max(maxDay, ...actualDays);
+    }
+    
+    // Include growth samples range
+    if (data.growth_samples && data.growth_samples.length > 0) {
+      const batchStartDate = new Date(data.start_date);
+      data.growth_samples.forEach(sample => {
+        const sampleDate = new Date(sample.date);
+        const dayNumber = Math.floor((sampleDate.getTime() - batchStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        minDay = Math.min(minDay, dayNumber);
+        maxDay = Math.max(maxDay, dayNumber);
+      });
+    }
+    
+    // Fallback if no data
+    if (!isFinite(minDay)) minDay = 1;
+    if (!isFinite(maxDay)) maxDay = 100;
+    
+    // Add small padding
+    return [Math.max(1, minDay - 5), maxDay + 5];
+  }, [data, liveProjections]);
+
   // ============================================================================
   // Empty State
   // ============================================================================
@@ -269,7 +340,7 @@ export function GrowthAnalysisChart({
           <XAxis
             dataKey="day"
             type="number"
-            domain={['dataMin', 'dataMax']}
+            domain={xAxisDomain}
             label={{ value: 'Days', position: 'insideBottom', offset: -10 }}
             className="text-xs"
           />
@@ -328,6 +399,20 @@ export function GrowthAnalysisChart({
             />
           )}
           
+          {/* Live Forward Projection Line (Purple) */}
+          {seriesVisibility.liveProjection && (
+            <Line
+              type="monotone"
+              dataKey="liveProjectionWeight"
+              stroke="#a855f7"
+              strokeWidth={2}
+              strokeDasharray="5 3"
+              dot={false}
+              name="Live Projection"
+              connectNulls
+            />
+          )}
+          
           {/* Growth Samples Scatter (Blue) */}
           {seriesVisibility.samples && (
             <Scatter
@@ -358,6 +443,7 @@ export function GrowthAnalysisChart({
         <p>• <span className="font-medium">Growth Samples</span>: Measured weights from sampling events</p>
         <p>• <span className="font-medium">Scenario Projection</span>: Planned growth based on TGC model</p>
         <p>• <span className="font-medium">Actual Daily State</span>: Reality-based assimilation from measurements + models</p>
+        <p>• <span className="font-medium">Live Projection</span> (dashed purple): Forward projection from current actual state to harvest</p>
         <p>• <span className="font-medium">Anchor Points</span> (circles with dots): Growth samples, transfers, or vaccinations that reset weight calculations</p>
       </div>
     </div>

@@ -54,11 +54,6 @@ export default function ExecutiveDashboardPage() {
     return options;
   }, [geographiesData]);
 
-  // Navigate to scenario planning
-  const handleNavigateToScenario = () => {
-    navigate('/scenario-planning');
-  };
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -98,10 +93,7 @@ export default function ExecutiveDashboardPage() {
         </TabsContent>
 
         <TabsContent value="strategic" className="space-y-4">
-          <StrategicTab
-            geography={geography}
-            onNavigateToScenario={handleNavigateToScenario}
-          />
+          <StrategicTab geography={geography} />
         </TabsContent>
 
         <TabsContent value="market" className="space-y-4">

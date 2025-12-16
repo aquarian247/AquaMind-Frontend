@@ -80,3 +80,4 @@ export function MobileActivityCard({ activity, onClick }: MobileActivityCardProp
 
 
 
+

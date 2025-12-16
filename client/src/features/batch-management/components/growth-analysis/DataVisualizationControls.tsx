@@ -12,13 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshDataButton } from './RefreshDataButton';
-import { ProjectionRunSelector } from './ProjectionRunSelector';
 import type { ScenarioInfo } from '../../api/growth-assimilation';
 
 interface SeriesVisibility {
   samples: boolean;
   scenario: boolean;
   actual: boolean;
+  liveProjection: boolean;
 }
 
 interface DataVisualizationControlsProps {
@@ -108,6 +108,23 @@ export function DataVisualizationControls({
             </div>
           </div>
         </div>
+        
+        {/* Live Forward Projection */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="series-live-projection"
+              checked={seriesVisibility.liveProjection}
+              onCheckedChange={() => onSeriesToggle('liveProjection')}
+            />
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <Label htmlFor="series-live-projection" className="text-sm font-normal cursor-pointer">
+                Live Projection
+              </Label>
+            </div>
+          </div>
+        </div>
       </div>
       
       <Separator />
@@ -141,20 +158,11 @@ export function DataVisualizationControls({
           Scenario
         </Label>
         {scenario ? (
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">{scenario.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {scenario.duration_days} days • {scenario.initial_count.toLocaleString()} fish • {scenario.initial_weight}g
-              </p>
-            </div>
-            
-            {/* Projection Run Selector */}
-            <ProjectionRunSelector
-              batchId={batchId}
-              currentRunId={scenario.projection_run?.run_id}
-              scenarioId={scenario.id}
-            />
+          <div className="space-y-1">
+            <p className="text-sm font-medium">{scenario.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {scenario.duration_days} days • {scenario.initial_count.toLocaleString()} fish • {scenario.initial_weight}g
+            </p>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">No scenario pinned</p>

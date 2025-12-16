@@ -14,8 +14,10 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   useCombinedGrowthData,
+  useBatchLiveProjections,
   determineGranularity,
   type GrowthDataOptions,
+  type LiveProjectionPoint,
 } from '../../api/growth-assimilation';
 import { DataVisualizationControls } from './DataVisualizationControls';
 import { GrowthAnalysisChart } from './GrowthAnalysisChart';
@@ -30,6 +32,7 @@ interface SeriesVisibility {
   samples: boolean;
   scenario: boolean;
   actual: boolean;
+  liveProjection: boolean;
 }
 
 export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentProps) {
@@ -41,6 +44,7 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
     samples: true,
     scenario: true,
     actual: true,
+    liveProjection: true,
   });
   
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | undefined>();
@@ -73,6 +77,9 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
     error,
     refetch,
   } = useCombinedGrowthData(batchId, queryOptions);
+  
+  // Fetch live forward projections for the batch
+  const { data: liveProjections } = useBatchLiveProjections(batchId);
   
   // ============================================================================
   // Auto-adjust granularity for long date ranges
@@ -263,6 +270,7 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
               data={data}
               seriesVisibility={seriesVisibility}
               selectedAssignmentId={selectedAssignmentId}
+              liveProjections={liveProjections}
             />
           </Card>
           
