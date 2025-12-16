@@ -259,6 +259,54 @@ export function GrowthAnalysisChart({
   ]);
   
   // ============================================================================
+  // Calculate X-axis domain to include ALL data series (including future projections)
+  // ============================================================================
+  
+  const xAxisDomain = useMemo<[number, number]>(() => {
+    let minDay = Infinity;
+    let maxDay = -Infinity;
+    
+    // Include scenario projection range (should extend to full scenario duration)
+    if (data.scenario_projection && data.scenario_projection.length > 0) {
+      const scenarioDays = data.scenario_projection.map(p => p.day_number);
+      minDay = Math.min(minDay, ...scenarioDays);
+      maxDay = Math.max(maxDay, ...scenarioDays);
+    }
+    
+    // Include live projection range (extends into the future)
+    if (liveProjections && liveProjections.length > 0) {
+      const projDays = liveProjections.map(p => p.day_number);
+      minDay = Math.min(minDay, ...projDays);
+      maxDay = Math.max(maxDay, ...projDays);
+    }
+    
+    // Include actual daily states range
+    if (data.actual_daily_states && data.actual_daily_states.length > 0) {
+      const actualDays = data.actual_daily_states.map(s => s.day_number);
+      minDay = Math.min(minDay, ...actualDays);
+      maxDay = Math.max(maxDay, ...actualDays);
+    }
+    
+    // Include growth samples range
+    if (data.growth_samples && data.growth_samples.length > 0) {
+      const batchStartDate = new Date(data.start_date);
+      data.growth_samples.forEach(sample => {
+        const sampleDate = new Date(sample.date);
+        const dayNumber = Math.floor((sampleDate.getTime() - batchStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        minDay = Math.min(minDay, dayNumber);
+        maxDay = Math.max(maxDay, dayNumber);
+      });
+    }
+    
+    // Fallback if no data
+    if (!isFinite(minDay)) minDay = 1;
+    if (!isFinite(maxDay)) maxDay = 100;
+    
+    // Add small padding
+    return [Math.max(1, minDay - 5), maxDay + 5];
+  }, [data, liveProjections]);
+
+  // ============================================================================
   // Empty State
   // ============================================================================
   
@@ -309,7 +357,7 @@ export function GrowthAnalysisChart({
           <XAxis
             dataKey="day"
             type="number"
-            domain={['dataMin', 'dataMax']}
+            domain={xAxisDomain}
             label={{ value: 'Days', position: 'insideBottom', offset: -10 }}
             className="text-xs"
           />
