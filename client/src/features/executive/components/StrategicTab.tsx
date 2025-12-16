@@ -4,12 +4,7 @@
  * Strategic planning tab showing capacity utilization, harvest forecasts,
  * and integration with scenario planning features.
  * 
- * Now includes 3-tier forecast display from Live Forward Projections:
- * - PLANNED (Tier 1): Confirmed PlannedActivity records
- * - PROJECTED (Tier 2): Live projections without plans
- * - NEEDS_PLANNING (Tier 3): Approaching threshold without plan
- * 
- * Issue: Live Forward Projection Feature
+ * Now includes Live Forward Projection tiered forecast display.
  */
 
 import * as React from 'react';
@@ -17,9 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Info, ExternalLink, CheckCircle, Clock, AlertTriangle, Loader2 } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Info, ExternalLink, Calendar, AlertTriangle, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import { KPICard } from './KPICard';
-import { useExecutiveSummary, useTieredHarvestForecast } from '../api/api';
+import { useExecutiveSummary, useTieredHarvestForecast, type TieredHarvestForecast } from '../api/api';
 import type { GeographyFilterValue, KPIData, CapacityUtilization } from '../types';
 import { formatKPI } from '../utils/kpiCalculations';
 
@@ -43,15 +39,18 @@ export interface StrategicTabProps {
  */
 export function StrategicTab({ geography, onNavigateToScenario }: StrategicTabProps) {
   const { data: summary } = useExecutiveSummary(geography);
-  
-  // Fetch tiered harvest forecast from Live Forward Projections
-  const { 
-    data: harvestForecast, 
-    isLoading: forecastLoading,
-    error: forecastError,
-  } = useTieredHarvestForecast(
-    geography === 'global' ? undefined : parseInt(String(geography))
-  );
+  const { data: forecasts, isLoading: forecastsLoading } = useTieredHarvestForecast(geography, 90);
+
+  // Group forecasts by tier
+  const forecastsByTier = React.useMemo(() => {
+    if (!forecasts) return { PLANNED: [], PROJECTED: [], NEEDS_PLANNING: [] };
+    
+    return {
+      PLANNED: forecasts.filter(f => f.tier === 'PLANNED'),
+      PROJECTED: forecasts.filter(f => f.tier === 'PROJECTED'),
+      NEEDS_PLANNING: forecasts.filter(f => f.tier === 'NEEDS_PLANNING'),
+    };
+  }, [forecasts]);
 
   // Capacity Utilization KPIs
   const capacityKPIs: KPIData[] = React.useMemo(() => {
@@ -158,154 +157,68 @@ export function StrategicTab({ geography, onNavigateToScenario }: StrategicTabPr
         </Card>
       </section>
 
-      {/* Tiered Harvest Forecast - Live Forward Projections */}
+      {/* Harvest Forecast - Tiered Display */}
       <section aria-label="Harvest Forecast">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Harvest Forecast
-              {forecastLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-            </CardTitle>
-            <CardDescription>
-              Three-tier forecast: Planned activities, live projections, and items needing attention
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Tier Explanation Panel */}
-            <div className="grid grid-cols-3 gap-4 mb-6 p-4 bg-muted/30 rounded-lg">
-              <div className="flex items-start gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Tier 1: Planned</p>
-                  <p className="text-xs text-muted-foreground">
-                    Confirmed PlannedActivity records
-                  </p>
-                </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Harvest Forecast</CardTitle>
+                <CardDescription>Live forward projections for next 90 days</CardDescription>
               </div>
-              <div className="flex items-start gap-2">
-                <Clock className="h-5 w-5 text-blue-500 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Tier 2: Projected</p>
-                  <p className="text-xs text-muted-foreground">
-                    Live projection without plan
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium">Tier 3: Needs Planning</p>
-                  <p className="text-xs text-muted-foreground">
-                    Approaching threshold without plan
-                  </p>
-                </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>90-day horizon</span>
               </div>
             </div>
-            
-            {/* Summary Counts */}
-            {harvestForecast?.summary && (
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-4 border rounded-lg border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30">
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-                    {harvestForecast.summary.planned_count}
-                  </p>
-                  <p className="text-sm text-green-600 dark:text-green-500">Planned</p>
-                </div>
-                <div className="text-center p-4 border rounded-lg border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30">
-                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
-                    {harvestForecast.summary.projected_count}
-                  </p>
-                  <p className="text-sm text-blue-600 dark:text-blue-500">Projected</p>
-                </div>
-                <div className="text-center p-4 border rounded-lg border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
-                  <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">
-                    {harvestForecast.summary.needs_attention_count}
-                  </p>
-                  <p className="text-sm text-amber-600 dark:text-amber-500">Needs Attention</p>
-                </div>
+          </CardHeader>
+          <CardContent>
+            {forecastsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-sm text-muted-foreground">Loading forecasts...</span>
               </div>
-            )}
-            
-            {/* Forecast Error State */}
-            {forecastError && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertTriangle className="h-4 w-4" />
+            ) : forecasts && forecasts.length > 0 ? (
+              <Tabs defaultValue="all" className="w-full">
+                <TabsList className="grid w-full grid-cols-4 mb-4">
+                  <TabsTrigger value="all">
+                    All ({forecasts.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="planned" className="text-green-600">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Planned ({forecastsByTier.PLANNED.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="projected" className="text-blue-600">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Projected ({forecastsByTier.PROJECTED.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="needs_planning" className="text-amber-600">
+                    <AlertTriangle className="h-3 w-3 mr-1" />
+                    Needs Plan ({forecastsByTier.NEEDS_PLANNING.length})
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="all">
+                  <ForecastTable forecasts={forecasts} />
+                </TabsContent>
+                <TabsContent value="planned">
+                  <ForecastTable forecasts={forecastsByTier.PLANNED} tier="PLANNED" />
+                </TabsContent>
+                <TabsContent value="projected">
+                  <ForecastTable forecasts={forecastsByTier.PROJECTED} tier="PROJECTED" />
+                </TabsContent>
+                <TabsContent value="needs_planning">
+                  <ForecastTable forecasts={forecastsByTier.NEEDS_PLANNING} tier="NEEDS_PLANNING" />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <Alert>
+                <Info className="h-4 w-4" />
                 <AlertDescription className="text-sm">
-                  Failed to load forecast data. Live projections may not be computed yet.
+                  No harvest forecasts available. Live forward projections are computed nightly
+                  for batches with active assignments.
                 </AlertDescription>
               </Alert>
-            )}
-            
-            {/* Forecast Table */}
-            {harvestForecast?.forecasts && harvestForecast.forecasts.length > 0 ? (
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {harvestForecast.forecasts.slice(0, 10).map((forecast, index) => (
-                  <div
-                    key={`forecast-${forecast.batch_id}-${index}`}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Tier Badge */}
-                      <Badge
-                        variant={
-                          forecast.tier === 'PLANNED' ? 'default' :
-                          forecast.tier === 'NEEDS_PLANNING' ? 'destructive' : 'secondary'
-                        }
-                        className={
-                          forecast.tier === 'PLANNED' ? 'bg-green-500 hover:bg-green-600' :
-                          forecast.tier === 'NEEDS_PLANNING' ? 'bg-amber-500 hover:bg-amber-600' : ''
-                        }
-                      >
-                        {forecast.tier === 'PLANNED' && <CheckCircle className="h-3 w-3 mr-1" />}
-                        {forecast.tier === 'PROJECTED' && <Clock className="h-3 w-3 mr-1" />}
-                        {forecast.tier === 'NEEDS_PLANNING' && <AlertTriangle className="h-3 w-3 mr-1" />}
-                        {forecast.tier.replace('_', ' ')}
-                      </Badge>
-                      
-                      {/* Batch Info */}
-                      <div>
-                        <p className="font-medium text-sm">{forecast.batch_number}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {forecast.container_name}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* Dates and Weight */}
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        {forecast.planned_date || forecast.projected_date || 'Unknown'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {forecast.days_to_harvest != null && `${forecast.days_to_harvest} days`}
-                        {forecast.current_weight_g && ` • ${(forecast.current_weight_g / 1000).toFixed(1)}kg`}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                
-                {harvestForecast.forecasts.length > 10 && (
-                  <p className="text-center text-sm text-muted-foreground py-2">
-                    Showing 10 of {harvestForecast.forecasts.length} forecasts
-                  </p>
-                )}
-              </div>
-            ) : !forecastLoading && (
-              <div className="text-center py-8">
-                <Info className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  No forecast data available. Live projections may not have been computed yet.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onNavigateToScenario}
-                  className="mt-4 gap-2"
-                >
-                  <span>Open Scenario Planner</span>
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </div>
             )}
           </CardContent>
         </Card>
@@ -328,6 +241,92 @@ export function StrategicTab({ geography, onNavigateToScenario }: StrategicTabPr
           </CardContent>
         </Card>
       </section>
+    </div>
+  );
+}
+
+/**
+ * ForecastTable Component
+ * 
+ * Displays a table of harvest forecasts with tier-specific styling.
+ */
+interface ForecastTableProps {
+  forecasts: TieredHarvestForecast[];
+  tier?: 'PLANNED' | 'PROJECTED' | 'NEEDS_PLANNING';
+}
+
+function ForecastTable({ forecasts, tier }: ForecastTableProps) {
+  if (forecasts.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>No forecasts in this category</p>
+      </div>
+    );
+  }
+
+  const getTierBadge = (itemTier: string) => {
+    switch (itemTier) {
+      case 'PLANNED':
+        return <Badge variant="default" className="bg-green-600">Planned</Badge>;
+      case 'PROJECTED':
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Projected</Badge>;
+      case 'NEEDS_PLANNING':
+        return <Badge variant="destructive" className="bg-amber-100 text-amber-800">Needs Plan</Badge>;
+      default:
+        return <Badge variant="outline">{itemTier}</Badge>;
+    }
+  };
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b">
+            <th className="text-left p-2 font-medium">Batch</th>
+            {!tier && <th className="text-left p-2 font-medium">Status</th>}
+            <th className="text-right p-2 font-medium">Weight</th>
+            <th className="text-left p-2 font-medium">Harvest Date</th>
+            <th className="text-right p-2 font-medium">Days</th>
+            <th className="text-right p-2 font-medium">Variance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {forecasts.slice(0, 20).map((forecast, index) => (
+            <tr key={`${forecast.batch_id}-${forecast.container_id}-${index}`} className="border-b hover:bg-muted/50">
+              <td className="p-2">
+                <div className="font-medium">{forecast.batch_number}</div>
+                {forecast.container_name && (
+                  <div className="text-xs text-muted-foreground">{forecast.container_name}</div>
+                )}
+              </td>
+              {!tier && <td className="p-2">{getTierBadge(forecast.tier)}</td>}
+              <td className="text-right p-2">
+                {forecast.current_weight_g 
+                  ? `${(forecast.current_weight_g / 1000).toFixed(2)} kg`
+                  : '—'}
+              </td>
+              <td className="p-2">
+                {forecast.planned_date || forecast.projected_date || '—'}
+              </td>
+              <td className="text-right p-2">
+                {forecast.days_to_harvest != null ? forecast.days_to_harvest : '—'}
+              </td>
+              <td className="text-right p-2">
+                {forecast.variance_days != null ? (
+                  <span className={forecast.variance_days > 0 ? 'text-red-600' : 'text-green-600'}>
+                    {forecast.variance_days > 0 ? '+' : ''}{forecast.variance_days}d
+                  </span>
+                ) : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {forecasts.length > 20 && (
+        <div className="text-center py-2 text-sm text-muted-foreground">
+          Showing 20 of {forecasts.length} forecasts
+        </div>
+      )}
     </div>
   );
 }

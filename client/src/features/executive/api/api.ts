@@ -489,18 +489,18 @@ export function useMarketPrices(): UseQueryResult<MarketPrice, Error> {
 }
 
 // ============================================================================
-// Live Forward Projection - Tiered Harvest Forecast
+// Live Forward Projection Hooks
 // ============================================================================
 
 /**
- * Tiered Harvest Forecast response from backend
+ * Tiered Harvest Forecast item from the API
  */
-export interface TieredForecastItem {
+export interface TieredHarvestForecast {
   tier: 'PLANNED' | 'PROJECTED' | 'NEEDS_PLANNING';
   batch_id: number;
   batch_number: string;
   container_id: number | null;
-  container_name: string;
+  container_name: string | null;
   current_weight_g: number | null;
   planned_date: string | null;
   projected_date: string | null;
@@ -511,53 +511,51 @@ export interface TieredForecastItem {
   source: string;
 }
 
-export interface TieredHarvestForecastResponse {
-  summary: {
-    planned_count: number;
-    projected_count: number;
-    needs_attention_count: number;
-  };
-  forecasts: TieredForecastItem[];
-}
-
 /**
  * Hook: useTieredHarvestForecast
  * 
- * Fetches tiered harvest forecast from Live Forward Projections.
- * Returns three tiers:
- * - PLANNED (Tier 1): Confirmed PlannedActivity records
- * - PROJECTED (Tier 2): Live projections without plans  
- * - NEEDS_PLANNING (Tier 3): Approaching threshold without plan
+ * Fetches live forward projection forecasts organized by tier:
+ * - PLANNED: Confirmed PlannedActivity records (authoritative)
+ * - PROJECTED: Live projections based on ActualDailyAssignmentState
+ * - NEEDS_PLANNING: Approaching harvest threshold without a plan
  * 
- * @param geographyId - Optional geography ID filter
- * @param daysHorizon - Days to look ahead (default 90)
+ * @param geography - Geography ID or 'global'
+ * @param daysHorizon - Number of days to look ahead (default 90)
+ * @param tierFilter - Optional filter by tier
  */
 export function useTieredHarvestForecast(
-  geographyId?: number,
-  daysHorizon: number = 90
-): UseQueryResult<TieredHarvestForecastResponse, Error> {
+  geography: GeographyFilterValue,
+  daysHorizon: number = 90,
+  tierFilter?: 'PLANNED' | 'PROJECTED' | 'NEEDS_PLANNING'
+): UseQueryResult<TieredHarvestForecast[], Error> {
   return useQuery({
-    queryKey: ['tiered-harvest-forecast', geographyId, daysHorizon],
-    queryFn: async (): Promise<TieredHarvestForecastResponse> => {
-      // Build URL with query params
+    queryKey: ['tiered-harvest-forecast', geography, daysHorizon, tierFilter],
+    queryFn: async (): Promise<TieredHarvestForecast[]> => {
+      const geographyId = geography === 'global' ? undefined : geography;
+      
+      // Build query params
       const params = new URLSearchParams();
       if (geographyId) params.append('geography_id', String(geographyId));
       params.append('days_horizon', String(daysHorizon));
+      if (tierFilter) params.append('tier', tierFilter);
       
-      const url = `/api/v1/batch/forecast/tiered-harvest/?${params.toString()}`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      // Fetch from backend
+      const response = await fetch(
+        `/api/v1/batch/forecast/tiered-harvest/?${params.toString()}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        }
+      );
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch tiered forecast: ${response.statusText}`);
+        throw new Error(`Failed to fetch tiered harvest forecast: ${response.status}`);
       }
       
-      return response.json();
+      const data = await response.json();
+      return data as TieredHarvestForecast[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000,

@@ -14,17 +14,25 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
   useCombinedGrowthData,
-  useBatchLiveForwardProjections,
+  useBatchLiveProjections,
   determineGranularity,
   type GrowthDataOptions,
+  type LiveProjectionPoint,
 } from '../../api/growth-assimilation';
 import { DataVisualizationControls } from './DataVisualizationControls';
-import { GrowthAnalysisChart, type SeriesVisibility } from './GrowthAnalysisChart';
+import { GrowthAnalysisChart } from './GrowthAnalysisChart';
 import { ContainerDrilldown } from './ContainerDrilldown';
 import { VarianceAnalysis } from './VarianceAnalysis';
 
 interface GrowthAnalysisTabContentProps {
   batchId: number;
+}
+
+interface SeriesVisibility {
+  samples: boolean;
+  scenario: boolean;
+  actual: boolean;
+  liveProjection: boolean;
 }
 
 export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentProps) {
@@ -36,7 +44,7 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
     samples: true,
     scenario: true,
     actual: true,
-    liveProjection: true,  // Enable by default for the new feature
+    liveProjection: true,
   });
   
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | undefined>();
@@ -70,14 +78,8 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
     refetch,
   } = useCombinedGrowthData(batchId, queryOptions);
   
-  // Fetch live forward projections for 4th series
-  const {
-    data: liveProjections,
-    isLoading: liveProjectionsLoading,
-  } = useBatchLiveForwardProjections(
-    batchId,
-    data?.container_assignments || []
-  );
+  // Fetch live forward projections for the batch
+  const { data: liveProjections } = useBatchLiveProjections(batchId);
   
   // ============================================================================
   // Auto-adjust granularity for long date ranges

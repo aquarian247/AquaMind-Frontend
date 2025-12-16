@@ -2,10 +2,8 @@
  * Data Visualization Controls
  * 
  * Left panel with series toggles, granularity selector, and scenario management.
- * Now includes 4th toggle for Live Forward Projection.
  * 
  * Issue: #112 - Phase 7
- * Issue: Live Forward Projection Feature
  */
 
 import React from 'react';
@@ -14,9 +12,14 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshDataButton } from './RefreshDataButton';
-import { ProjectionRunSelector } from './ProjectionRunSelector';
 import type { ScenarioInfo } from '../../api/growth-assimilation';
-import type { SeriesVisibility } from './GrowthAnalysisChart';
+
+interface SeriesVisibility {
+  samples: boolean;
+  scenario: boolean;
+  actual: boolean;
+  liveProjection: boolean;
+}
 
 interface DataVisualizationControlsProps {
   batchId: number;
@@ -106,7 +109,7 @@ export function DataVisualizationControls({
           </div>
         </div>
         
-        {/* Live Forward Projection - NEW */}
+        {/* Live Forward Projection */}
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -122,11 +125,6 @@ export function DataVisualizationControls({
             </div>
           </div>
         </div>
-        
-        <p className="text-xs text-muted-foreground mt-2 bg-purple-50 dark:bg-purple-950/30 p-2 rounded">
-          <span className="font-medium">Live Projection:</span> Forward forecast from current state 
-          using temperature bias from recent sensor data.
-        </p>
       </div>
       
       <Separator />
@@ -160,20 +158,11 @@ export function DataVisualizationControls({
           Scenario
         </Label>
         {scenario ? (
-          <div className="space-y-3">
-            <div className="space-y-1">
-              <p className="text-sm font-medium">{scenario.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {scenario.duration_days} days • {scenario.initial_count.toLocaleString()} fish • {scenario.initial_weight}g
-              </p>
-            </div>
-            
-            {/* Projection Run Selector */}
-            <ProjectionRunSelector
-              batchId={batchId}
-              currentRunId={scenario.projection_run?.run_id}
-              scenarioId={scenario.id}
-            />
+          <div className="space-y-1">
+            <p className="text-sm font-medium">{scenario.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {scenario.duration_days} days • {scenario.initial_count.toLocaleString()} fish • {scenario.initial_weight}g
+            </p>
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">No scenario pinned</p>
