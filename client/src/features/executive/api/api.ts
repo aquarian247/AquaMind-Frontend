@@ -547,7 +547,8 @@ export function useTieredHarvestForecast(
       );
       
       const data = await response.json();
-      return data as TieredHarvestForecast[];
+      // API returns { summary: {...}, forecasts: [...] }
+      return (data.forecasts || []) as TieredHarvestForecast[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000,
