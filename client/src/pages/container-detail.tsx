@@ -87,7 +87,8 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
         Number(containerId),
       );
 
-      const capacity = parseFloat((raw as any).volume_m3 ?? "0") || 0;
+      const maxBiomassKg = parseFloat((raw as any).max_biomass_kg ?? "0") || 0;
+      const volumeM3 = parseFloat((raw as any).volume_m3 ?? "0") || 0;
 
       return {
         id: raw.id,
@@ -100,7 +101,7 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
         stage: "Smolt",
         status: raw.active ? "active" : "inactive",
         biomass: 0, // Will be calculated from batch assignments
-        capacity,
+        capacity: maxBiomassKg, // Use max_biomass_kg for capacity utilization
         fishCount: 0, // Will be calculated from batch assignments
         averageWeight: 0, // Will be calculated from batch assignments
         temperature: 0, // Will be fetched from sensors
@@ -108,9 +109,9 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
         flowRate: 0, // Will be fetched from sensors
         lastMaintenance: new Date().toISOString(),
         systemStatus: "optimal",
-        density: 0, // Will be calculated from biomass/capacity
+        density: 0, // Will be calculated from biomass/volume
         feedingSchedule: "08:00, 12:00, 16:00", // Could be made dynamic
-        volume: capacity,
+        volume: volumeM3,
         installDate: (raw as any).created_at,
         lastFeedingTime: new Date().toISOString(), // Will be fetched from feeding events
         dailyFeedAmount: 0, // Will be calculated from feeding events
@@ -189,7 +190,8 @@ export default function ContainerDetail({ params }: { params: { id: string } }) 
       powerConsumption = 1250; // Placeholder
     }
 
-    const density = containerData.capacity > 0 ? (biomass / containerData.capacity) * 100 : 0;
+    // Density is biomass (kg) / volume (m³) = kg/m³
+    const density = containerData.volume > 0 ? biomass / containerData.volume : 0;
 
     return {
       ...containerData,
