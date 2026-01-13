@@ -98,6 +98,8 @@ export type HallSummaryData = {
   active_biomass_kg: number;
   population_count: number;
   avg_weight_kg: number;
+  total_capacity_kg: number;
+  utilization_percent: number;
 };
 
 /**

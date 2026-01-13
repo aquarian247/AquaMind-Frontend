@@ -326,4 +326,3 @@ function ForecastTable({ forecasts, tier }: ForecastTableProps) {
     </div>
   );
 }
-

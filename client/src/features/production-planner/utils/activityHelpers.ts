@@ -284,4 +284,3 @@ export function formatTriggerType(triggerType: string): string {
 
   return displayMap[triggerType] || triggerType;
 }
-

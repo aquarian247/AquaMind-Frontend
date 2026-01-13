@@ -303,9 +303,9 @@ export default function StationHalls({ params }: { params: { id: string } }) {
                 <div>
                   <span className="text-muted-foreground">Utilization</span>
                   <div className="font-semibold text-lg">
-                    {summariesLoading || !summary?.container_count 
+                    {summariesLoading || summary?.utilization_percent === undefined
                       ? "N/A" 
-                      : `${Math.round((summary.population_count || 0) / (summary.container_count * 1000)) * 10}%`}
+                      : `${summary.utilization_percent}%`}
                   </div>
                 </div>
               </div>

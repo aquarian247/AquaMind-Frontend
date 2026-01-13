@@ -479,4 +479,3 @@ export function useVarianceReport(params?: {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
-

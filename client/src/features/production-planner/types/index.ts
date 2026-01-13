@@ -112,4 +112,3 @@ export interface TemplateFilters {
   isActive?: boolean | null;
   search?: string;
 }
-
