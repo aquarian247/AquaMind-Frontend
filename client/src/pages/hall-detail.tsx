@@ -107,7 +107,8 @@ export default function HallDetail({ params }: { params: { id: string } }) {
 
       /* Map API result to UI shape with real data */
       const mapped = containers.map((c: any) => {
-        const capacity = parseFloat(c.volume_m3 ?? "0") || 0;
+        const volumeM3 = parseFloat(c.volume_m3 ?? "0") || 0;
+        const maxBiomassKg = parseFloat(c.max_biomass_kg ?? "0") || 0;
         const assignment = assignmentsMap.get(c.id);
         
         const biomassKg = assignment ? parseFloat(assignment.biomass_kg || '0') : 0;
@@ -115,8 +116,8 @@ export default function HallDetail({ params }: { params: { id: string } }) {
         const avgWeightG = assignment ? parseFloat(assignment.avg_weight_g || '0') : 0;
         const avgWeightKg = avgWeightG / 1000;
         
-        // Calculate density (kg/m³)
-        const density = capacity > 0 ? biomassKg / capacity : 0;
+        // Calculate density (kg/m³) - uses volume
+        const density = volumeM3 > 0 ? biomassKg / volumeM3 : 0;
         
         return {
           id: c.id,
@@ -129,7 +130,7 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           stage: assignment?.lifecycle_stage?.name || "Unknown",
           status: c.active ? "active" : "inactive",
           biomass: biomassKg,
-          capacity,
+          capacity: maxBiomassKg, // Use max_biomass_kg for capacity utilization
           fishCount,
           averageWeight: avgWeightKg,
           temperature: 0, // TODO: Fetch from environmental stats if needed
