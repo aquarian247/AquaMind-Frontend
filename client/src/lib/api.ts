@@ -245,12 +245,10 @@ export const api = {
 
     /**
      * List lifecycle stages for batches.
-     * Note: Lifecycle stages are available through batch data, not as a separate endpoint.
+     * Fetches from the batch/lifecycle-stages/ endpoint.
      */
     async getLifecycleStages() {
-      // Lifecycle stages are nested within batch/species data
-      // This method is a placeholder - lifecycle stages should be accessed through batch details
-      return { results: [] };
+      return ApiService.apiV1BatchLifecycleStagesList();
     },
 
     async getAssignments(batchId?: number) {
