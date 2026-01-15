@@ -44,6 +44,10 @@ export type PatchedTransferActionDetail = {
      */
     transferred_biomass_kg?: string;
     /**
+     * Allow mixing with other batches if destination is occupied at execution
+     */
+    allow_mixed?: boolean;
+    /**
      * * `PENDING` - Pending - Not Started
      * * `IN_PROGRESS` - In Progress - Being Executed
      * * `COMPLETED` - Completed

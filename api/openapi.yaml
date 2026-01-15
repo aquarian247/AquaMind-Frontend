@@ -2230,6 +2230,114 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/batch/container-assignments/{id}/live-forward-projection/:
+    get:
+      operationId: batch-container-assignments-live-forward-projection
+      description: "\nReturns the live forward projection series for a specific container\
+        \ assignment.\n\nThe projection starts from the latest ActualDailyAssignmentState\
+        \ and projects\ngrowth forward to the scenario end using:\n- TGC-based growth\
+        \ model\n- Temperature profile with bias adjustment\n- Scenario mortality\
+        \ model\n\n**Temperature Bias**: Computed from recent days where sensor-derived\
+        \ temps\nwere available (measured, interpolated, nearest). The bias represents\
+        \ the\ndelta between actual temps and profile temps, clamped to configurable\
+        \ bounds.\n\n**Provenance**: Response includes full transparency about projection\
+        \ inputs:\n- Temperature profile name and ID\n- Bias value, window days, and\
+        \ clamp bounds\n- TGC value used\n- computed_date (when projection was run)\n\
+        \nBy default returns the latest projection (computed_date = most recent).\n\
+        Use `computed_date` parameter for backtesting historical projections.\n  \
+        \      "
+      summary: Get live forward projection for an assignment
+      parameters:
+      - in: query
+        name: computed_date
+        schema:
+          type: string
+          format: date
+        description: 'Date of projection run (YYYY-MM-DD). Default: latest.'
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this batch container assignment.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assignment_id:
+                    type: integer
+                    maximum: 9223372036854775807
+                    minimum: -9223372036854775808
+                  batch_number:
+                    type: string
+                  container_name:
+                    type: string
+                  computed_date:
+                    type: string
+                    format: date
+                    description: Date projection was computed
+                  provenance:
+                    type: object
+                    properties:
+                      temp_profile_id:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      temp_profile_name:
+                        type: string
+                      temp_bias_c:
+                        type: number
+                      temp_bias_window_days:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      temp_bias_clamp_min_c:
+                        type: number
+                      temp_bias_clamp_max_c:
+                        type: number
+                      tgc_value:
+                        type: number
+                  projections:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        projection_date:
+                          type: string
+                          format: date
+                        day_number:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        projected_weight_g:
+                          type: number
+                        projected_population:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        projected_biomass_kg:
+                          type: number
+                        temperature_used_c:
+                          type: number
+          description: Live forward projection series with provenance
+        '404':
+          description: No projections found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/batch/container-assignments/summary/:
     get:
       operationId: batch-container-assignments-summary
@@ -3160,6 +3268,374 @@ paths:
           description: ''
         '404':
           description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/batch/forecast/harvest/:
+    get:
+      operationId: forecastviewset_harvest
+      description: |-
+        Returns aggregated harvest forecast showing batches approaching harvest weight threshold.
+
+        Uses projection data to find the earliest date when batches will reach species-specific harvest weight thresholds, enriched with confidence scores from actual daily states and existing planned HARVEST activities.
+
+        Useful for executive dashboards and harvest planning.
+      summary: Get harvest forecast for batches approaching harvest weight
+      parameters:
+      - in: query
+        name: from_date
+        schema:
+          type: string
+          format: date
+        description: 'Filter projections from this date (ISO 8601: YYYY-MM-DD)'
+      - in: query
+        name: geography_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID (optional)
+      - in: query
+        name: min_confidence
+        schema:
+          type: number
+          format: float
+        description: Minimum confidence score (0-1, default 0.5)
+      - in: query
+        name: species_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by species ID (optional)
+      - in: query
+        name: to_date
+        schema:
+          type: string
+          format: date
+        description: 'Filter projections until this date (ISO 8601: YYYY-MM-DD)'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      total_batches:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      harvest_ready_count:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      avg_days_to_harvest:
+                        type: number
+                        nullable: true
+                      total_projected_biomass_tonnes:
+                        type: number
+                  upcoming:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        batch_id:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        batch_number:
+                          type: string
+                        species:
+                          type: string
+                        facility:
+                          type: string
+                        current_weight_g:
+                          type: number
+                          nullable: true
+                        target_weight_g:
+                          type: number
+                        projected_harvest_date:
+                          type: string
+                          format: date
+                          nullable: true
+                        days_until_harvest:
+                          type: integer
+                          nullable: true
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        projected_biomass_kg:
+                          type: number
+                          nullable: true
+                        confidence:
+                          type: number
+                          nullable: true
+                        planned_activity_id:
+                          type: integer
+                          nullable: true
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        planned_activity_status:
+                          type: string
+                          nullable: true
+                  by_quarter:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        count:
+                          type: integer
+                        biomass_tonnes:
+                          type: number
+          description: Harvest forecast data
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/batch/forecast/sea-transfer/:
+    get:
+      operationId: forecastviewset_sea_transfer
+      description: |-
+        Returns aggregated sea-transfer forecast showing freshwater batches approaching smolt weight threshold for transfer to sea cages.
+
+        Only includes batches currently in freshwater facilities (containers in halls). Uses projection data to find the earliest date when batches will reach species-specific transfer weight thresholds.
+
+        Useful for executive dashboards and transfer planning.
+      summary: Get sea-transfer forecast for freshwater batches approaching smolt
+        stage
+      parameters:
+      - in: query
+        name: from_date
+        schema:
+          type: string
+          format: date
+        description: 'Filter projections from this date (ISO 8601: YYYY-MM-DD)'
+      - in: query
+        name: geography_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID (optional)
+      - in: query
+        name: min_confidence
+        schema:
+          type: number
+          format: float
+        description: Minimum confidence score (0-1, default 0.5)
+      - in: query
+        name: species_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by species ID (optional)
+      - in: query
+        name: to_date
+        schema:
+          type: string
+          format: date
+        description: 'Filter projections until this date (ISO 8601: YYYY-MM-DD)'
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      total_freshwater_batches:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      transfer_ready_count:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      avg_days_to_transfer:
+                        type: number
+                        nullable: true
+                  upcoming:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        batch_id:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        batch_number:
+                          type: string
+                        current_stage:
+                          type: string
+                        target_stage:
+                          type: string
+                        current_facility:
+                          type: string
+                        target_facility:
+                          type: string
+                          nullable: true
+                        projected_transfer_date:
+                          type: string
+                          format: date
+                          nullable: true
+                        days_until_transfer:
+                          type: integer
+                          nullable: true
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        current_weight_g:
+                          type: number
+                          nullable: true
+                        target_weight_g:
+                          type: number
+                        confidence:
+                          type: number
+                          nullable: true
+                        planned_activity_id:
+                          type: integer
+                          nullable: true
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                  by_month:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        count:
+                          type: integer
+          description: Sea-transfer forecast data
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
+  /api/v1/batch/forecast/tiered-harvest/:
+    get:
+      operationId: forecastviewset_tiered_harvest
+      description: "\nReturns harvest forecasts organized in three tiers:\n\n**TIER\
+        \ 1 - PLANNED**: Harvests with confirmed PlannedActivity records.\nThese are\
+        \ authoritative operational plans made by staff.\n\n**TIER 2 - PROJECTED**:\
+        \ Harvests predicted by live forward projections.\nBased on current ActualDailyAssignmentState\
+        \ trajectory with temperature\nbias from recent sensor readings.\n\n**TIER\
+        \ 3 - NEEDS_PLANNING**: Containers approaching harvest threshold\nwithin the\
+        \ attention window (default 30 days) WITHOUT a PlannedActivity.\nRequires\
+        \ operational attention.\n\nUses ContainerForecastSummary for fast queries\
+        \ (updated nightly by\nthe live forward projection task).\n        "
+      summary: Get tiered harvest forecast (PLANNED/PROJECTED/NEEDS_PLANNING)
+      parameters:
+      - in: query
+        name: days_horizon
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Days to look ahead (default 90)
+      - in: query
+        name: geography_id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: Filter by geography ID
+      - in: query
+        name: tier
+        schema:
+          type: string
+        description: Filter by tier (PLANNED, PROJECTED, NEEDS_PLANNING)
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      planned_count:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      projected_count:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                      needs_attention_count:
+                        type: integer
+                        maximum: 9223372036854775807
+                        minimum: -9223372036854775808
+                  forecasts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        tier:
+                          type: string
+                        batch_id:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        batch_number:
+                          type: string
+                        container_id:
+                          type: integer
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        container_name:
+                          type: string
+                        current_weight_g:
+                          type: number
+                        planned_date:
+                          type: string
+                          format: date
+                          nullable: true
+                        projected_date:
+                          type: string
+                          format: date
+                          nullable: true
+                        days_to_harvest:
+                          type: integer
+                          nullable: true
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        variance_days:
+                          type: integer
+                          nullable: true
+                          maximum: 9223372036854775807
+                          minimum: -9223372036854775808
+                        confidence:
+                          type: number
+                        computed_date:
+                          type: string
+                          format: date
+                          nullable: true
+          description: Tiered harvest forecast
         '401':
           description: Unauthorized
         '403':
@@ -26465,6 +26941,41 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
+  /api/v1/planning/planned-activities/{id}/projection-preview/:
+    get:
+      operationId: api_v1_planning_planned_activities_projection_preview_retrieve
+      description: Get projection preview showing scenario-based rationale for activity
+        due date.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Planned Activity.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/planning/planned-activities/{id}/spawn-workflow/:
     post:
       operationId: api_v1_planning_planned_activities_spawn_workflow_create
@@ -26512,6 +27023,41 @@ paths:
           description: Internal Server Error
         '400':
           description: Bad request (validation error)
+  /api/v1/planning/planned-activities/{id}/variance-from-actual/:
+    get:
+      operationId: api_v1_planning_planned_activities_variance_from_actual_retrieve
+      description: Get variance-from-actual data for a specific activity by joining
+        with ActualDailyAssignmentState.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        description: A unique integer value identifying this Planned Activity.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '404':
+          description: Not Found
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/planning/planned-activities/variance-report/:
     get:
       operationId: api_v1_planning_planned_activities_variance_report_retrieve
@@ -43748,6 +44294,7 @@ components:
           minimum: -9223372036854775808
         scenario:
           type: integer
+          nullable: true
           description: Scenario this activity belongs to
           maximum: 9223372036854775807
           minimum: -9223372036854775808
@@ -44358,6 +44905,10 @@ components:
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           description: Biomass transferred (kg)
+        allow_mixed:
+          type: boolean
+          description: Allow mixing with other batches if destination is occupied
+            at execution
         status:
           enum:
           - PENDING
@@ -44920,6 +45471,7 @@ components:
           minimum: -9223372036854775808
         scenario:
           type: integer
+          nullable: true
           description: Scenario this activity belongs to
           maximum: 9223372036854775807
           minimum: -9223372036854775808
@@ -45058,7 +45610,6 @@ components:
       - due_date
       - id
       - is_overdue
-      - scenario
       - scenario_name
       - status_display
       - transfer_workflow
@@ -46138,6 +46689,10 @@ components:
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           description: Biomass transferred (kg)
+        allow_mixed:
+          type: boolean
+          description: Allow mixing with other batches if destination is occupied
+            at execution
         status:
           enum:
           - PENDING
@@ -46396,6 +46951,10 @@ components:
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
           description: Biomass transferred (kg)
+        allow_mixed:
+          type: boolean
+          description: Allow mixing with other batches if destination is occupied
+            at execution
         status:
           enum:
           - PENDING

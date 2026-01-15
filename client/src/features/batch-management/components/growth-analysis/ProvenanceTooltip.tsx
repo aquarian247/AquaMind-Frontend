@@ -14,9 +14,27 @@ interface ProvenanceTooltipProps {
   active?: boolean;
   payload?: any[];
   label?: number;
+  /**
+   * When series have different granularities (e.g. weekly scenario vs daily live projections),
+   * the hovered day may not have an exact value for all series. We pass sparse series points
+   * so the tooltip can show the nearest available value (clearly labeled).
+   */
+  sparseSeries?: {
+    scenario?: Array<{ day: number; date?: string; weight_g: number }>;
+    actual?: Array<{ day: number; date?: string; weight_g: number }>;
+    sample?: Array<{ day: number; date?: string; weight_g: number }>;
+    live?: Array<{ day: number; date?: string; weight_g: number }>;
+  };
+  batchStartDate?: string; // YYYY-MM-DD
 }
 
-export function ProvenanceTooltip({ active, payload, label }: ProvenanceTooltipProps) {
+export function ProvenanceTooltip({
+  active,
+  payload,
+  label,
+  sparseSeries,
+  batchStartDate,
+}: ProvenanceTooltipProps) {
   if (!active || !payload || payload.length === 0) {
     return null;
   }
@@ -31,20 +49,85 @@ export function ProvenanceTooltip({ active, payload, label }: ProvenanceTooltipP
     sampleWeight,
     scenarioWeight,
     actualWeight,
+    liveProjectionWeight,
     anchorType,
     sources,
     confidenceScores,
     containerCount,
     sampleCount,
   } = data;
+
+  const tooltipDay: number | undefined = typeof label === 'number' ? label : day;
+
+  const displayDate = (() => {
+    if (typeof date === 'string' && date.length > 0) return date;
+    if (!batchStartDate || tooltipDay === undefined) return '';
+    // Avoid timezone drift by doing date math in UTC.
+    const base = new Date(`${batchStartDate}T00:00:00Z`);
+    base.setUTCDate(base.getUTCDate() + (tooltipDay - 1));
+    return base.toISOString().slice(0, 10); // YYYY-MM-DD
+  })();
+
+  const formatWeight = (g: number) => {
+    if (!isFinite(g)) return '—';
+    if (Math.abs(g) >= 1000) return `${(g / 1000).toFixed(2)}kg`;
+    return `${g.toFixed(1)}g`;
+  };
+
+  const findNearest = (
+    points: Array<{ day: number; date?: string; weight_g: number }> | undefined,
+    targetDay: number | undefined
+  ): { point?: { day: number; date?: string; weight_g: number }; isExact: boolean } => {
+    if (!points || points.length === 0 || targetDay === undefined) return { isExact: false };
+    // points are expected sorted by day asc
+    let lo = 0;
+    let hi = points.length - 1;
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      const midDay = points[mid].day;
+      if (midDay === targetDay) return { point: points[mid], isExact: true };
+      if (midDay < targetDay) lo = mid + 1;
+      else hi = mid - 1;
+    }
+    // hi is last < targetDay, lo is first > targetDay
+    const lower = hi >= 0 ? points[hi] : undefined;
+    const upper = lo < points.length ? points[lo] : undefined;
+    if (!lower) return { point: upper, isExact: false };
+    if (!upper) return { point: lower, isExact: false };
+    return {
+      point:
+        Math.abs(targetDay - lower.day) <= Math.abs(upper.day - targetDay) ? lower : upper,
+      isExact: false,
+    };
+  };
+
+  // Use exact hovered-point values first; fall back to nearest sparse-series values
+  const nearestScenario = findNearest(
+    sparseSeries?.scenario,
+    tooltipDay
+  );
+  const nearestLive = findNearest(
+    sparseSeries?.live,
+    tooltipDay
+  );
+
+  const scenarioWeightToShow =
+    scenarioWeight !== undefined ? { value: scenarioWeight, isExact: true } :
+    nearestScenario.point ? { value: nearestScenario.point.weight_g, isExact: nearestScenario.isExact } :
+    undefined;
+
+  const liveWeightToShow =
+    liveProjectionWeight !== undefined ? { value: liveProjectionWeight, isExact: true } :
+    nearestLive.point ? { value: nearestLive.point.weight_g, isExact: nearestLive.isExact } :
+    undefined;
   
   return (
     <div className="bg-background border border-border shadow-lg rounded-lg p-4 max-w-xs">
       {/* Header */}
       <div className="border-b border-border pb-2 mb-2">
-        <p className="font-semibold text-sm">{date}</p>
+        <p className="font-semibold text-sm">{displayDate || '—'}</p>
         <p className="text-xs text-muted-foreground">
-          Day {day}
+          Day {tooltipDay ?? '—'}
           {containerCount > 1 && ` • ${containerCount} containers`}
           {sampleCount > 1 && ` • ${sampleCount} samples`}
         </p>
@@ -52,13 +135,27 @@ export function ProvenanceTooltip({ active, payload, label }: ProvenanceTooltipP
       
       {/* Values */}
       <div className="space-y-2">
-        {scenarioWeight !== undefined && (
+        {scenarioWeightToShow && (
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500" />
-              <span className="text-sm">Scenario</span>
+              <span className="text-sm">
+                Scenario{scenarioWeightToShow.isExact ? '' : ' (nearest)'}
+              </span>
             </div>
-            <span className="font-medium text-sm">{scenarioWeight.toFixed(1)}g</span>
+            <span className="font-medium text-sm">{formatWeight(scenarioWeightToShow.value)}</span>
+          </div>
+        )}
+        
+        {liveWeightToShow && (
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <span className="text-sm">
+                Live{liveWeightToShow.isExact ? '' : ' (nearest)'}
+              </span>
+            </div>
+            <span className="font-medium text-sm">{formatWeight(liveWeightToShow.value)}</span>
           </div>
         )}
         
@@ -68,7 +165,7 @@ export function ProvenanceTooltip({ active, payload, label }: ProvenanceTooltipP
               <div className="w-3 h-3 rounded-full bg-orange-500" />
               <span className="text-sm">Actual</span>
             </div>
-            <span className="font-medium text-sm">{actualWeight.toFixed(1)}g</span>
+            <span className="font-medium text-sm">{formatWeight(actualWeight)}</span>
           </div>
         )}
         
@@ -78,7 +175,7 @@ export function ProvenanceTooltip({ active, payload, label }: ProvenanceTooltipP
               <div className="w-3 h-3 rounded-full bg-blue-500" />
               <span className="text-sm">Sample</span>
             </div>
-            <span className="font-medium text-sm">{sampleWeight.toFixed(1)}g</span>
+            <span className="font-medium text-sm">{formatWeight(sampleWeight)}</span>
           </div>
         )}
       </div>

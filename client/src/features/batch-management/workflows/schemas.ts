@@ -11,11 +11,13 @@ import { z } from 'zod';
 // ============================================================================
 
 export const executeActionSchema = z.object({
-  mortality_during_transfer: z.coerce
-    .number()
-    .int()
-    .min(0, 'Mortality cannot be negative')
-    .default(0),
+  mortality_during_transfer: z.preprocess(
+    (value) => {
+      if (value === '' || value === undefined || value === null) return 0;
+      return Number(value);
+    },
+    z.number().int().min(0, 'Mortality cannot be negative')
+  ),
   
   transfer_method: z.enum(['NET', 'PUMP', 'GRAVITY', 'MANUAL']).optional(),
   
@@ -29,11 +31,13 @@ export const executeActionSchema = z.object({
     .optional()
     .or(z.literal('')),
   
-  execution_duration_minutes: z.coerce
-    .number()
-    .int()
-    .positive('Duration must be positive')
-    .optional(),
+  execution_duration_minutes: z.preprocess(
+    (value) => {
+      if (value === '' || value === undefined || value === null) return undefined;
+      return Number(value);
+    },
+    z.number().int().positive('Duration must be positive').optional()
+  ),
   
   notes: z.string().optional(),
 });

@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ApiService } from '@/api/generated';
 import type { BatchTransferWorkflowDetail } from '@/api/generated';
 import { useCreateAction } from '../api';
+import { useContainerAvailability } from '../hooks/useContainerAvailability';
 import { formatCount, formatBiomass } from '../utils';
 
 // ============================================================================
@@ -47,9 +49,12 @@ interface ActionRow {
   id: string;
   sourceAssignmentId?: number;
   destContainerId?: number; // Changed from destAssignmentId - we select container, not assignment
+  destAssignmentId?: number;
   transferredCount?: number;
   transferredBiomassKg?: string;
   sourcePopulationBefore?: number;
+  transferAll?: boolean;
+  allowMixed?: boolean;
 }
 
 interface AddActionsDialogProps {
@@ -74,6 +79,7 @@ export function AddActionsDialog({
   ]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [destContainerCategory, setDestContainerCategory] = useState<'TANK' | 'PEN' | 'TRAY' | 'OTHER' | undefined>();
+  const [destContainerTypeId, setDestContainerTypeId] = useState<number | 'auto'>('auto');
   const { toast } = useToast();
   const createAction = useCreateAction();
 
@@ -264,19 +270,99 @@ export function AddActionsDialog({
     enabled: open && !!stationId,
   });
 
+  // Fetch area (if source container is sea-based)
+  const areaId = firstContainerFull ? (firstContainerFull as any).area : undefined;
+
+  const { data: areaData } = useQuery({
+    queryKey: ['area', areaId],
+    queryFn: async () => {
+      console.log('[AddActions] Fetching area details for ID:', areaId);
+      const area = await ApiService.apiV1InfrastructureAreasRetrieve(areaId!);
+      console.log('[AddActions] Area received:', area);
+      return area;
+    },
+    enabled: open && !!areaId,
+  });
+
   // Extract geography from station
-  const geographyId = stationData
-    ? (stationData as any).geography_id 
-      || (stationData as any).geography
-    : undefined;
+  const geographyId = (stationData as any)?.geography_id
+    || (stationData as any)?.geography
+    || (areaData as any)?.geography
+    || (batchData as any)?.geography_id
+    || (batchData as any)?.geography;
+
+  const destStageName = (workflow.dest_stage_name || '').toLowerCase();
+  const isLifecycleTransition = workflow.workflow_type === 'LIFECYCLE_TRANSITION';
+  const isDestSeaStage = ['post-smolt', 'adult'].some((stage) => destStageName.includes(stage));
+
+  const sourceLocationType: 'freshwater' | 'sea' | 'unknown' =
+    (firstContainerFull as any)?.area ? 'sea'
+      : (firstContainerFull as any)?.hall ? 'freshwater'
+      : 'unknown';
+
+  const destLocationScope: 'freshwater' | 'sea' | 'any' = isLifecycleTransition
+    ? (isDestSeaStage ? 'sea' : 'freshwater')
+    : sourceLocationType === 'unknown' ? 'any' : sourceLocationType;
+
+  const getDestStageKey = () => {
+    if (!isLifecycleTransition) return undefined;
+    if (destStageName.includes('post-smolt')) return 'post-smolt';
+    if (destStageName.includes('smolt')) return 'smolt';
+    if (destStageName.includes('parr')) return 'parr';
+    if (destStageName.includes('fry')) return 'fry';
+    if (destStageName.includes('alevin') || destStageName.includes('egg')) return 'egg-alevin';
+    if (destStageName.includes('adult')) return 'adult';
+    return undefined;
+  };
+
+  const destStageKey = getDestStageKey();
+
+  const stageKeywords: Record<string, string[]> = {
+    'egg-alevin': ['tray', 'incubation'],
+    fry: ['fry'],
+    parr: ['parr'],
+    smolt: ['smolt'],
+    'post-smolt': ['post-smolt'],
+    adult: ['adult', 'ring', 'pen', 'cage', 'sea'],
+  };
 
   console.log('[AddActions] Geography derived from station:', geographyId);
   console.log('[AddActions] Source assignments count:', sourceAssignments?.length || 0);
   
-  // Fetch destination containers (filtered by geography + optional category)
+  // Fetch destination containers (filtered by geography + location scope + optional category)
   const { data: destContainersRaw } = useQuery({
-    queryKey: ['containers', 'geography', geographyId, 'category', destContainerCategory],
+    queryKey: [
+      'containers',
+      'geography',
+      geographyId,
+      'scope',
+      destLocationScope,
+      'category',
+      destContainerCategory,
+      'station',
+      stationId,
+    ],
     queryFn: async () => {
+      const getResults = (response: any) => {
+        if (Array.isArray(response)) return response;
+        return response?.results || [];
+      };
+      const getNext = (response: any) => {
+        if (Array.isArray(response)) return null;
+        return response?.next;
+      };
+      const fetchAllPages = async (fetchPage: (page: number) => Promise<any>) => {
+        let page = 1;
+        const results: any[] = [];
+        while (true) {
+          const response = await fetchPage(page);
+          results.push(...getResults(response));
+          if (!getNext(response)) break;
+          page += 1;
+        }
+        return results;
+      };
+
       if (!geographyId) {
         console.log('[AddActions] Skipping dest containers - no geography available');
         return [];
@@ -290,84 +376,122 @@ export function AddActionsDialog({
       // IMPORTANT: Geography filter on containers API doesn't include area-based containers (sea rings)!
       // Solution: Fetch areas in this geography, then get containers from both halls AND areas
       
-      // 1. Get all areas in this geography
+      // 1. Get all areas in this geography (sea containers)
       // Parameters: active, geography, geographyIn, name, nameIcontains, ordering, page, search
-      const areasInGeo = await ApiService.apiV1InfrastructureAreasList(
-        true, // 1: active ✅
-        geographyId, // 2: geography ✅
-        undefined, // 3: geographyIn
-        undefined, // 4: name
-        undefined, // 5: nameIcontains
-        undefined, // 6: ordering
-        1, // 7: page ✅
-        undefined, // 8: search
-      );
-      
-      console.log('[AddActions] Areas in geography:', areasInGeo.count);
-      console.log('[AddActions] Area names:', areasInGeo.results?.map((a: any) => a.name));
-      const areaIds = areasInGeo.results?.map((a: any) => a.id) || [];
-      console.log('[AddActions] Area IDs to fetch containers from:', areaIds);
-      
-      // 2. Fetch containers from halls (freshwater) - these have geography via station
-      // NOTE: There's NO geography parameter! We'll get all hall containers and filter client-side
-      // Parameters: active, area, areaIn, containerType, hall, hallIn, name, ordering, page, search
-      const hallContainers = await ApiService.apiV1InfrastructureContainersList(
-        true, // 1: active ✅
-        undefined, // 2: area (null for hall-based)
-        undefined, // 3: areaIn
-        undefined, // 4: containerType
-        undefined, // 5: hall
-        undefined, // 6: hallIn
-        undefined, // 7: name
-        undefined, // 8: ordering
-        1, // 9: page ✅
-        undefined, // 10: search
-      );
-      
-      console.log('[AddActions] All hall containers fetched:', hallContainers.count);
-      
-      // Filter to only containers in this geography (via hall → station → geography)
-      // We'll need to do this client-side since API doesn't support geography filter
-      const hallContainersInGeo = hallContainers.results || [];
-      
-      console.log('[AddActions] Hall-based containers:', hallContainers.count);
-      
-      // 3. Fetch containers from areas (sea) - need to query by area
-      // Parameters: active, area, areaIn, containerType, hall, hallIn, name, ordering, page, search
-      const areaContainersPromises = areaIds.map((areaId: number) =>
-        ApiService.apiV1InfrastructureContainersList(
+      const areasInGeoResults = await fetchAllPages((page) =>
+        ApiService.apiV1InfrastructureAreasList(
           true, // 1: active ✅
-          areaId, // 2: area ✅
-          undefined, // 3: areaIn
-          undefined, // 4: containerType
-          undefined, // 5: hall
-          undefined, // 6: hallIn
-          undefined, // 7: name
-          undefined, // 8: ordering
-          1, // 9: page ✅
-          undefined, // 10: search
+          geographyId, // 2: geography ✅
+          undefined, // 3: geographyIn
+          undefined, // 4: name
+          undefined, // 5: nameIcontains
+          undefined, // 6: ordering
+          page, // 7: page ✅
+          undefined, // 8: search
         )
       );
       
+      console.log('[AddActions] Areas in geography:', areasInGeoResults.length);
+      console.log('[AddActions] Area names:', areasInGeoResults?.map((a: any) => a.name));
+      const areaIds = areasInGeoResults?.map((a: any) => a.id) || [];
+      console.log('[AddActions] Area IDs to fetch containers from:', areaIds);
+
+      let hallContainersInStation: any[] = [];
+      let areaContainers: any[] = [];
+
+      if (destLocationScope !== 'sea') {
+        // 2. Fetch halls for this station, then containers in those halls
+        if (stationId) {
+          const hallsInStationResults = await fetchAllPages((page) =>
+            ApiService.apiV1InfrastructureHallsList(
+              true, // active
+              stationId, // freshwaterStation
+              undefined, // freshwaterStationIn
+              undefined, // name
+              undefined, // ordering
+              page, // page
+              undefined, // search
+            )
+          );
+          const hallIds = hallsInStationResults?.map((h: any) => h.id) || [];
+          console.log('[AddActions] Halls in station:', hallIds);
+
+          const hallContainersBulk = hallIds.length > 0
+            ? await fetchAllPages((page) =>
+                ApiService.apiV1InfrastructureContainersList(
+                  true, // 1: active ✅
+                  undefined, // 2: area (null for hall-based)
+                  undefined, // 3: areaIn
+                  undefined, // 4: containerType
+                  undefined, // 5: hall
+                  hallIds, // 6: hallIn ✅
+                  undefined, // 7: name
+                  undefined, // 8: ordering
+                  page, // 9: page ✅
+                  undefined, // 10: search
+                )
+              )
+            : [];
+
+          const perHallResults = await Promise.all(
+            hallIds.map((hallId: number) =>
+              fetchAllPages((page) =>
+                ApiService.apiV1InfrastructureContainersList(
+                  true, // active
+                  undefined, // area
+                  undefined, // areaIn
+                  undefined, // containerType
+                  hallId, // hall ✅
+                  undefined, // hallIn
+                  undefined, // name
+                  undefined, // ordering
+                  page, // page
+                  undefined, // search
+                )
+              )
+            )
+          );
+
+          const hallContainersPerHall = perHallResults.flatMap((r) => r || []);
+          const hallContainerMap = new Map<number, any>();
+          [...hallContainersBulk, ...hallContainersPerHall].forEach((container: any) => {
+            hallContainerMap.set(container.id, container);
+          });
+          hallContainersInStation = Array.from(hallContainerMap.values());
+        }
+      }
+
+      if (destLocationScope !== 'freshwater') {
+        // 3. Fetch containers from areas (sea)
+        const areaContainersPromises = areaIds.map((areaId: number) =>
+          fetchAllPages((page) =>
+            ApiService.apiV1InfrastructureContainersList(
+              true, // 1: active ✅
+              areaId, // 2: area ✅
+              undefined, // 3: areaIn
+              undefined, // 4: containerType
+              undefined, // 5: hall
+              undefined, // 6: hallIn
+              undefined, // 7: name
+              undefined, // 8: ordering
+              page, // 9: page ✅
+              undefined, // 10: search
+            )
+          )
+        );
+      
       const areaContainersResults = await Promise.all(areaContainersPromises);
-      const areaContainers = areaContainersResults.flatMap(r => r.results || []);
-      
-      console.log('[AddActions] Area-based containers (sea):', areaContainers.length);
-      console.log('[AddActions] Sample area containers:', areaContainers.slice(0, 3).map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        type: c.container_type_name,
-      })));
-      
-      // 4. Combine both
+      areaContainers = areaContainersResults.flatMap(r => r || []);
+      }
+
       const allContainers = {
-        count: hallContainersInGeo.length + areaContainers.length,
-        results: [...hallContainersInGeo, ...areaContainers],
+        count: hallContainersInStation.length + areaContainers.length,
+        results: [...hallContainersInStation, ...areaContainers],
       };
       
       console.log('[AddActions] Total containers (halls + areas):', allContainers.count);
       console.log('[AddActions] Breakdown:', {
-        hallContainers: hallContainersInGeo.length,
+        hallContainers: hallContainersInStation.length,
         areaContainers: areaContainers.length,
         total: allContainers.count,
       });
@@ -421,12 +545,63 @@ export function AddActionsDialog({
     enabled: open && !!geographyId && sourceAssignments && sourceAssignments.length > 0,
   });
 
+  const availabilityDate = workflow.planned_start_date || new Date().toISOString().split('T')[0];
+
+  const availabilityContainerTypeName = destContainerTypeId !== 'auto'
+    ? (destContainersRaw || []).find((c: any) => c.container_type === destContainerTypeId)?.container_type_name
+    : undefined;
+
+  const { data: containerAvailability } = useContainerAvailability({
+    geography: geographyId,
+    deliveryDate: availabilityDate,
+    containerType: availabilityContainerTypeName,
+    includeOccupied: true,
+    enabled: open && !!geographyId && destLocationScope === 'sea',
+  });
+
+  const stageFilteredContainers = (destContainersRaw || []).filter((container: any) => {
+    if (destContainerTypeId !== 'auto') {
+      return container.container_type === destContainerTypeId;
+    }
+
+    if (!destStageKey || !stageKeywords[destStageKey]) {
+      return true;
+    }
+    const keywords = stageKeywords[destStageKey];
+    const typeName = (container.container_type_name || '').toLowerCase();
+    const containerName = (container.name || '').toLowerCase();
+    return keywords.some((keyword) =>
+      typeName.includes(keyword) || containerName.includes(keyword)
+    );
+  });
+
+  useEffect(() => {
+    console.log('[AddActions] Dest containers raw:', destContainersRaw?.length || 0);
+    console.log('[AddActions] Stage filter key:', destStageKey);
+    console.log('[AddActions] Container type filter:', destContainerTypeId);
+    console.log('[AddActions] Stage-filtered containers:', stageFilteredContainers.length);
+    if (destContainersRaw && destContainersRaw.length > 0) {
+      console.log(
+        '[AddActions] Sample container types:',
+        Array.from(
+          new Map(
+            destContainersRaw.map((container: any) => [
+              container.container_type,
+              container.container_type_name,
+            ])
+          )
+        )
+      );
+    }
+  }, [destContainersRaw, destStageKey, destContainerTypeId, stageFilteredContainers.length]);
+
   // Fetch current assignments for destination containers to show occupancy
   const { data: destAssignments } = useQuery({
-    queryKey: ['container-assignments', 'geography', geographyId],
+    queryKey: ['container-assignments', 'dest-container-ids', stageFilteredContainers.map((c: any) => c.id)],
     queryFn: async () => {
-      if (!geographyId) {
-        console.log('[AddActions] Skipping dest assignments - no geography');
+      const destContainerIds = stageFilteredContainers.map((c: any) => c.id);
+      if (destContainerIds.length === 0) {
+        console.log('[AddActions] Skipping dest assignments - no dest containers');
         return [];
       }
       
@@ -439,81 +614,139 @@ export function AddActionsDialog({
       // NOTE: There's NO geography parameter in this endpoint!
       // We'll have to fetch by container IDs instead
       
-      // First, get container IDs for this geography
-      // Parameters: active, area, areaIn, containerType, hall, hallIn, name, ordering, page, search
-      const containersInGeo = await ApiService.apiV1InfrastructureContainersList(
-        true, // 1: active
-        undefined, // 2: area
-        undefined, // 3: areaIn
-        undefined, // 4: containerType
-        undefined, // 5: hall
-        undefined, // 6: hallIn
-        undefined, // 7: name
-        undefined, // 8: ordering
-        1, // 9: page
-        undefined, // 10: search
-      );
-      
-      console.log('[AddActions] Containers in geography:', containersInGeo.count);
-      
-      const containerIds = containersInGeo.results?.map((c: any) => c.id) || [];
-      
-      if (containerIds.length === 0) {
-        return [];
+      const fetchAssignmentsForContainers = async (containerIds: number[]) => {
+        let page = 1;
+        const results: any[] = [];
+        while (true) {
+          const response = await ApiService.apiV1BatchContainerAssignmentsList(
+            undefined, // 1: assignmentDate
+            undefined, // 2: assignmentDateAfter
+            undefined, // 3: assignmentDateBefore
+            undefined, // 4: batch (all batches)
+            undefined, // 5: batchIn
+            undefined, // 6: batchNumber
+            undefined, // 7: biomassMax
+            undefined, // 8: biomassMin
+            undefined, // 9: container
+            containerIds.join(',') as any, // 10: containerIn (CSV)
+            undefined, // 11: containerName
+            undefined, // 12: containerType
+            true, // 13: isActive
+            undefined, // 14: lifecycleStage
+            undefined, // 15: ordering
+            page, // 16: page ✅
+            undefined, // 17: populationMax
+            undefined, // 18: populationMin
+            undefined, // 19: search
+            undefined, // 20: species
+          );
+          results.push(...(response.results || []));
+          if (!response.next) break;
+          page += 1;
+        }
+        return results;
+      };
+
+      const chunkSize = 100;
+      const chunks = [];
+      for (let i = 0; i < destContainerIds.length; i += chunkSize) {
+        chunks.push(destContainerIds.slice(i, i + chunkSize));
       }
-      
-      // Now fetch assignments for those containers
-      const result = await ApiService.apiV1BatchContainerAssignmentsList(
-        undefined, // 1: assignmentDate
-        undefined, // 2: assignmentDateAfter
-        undefined, // 3: assignmentDateBefore
-        undefined, // 4: batch (all batches)
-        undefined, // 5: batchIn
-        undefined, // 6: batchNumber
-        undefined, // 7: biomassMax
-        undefined, // 8: biomassMin
-        undefined, // 9: container
-        containerIds, // 10: containerIn ✅
-        undefined, // 11: containerName
-        undefined, // 12: containerType
-        undefined, // 13: isActive
-        undefined, // 14: lifecycleStage
-        undefined, // 15: ordering
-        1, // 16: page ✅
-        undefined, // 17: populationMax
-        undefined, // 18: populationMin
-        undefined, // 19: search
-        undefined, // 20: species
+
+      console.log('[AddActions] Fetching assignments in chunks:', chunks.length);
+      const chunkResults = await Promise.all(
+        chunks.map((chunk) => fetchAssignmentsForContainers(chunk))
       );
+      const result = { results: chunkResults.flat() };
       
       console.log('[AddActions] Destination assignments API result:', result);
-      console.log('[AddActions] Total dest assignments found:', result.count);
+      console.log('[AddActions] Total dest assignments found:', result.results.length);
       
-      // Filter client-side for active only
-      return (result.results || []).filter((a: any) => a.is_active === true);
+      return result.results || [];
     },
-    enabled: open && !!geographyId,
+    enabled: open && stageFilteredContainers.length > 0,
+  });
+
+  const destAssignmentsByContainer = new Map<number, any[]>();
+  (destAssignments || []).forEach((assignment: any) => {
+    const containerId =
+      assignment.container?.id || assignment.container || assignment.container_info?.id;
+    if (!containerId) return;
+    const existing = destAssignmentsByContainer.get(containerId) || [];
+    existing.push(assignment);
+    destAssignmentsByContainer.set(containerId, existing);
+  });
+
+  const availabilityById = new Map<number, any>();
+  (containerAvailability?.results || []).forEach((container: any) => {
+    availabilityById.set(container.id, container);
   });
 
   // Combine container data with occupancy info
-  const destContainers = (destContainersRaw || []).map((container: any) => {
-    const assignment = (destAssignments || []).find((a: any) => a.container === container.id);
-    
+  const destContainers = stageFilteredContainers.map((container: any) => {
+    const assignments = destAssignmentsByContainer.get(container.id) || [];
+    const availability = availabilityById.get(container.id);
+    const availabilityAssignments = availability?.current_assignments || [];
+
+    const sameBatchAssignment = assignments.find(
+      (a: any) => (a.batch?.id || a.batch_id) === workflow.batch
+    );
+    const otherBatchAssignments = assignments.filter(
+      (a: any) => (a.batch?.id || a.batch_id) !== workflow.batch
+    );
+
     let occupancyInfo = 'Empty';
     let daysOccupied = 0;
-    
-    if (assignment) {
-      const assignmentDate = new Date((assignment as any).assignment_date);
-      const today = new Date();
-      daysOccupied = Math.floor((today.getTime() - assignmentDate.getTime()) / (1000 * 60 * 60 * 24));
-      occupancyInfo = `${(assignment as any).population_count?.toLocaleString() || 0} fish, ${daysOccupied} days`;
+
+    if (availabilityAssignments.length > 0) {
+      const occupancySegments = availabilityAssignments.map((a: any) => {
+        const batchNumber = a.batch_number || 'Unknown Batch';
+        const population = (a.population_count || 0).toLocaleString();
+        const assignmentDate = new Date(a.assignment_date);
+        const today = new Date();
+        const days = Math.floor((today.getTime() - assignmentDate.getTime()) / (1000 * 60 * 60 * 24));
+        daysOccupied = Math.max(daysOccupied, days);
+        return `${batchNumber} (${population} fish)`;
+      });
+      occupancyInfo = occupancySegments.join(' + ');
+    } else if (assignments.length > 0) {
+      const occupancySegments = assignments.map((a: any) => {
+        const batchNumber = a.batch?.batch_number || a.batch_info?.batch_number || 'Unknown Batch';
+        const population = (a.population_count || 0).toLocaleString();
+        const assignmentDate = new Date(a.assignment_date);
+        const today = new Date();
+        const days = Math.floor((today.getTime() - assignmentDate.getTime()) / (1000 * 60 * 60 * 24));
+        daysOccupied = Math.max(daysOccupied, days);
+        return `${batchNumber} (${population} fish)`;
+      });
+      occupancyInfo = occupancySegments.join(' + ');
     }
-    
+
+    const hasOtherBatchNow = availabilityAssignments.length > 0
+      ? availabilityAssignments.some((a: any) => a.batch_id !== workflow.batch)
+      : otherBatchAssignments.length > 0;
+
+    const availabilityStatus = availability?.availability_status;
+    const availabilityMessage = availability?.availability_message;
+    const isMixedRisk = availabilityStatus
+      ? ['OCCUPIED_BUT_OK', 'CONFLICT'].includes(availabilityStatus)
+      : hasOtherBatchNow;
+
+    const hasOtherBatch = hasOtherBatchNow && isMixedRisk;
+
+    const isEmpty = availability
+      ? availability.current_status === 'EMPTY'
+      : assignments.length === 0;
+
     return {
       ...container,
       occupancy_info: occupancyInfo,
       days_occupied: daysOccupied,
-      is_empty: !assignment,
+      is_empty: isEmpty,
+      has_other_batch: hasOtherBatch,
+      availability_status: availabilityStatus,
+      availability_message: availabilityMessage,
+      same_batch_assignment_id: sameBatchAssignment?.id,
     };
   }).sort((a: any, b: any) => {
     // Sort: Empty first, then by days_occupied DESC (oldest first)
@@ -556,21 +789,28 @@ export function AddActionsDialog({
           const updated = { ...row, [field]: value };
 
           // Auto-calculate biomass when count changes
-          if (field === 'transferredCount' || field === 'sourceAssignmentId') {
+          if (field === 'transferAll') {
+            if (value && updated.sourcePopulationBefore) {
+              updated.transferredCount = updated.sourcePopulationBefore;
+            }
+          }
+
+          if (field === 'transferredCount' || field === 'sourceAssignmentId' || field === 'transferAll') {
             const sourceContainer = sourceAssignments?.find(
               (a: any) => a.id === (field === 'sourceAssignmentId' ? value : row.sourceAssignmentId)
             );
             
-            if (sourceContainer && (field === 'transferredCount' ? value : row.transferredCount)) {
-              const count = field === 'transferredCount' ? value : row.transferredCount;
+            if (sourceContainer) {
+              const population = (sourceContainer as any).population_count || batchData?.calculated_population_count || 0;
+              updated.sourcePopulationBefore = population;
+
+              const count = updated.transferAll ? population : (field === 'transferredCount' ? value : row.transferredCount);
+
+              if (count) {
               const avgWeight = parseFloat((sourceContainer as any).average_weight_g || batchData?.calculated_avg_weight_g || '0') / 1000; // g to kg
               const biomass = (count * avgWeight).toFixed(2);
               updated.transferredBiomassKg = biomass;
             }
-
-            // Store source population for validation
-            if (sourceContainer) {
-              updated.sourcePopulationBefore = (sourceContainer as any).population_count || batchData?.calculated_population_count || 0;
             }
           }
 
@@ -587,6 +827,21 @@ export function AddActionsDialog({
       delete newErrors[errorKey];
       setErrors(newErrors);
     }
+  };
+
+  const handleDestContainerChange = (rowId: string, containerId: number) => {
+    const containerMeta = destContainers.find((c: any) => c.id === containerId);
+    setRows(
+      rows.map((row) => {
+        if (row.id !== rowId) return row;
+        return {
+          ...row,
+          destContainerId: containerId,
+          destAssignmentId: containerMeta?.same_batch_assignment_id,
+          allowMixed: containerMeta?.has_other_batch ? row.allowMixed : false,
+        };
+      })
+    );
   };
 
   const validateRows = (): boolean => {
@@ -622,6 +877,14 @@ export function AddActionsDialog({
         newErrors[`${row.id}-transferredBiomassKg`] = 'Biomass must be > 0';
         isValid = false;
       }
+
+      if (row.destContainerId) {
+        const containerMeta = destContainers.find((c: any) => c.id === row.destContainerId);
+        if (containerMeta?.has_other_batch && !row.allowMixed) {
+          newErrors[`${row.id}-allowMixed`] = 'Confirm mixed batch to proceed';
+          isValid = false;
+        }
+      }
     });
 
     setErrors(newErrors);
@@ -644,30 +907,38 @@ export function AddActionsDialog({
       for (const [index, row] of rows.entries()) {
         console.log(`[AddActions] Creating action ${index + 1}/${rows.length}`);
         
-        // Step 1: Create placeholder destination assignment (population=0, is_active=false)
-        const destAssignment = await ApiService.apiV1BatchContainerAssignmentsCreate({
-          batch_id: workflow.batch,
-          container_id: row.destContainerId!,
-          lifecycle_stage_id: workflow.dest_lifecycle_stage,
-          assignment_date: new Date().toISOString().split('T')[0],
-          population_count: 0,
-          biomass_kg: '0.00',
-          avg_weight_g: '0.00',
-          is_active: false, // Not active until execution completes
-          notes: `Placeholder for workflow ${workflow.workflow_number} action ${index + 1}`,
-        } as any);
-        
-        console.log(`[AddActions] Created placeholder dest_assignment ${destAssignment.id} for container ${row.destContainerId}`);
+        let destAssignmentId = row.destAssignmentId;
+
+        if (!destAssignmentId) {
+          // Step 1: Create placeholder destination assignment (population=0, is_active=false)
+          const destAssignment = await ApiService.apiV1BatchContainerAssignmentsCreate({
+            batch_id: workflow.batch,
+            container_id: row.destContainerId!,
+            lifecycle_stage_id: workflow.dest_lifecycle_stage,
+            assignment_date: new Date().toISOString().split('T')[0],
+            population_count: 0,
+            biomass_kg: '0.00',
+            avg_weight_g: '0.00',
+            is_active: false, // Not active until execution completes
+            notes: `Placeholder for workflow ${workflow.workflow_number} action ${index + 1}${
+              row.allowMixed ? ' (mixed batch)' : ''
+            }`,
+          } as any);
+          
+          destAssignmentId = destAssignment.id;
+          console.log(`[AddActions] Created placeholder dest_assignment ${destAssignment.id} for container ${row.destContainerId}`);
+        }
         
         // Step 2: Create the transfer action
         const actionPayload = {
           workflow: workflow.id,
           action_number: index + 1,
           source_assignment: row.sourceAssignmentId!,
-          dest_assignment: destAssignment.id, // Use placeholder assignment ID
+          dest_assignment: destAssignmentId, // Use placeholder or existing assignment
           source_population_before: row.sourcePopulationBefore!,
           transferred_count: row.transferredCount!,
           transferred_biomass_kg: row.transferredBiomassKg!,
+          allow_mixed: !!row.allowMixed,
           status: 'PENDING' as const,
         };
 
@@ -731,6 +1002,16 @@ export function AddActionsDialog({
                   Geography filter: <strong>ID {geographyId}</strong> (from source containers)
                 </span>
               )}
+              {destLocationScope === 'freshwater' && stationData && (
+                <span className="block mt-1 text-xs">
+                  Destination scope: <strong>same freshwater station</strong> ({(stationData as any).name || 'Station'})
+                </span>
+              )}
+              {destLocationScope === 'sea' && (
+                <span className="block mt-1 text-xs">
+                  Destination scope: <strong>sea areas in same geography</strong>
+                </span>
+              )}
             </AlertDescription>
           </Alert>
 
@@ -755,12 +1036,47 @@ export function AddActionsDialog({
                 ))}
               </SelectContent>
             </Select>
+            <div className="mt-3">
+              <Label className="text-sm font-medium mb-2 block">
+                Filter by Container Type (Optional)
+              </Label>
+              <Select
+                value={destContainerTypeId === 'auto' ? 'auto' : destContainerTypeId.toString()}
+                onValueChange={(value) =>
+                  setDestContainerTypeId(value === 'auto' ? 'auto' : parseInt(value))
+                }
+              >
+                <SelectTrigger className="w-full max-w-md">
+                  <SelectValue placeholder="Auto (Next Stage)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto (Next Stage: {workflow.dest_stage_name})</SelectItem>
+                  {Array.from(
+                    new Map(
+                      (destContainersRaw || []).map((container: any) => [
+                        container.container_type,
+                        container.container_type_name || `Type ${container.container_type}`,
+                      ])
+                    )
+                  ).map(([typeId, typeName]) => (
+                    <SelectItem key={typeId} value={typeId.toString()}>
+                      {typeName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <p className="text-xs text-muted-foreground mt-2">
               {destContainerCategory 
                 ? `Showing ${destContainers?.length || 0} ${destContainerCategory.toLowerCase()} containers`
                 : `Showing all ${destContainers?.length || 0} containers (sorted by type)`
               }
             </p>
+            {destStageKey && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Stage filter: {workflow.dest_stage_name} containers only
+              </p>
+            )}
           </div>
 
           {/* Actions Table */}
@@ -835,9 +1151,7 @@ export function AddActionsDialog({
                     <td className="p-2">
                       <Select
                         value={row.destContainerId?.toString() || ''}
-                        onValueChange={(value) =>
-                          updateRow(row.id, 'destContainerId', parseInt(value))
-                        }
+                        onValueChange={(value) => handleDestContainerChange(row.id, parseInt(value))}
                       >
                         <SelectTrigger
                           className={errors[`${row.id}-destContainerId`] ? 'border-red-500' : ''}
@@ -848,7 +1162,10 @@ export function AddActionsDialog({
                           {destContainers && destContainers.length > 0 ? (
                             destContainers.map((container: any) => {
                               const typeName = container.container_type_name || 'Unknown Type';
-                              const displayLabel = `${container.name} (${typeName}) - ${container.occupancy_info}`;
+                              const availabilitySuffix = container.availability_message
+                                ? ` - ${container.availability_message}`
+                                : '';
+                              const displayLabel = `${container.name} (${typeName}) - ${container.occupancy_info}${availabilitySuffix}`;
                               
                               console.log('[AddActions] Rendering dest container:', {
                                 id: container.id,
@@ -873,6 +1190,34 @@ export function AddActionsDialog({
                           )}
                         </SelectContent>
                       </Select>
+                      {row.destContainerId && (() => {
+                        const containerMeta = destContainers.find((c: any) => c.id === row.destContainerId);
+                        if (!containerMeta?.has_other_batch) return null;
+                        return (
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs text-amber-600">
+                              Destination already has another batch. This will create a mixed container.
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                id={`${row.id}-allow-mixed`}
+                                checked={!!row.allowMixed}
+                                onCheckedChange={(checked) =>
+                                  updateRow(row.id, 'allowMixed', checked === true)
+                                }
+                              />
+                              <Label htmlFor={`${row.id}-allow-mixed`} className="text-xs text-muted-foreground">
+                                Allow mixed batch
+                              </Label>
+                            </div>
+                            {errors[`${row.id}-allowMixed`] && (
+                              <p className="text-xs text-red-500">
+                                {errors[`${row.id}-allowMixed`]}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {errors[`${row.id}-destContainerId`] && (
                         <p className="text-xs text-red-500 mt-1">
                           {errors[`${row.id}-destContainerId`]}
@@ -892,7 +1237,20 @@ export function AddActionsDialog({
                         }
                         placeholder="Count"
                         className={errors[`${row.id}-transferredCount`] ? 'border-red-500' : ''}
+                        disabled={row.transferAll}
                       />
+                      <div className="mt-2 flex items-center gap-2">
+                        <Checkbox
+                          id={`${row.id}-transfer-all`}
+                          checked={!!row.transferAll}
+                          onCheckedChange={(checked) =>
+                            updateRow(row.id, 'transferAll', checked === true)
+                          }
+                        />
+                        <Label htmlFor={`${row.id}-transfer-all`} className="text-xs text-muted-foreground">
+                          Transfer all from source
+                        </Label>
+                      </div>
                       {errors[`${row.id}-transferredCount`] && (
                         <p className="text-xs text-red-500 mt-1">
                           {errors[`${row.id}-transferredCount`]}

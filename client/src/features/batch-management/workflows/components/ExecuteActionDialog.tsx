@@ -4,7 +4,9 @@
  * Designed for ship crew to quickly execute transfers with minimal friction.
  */
 
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useQuery } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertTriangle,
@@ -39,6 +41,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { ApiService } from '@/api/generated';
 
 import { useAction, useExecuteAction } from '../api';
 import { executeActionSchema, type ExecuteActionFormData } from '../schemas';
@@ -58,11 +61,53 @@ export function ExecuteActionDialog({
   const { toast } = useToast();
   const { data: action, isLoading } = useAction(actionId);
   const executeAction = useExecuteAction();
+  const [envValuesSource, setEnvValuesSource] = useState<Record<number, string>>({});
+  const [envValuesDest, setEnvValuesDest] = useState<Record<number, string>>({});
+
+  const { data: environmentalParameters } = useQuery({
+    queryKey: ['environmental-parameters'],
+    queryFn: async () => {
+      let page = 1;
+      const results: any[] = [];
+      while (true) {
+        const response = await ApiService.apiV1EnvironmentalParametersList(
+          undefined, // name
+          undefined, // nameIcontains
+          undefined, // ordering
+          page, // page
+          undefined, // search
+          undefined, // unit
+        );
+        results.push(...(response.results || []));
+        if (!response.next) break;
+        page += 1;
+      }
+      return results;
+    },
+  });
+
+  const tempParameter = useMemo(() => {
+    return (environmentalParameters || []).find((param: any) => {
+      const name = (param.name || '').toLowerCase();
+      return name.includes('temp');
+    });
+  }, [environmentalParameters]);
+
+  const oxygenParameter = useMemo(() => {
+    return (environmentalParameters || []).find((param: any) => {
+      const name = (param.name || '').toLowerCase();
+      return name.includes('oxygen') || name.includes('o2');
+    });
+  }, [environmentalParameters]);
+
+  const allParameters = useMemo(() => {
+    return (environmentalParameters || []).slice();
+  }, [environmentalParameters]);
 
   const form = useForm<ExecuteActionFormData>({
     resolver: zodResolver(executeActionSchema),
     defaultValues: {
-      mortality_during_transfer: 0,
+      mortality_during_transfer: undefined,
       transfer_method: undefined,
       water_temp_c: '',
       oxygen_level: '',
@@ -72,12 +117,28 @@ export function ExecuteActionDialog({
   });
 
   const handleExecute = async (data: ExecuteActionFormData) => {
+    if (!action) {
+      toast({
+        title: 'Action unavailable',
+        description: 'Please wait for the action details to load.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
+      const tempValue = tempParameter?.id
+        ? envValuesSource[tempParameter.id] ?? envValuesDest[tempParameter.id]
+        : undefined;
+      const oxygenValue = oxygenParameter?.id
+        ? envValuesSource[oxygenParameter.id] ?? envValuesDest[oxygenParameter.id]
+        : undefined;
+
       const payload = {
         mortality_during_transfer: data.mortality_during_transfer,
         transfer_method: data.transfer_method,
-        water_temp_c: data.water_temp_c || undefined,
-        oxygen_level: data.oxygen_level || undefined,
+        water_temp_c: tempValue || undefined,
+        oxygen_level: oxygenValue || undefined,
         execution_duration_minutes: data.execution_duration_minutes || undefined,
         notes: data.notes || '',
       };
@@ -89,12 +150,51 @@ export function ExecuteActionDialog({
         data: payload,
       });
 
+      const sourceContainerId = sourceInfo?.container_id;
+      const destContainerId = destInfo?.container_id;
+      const sourceAssignmentId = action.source_assignment ?? undefined;
+      const destAssignmentId = action.dest_assignment ?? undefined;
+      const readingTime = new Date().toISOString();
+
+      const buildEntries = (
+        containerId: number | undefined,
+        assignmentId: number | undefined,
+        values: Record<number, string>
+      ) => {
+        if (!containerId) return [];
+        return Object.entries(values)
+          .filter(([, value]) => value !== '')
+          .map(([paramId, value]) => ({
+            parameter: Number(paramId),
+            container: containerId,
+            batch_container_assignment: assignmentId,
+            reading_time: readingTime,
+            value,
+            is_manual: true,
+          }));
+      };
+
+      const allEnvEntries = [
+        ...buildEntries(sourceContainerId, sourceAssignmentId, envValuesSource),
+        ...buildEntries(destContainerId, destAssignmentId, envValuesDest),
+      ];
+
+      if (allEnvEntries.length > 0) {
+        await Promise.all(
+          allEnvEntries.map((entry) =>
+            ApiService.apiV1EnvironmentalReadingsCreate(entry as any)
+          )
+        );
+      }
+
       toast({
         title: 'Transfer executed successfully',
         description: `Action #${action?.action_number} completed`,
       });
 
       form.reset();
+      setEnvValuesSource({});
+      setEnvValuesDest({});
       onClose();
     } catch (error) {
       console.error('[ExecuteAction] Execution failed:', error);
@@ -213,8 +313,10 @@ export function ExecuteActionDialog({
                     <Input
                       type="number"
                       placeholder="0"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      value={field.value ?? ''}
+                      onChange={(e) =>
+                        field.onChange(e.target.value === '' ? '' : parseInt(e.target.value, 10))
+                      }
                     />
                   </FormControl>
                   <FormDescription>
@@ -252,51 +354,64 @@ export function ExecuteActionDialog({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="water_temp_c"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      <Thermometer className="inline h-3 w-3 mr-1" />
-                      Water Temp (°C)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="12.5"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="oxygen_level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      <Wind className="inline h-3 w-3 mr-1" />
-                      O₂ Level (mg/L)
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="9.2"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {allParameters.length > 0 && (
+              <div className="space-y-2">
+                <FormLabel>Environmental Parameters</FormLabel>
+                <FormDescription>
+                  Enter values for source and destination containers.
+                </FormDescription>
+                <div className="hidden md:grid md:grid-cols-2 text-xs text-muted-foreground gap-4">
+                  <span>Source</span>
+                  <span>Destination</span>
+                </div>
+                <div className="space-y-3">
+                  {allParameters.map((param: any) => (
+                    <div key={param.id} className="space-y-2">
+                      <FormLabel className="text-sm">
+                        {param.name} ({param.unit})
+                      </FormLabel>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="Source"
+                              value={envValuesSource[param.id] ?? ''}
+                              onChange={(e) =>
+                                setEnvValuesSource((prev) => ({
+                                  ...prev,
+                                  [param.id]: e.target.value,
+                                }))
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="Destination"
+                              value={envValuesDest[param.id] ?? ''}
+                              onChange={(e) =>
+                                setEnvValuesDest((prev) => ({
+                                  ...prev,
+                                  [param.id]: e.target.value,
+                                }))
+                              }
+                            />
+                          </FormControl>
+                        </FormItem>
+                      </div>
+                      {param.description && (
+                        <FormDescription>{param.description}</FormDescription>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <FormField
               control={form.control}
@@ -308,8 +423,10 @@ export function ExecuteActionDialog({
                     <Input
                       type="number"
                       placeholder="45"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                      value={field.value ?? ''}
+                      onChange={(e) =>
+                        field.onChange(e.target.value === '' ? '' : parseInt(e.target.value, 10))
+                      }
                     />
                   </FormControl>
                   <FormDescription>

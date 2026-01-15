@@ -240,6 +240,26 @@ export function GrowthAnalysisChart({
     selectedAssignmentId,
     liveProjections,
   ]);
+
+  // ============================================================================
+  // Sparse-series lookup (for tooltip when granularities differ)
+  // ============================================================================
+
+  const sparseSeries = useMemo(() => {
+    const scenario = seriesVisibility.scenario
+      ? (data.scenario_projection || [])
+          .map((p) => ({ day: p.day_number, date: p.date, weight_g: p.avg_weight_g }))
+          .sort((a, b) => a.day - b.day)
+      : [];
+
+    const live = seriesVisibility.liveProjection
+      ? (liveProjections || [])
+          .map((p) => ({ day: p.day_number, date: p.projection_date, weight_g: p.projected_weight_g }))
+          .sort((a, b) => a.day - b.day)
+      : [];
+
+    return { scenario, live };
+  }, [data.scenario_projection, liveProjections, seriesVisibility.liveProjection, seriesVisibility.scenario]);
   
   // ============================================================================
   // Calculate X-axis domain to include ALL data series (including future projections)
@@ -351,7 +371,13 @@ export function GrowthAnalysisChart({
           />
           
           <Tooltip
-            content={<ProvenanceTooltip />}
+            content={(props: any) => (
+              <ProvenanceTooltip
+                {...props}
+                sparseSeries={sparseSeries}
+                batchStartDate={data.start_date}
+              />
+            )}
             cursor={{ strokeDasharray: '3 3' }}
           />
           

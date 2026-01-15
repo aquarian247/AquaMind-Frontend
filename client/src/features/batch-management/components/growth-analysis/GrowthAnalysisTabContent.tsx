@@ -49,7 +49,16 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
   
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | undefined>();
   const [granularity, setGranularity] = useState<'daily' | 'weekly'>('daily');
+  const [granularityUserOverride, setGranularityUserOverride] = useState(false);
   const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({});
+
+  // Reset local UI state when switching batches to avoid leaking filters/overrides.
+  React.useEffect(() => {
+    setSelectedAssignmentId(undefined);
+    setDateRange({});
+    setGranularity('daily');
+    setGranularityUserOverride(false);
+  }, [batchId]);
   
   // ============================================================================
   // API Query
@@ -91,12 +100,14 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
       const end = new Date(data.date_range.end);
       const suggestedGranularity = determineGranularity(start, end);
       
-      if (suggestedGranularity === 'weekly' && granularity === 'daily') {
+      // Only auto-switch before the user explicitly chooses a value.
+      // Otherwise the dropdown will "snap back" to weekly.
+      if (!granularityUserOverride && suggestedGranularity === 'weekly' && granularity === 'daily') {
         // Auto-switch to weekly for performance
         setGranularity('weekly');
       }
     }
-  }, [data, granularity]);
+  }, [data, granularity, granularityUserOverride]);
   
   // ============================================================================
   // Event Handlers
@@ -118,6 +129,7 @@ export function GrowthAnalysisTabContent({ batchId }: GrowthAnalysisTabContentPr
   };
   
   const handleGranularityChange = (newGranularity: 'daily' | 'weekly') => {
+    setGranularityUserOverride(true);
     setGranularity(newGranularity);
   };
   
