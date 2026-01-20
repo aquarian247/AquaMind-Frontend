@@ -1,6 +1,6 @@
 import { API_CONFIG } from "./config";
 import { ApiService } from "../api/generated";
-import type { Batch } from "../api/generated";
+import type { Batch, MortalityReason } from "../api/generated";
 import { setAuthToken } from "../api";
 import { AuthService, authenticatedFetch } from "../services/auth.service";
 import { fetchAllPages, type PaginatedResponse } from "./pagination";
@@ -93,9 +93,22 @@ export const api = {
 
   async getFarmSites() {
     try {
-      // Farm sites endpoint doesn't exist, use areas instead
-      const areas = await ApiService.apiV1InfrastructureAreasList();
-      return areas.results.map((area: any) => ({
+      // Farm sites endpoint doesn't exist, use areas instead (fetch all pages)
+      const areas = await fetchAllPages(
+        (page) =>
+          ApiService.apiV1InfrastructureAreasList(
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            page,
+            undefined
+          ) as Promise<PaginatedResponse<any>>,
+        10
+      );
+      return areas.map((area: any) => ({
         id: area.id,
         name: area.name,
         location: `${area.latitude || 0}, ${area.longitude || 0}`,
@@ -157,13 +170,34 @@ export const api = {
 
   // Farm management endpoints
   async getPensByFarmSite(farmSiteId: number) {
-    // Get containers for the area/site
-    const containers = await ApiService.apiV1InfrastructureContainersList();
-    
-    // Filter for the specific area if needed
-    const areaContainers = containers.results.filter((c: any) => c.area === farmSiteId);
-    
-    return areaContainers.map((container: any) => ({
+    // Get all containers for the area/site (fetch all pages)
+    const areaContainers = await fetchAllPages(
+      (page) =>
+        ApiService.apiV1InfrastructureContainersList(
+          undefined,
+          farmSiteId,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          page,
+          undefined
+        ) as Promise<PaginatedResponse<any>>,
+      10
+    );
+
+    const seaPens = areaContainers.filter((container: any) => {
+      const typeName = (container.container_type_name || container.container_type || '')
+        .toString()
+        .toLowerCase();
+      return typeName.includes('pen') || typeName.includes('ring');
+    });
+
+    const containersToShow = seaPens.length > 0 ? seaPens : areaContainers;
+
+    return containersToShow.map((container: any) => ({
       id: container.id,
       name: container.name,
       capacity: container.volume_m3,
@@ -1256,6 +1290,23 @@ export const api = {
 
   // Health endpoints
   health: {
+    async getMortalityReasons() {
+      try {
+        return await fetchAllPages<MortalityReason>(
+          (page) =>
+            ApiService.apiV1HealthMortalityReasonsList(
+              undefined,
+              undefined,
+              page,
+              undefined
+            ) as Promise<PaginatedResponse<MortalityReason>>,
+          20
+        );
+      } catch (error) {
+        console.warn('Failed to fetch mortality reasons:', error);
+        return [];
+      }
+    },
     async getHealthRecords(batchId?: number) {
       if (batchId) {
         // Filter client-side if needed since the endpoint may not support filtering

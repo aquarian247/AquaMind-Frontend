@@ -175,7 +175,7 @@ if a cookie named `csrftoken` is present. No explicit call to a CSRF endpoint is
 Your Django settings.py should include:
 ```python
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Development
+    "http://localhost:5001",  # Development
     "https://aquamind.yourdomain.com",  # Production DMZ
 ]
 CORS_ALLOW_CREDENTIALS = True

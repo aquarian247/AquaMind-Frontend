@@ -1,44 +1,40 @@
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@/lib/api";
+import { PermissionGuard } from "@/components/rbac/PermissionGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import type { MortalityReason } from "@/api/generated";
 
 const mortalityReportSchema = z.object({
   farmSiteId: z.number().min(1, "Please select a farm site"),
   penId: z.string().min(1, "Please select a pen"),
   mortalityCount: z.number().min(1, "Count must be at least 1"),
-  primaryCause: z.string().min(1, "Please select a cause"),
-  secondaryCause: z.string().optional(),
+  primaryCause: z.number().min(1, "Please select a cause"),
+  secondaryCause: z.number().optional().nullable(),
   notes: z.string().optional(),
   reportDate: z.string().min(1, "Date is required"),
+}).refine((data) => {
+  if (data.secondaryCause == null) {
+    return true;
+  }
+  return data.secondaryCause !== data.primaryCause;
+}, {
+  path: ["secondaryCause"],
+  message: "Secondary cause must differ from primary cause.",
 });
 
 type MortalityReportForm = z.infer<typeof mortalityReportSchema>;
-
-const MORTALITY_CAUSES = [
-  { value: "disease", label: "Disease" },
-  { value: "predation", label: "Predation" },
-  { value: "wounds", label: "Physical Wounds" },
-  { value: "parasites", label: "Parasites" },
-  { value: "water_quality", label: "Water Quality" },
-  { value: "starvation", label: "Starvation" },
-  { value: "old_age", label: "Natural Death" },
-  { value: "unknown", label: "Unknown" },
-  { value: "handling", label: "Handling Stress" },
-  { value: "equipment", label: "Equipment Related" },
-];
 
 export default function MortalityReporting() {
   /* ------------------------------------------------------------------
@@ -65,6 +61,7 @@ export default function MortalityReporting() {
     defaultValues: {
       mortalityCount: 1,
       reportDate: new Date().toISOString().split('T')[0],
+      secondaryCause: null,
     },
   });
 
@@ -81,17 +78,62 @@ export default function MortalityReporting() {
     enabled: !!selectedFarmSite,
   });
 
+  // Fetch mortality reasons from backend
+  const { data: mortalityReasons, isLoading: mortalityReasonsLoading } = useQuery({
+    queryKey: ["mortality-reasons"],
+    queryFn: () => api.health.getMortalityReasons(),
+  });
+
+  type MortalityReasonWithParent = MortalityReason & { parent?: number | null };
+
+  const mortalityReasonList = (mortalityReasons ?? []) as MortalityReasonWithParent[];
+  const hasHierarchy = mortalityReasonList.some((reason) => reason.parent != null);
+  const selectedPrimaryCause = form.watch("primaryCause");
+
+  const mortalityReasonById = useMemo(() => {
+    return new Map(mortalityReasonList.map((reason) => [reason.id, reason.name]));
+  }, [mortalityReasonList]);
+
+  const primaryReasons = useMemo(() => {
+    if (!hasHierarchy) {
+      return mortalityReasonList;
+    }
+    return mortalityReasonList.filter((reason) => reason.parent == null);
+  }, [hasHierarchy, mortalityReasonList]);
+
+  const secondaryReasons = useMemo(() => {
+    if (!selectedPrimaryCause) {
+      return [];
+    }
+    if (!hasHierarchy) {
+      return mortalityReasonList.filter((reason) => reason.id !== selectedPrimaryCause);
+    }
+    return mortalityReasonList.filter(
+      (reason) => reason.parent === selectedPrimaryCause
+    );
+  }, [hasHierarchy, mortalityReasonList, selectedPrimaryCause]);
+
   // Submit mortality report
   const submitMortality = useMutation({
     mutationFn: async (data: MortalityReportForm) => {
       // Create a health record with mortality data
+      const primaryName = mortalityReasonById.get(data.primaryCause);
+      const secondaryName = data.secondaryCause != null
+        ? mortalityReasonById.get(data.secondaryCause)
+        : null;
+      const notesParts = [
+        primaryName ? `Primary cause: ${primaryName}` : null,
+        secondaryName ? `Secondary cause: ${secondaryName}` : null,
+        data.notes ? `Notes: ${data.notes}` : null,
+      ].filter(Boolean);
+
       const healthRecord = {
         batch: 1, // Would normally get this from the selected pen
         checkDate: data.reportDate,
         veterinarian: "Field Worker",
         healthStatus: "poor",
         mortalityCount: data.mortalityCount,
-        notes: `Primary cause: ${data.primaryCause}${data.secondaryCause ? `, Secondary: ${data.secondaryCause}` : ''}${data.notes ? `. Notes: ${data.notes}` : ''}`,
+        notes: notesParts.join(". "),
       };
       
       // Use the typed helper from the unified API client.
@@ -105,6 +147,7 @@ export default function MortalityReporting() {
       form.reset({
         mortalityCount: 1,
         reportDate: new Date().toISOString().split('T')[0],
+        secondaryCause: null,
       });
       setSelectedFarmSite(null);
       queryClient.invalidateQueries({ queryKey: ["health/records"] });
@@ -123,7 +166,8 @@ export default function MortalityReporting() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <PermissionGuard require="health" resource="Mortality Report">
+      <div className="max-w-2xl mx-auto space-y-6">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900">Mortality Report</h1>
         <p className="text-gray-600 mt-2">Record daily fish mortality counts</p>
@@ -261,18 +305,31 @@ export default function MortalityReporting() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Primary Cause of Death</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={(value) => {
+                        const parsed = Number(value);
+                        field.onChange(parsed);
+                        form.setValue("secondaryCause", null);
+                      }}
+                      value={field.value ? field.value.toString() : ""}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select primary cause" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {MORTALITY_CAUSES.map((cause) => (
-                          <SelectItem key={cause.value} value={cause.value}>
-                            {cause.label}
-                          </SelectItem>
-                        ))}
+                        {mortalityReasonsLoading ? (
+                          <div className="p-2">
+                            <Skeleton className="h-4 w-full" />
+                          </div>
+                        ) : (
+                          primaryReasons.map((reason) => (
+                            <SelectItem key={reason.id} value={reason.id.toString()}>
+                              {reason.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -287,7 +344,17 @@ export default function MortalityReporting() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Secondary Cause (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={(value) => {
+                        if (value === "none") {
+                          field.onChange(null);
+                          return;
+                        }
+                        field.onChange(Number(value));
+                      }}
+                      value={field.value === null ? "none" : field.value ? field.value.toString() : ""}
+                      disabled={!selectedPrimaryCause}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select secondary cause" />
@@ -295,11 +362,17 @@ export default function MortalityReporting() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="none">None</SelectItem>
-                        {MORTALITY_CAUSES.map((cause) => (
-                          <SelectItem key={cause.value} value={cause.value}>
-                            {cause.label}
-                          </SelectItem>
-                        ))}
+                        {mortalityReasonsLoading ? (
+                          <div className="p-2">
+                            <Skeleton className="h-4 w-full" />
+                          </div>
+                        ) : (
+                          secondaryReasons.map((reason) => (
+                            <SelectItem key={reason.id} value={reason.id.toString()}>
+                              {reason.name}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -362,6 +435,7 @@ export default function MortalityReporting() {
         2. Display actual counts and timestamps
         3. Re-enable this section with real data
       */}
-    </div>
+      </div>
+    </PermissionGuard>
   );
 }
