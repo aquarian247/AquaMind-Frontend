@@ -35,6 +35,8 @@ const json = (data: any, init?: ResponseInit) => {
 
 describe('BatchTraceabilityView', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
+
     // Mock fetch for all API endpoints used by this component
     vi.spyOn(globalThis, 'fetch').mockImplementation((url: string | Request) => {
       // Handle both string URLs and Request objects
@@ -42,6 +44,42 @@ describe('BatchTraceabilityView', () => {
       
       if (!urlString) {
         return Promise.resolve(json({}));
+      }
+
+      // Lifecycle progression endpoint
+      if (urlString.includes('/api/v1/batch/container-assignments/lifecycle-progression/')) {
+        return Promise.resolve(json({
+          batch_id: 1,
+          basis: 'stage_entry',
+          stages: [
+            {
+              lifecycle_stage_id: 1,
+              lifecycle_stage: 'Egg&Alevin',
+              stage_order: 1,
+              container_assignments: 1,
+              active_containers: 0,
+              total_population: 20000,
+              total_biomass_kg: 3500.5,
+              avg_weight_g: 175.03,
+            },
+            {
+              lifecycle_stage_id: 2,
+              lifecycle_stage: 'Fry',
+              stage_order: 2,
+              container_assignments: 1,
+              active_containers: 1,
+              total_population: 19500,
+              total_biomass_kg: 4200.75,
+              avg_weight_g: 215.42,
+            },
+          ],
+          totals: {
+            container_assignments: 2,
+            active_containers: 1,
+            total_population: 39500,
+            total_biomass_kg: 7701.25,
+          },
+        }));
       }
 
       // Batch container assignments endpoint (DRF pagination format)
@@ -207,30 +245,18 @@ describe('BatchTraceabilityView', () => {
   });
 
   it('shows loading placeholder when a core dataset fails', async () => {
-    // Override fetch mock for batch-container-assignments to return error
-    vi.spyOn(globalThis, 'fetch').mockImplementation((url: string) => {
-      if (typeof url === 'string' && url.includes('/api/batch-container-assignments')) {
+    // Override fetch mock for assignment endpoint to return error.
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url: string | Request) => {
+      const urlString = typeof url === 'string' ? url : url.url;
+
+      if (
+        urlString.includes('/api/v1/batch/container-assignments/') ||
+        urlString.includes('/api/v1/batch/batch-container-assignments')
+      ) {
         return Promise.resolve(new Response(null, { status: 500 }));
       }
 
-      // Return empty arrays for other endpoints to isolate the test
-      if (urlString.includes('/api/batch-transfers')) {
-        return Promise.resolve(json([]));
-      }
-      if (urlString.includes('/api/containers')) {
-        return Promise.resolve(json([]));
-      }
-      if (urlString.includes('/api/stages')) {
-        return Promise.resolve(json([]));
-      }
-      if (urlString.includes('/api/growth-samples')) {
-        return Promise.resolve(json([]));
-      }
-      if (urlString.includes('/api/mortality-events')) {
-        return Promise.resolve(json([]));
-      }
-
-      return Promise.resolve(json({}));
+      return Promise.resolve(json({ count: 0, next: null, previous: null, results: [] }));
     });
 
     // Render with required props

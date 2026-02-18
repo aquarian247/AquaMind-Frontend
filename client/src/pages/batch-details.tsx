@@ -13,6 +13,7 @@ import { BatchTraceabilityView } from "../components/batch-management/BatchTrace
 import { BatchHealthView } from "../components/batch-management/BatchHealthView";
 import { BatchFeedHistoryView } from "../components/batch-management/BatchFeedHistoryView";
 import { BatchAnalyticsView } from "../components/batch-management/BatchAnalyticsView";
+import { BatchContainerInsightsView } from "../components/batch-management/BatchContainerInsightsView";
 import { BatchWorkflowsTab } from "../features/batch-management/workflows/components/BatchWorkflowsTab";
 import { BatchPlannedActivitiesTab } from "../features/production-planner/components/BatchPlannedActivitiesTab";
 import { api } from "../lib/api";
@@ -45,11 +46,18 @@ interface Container {
   name: string;
 }
 
+interface ContainerInsightSelection {
+  assignmentId?: number;
+  containerId?: number;
+  containerName?: string;
+}
+
 export default function BatchDetails() {
   const params = useParams();
   const batchId = parseInt(params.id!);
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("overview");
+  const [insightSelection, setInsightSelection] = useState<ContainerInsightSelection | null>(null);
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
@@ -321,6 +329,7 @@ export default function BatchDetails() {
                 <SelectValue>
                   {activeTab === "overview" && "Batch Overview"}
                   {activeTab === "containers" && "Containers"}
+                  {activeTab === "container-insights" && "Container Insights"}
                   {activeTab === "health" && "Health"}
                   {activeTab === "feed-history" && "Feed History"}
                   {activeTab === "analytics" && "Analytics"}
@@ -330,6 +339,7 @@ export default function BatchDetails() {
               <SelectContent>
                 <SelectItem value="overview">Batch Overview</SelectItem>
                 <SelectItem value="containers">Containers</SelectItem>
+                <SelectItem value="container-insights">Container Insights</SelectItem>
                 <SelectItem value="health">Health</SelectItem>
                 <SelectItem value="feed-history">Feed History</SelectItem>
                 <SelectItem value="analytics">Analytics</SelectItem>
@@ -341,9 +351,10 @@ export default function BatchDetails() {
             </Select>
           </div>
         ) : (
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="containers">Containers</TabsTrigger>
+            <TabsTrigger value="container-insights">Insights</TabsTrigger>
             <TabsTrigger value="transfers">Transfers</TabsTrigger>
             <TabsTrigger value="health">Health</TabsTrigger>
             <TabsTrigger value="feed-history">Feed History</TabsTrigger>
@@ -598,11 +609,10 @@ export default function BatchDetails() {
 
                         <div className="flex space-x-2">
                           <Button
-                            variant="outline"
+                            variant="default"
                             size="sm"
                             className="flex-1"
                             onClick={() => {
-                              // Extract container ID from nested object or use direct ID
                               const containerId = assignment.container?.id || assignment.container_id || assignment.container;
 
                               if (!containerId) {
@@ -615,11 +625,29 @@ export default function BatchDetails() {
                                 return;
                               }
 
+                              setInsightSelection({
+                                assignmentId: assignment.id,
+                                containerId: Number(containerId),
+                                containerName,
+                              });
+                              setActiveTab("container-insights");
+                            }}
+                          >
+                            <Activity className="h-4 w-4 mr-2" />
+                            Open Insights
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              const containerId = assignment.container?.id || assignment.container_id || assignment.container;
+                              if (!containerId) return;
                               navigate(`/infrastructure/containers/${containerId}`);
                             }}
                           >
                             <Eye className="h-4 w-4 mr-2" />
-                            View Details
+                            Infrastructure
                           </Button>
                           <Button variant="outline" size="sm">
                             <Settings className="h-4 w-4" />
@@ -646,6 +674,14 @@ export default function BatchDetails() {
 
         <TabsContent value="transfers" className="space-y-6">
           <BatchWorkflowsTab batchId={batch.id} batchNumber={batch.batch_number} />
+        </TabsContent>
+
+        <TabsContent value="container-insights" className="space-y-6">
+          <BatchContainerInsightsView
+            batchId={batch.id}
+            batchName={batch.batch_number}
+            initialSelection={insightSelection}
+          />
         </TabsContent>
 
         <TabsContent value="health" className="space-y-6">

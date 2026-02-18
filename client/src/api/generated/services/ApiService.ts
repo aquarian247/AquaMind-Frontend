@@ -1082,6 +1082,36 @@ export class ApiService {
         });
     }
     /**
+     * Return daily aggregated insights for a batch, container, or container lineage.
+     *
+     * Query params:
+     * - start_date (YYYY-MM-DD, optional; default: last 90 days)
+     * - end_date (YYYY-MM-DD, optional; default: today)
+     * - scope: batch | container | lineage (optional)
+     * - container_id (int, optional)
+     * - assignment_id (int, optional; required for lineage unless inferred)
+     * @param id A unique integer value identifying this batch.
+     * @returns Batch
+     * @throws ApiError
+     */
+    public static apiV1BatchBatchesInsightsTimeseriesRetrieve(
+        id: number,
+    ): CancelablePromise<Batch> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/batch/batches/{id}/insights-timeseries/',
+            path: {
+                'id': id,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
      * Calculate and return performance metrics for a batch.
      *
      * Includes:
@@ -1799,6 +1829,66 @@ export class ApiService {
                 401: `Unauthorized`,
                 403: `Forbidden`,
                 404: `No projections found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Get lifecycle progression aggregates for a batch
+     * Returns stage-level population and biomass aggregates for a single batch using an explicit aggregation basis.
+     * @param batch Batch ID to aggregate.
+     * @param area Optional area filter.
+     * @param basis Aggregation basis. Valid values: full_history, stage_entry, active_snapshot. Default: stage_entry.
+     * @param containerType Optional container type category filter.
+     * @param geography Optional geography filter.
+     * @param hall Optional hall filter.
+     * @param station Optional freshwater station filter.
+     * @returns any
+     * @throws ApiError
+     */
+    public static batchContainerAssignmentsLifecycleProgression(
+        batch: number,
+        area?: number,
+        basis: string = 'stage_entry',
+        containerType?: string,
+        geography?: number,
+        hall?: number,
+        station?: number,
+    ): CancelablePromise<{
+        batch_id: number;
+        basis: string;
+        stages: Array<{
+            lifecycle_stage_id: number;
+            lifecycle_stage: string;
+            stage_order: number;
+            container_assignments: number;
+            active_containers: number;
+            total_population: number;
+            total_biomass_kg: number;
+            avg_weight_g: number;
+        }>;
+        totals: {
+            container_assignments: number;
+            active_containers: number;
+            total_population: number;
+            total_biomass_kg: number;
+        };
+    }> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/batch/container-assignments/lifecycle-progression/',
+            query: {
+                'area': area,
+                'basis': basis,
+                'batch': batch,
+                'container_type': containerType,
+                'geography': geography,
+                'hall': hall,
+                'station': station,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
                 500: `Internal Server Error`,
             },
         });
@@ -10447,7 +10537,9 @@ export class ApiService {
      * @param name
      * @param nameIcontains
      * @param page A page number within the paginated result set.
+     * @param parent Filter by parent reason ID
      * @param search A search term.
+     * @param topLevel Filter to only top-level reasons (no parent)
      * @returns PaginatedMortalityReasonList
      * @throws ApiError
      */
@@ -10455,7 +10547,9 @@ export class ApiService {
         name?: string,
         nameIcontains?: string,
         page?: number,
+        parent?: number,
         search?: string,
+        topLevel?: boolean,
     ): CancelablePromise<PaginatedMortalityReasonList> {
         return __request(OpenAPI, {
             method: 'GET',
@@ -10464,7 +10558,9 @@ export class ApiService {
                 'name': name,
                 'name__icontains': nameIcontains,
                 'page': page,
+                'parent': parent,
                 'search': search,
+                'top_level': topLevel,
             },
             errors: {
                 400: `Bad request (validation error)`,

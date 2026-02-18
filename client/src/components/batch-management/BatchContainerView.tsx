@@ -15,9 +15,14 @@ import { GrowthSampleForm } from "@/features/batch-management/components/GrowthS
 
 interface BatchContainerViewProps {
   selectedBatch?: Batch;
+  onOpenInsights?: (selection: {
+    assignmentId: number;
+    containerId: number;
+    containerName: string;
+  }) => void;
 }
 
-export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
+export function BatchContainerView({ selectedBatch, onOpenInsights }: BatchContainerViewProps) {
   // State for growth sample dialog
   const [growthSampleDialogOpen, setGrowthSampleDialogOpen] = useState(false)
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null)
@@ -208,22 +213,47 @@ export function BatchContainerView({ selectedBatch }: BatchContainerViewProps) {
                 {/* Action Buttons */}
                 <div className="flex gap-2">
                   <Button 
-                    variant="outline" 
+                    variant={onOpenInsights ? "default" : "outline"}
                     size="sm" 
                     className="flex-1"
                     onClick={() => {
-                      // Navigate to infrastructure container detail page
                       const containerId = typeof assignment.container === 'object' && assignment.container
                         ? (assignment.container as any).id
                         : assignment.container;
                       
                       if (containerId) {
-                        navigate(`/infrastructure/containers/${containerId}`);
+                        if (onOpenInsights) {
+                          onOpenInsights({
+                            assignmentId: assignment.id,
+                            containerId: Number(containerId),
+                            containerName,
+                          });
+                        } else {
+                          navigate(`/infrastructure/containers/${containerId}`);
+                        }
                       }
                     }}
                   >
-                    View Details
+                    {onOpenInsights ? "Open Insights" : "View Details"}
                   </Button>
+                  {onOpenInsights && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        const containerId = typeof assignment.container === 'object' && assignment.container
+                          ? (assignment.container as any).id
+                          : assignment.container;
+
+                        if (containerId) {
+                          navigate(`/infrastructure/containers/${containerId}`);
+                        }
+                      }}
+                    >
+                      Infrastructure
+                    </Button>
+                  )}
                   <Button 
                     variant="default" 
                     size="sm" 

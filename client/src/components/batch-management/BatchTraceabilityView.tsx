@@ -12,6 +12,30 @@ import { Fish, TrendingUp, TrendingDown, Activity, Beaker, AlertTriangle, Chevro
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ApiService } from "@/api/generated";
 import { api } from "@/lib/api";
+import { API_CONFIG } from "@/lib/config";
+
+interface LifecycleProgressionStage {
+  lifecycle_stage_id: number;
+  lifecycle_stage: string;
+  stage_order: number;
+  container_assignments: number;
+  active_containers: number;
+  total_population: number;
+  total_biomass_kg: number;
+  avg_weight_g: number;
+}
+
+interface LifecycleProgressionResponse {
+  batch_id: number;
+  basis: "full_history" | "stage_entry" | "active_snapshot";
+  stages: LifecycleProgressionStage[];
+  totals: {
+    container_assignments: number;
+    active_containers: number;
+    total_population: number;
+    total_biomass_kg: number;
+  };
+}
 
 interface BatchTraceabilityViewProps {
   batchId: number;
@@ -52,6 +76,24 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
   const transfers: any[] = [];
   const isLoadingTransfers = false;
   const transfersError = null;
+
+  const { data: lifecycleProgression, isLoading: isLoadingLifecycleProgression } = useQuery<LifecycleProgressionResponse>({
+    queryKey: ["batch/lifecycle-progression", batchId, "stage_entry"],
+    queryFn: async () => {
+      const url = `${API_CONFIG.DJANGO_API_URL}/api/v1/batch/container-assignments/lifecycle-progression/?batch=${batchId}&basis=stage_entry`;
+      const token = localStorage.getItem("auth_token");
+      const headers: HeadersInit = token
+        ? { Authorization: `Bearer ${token}` }
+        : {};
+      const response = await fetch(url, { headers });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch lifecycle progression (${response.status})`);
+      }
+
+      return await response.json();
+    },
+  });
 
   // Use stages and containers from props if available, otherwise fetch
   const { data: fetchedContainers, isLoading: isLoadingContainers, error: containersError } = useQuery<any[]>({
@@ -205,6 +247,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
       growthAnalysis: !growthAnalysis,
       performanceMetrics: isLoadingPerformance,
       recentMortality: isLoadingMortality,
+      lifecycleProgression: isLoadingLifecycleProgression,
     },
     dataLengths: {
       assignments: assignments.length,
@@ -213,6 +256,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
       stages: stages.length,
       growthSamples: growthSamples.length,
       mortalityEvents: mortalityEvents.length,
+      lifecycleProgressionStages: lifecycleProgression?.stages?.length || 0,
     },
     errors: {
       assignments: assignmentsError,
@@ -281,7 +325,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
   });
 
   // Group assignments by lifecycle stage
-  const assignmentsByStage = batchAssignments.reduce((acc: any, assignment: any) => {
+  const fallbackAssignmentsByStage = batchAssignments.reduce((acc: any, assignment: any) => {
     // Handle nested lifecycle_stage object or ID
     const stageId = typeof assignment.lifecycle_stage === 'object' 
       ? assignment.lifecycle_stage?.id 
@@ -317,30 +361,48 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
     return acc;
   }, {});
 
-  // Create lifecycle progression chart data
-  const lifecycleData = Object.keys(assignmentsByStage).map(stageName => {
-    const stageAssignments = assignmentsByStage[stageName];
-    const totalPopulation = stageAssignments.reduce((sum: number, a: any) => 
+  // Fallback lifecycle progression from raw assignments when endpoint is unavailable.
+  const fallbackLifecycleData = Object.keys(fallbackAssignmentsByStage).map(stageName => {
+    const stageAssignments = fallbackAssignmentsByStage[stageName];
+    const totalPopulation = stageAssignments.reduce((sum: number, a: any) =>
       sum + (a.population_count || 0), 0
     );
-    const totalBiomass = stageAssignments.reduce((sum: number, a: any) => 
+    const totalBiomass = stageAssignments.reduce((sum: number, a: any) =>
       sum + parseFloat(a.biomass_kg || 0), 0
     );
     const avgWeight = totalBiomass > 0 ? (totalBiomass * 1000) / totalPopulation : 0;
+    const stageOrder = stages.find((s: any) => s.name === stageName)?.order ?? Number.MAX_SAFE_INTEGER;
     
     return {
       stage: stageName,
+      stageOrder,
       population: totalPopulation,
       biomassKg: totalBiomass,
       avgWeightG: avgWeight,
       containers: stageAssignments.length,
+      activeContainers: stageAssignments.filter((a: any) => a.is_active).length,
     };
   });
+
+  // Primary lifecycle progression data from explicit server-side aggregation basis.
+  const lifecycleData = (lifecycleProgression?.stages || []).map((stage) => ({
+    stage: stage.lifecycle_stage,
+    stageOrder: stage.stage_order,
+    population: stage.total_population,
+    biomassKg: stage.total_biomass_kg,
+    avgWeightG: stage.avg_weight_g,
+    containers: stage.container_assignments,
+    activeContainers: stage.active_containers,
+  }));
+
+  const hasLifecycleProgressionData = lifecycleData.length > 0;
+  const lifecycleDisplayData = (hasLifecycleProgressionData ? lifecycleData : fallbackLifecycleData)
+    .sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0));
   
   console.log('📊 LIFECYCLE DATA FOR CHART:', {
-    assignmentsByStageKeys: Object.keys(assignmentsByStage),
-    lifecycleDataLength: lifecycleData.length,
-    lifecycleData,
+    source: hasLifecycleProgressionData ? 'lifecycle-progression-endpoint(stage_entry)' : 'fallback-assignments-derived',
+    lifecycleDataLength: lifecycleDisplayData.length,
+    lifecycleData: lifecycleDisplayData,
   });
 
   // Create growth trend data from aggregated growth metrics
@@ -379,7 +441,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
         <div className="flex gap-2">
           <Badge variant="outline" className="text-blue-600">
             <Fish className="w-4 h-4 mr-1" />
-            {lifecycleData.length} Life Stages
+            {lifecycleDisplayData.length} Life Stages
           </Badge>
           <Badge variant="outline" className="text-green-600">
             <TrendingUp className="w-4 h-4 mr-1" />
@@ -403,7 +465,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {lifecycleData.length > 0 ? lifecycleData[lifecycleData.length - 1].population.toLocaleString() : '0'}
+              {lifecycleDisplayData.length > 0 ? lifecycleDisplayData[lifecycleDisplayData.length - 1].population.toLocaleString() : '0'}
             </div>
             <p className="text-xs text-muted-foreground">
               Across {batchAssignments.filter((a: any) => a.is_active).length} active containers
@@ -491,7 +553,7 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={lifecycleData}>
+                <BarChart data={lifecycleDisplayData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="stage" />
                   <YAxis yAxisId="left" />
@@ -506,31 +568,25 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
           </Card>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.entries(assignmentsByStage).map(([stageName, assignments]: [string, any]) => (
-              <Card key={stageName}>
+            {lifecycleDisplayData.map((stage) => (
+              <Card key={stage.stage}>
                 <CardHeader>
-                  <CardTitle className="text-lg">{stageName} Stage</CardTitle>
-                  <CardDescription>{assignments.length} container assignments</CardDescription>
+                  <CardTitle className="text-lg">{stage.stage} Stage</CardTitle>
+                  <CardDescription>{stage.containers} container assignments</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Total Population:</span>
-                      <span className="font-medium">
-                        {assignments.reduce((sum: number, a: any) => sum + (a.population_count || 0), 0).toLocaleString()}
-                      </span>
+                      <span className="font-medium">{stage.population.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Total Biomass:</span>
-                      <span className="font-medium">
-                        {assignments.reduce((sum: number, a: any) => sum + parseFloat(a.biomass_kg || 0), 0).toFixed(2)} kg
-                      </span>
+                      <span className="font-medium">{stage.biomassKg.toFixed(2)} kg</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Active Containers:</span>
-                      <span className="font-medium">
-                        {assignments.filter((a: any) => a.is_active).length} / {assignments.length}
-                      </span>
+                      <span className="font-medium">{stage.activeContainers} / {stage.containers}</span>
                     </div>
                   </div>
                 </CardContent>

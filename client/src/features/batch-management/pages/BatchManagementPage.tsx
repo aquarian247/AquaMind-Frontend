@@ -8,6 +8,7 @@ import { BatchContainerView } from "@/components/batch-management/BatchContainer
 import { BatchHealthView } from "@/components/batch-management/BatchHealthView";
 import { BatchAnalyticsView } from "@/components/batch-management/BatchAnalyticsView";
 import { BatchFeedHistoryView } from "@/components/batch-management/BatchFeedHistoryView";
+import { BatchContainerInsightsView } from "@/components/batch-management/BatchContainerInsightsView";
 import { BatchKPIs } from "@/features/batch/components/BatchKPIs";
 import { BatchOverview } from "@/features/batch/components/BatchOverview";
 import { useBatchData } from "@/features/batch/hooks/useBatchData";
@@ -36,6 +37,11 @@ export default function BatchManagementPage() {
   const [selectedBatch, setSelectedBatch] = useState<ExtendedBatch | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [statusFilter, setStatusFilter] = useState("ACTIVE"); // Default to ACTIVE
+  const [insightSelection, setInsightSelection] = useState<{
+    assignmentId?: number;
+    containerId?: number;
+    containerName?: string;
+  } | null>(null);
   const isMobile = useIsMobile();
 
   // Data hooks - pass status filter to API
@@ -99,6 +105,7 @@ export default function BatchManagementPage() {
                 <SelectValue>
                   {activeTab === "overview" && "Overview"}
                   {activeTab === "containers" && "Containers"}
+                  {activeTab === "container-insights" && "Container Insights"}
                   {activeTab === "medical" && "Medical Journal"}
                   {activeTab === "feed" && "Feed History"}
                   {activeTab === "analytics" && "Analytics"}
@@ -107,6 +114,7 @@ export default function BatchManagementPage() {
               <SelectContent>
                 <SelectItem value="overview">Overview</SelectItem>
                 <SelectItem value="containers">Containers</SelectItem>
+                <SelectItem value="container-insights">Container Insights</SelectItem>
                 <SelectItem value="medical">Medical Journal</SelectItem>
                 <SelectItem value="feed">Feed History</SelectItem>
                 <SelectItem value="analytics">Analytics</SelectItem>
@@ -114,7 +122,7 @@ export default function BatchManagementPage() {
             </Select>
           </div>
         ) : (
-          <TabsList className="grid grid-cols-5 w-full">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="overview">
               <BarChart3 className="w-4 h-4 mr-2" />
               Overview
@@ -122,6 +130,10 @@ export default function BatchManagementPage() {
             <TabsTrigger value="containers">
               <Container className="w-4 h-4 mr-2" />
               Containers
+            </TabsTrigger>
+            <TabsTrigger value="container-insights">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Insights
             </TabsTrigger>
             <TabsTrigger value="medical">
               <Stethoscope className="w-4 h-4 mr-2" />
@@ -156,9 +168,27 @@ export default function BatchManagementPage() {
 
         <TabsContent value="containers">
           {selectedBatch ? (
-            <BatchContainerView selectedBatch={mapExtendedToBatch(selectedBatch)} />
+            <BatchContainerView
+              selectedBatch={mapExtendedToBatch(selectedBatch)}
+              onOpenInsights={(selection) => {
+                setInsightSelection(selection);
+                setActiveTab("container-insights");
+              }}
+            />
           ) : (
             <SelectBatchPlaceholder message="Select a batch from the overview list to view its containers." />
+          )}
+        </TabsContent>
+
+        <TabsContent value="container-insights">
+          {selectedBatch ? (
+            <BatchContainerInsightsView
+              batchId={selectedBatch.id}
+              batchName={selectedBatch.batch_number}
+              initialSelection={insightSelection}
+            />
+          ) : (
+            <SelectBatchPlaceholder message="Select a batch from the overview list to view container insights." />
           )}
         </TabsContent>
 
@@ -189,4 +219,3 @@ export default function BatchManagementPage() {
     </div>
   );
 }
-
