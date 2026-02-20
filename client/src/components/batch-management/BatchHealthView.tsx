@@ -181,13 +181,12 @@ export function BatchHealthView({ batchId, batchName }: BatchHealthViewProps) {
     count: event.count || 0, // Handle missing/null count values gracefully
     cause: event.cause || "UNKNOWN",
     description: event.description || "",
-    // container_info may be a string in the API. If it's an object/null in some environments, coerce safely.
     containerName:
-      typeof event?.container_info === 'string'
+      event?.assignment_info?.container_name ||
+      (typeof event?.container_info === 'string'
         ? event.container_info
-        : event?.container_info
-          ? String(event.container_info)
-          : undefined,
+        : event?.container_info?.name) ||
+      undefined,
   }));
 
   // Fetch health sampling events

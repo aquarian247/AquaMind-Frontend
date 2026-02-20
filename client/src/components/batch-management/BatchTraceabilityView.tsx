@@ -830,8 +830,12 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
                     mortalityEvents
                       .sort((a: any, b: any) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime())
                       .map((event: any) => {
-                      // Mortality events have container_info which might be null
-                      const containerName = event.container_info?.name || 'N/A';
+                      const containerName =
+                        event.assignment_info?.container_name ||
+                        (typeof event.container_info === 'string'
+                          ? event.container_info
+                          : event.container_info?.name) ||
+                        'N/A';
                       
                       return (
                         <TableRow key={event.id}>
