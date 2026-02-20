@@ -23,6 +23,7 @@ interface UserContextType {
   isAdmin: boolean;
   isManager: boolean;
   isOperator: boolean;
+  isShipCrew: boolean;
   isVeterinarian: boolean;
   isQA: boolean;
   isFinance: boolean;
@@ -33,6 +34,7 @@ interface UserContextType {
   hasOperationalAccess: boolean;
   hasTreatmentEditAccess: boolean;
   hasFinanceAccess: boolean;
+  hasTransportExecutionAccess: boolean;
   
   // Location assignment checks (Phase 2)
   hasLocationAssignments: boolean;
@@ -78,6 +80,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const isAdmin = useMemo(() => profile?.role === 'ADMIN', [profile]);
   const isManager = useMemo(() => profile?.role === 'MGR', [profile]);
   const isOperator = useMemo(() => profile?.role === 'OPR', [profile]);
+  const isShipCrew = useMemo(
+    () => (profile?.role as string | undefined) === 'SHIP_CREW',
+    [profile]
+  );
   const isVeterinarian = useMemo(() => profile?.role === 'VET', [profile]);
   const isQA = useMemo(() => profile?.role === 'QA', [profile]);
   const isFinance = useMemo(() => profile?.role === 'FIN', [profile]);
@@ -91,8 +97,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   );
 
   const hasOperationalAccess = useMemo(
-    () => isAdmin || isManager || isOperator,
-    [isAdmin, isManager, isOperator]
+    () => isAdmin || isManager || isOperator || isShipCrew,
+    [isAdmin, isManager, isOperator, isShipCrew]
   );
 
   const hasTreatmentEditAccess = useMemo(
@@ -103,6 +109,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const hasFinanceAccess = useMemo(
     () => isAdmin || isFinance,
     [isAdmin, isFinance]
+  );
+  
+  const hasTransportExecutionAccess = useMemo(
+    () => isAdmin || isShipCrew || (isOperator && profile?.subsidiary === 'LG'),
+    [isAdmin, isShipCrew, isOperator, profile]
   );
   
   // Location assignment checks (Phase 2)
@@ -179,6 +190,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     isAdmin,
     isManager,
     isOperator,
+    isShipCrew,
     isVeterinarian,
     isQA,
     isFinance,
@@ -189,6 +201,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     hasOperationalAccess,
     hasTreatmentEditAccess,
     hasFinanceAccess,
+    hasTransportExecutionAccess,
     
     // Location assignment checks
     hasLocationAssignments,

@@ -11,7 +11,7 @@ type UserFormInput = {
   phone?: string;
   geography?: 'FO' | 'SC' | 'ALL';
   subsidiary?: 'BS' | 'FW' | 'FM' | 'LG' | 'ALL';
-  role?: 'ADMIN' | 'MGR' | 'OPR' | 'VET' | 'QA' | 'FIN' | 'VIEW';
+  role?: 'ADMIN' | 'MGR' | 'OPR' | 'SHIP_CREW' | 'VET' | 'QA' | 'FIN' | 'VIEW';
   password?: string;
   password_confirm?: string;
   is_active?: boolean;
@@ -99,6 +99,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     { value: 'ADMIN', label: 'Administrator' },
     { value: 'MGR', label: 'Manager' },
     { value: 'OPR', label: 'Operator' },
+    { value: 'SHIP_CREW', label: 'Ship Crew' },
     { value: 'VET', label: 'Veterinarian' },
     { value: 'QA', label: 'Quality Assurance' },
     { value: 'FIN', label: 'Finance' },

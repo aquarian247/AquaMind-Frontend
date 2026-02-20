@@ -56,6 +56,7 @@ export const UserProfileCard: React.FC = () => {
     'ADMIN': 'Administrator',
     'MGR': 'Manager',
     'OPR': 'Operator',
+    'SHIP_CREW': 'Ship Crew',
     'VET': 'Veterinarian',
     'QA': 'Quality Assurance',
     'FIN': 'Finance',

@@ -42,6 +42,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { ApiService } from '@/api/generated';
+import { getApiUrl, getAuthToken } from '@/lib/config';
 
 import { useAction, useExecuteAction } from '../api';
 import { executeActionSchema, type ExecuteActionFormData } from '../schemas';
@@ -63,6 +64,8 @@ export function ExecuteActionDialog({
   const executeAction = useExecuteAction();
   const [envValuesSource, setEnvValuesSource] = useState<Record<number, string>>({});
   const [envValuesDest, setEnvValuesDest] = useState<Record<number, string>>({});
+  const [snapshotPendingMoment, setSnapshotPendingMoment] = useState<string | null>(null);
+  const [snapshotMoments, setSnapshotMoments] = useState<Record<string, string>>({});
 
   const { data: environmentalParameters } = useQuery({
     queryKey: ['environmental-parameters'],
@@ -145,10 +148,18 @@ export function ExecuteActionDialog({
       
       console.log('[ExecuteAction] Submitting execution data:', payload);
       
-      await executeAction.mutateAsync({
+      const executedAction = await executeAction.mutateAsync({
         id: actionId,
         data: payload,
       });
+
+      const sourceSnapshot = (executedAction as any)?.source_readings_snapshot;
+      const destSnapshot = (executedAction as any)?.dest_readings_snapshot;
+      const snapshotCapturedAt =
+        sourceSnapshot?.captured_at || destSnapshot?.captured_at;
+      const snapshotMessage = snapshotCapturedAt
+        ? `Environmental snapshots captured at ${new Date(snapshotCapturedAt).toLocaleTimeString()}.`
+        : 'Environmental snapshot capture triggered.';
 
       const sourceContainerId = sourceInfo?.container_id;
       const destContainerId = destInfo?.container_id;
@@ -189,7 +200,7 @@ export function ExecuteActionDialog({
 
       toast({
         title: 'Transfer executed successfully',
-        description: `Action #${action?.action_number} completed`,
+        description: `Action #${action?.action_number} completed. ${snapshotMessage}`,
       });
 
       form.reset();
@@ -237,6 +248,59 @@ export function ExecuteActionDialog({
 
   const sourceInfo = action.source_assignment_info as any;
   const destInfo = action.dest_assignment_info as any;
+  const workflowInfo = action.workflow_info as any;
+  const isTransportExecution = Boolean(
+    workflowInfo?.is_dynamic_execution ||
+    sourceInfo?.carrier_type ||
+    destInfo?.carrier_type
+  );
+
+  const captureTransportSnapshot = async (moment: 'start' | 'in_transit' | 'finish') => {
+    try {
+      setSnapshotPendingMoment(moment);
+
+      const token = getAuthToken();
+      const response = await fetch(
+        getApiUrl(`/batch/transfer-actions/${actionId}/snapshot/`),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ moment }),
+        }
+      );
+
+      let payload: any = {};
+      try {
+        payload = await response.json();
+      } catch {
+        // no-op
+      }
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.error || payload?.detail || `Snapshot request failed (${response.status})`
+        );
+      }
+
+      const capturedAt = new Date().toLocaleTimeString();
+      setSnapshotMoments((previous) => ({ ...previous, [moment]: capturedAt }));
+      toast({
+        title: `Snapshot Captured (${moment.replace('_', ' ')})`,
+        description: `Readings captured: ${payload.created_count ?? 0}, missing: ${payload.missing_value_count ?? 0}.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Snapshot Capture Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setSnapshotPendingMoment(null);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -296,6 +360,62 @@ export function ExecuteActionDialog({
             {formatBiomass(action.transferred_biomass_kg)})
           </AlertDescription>
         </Alert>
+
+        {isTransportExecution && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Transport Snapshot Capture</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Capture AVEVA-backed readings at handoff start and in transit.
+                Finish snapshots are captured automatically at execution.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => captureTransportSnapshot('start')}
+                  disabled={!!snapshotPendingMoment || executeAction.isPending}
+                >
+                  {snapshotPendingMoment === 'start' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Capturing Start...
+                    </>
+                  ) : (
+                    'Capture Start'
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => captureTransportSnapshot('in_transit')}
+                  disabled={!!snapshotPendingMoment || executeAction.isPending}
+                >
+                  {snapshotPendingMoment === 'in_transit' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Capturing In Transit...
+                    </>
+                  ) : (
+                    'Capture In Transit'
+                  )}
+                </Button>
+              </div>
+              {(snapshotMoments.start || snapshotMoments.in_transit) && (
+                <div className="text-xs text-muted-foreground space-y-1">
+                  {snapshotMoments.start && (
+                    <p>Start captured at {snapshotMoments.start}</p>
+                  )}
+                  {snapshotMoments.in_transit && (
+                    <p>In-transit captured at {snapshotMoments.in_transit}</p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Execution Form */}
         <Form {...form}>
@@ -487,4 +607,3 @@ export function ExecuteActionDialog({
     </Dialog>
   );
 }
-

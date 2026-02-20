@@ -11,7 +11,7 @@ export const userFormSchema = z.object({
   phone: z.string().optional(),
   geography: z.enum(['FO', 'SC', 'ALL']).optional(),
   subsidiary: z.enum(['BS', 'FW', 'FM', 'LG', 'ALL']).optional(),
-  role: z.enum(['ADMIN', 'MGR', 'OPR', 'VET', 'QA', 'FIN', 'VIEW']).optional(),
+  role: z.enum(['ADMIN', 'MGR', 'OPR', 'SHIP_CREW', 'VET', 'QA', 'FIN', 'VIEW']).optional(),
   password: z.string().min(8, 'Password must be at least 8 characters').optional(),
   is_active: z.boolean().optional(),
 });
@@ -23,7 +23,7 @@ export const userCreateSchema = z.object({
   phone: z.string().optional(),
   geography: z.enum(['FO', 'SC', 'ALL']).optional(),
   subsidiary: z.enum(['BS', 'FW', 'FM', 'LG', 'ALL']).optional(),
-  role: z.enum(['ADMIN', 'MGR', 'OPR', 'VET', 'QA', 'FIN', 'VIEW']).optional(),
+  role: z.enum(['ADMIN', 'MGR', 'OPR', 'SHIP_CREW', 'VET', 'QA', 'FIN', 'VIEW']).optional(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   password_confirm: z.string().min(8, 'Password confirmation must be at least 8 characters'),
   is_active: z.boolean().optional(),
@@ -34,5 +34,4 @@ export const userCreateSchema = z.object({
 
 export type UserFormData = z.infer<typeof userFormSchema>;
 export type UserCreateData = z.infer<typeof userCreateSchema>;
-
 

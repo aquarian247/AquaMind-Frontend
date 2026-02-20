@@ -9,7 +9,7 @@
  * - Bulk create all actions
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Trash2, AlertCircle } from 'lucide-react';
 
@@ -214,6 +214,23 @@ export function AddActionsDialog({
   });
 
   const sourceAssignments = sourceAssignmentsData || [];
+
+  const nextActionNumberBase = useMemo(() => {
+    const workflowAny = workflow as any;
+    const existingActions = Array.isArray(workflowAny.actions)
+      ? workflowAny.actions
+      : [];
+
+    const maxFromActions = existingActions.reduce((max: number, action: any) => {
+      const actionNumber = Number(action?.action_number);
+      return Number.isFinite(actionNumber)
+        ? Math.max(max, actionNumber)
+        : max;
+    }, 0);
+
+    const totalPlanned = Number(workflowAny.total_actions_planned || 0);
+    return Math.max(maxFromActions, totalPlanned) + 1;
+  }, [workflow]);
 
   // Container categories for filter
   const containerCategories = [
@@ -905,7 +922,8 @@ export function AddActionsDialog({
       // Create all actions sequentially
       // For each action, we need to create a placeholder dest_assignment first
       for (const [index, row] of rows.entries()) {
-        console.log(`[AddActions] Creating action ${index + 1}/${rows.length}`);
+        const actionNumber = nextActionNumberBase + index;
+        console.log(`[AddActions] Creating action ${actionNumber} (${index + 1}/${rows.length})`);
         
         let destAssignmentId = row.destAssignmentId;
 
@@ -920,7 +938,7 @@ export function AddActionsDialog({
             biomass_kg: '0.00',
             avg_weight_g: '0.00',
             is_active: false, // Not active until execution completes
-            notes: `Placeholder for workflow ${workflow.workflow_number} action ${index + 1}${
+            notes: `Placeholder for workflow ${workflow.workflow_number} action ${actionNumber}${
               row.allowMixed ? ' (mixed batch)' : ''
             }`,
           } as any);
@@ -932,7 +950,7 @@ export function AddActionsDialog({
         // Step 2: Create the transfer action
         const actionPayload = {
           workflow: workflow.id,
-          action_number: index + 1,
+          action_number: actionNumber,
           source_assignment: row.sourceAssignmentId!,
           dest_assignment: destAssignmentId, // Use placeholder or existing assignment
           source_population_before: row.sourcePopulationBefore!,
@@ -943,7 +961,7 @@ export function AddActionsDialog({
         };
 
         await createAction.mutateAsync(actionPayload as any);
-        console.log(`[AddActions] Created action ${index + 1}`);
+        console.log(`[AddActions] Created action ${actionNumber}`);
       }
 
       toast({
@@ -1095,7 +1113,7 @@ export function AddActionsDialog({
               <tbody>
                 {rows.map((row, index) => (
                   <tr key={row.id} className="border-t">
-                    <td className="p-2 text-sm font-medium">{index + 1}</td>
+                    <td className="p-2 text-sm font-medium">{nextActionNumberBase + index}</td>
                     
                     {/* Source Container */}
                     <td className="p-2">
@@ -1333,4 +1351,3 @@ export function AddActionsDialog({
     </Dialog>
   );
 }
-

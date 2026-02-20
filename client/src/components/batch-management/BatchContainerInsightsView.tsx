@@ -621,19 +621,22 @@ export function BatchContainerInsightsView({
                     <YAxis domain={healthDomain} />
                     <Tooltip />
                     <Legend />
-                    {healthFactors.map((factor, index) => (
-                      <Line
-                        key={factor.key}
-                        type="monotone"
-                        dataKey={(row: ChartRow) => row.healthFactors[factor.key]}
-                        name={factor.label}
-                        stroke={HEALTH_COLORS[index % HEALTH_COLORS.length]}
-                        strokeWidth={0}
-                        dot={{ r: 3 }}
-                        activeDot={{ r: 4 }}
-                        connectNulls={false}
-                      />
-                    ))}
+                    {healthFactors.map((factor, index) => {
+                      const color = HEALTH_COLORS[index % HEALTH_COLORS.length];
+                      return (
+                        <Line
+                          key={factor.key}
+                          type="monotone"
+                          dataKey={(row: ChartRow) => row.healthFactors[factor.key]}
+                          name={factor.label}
+                          stroke={color}
+                          strokeWidth={0}
+                          dot={{ r: 3.5, fill: color, stroke: color, strokeWidth: 1 }}
+                          activeDot={{ r: 5, fill: color, stroke: "#111827", strokeWidth: 1 }}
+                          connectNulls={false}
+                        />
+                      );
+                    })}
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>

@@ -11,6 +11,7 @@ export enum UserRole {
   ADMIN = 'ADMIN',
   MGR = 'MGR',
   OPR = 'OPR',
+  SHIP_CREW = 'SHIP_CREW',
   VET = 'VET',
   QA = 'QA',
   FIN = 'FIN',
@@ -25,6 +26,7 @@ export const ROLE_HIERARCHY: UserRole[] = [
   UserRole.ADMIN,
   UserRole.MGR,
   UserRole.OPR,
+  UserRole.SHIP_CREW,
   UserRole.VET,
   UserRole.QA,
   UserRole.FIN,
@@ -74,5 +76,4 @@ export interface PermissionCheckResult {
   /** Reason for denial (if not allowed) */
   reason?: string
 }
-
 

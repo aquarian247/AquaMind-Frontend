@@ -44,10 +44,12 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 
 import { useWorkflow, useActions, useCancelWorkflow, usePlanWorkflow } from '../api';
 import { AddActionsDialog } from '../components/AddActionsDialog';
+import { DynamicTransportActionsDialog } from '../components/DynamicTransportActionsDialog';
 import { ExecuteActionDialog } from '../components/ExecuteActionDialog';
 import { FinanceSummaryCard } from '../components/FinanceSummaryCard';
 import {
@@ -69,6 +71,7 @@ export function WorkflowDetailPage() {
   const [, navigate] = useLocation();
   const workflowId = params.id ? parseInt(params.id) : undefined;
   const { toast } = useToast();
+  const { hasTransportExecutionAccess } = useUser();
 
   const { data: workflow, isLoading, error } = useWorkflow(workflowId);
   const { data: actionsData } = useActions({ workflow: workflowId });
@@ -114,8 +117,20 @@ export function WorkflowDetailPage() {
     workflow.planned_completion_date
   );
 
-  const canAddActions = workflow.status === 'DRAFT';
-  const canPlanWorkflow = workflow.status === 'DRAFT' && workflow.total_actions_planned > 0;
+  const workflowMeta = workflow as any;
+  const isDynamicExecution = Boolean(workflowMeta.is_dynamic_execution);
+  const isVesselTransfer = Boolean(workflowMeta.is_vessel_transfer);
+  const requiresTransportExecutionRole = isDynamicExecution || isVesselTransfer;
+  const canExecuteActions = !requiresTransportExecutionRole || hasTransportExecutionAccess;
+
+  const canAddActionsInCurrentStatus =
+    workflow.status === 'DRAFT' ||
+    (isDynamicExecution && workflow.status === 'IN_PROGRESS');
+  const canAddActions = canAddActionsInCurrentStatus && canExecuteActions;
+
+  const canPlanWorkflow =
+    workflow.status === 'DRAFT' &&
+    (isDynamicExecution || workflow.total_actions_planned > 0);
 
   const handlePlanWorkflow = async () => {
     try {
@@ -201,6 +216,12 @@ export function WorkflowDetailPage() {
                   <DollarSign className="h-3 w-3 mr-1" />
                   Intercompany
                 </Badge>
+              )}
+              {isDynamicExecution && (
+                <Badge variant="secondary">Dynamic Execution</Badge>
+              )}
+              {isVesselTransfer && (
+                <Badge variant="outline">Vessel Transfer</Badge>
               )}
             </div>
             <p className="text-muted-foreground mt-1">
@@ -316,21 +337,36 @@ export function WorkflowDetailPage() {
             {canAddActions && (
               <Button onClick={() => setShowAddActionsDialog(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Actions
+                {isDynamicExecution && workflow.status === 'IN_PROGRESS'
+                  ? 'Add Handoff'
+                  : 'Add Actions'}
               </Button>
             )}
           </div>
         </CardHeader>
         <CardContent>
+          {requiresTransportExecutionRole && !canExecuteActions && (
+            <Alert className="mb-4">
+              <AlertDescription>
+                This transport workflow is read-only for your role.
+                Only ship crew and logistics operators can add or execute actions.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {actions.length === 0 ? (
             <div className="text-center p-8">
               <p className="text-muted-foreground mb-4">
-                No actions planned for this workflow
+                {isDynamicExecution
+                  ? 'No actions recorded yet for this dynamic workflow'
+                  : 'No actions planned for this workflow'}
               </p>
               {canAddActions && (
                 <Button onClick={() => setShowAddActionsDialog(true)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Actions to Continue
+                  {isDynamicExecution
+                    ? 'Add First Handoff'
+                    : 'Add Actions to Continue'}
                 </Button>
               )}
             </div>
@@ -373,7 +409,7 @@ export function WorkflowDetailPage() {
                       {formatDate(action.actual_execution_date)}
                     </TableCell>
                     <TableCell>
-                      {action.status === 'PENDING' && (
+                      {action.status === 'PENDING' && canExecuteActions && (
                         <Button
                           size="sm"
                           onClick={() => setSelectedActionId(action.id)}
@@ -381,6 +417,9 @@ export function WorkflowDetailPage() {
                           <Play className="mr-1 h-3 w-3" />
                           Execute
                         </Button>
+                      )}
+                      {action.status === 'PENDING' && !canExecuteActions && (
+                        <span className="text-xs text-muted-foreground">Crew only</span>
                       )}
                       {action.status === 'COMPLETED' && (
                         <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -396,15 +435,26 @@ export function WorkflowDetailPage() {
 
       {/* Add Actions Dialog */}
       {showAddActionsDialog && (
-        <AddActionsDialog
-          workflow={workflow}
-          open={showAddActionsDialog}
-          onClose={() => setShowAddActionsDialog(false)}
-          onSuccess={() => {
-            setShowAddActionsDialog(false);
-            // Refresh is automatic via React Query invalidation
-          }}
-        />
+        isDynamicExecution ? (
+          <DynamicTransportActionsDialog
+            workflow={workflow}
+            open={showAddActionsDialog}
+            onClose={() => setShowAddActionsDialog(false)}
+            onSuccess={() => {
+              setShowAddActionsDialog(false);
+            }}
+          />
+        ) : (
+          <AddActionsDialog
+            workflow={workflow}
+            open={showAddActionsDialog}
+            onClose={() => setShowAddActionsDialog(false)}
+            onSuccess={() => {
+              setShowAddActionsDialog(false);
+              // Refresh is automatic via React Query invalidation
+            }}
+          />
+        )
       )}
 
       {/* Execute Action Dialog */}
@@ -522,4 +572,3 @@ function StatCard({ label, value, icon: Icon, valueColor = 'text-foreground' }: 
     </div>
   );
 }
-

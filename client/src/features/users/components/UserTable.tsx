@@ -40,6 +40,7 @@ export function UserTable() {
       case 'ADMIN': return 'destructive'
       case 'MGR': return 'default'
       case 'OPR': return 'secondary'
+      case 'SHIP_CREW': return 'secondary'
       case 'VET': return 'outline'
       case 'QA': return 'outline'
       case 'FIN': return 'outline'
@@ -53,6 +54,7 @@ export function UserTable() {
       case 'ADMIN': return 'Administrator'
       case 'MGR': return 'Manager'
       case 'OPR': return 'Operator'
+      case 'SHIP_CREW': return 'Ship Crew'
       case 'VET': return 'Veterinarian'
       case 'QA': return 'Quality Assurance'
       case 'FIN': return 'Finance'
@@ -273,7 +275,6 @@ export function UserTable() {
     </div>
   )
 }
-
 
 
 

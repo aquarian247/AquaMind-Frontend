@@ -8,10 +8,10 @@
  * Actions are added separately after workflow creation via AddActionsDialog.
  */
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import {
@@ -65,6 +65,7 @@ const workflowFormSchema = z.object({
   batch: z.number().int().positive('Batch is required'),
   workflow_type: z.enum([
     'LIFECYCLE_TRANSITION',
+    'STATION_TO_SEA_DYNAMIC',
     'CONTAINER_REDISTRIBUTION',
     'EMERGENCY_CASCADE',
   ]),
@@ -95,7 +96,6 @@ export function CreateWorkflowWizard({
   const [open, setOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const form = useForm<WorkflowFormData>({
     resolver: zodResolver(workflowFormSchema),
@@ -124,14 +124,62 @@ export function CreateWorkflowWizard({
   });
 
   const createWorkflow = useCreateWorkflow();
+  const selectedWorkflowType = form.watch('workflow_type');
+  const isDynamicStationToSea = selectedWorkflowType === 'STATION_TO_SEA_DYNAMIC';
+  const totalSteps = isDynamicStationToSea ? 1 : 2;
+
+  const resolveStationToSeaStageIds = () => {
+    const stages = lifecycleStagesData?.results || [];
+    const normalize = (name: string) =>
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+
+    const postSmoltStage = stages.find((stage) =>
+      normalize(stage.name).includes('post smolt')
+    );
+    const adultStage = stages.find((stage) => normalize(stage.name) === 'adult');
+
+    if (!postSmoltStage || !adultStage) {
+      return null;
+    }
+
+    return {
+      sourceLifecycleStageId: postSmoltStage.id,
+      destLifecycleStageId: adultStage.id,
+    };
+  };
 
   const onSubmit = async (data: WorkflowFormData) => {
     try {
+      const isDynamicStationToSea = data.workflow_type === 'STATION_TO_SEA_DYNAMIC';
+      const workflowType = isDynamicStationToSea
+        ? 'LIFECYCLE_TRANSITION'
+        : data.workflow_type;
+      const stationToSeaStages = isDynamicStationToSea
+        ? resolveStationToSeaStageIds()
+        : null;
+
+      if (isDynamicStationToSea && !stationToSeaStages) {
+        toast({
+          title: 'Lifecycle Stages Missing',
+          description: 'Could not find required lifecycle stages "Post-Smolt" and "Adult".',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const payload = {
         batch: data.batch,
-        workflow_type: data.workflow_type,
-        source_lifecycle_stage: data.source_lifecycle_stage,
-        dest_lifecycle_stage: data.dest_lifecycle_stage || undefined,
+        workflow_type: workflowType,
+        is_dynamic_execution: isDynamicStationToSea,
+        source_lifecycle_stage: stationToSeaStages
+          ? stationToSeaStages.sourceLifecycleStageId
+          : data.source_lifecycle_stage,
+        dest_lifecycle_stage: stationToSeaStages
+          ? stationToSeaStages.destLifecycleStageId
+          : data.dest_lifecycle_stage || undefined,
         planned_start_date: format(data.planned_start_date, 'yyyy-MM-dd'),
         planned_completion_date: data.planned_completion_date
           ? format(data.planned_completion_date, 'yyyy-MM-dd')
@@ -145,7 +193,9 @@ export function CreateWorkflowWizard({
 
       toast({
         title: 'Workflow Created',
-        description: 'Transfer workflow created successfully. Add actions to continue.',
+        description: isDynamicStationToSea
+          ? 'Dynamic station-to-sea workflow created. Add handoffs during execution.'
+          : 'Transfer workflow created successfully. Add actions to continue.',
       });
 
       setOpen(false);
@@ -181,7 +231,28 @@ export function CreateWorkflowWizard({
     if (currentStep === 1) {
       fieldsToValidate = ['batch', 'workflow_type', 'planned_start_date'];
       const isValid = await form.trigger(fieldsToValidate);
-      if (isValid && currentStep < 2) {
+      if (!isValid) {
+        return;
+      }
+
+      if (form.getValues('workflow_type') === 'STATION_TO_SEA_DYNAMIC') {
+        const stageIds = resolveStationToSeaStageIds();
+        if (!stageIds) {
+          toast({
+            title: 'Lifecycle Stages Missing',
+            description: 'Could not find required lifecycle stages "Post-Smolt" and "Adult".',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        form.setValue('source_lifecycle_stage', stageIds.sourceLifecycleStageId);
+        form.setValue('dest_lifecycle_stage', stageIds.destLifecycleStageId);
+        await onSubmit(form.getValues() as WorkflowFormData);
+        return;
+      }
+
+      if (currentStep < totalSteps) {
         setCurrentStep(currentStep + 1);
       }
     }
@@ -194,8 +265,21 @@ export function CreateWorkflowWizard({
     }
   };
 
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (isDynamicStationToSea && currentStep === 1) {
+      event.preventDefault();
+      void nextStep();
+      return;
+    }
+
+    void form.handleSubmit(onSubmit)(event);
+  };
+
   const renderStepContent = () => {
-    const workflowType = form.watch('workflow_type');
+    const workflowType = selectedWorkflowType;
+    const isLifecycleTransitionWorkflow =
+      workflowType === 'LIFECYCLE_TRANSITION' ||
+      workflowType === 'STATION_TO_SEA_DYNAMIC';
 
     switch (currentStep) {
       case 1:
@@ -247,6 +331,9 @@ export function CreateWorkflowWizard({
                       <SelectItem value="LIFECYCLE_TRANSITION">
                         Lifecycle Stage Transition
                       </SelectItem>
+                      <SelectItem value="STATION_TO_SEA_DYNAMIC">
+                        Station-to-Sea (Dynamic)
+                      </SelectItem>
                       <SelectItem value="CONTAINER_REDISTRIBUTION">
                         Container Redistribution
                       </SelectItem>
@@ -258,6 +345,8 @@ export function CreateWorkflowWizard({
                   <FormDescription>
                     {workflowType === 'LIFECYCLE_TRANSITION' &&
                       'Transfer fish to next lifecycle stage (e.g., Post-Smolt → Adult)'}
+                    {workflowType === 'STATION_TO_SEA_DYNAMIC' &&
+                      'Create a high-level station-to-sea workflow. Crew adds handoffs live during execution.'}
                     {workflowType === 'CONTAINER_REDISTRIBUTION' &&
                       'Redistribute fish within same lifecycle stage'}
                     {workflowType === 'EMERGENCY_CASCADE' &&
@@ -267,6 +356,16 @@ export function CreateWorkflowWizard({
                 </FormItem>
               )}
             />
+
+            {workflowType === 'STATION_TO_SEA_DYNAMIC' && (
+              <Alert className="border-blue-200 bg-blue-50">
+                <AlertTriangle className="h-4 w-4 text-blue-700" />
+                <AlertDescription className="text-blue-900">
+                  This mode auto-uses Post-Smolt to Adult and creates a skeleton workflow.
+                  Actions are added as live handoffs by ship crew.
+                </AlertDescription>
+              </Alert>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -389,7 +488,7 @@ export function CreateWorkflowWizard({
               )}
             />
 
-            {workflowType === 'LIFECYCLE_TRANSITION' && (
+            {isLifecycleTransitionWorkflow && (
               <FormField
                 control={form.control}
                 name="dest_lifecycle_stage"
@@ -429,7 +528,7 @@ export function CreateWorkflowWizard({
               />
             )}
 
-            {workflowType === 'LIFECYCLE_TRANSITION' && (
+            {isLifecycleTransitionWorkflow && (
               <IntercompanyDetectionAlert
                 sourceStageId={form.watch('source_lifecycle_stage')}
                 destStageId={form.watch('dest_lifecycle_stage')}
@@ -463,6 +562,10 @@ export function CreateWorkflowWizard({
   };
 
   const getStepTitle = () => {
+    if (isDynamicStationToSea) {
+      return 'Basic Information & Create';
+    }
+
     switch (currentStep) {
       case 1:
         return 'Basic Information';
@@ -480,15 +583,15 @@ export function CreateWorkflowWizard({
         <DialogHeader>
           <DialogTitle>Create Transfer Workflow</DialogTitle>
           <DialogDescription>
-            Step {currentStep} of 2: {getStepTitle()}
+            Step {currentStep} of {totalSteps}: {getStepTitle()}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleFormSubmit} className="space-y-6">
             {/* Progress indicator */}
             <div className="flex items-center space-x-2">
-              {[1, 2].map((step) => (
+              {Array.from({ length: totalSteps }, (_, index) => index + 1).map((step) => (
                 <div key={step} className="flex items-center">
                   <div
                     className={cn(
@@ -496,11 +599,11 @@ export function CreateWorkflowWizard({
                       step <= currentStep
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    {step}
-                  </div>
-                  {step < 2 && (
+                      )}
+                    >
+                      {step}
+                    </div>
+                  {step < totalSteps && (
                     <div
                       className={cn(
                         'w-12 h-1 mx-2',
@@ -518,7 +621,7 @@ export function CreateWorkflowWizard({
 
             <DialogFooter className="flex justify-between">
               <div className="flex gap-2">
-                {currentStep > 1 && (
+                {!isDynamicStationToSea && currentStep > 1 && (
                   <Button type="button" variant="outline" onClick={prevStep}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Previous
@@ -527,7 +630,12 @@ export function CreateWorkflowWizard({
               </div>
 
               <div className="flex gap-2">
-                {currentStep < 2 ? (
+                {isDynamicStationToSea ? (
+                  <Button type="button" onClick={nextStep} disabled={createWorkflow.isPending}>
+                    <ArrowRightLeft className="h-4 w-4 mr-2" />
+                    {createWorkflow.isPending ? 'Creating...' : 'Create Dynamic Workflow'}
+                  </Button>
+                ) : currentStep < totalSteps ? (
                   <Button type="button" onClick={nextStep}>
                     Next
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -584,4 +692,3 @@ function IntercompanyDetectionAlert({
     </Alert>
   );
 }
-

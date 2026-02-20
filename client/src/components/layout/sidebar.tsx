@@ -107,7 +107,15 @@ const baseNavigationItems: NavigationItem[] = [
 // Navigation items component for reuse
 function NavigationMenu({ onItemClick }: { onItemClick?: () => void }) {
   const [location] = useLocation();
-  const { hasHealthAccess, hasOperationalAccess, hasFinanceAccess, isAdmin, profile, isLoading } = useUser();
+  const {
+    hasHealthAccess,
+    hasOperationalAccess,
+    hasFinanceAccess,
+    hasTransportExecutionAccess,
+    isAdmin,
+    profile,
+    isLoading,
+  } = useUser();
 
   // Filter navigation items based on user permissions
   // If profile is loading or not yet loaded, show all items (fallback to backend auth)
@@ -145,7 +153,9 @@ function NavigationMenu({ onItemClick }: { onItemClick?: () => void }) {
             )}
           >
             <i className={cn(item.icon, "mr-3 w-5 text-center")}></i>
-            {item.label}
+            {item.path === '/transfer-workflows' && hasTransportExecutionAccess
+              ? 'Vessel Transfers'
+              : item.label}
           </div>
         </Link>
       ))}
