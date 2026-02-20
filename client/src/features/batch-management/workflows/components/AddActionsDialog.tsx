@@ -397,14 +397,16 @@ export function AddActionsDialog({
       // Parameters: active, geography, geographyIn, name, nameIcontains, ordering, page, search
       const areasInGeoResults = await fetchAllPages((page) =>
         ApiService.apiV1InfrastructureAreasList(
-          true, // 1: active ✅
-          geographyId, // 2: geography ✅
-          undefined, // 3: geographyIn
-          undefined, // 4: name
-          undefined, // 5: nameIcontains
-          undefined, // 6: ordering
-          page, // 7: page ✅
-          undefined, // 8: search
+          true, // active
+          undefined, // areaGroup
+          undefined, // areaGroupIn
+          geographyId, // geography
+          undefined, // geographyIn
+          undefined, // name
+          undefined, // nameIcontains
+          undefined, // ordering
+          page, // page
+          undefined // search
         )
       );
       
@@ -436,16 +438,24 @@ export function AddActionsDialog({
           const hallContainersBulk = hallIds.length > 0
             ? await fetchAllPages((page) =>
                 ApiService.apiV1InfrastructureContainersList(
-                  true, // 1: active ✅
-                  undefined, // 2: area (null for hall-based)
-                  undefined, // 3: areaIn
-                  undefined, // 4: containerType
-                  undefined, // 5: hall
-                  hallIds, // 6: hallIn ✅
-                  undefined, // 7: name
-                  undefined, // 8: ordering
-                  page, // 9: page ✅
-                  undefined, // 10: search
+                  true, // active
+                  undefined, // area
+                  undefined, // areaIn
+                  undefined, // carrier
+                  undefined, // carrierCarrierType
+                  undefined, // carrierIn
+                  undefined, // containerType
+                  undefined, // containerTypeCategory
+                  undefined, // hall
+                  hallIds, // hallIn
+                  undefined, // hierarchyRole
+                  undefined, // name
+                  undefined, // ordering
+                  page, // page
+                  undefined, // parentContainer
+                  undefined, // parentContainerIn
+                  undefined, // parentContainerIsnull
+                  undefined, // search
                 )
               )
             : [];
@@ -457,12 +467,20 @@ export function AddActionsDialog({
                   true, // active
                   undefined, // area
                   undefined, // areaIn
+                  undefined, // carrier
+                  undefined, // carrierCarrierType
+                  undefined, // carrierIn
                   undefined, // containerType
-                  hallId, // hall ✅
+                  undefined, // containerTypeCategory
+                  hallId, // hall
                   undefined, // hallIn
+                  undefined, // hierarchyRole
                   undefined, // name
                   undefined, // ordering
                   page, // page
+                  undefined, // parentContainer
+                  undefined, // parentContainerIn
+                  undefined, // parentContainerIsnull
                   undefined, // search
                 )
               )
@@ -483,16 +501,24 @@ export function AddActionsDialog({
         const areaContainersPromises = areaIds.map((areaId: number) =>
           fetchAllPages((page) =>
             ApiService.apiV1InfrastructureContainersList(
-              true, // 1: active ✅
-              areaId, // 2: area ✅
-              undefined, // 3: areaIn
-              undefined, // 4: containerType
-              undefined, // 5: hall
-              undefined, // 6: hallIn
-              undefined, // 7: name
-              undefined, // 8: ordering
-              page, // 9: page ✅
-              undefined, // 10: search
+              true, // active
+              areaId, // area
+              undefined, // areaIn
+              undefined, // carrier
+              undefined, // carrierCarrierType
+              undefined, // carrierIn
+              undefined, // containerType
+              undefined, // containerTypeCategory
+              undefined, // hall
+              undefined, // hallIn
+              undefined, // hierarchyRole
+              undefined, // name
+              undefined, // ordering
+              page, // page
+              undefined, // parentContainer
+              undefined, // parentContainerIn
+              undefined, // parentContainerIsnull
+              undefined, // search
             )
           )
         );

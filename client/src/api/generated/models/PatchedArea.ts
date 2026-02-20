@@ -36,6 +36,14 @@ export type PatchedArea = {
      * Indicates if the area is currently active and available for use.
      */
     active?: boolean;
+    /**
+     * Optional parent area-group node for hierarchical sea geography.
+     */
+    area_group?: number | null;
+    /**
+     * Name of the linked area group.
+     */
+    readonly area_group_name?: string | null;
     readonly created_at?: string;
     readonly updated_at?: string;
 };

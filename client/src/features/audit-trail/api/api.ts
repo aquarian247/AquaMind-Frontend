@@ -288,6 +288,7 @@ const HISTORY_METHODS: Record<AppDomain, Record<string, HistoryMethodMapping>> =
       list: async (filters?: HistoryFilters) => await ApiService.listInfrastructureContainerHistory(
         undefined, // active
         undefined, // area
+        undefined, // carrier
         undefined, // containerType
         filters?.dateFrom,
         filters?.dateTo,

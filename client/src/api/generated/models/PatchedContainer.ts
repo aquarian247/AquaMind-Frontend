@@ -20,7 +20,7 @@ export type PatchedContainer = {
      */
     readonly container_type_name?: string;
     /**
-     * ID of the hall this container is located in (if applicable). Mutually exclusive with 'area'.
+     * ID of the hall this container is located in (if applicable). Mutually exclusive with 'area' and 'carrier'.
      */
     hall?: number | null;
     /**
@@ -28,13 +28,40 @@ export type PatchedContainer = {
      */
     readonly hall_name?: string | null;
     /**
-     * ID of the sea area this container is located in (if applicable). Mutually exclusive with 'hall'.
+     * ID of the sea area this container is located in (if applicable). Mutually exclusive with 'hall' and 'carrier'.
      */
     area?: number | null;
     /**
      * Name of the sea area this container is located in.
      */
     readonly area_name?: string | null;
+    /**
+     * Optional transport carrier this tank belongs to (truck or vessel).
+     */
+    carrier?: number | null;
+    /**
+     * Name of the linked transport carrier.
+     */
+    readonly carrier_name?: string | null;
+    /**
+     * Carrier type (TRUCK or VESSEL).
+     */
+    readonly carrier_type?: string | null;
+    /**
+     * Optional structural parent container (for example a rack).
+     */
+    parent_container?: number | null;
+    /**
+     * Name of the parent container, when linked.
+     */
+    readonly parent_container_name?: string | null;
+    /**
+     * Container role in hierarchy: HOLDING fish or STRUCTURAL support.
+     *
+     * * `HOLDING` - Holding
+     * * `STRUCTURAL` - Structural
+     */
+    hierarchy_role?: 'HOLDING' | 'STRUCTURAL';
     /**
      * Volume of the container in cubic meters (e.g., 150.75).
      */

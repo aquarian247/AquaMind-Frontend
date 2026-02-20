@@ -18,6 +18,7 @@ export type PatchedBatchTransferWorkflowDetail = {
     readonly dest_stage_name?: string;
     readonly initiated_by_username?: string;
     readonly completed_by_username?: string;
+    readonly is_vessel_transfer?: boolean;
     readonly actions?: string;
     /**
      * Unique workflow identifier (e.g., TRF-2024-001)
@@ -81,6 +82,10 @@ export type PatchedBatchTransferWorkflowDetail = {
      * Completion percentage (0-100)
      */
     readonly completion_percentage?: string;
+    /**
+     * When true, actions are created during execution time by ship crew instead of pre-defined during planning.
+     */
+    is_dynamic_execution?: boolean;
     /**
      * Whether this transfer crosses subsidiary boundaries
      */

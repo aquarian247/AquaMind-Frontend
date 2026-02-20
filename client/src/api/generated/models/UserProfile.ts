@@ -39,12 +39,13 @@ export type UserProfile = {
      * * `ADMIN` - Administrator
      * * `MGR` - Manager
      * * `OPR` - Operator
+     * * `SHIP_CREW` - Ship Crew
      * * `VET` - Veterinarian
      * * `QA` - Quality Assurance
      * * `FIN` - Finance
      * * `VIEW` - Viewer
      */
-    readonly role: 'ADMIN' | 'MGR' | 'OPR' | 'VET' | 'QA' | 'FIN' | 'VIEW';
+    readonly role: 'ADMIN' | 'MGR' | 'OPR' | 'SHIP_CREW' | 'VET' | 'QA' | 'FIN' | 'VIEW';
     /**
      * * `en` - English
      * * `fo` - Faroese

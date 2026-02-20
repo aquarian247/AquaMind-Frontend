@@ -52,6 +52,7 @@ export function useWorkflows(filters?: WorkflowFilters) {
         undefined, // destLifecycleStage
         undefined, // destSubsidiary
         undefined, // initiatedBy
+        undefined, // isDynamicExecution
         filters?.is_intercompany, // isIntercompany
         undefined, // ordering
         filters?.page, // page
@@ -356,4 +357,3 @@ export function useCreateAction() {
 //     },
 //   });
 // }
-

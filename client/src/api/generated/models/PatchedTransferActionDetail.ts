@@ -22,6 +22,8 @@ export type PatchedTransferActionDetail = {
      * Get destination assignment information.
      */
     readonly dest_assignment_info?: Record<string, any> | null;
+    readonly source_readings_snapshot?: string;
+    readonly dest_readings_snapshot?: string;
     readonly executed_by_username?: string;
     /**
      * Sequence number within workflow (1, 2, 3...)

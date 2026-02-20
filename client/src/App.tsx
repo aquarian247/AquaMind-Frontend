@@ -15,6 +15,7 @@ const TemperatureDataView = lazy(() => import("./pages/TemperatureDataView"));
 // Feature pages
 import Infrastructure from "@/pages/infrastructure";
 import InfrastructureManagementPage from "@/features/infrastructure/pages/InfrastructureManagementPage";
+import InfrastructureAreaGroups from "@/pages/infrastructure-area-groups";
 import InfrastructureAreas from "@/pages/infrastructure-areas";
 import InfrastructureStations from "@/pages/infrastructure-stations";
 import InfrastructureContainers from "@/pages/infrastructure-containers";
@@ -26,6 +27,7 @@ import StationHalls from "@/pages/station-halls";
 import RingDetail from "@/pages/ring-detail";
 import HallDetail from "@/pages/hall-detail";
 import ContainerDetail from "@/pages/container-detail";
+import ContainerChildrenPage from "@/pages/container-children";
 
 // Batch management
 import BatchManagement from "@/pages/batch-management";
@@ -152,6 +154,14 @@ function Router() {
           </AppLayout>
         </ProtectedRoute>
       </Route>
+
+      <Route path="/infrastructure/area-groups">
+        <ProtectedRoute>
+          <AppLayout>
+            <InfrastructureAreaGroups />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
       
       <Route path="/infrastructure/stations">
         <ProtectedRoute>
@@ -237,6 +247,16 @@ function Router() {
         )}
       </Route>
       
+      <Route path="/infrastructure/containers/:id/children">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <ContainerChildrenPage params={params} />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+
       <Route path="/infrastructure/containers/:id">
         {(params) => (
           <ProtectedRoute>

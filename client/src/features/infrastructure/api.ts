@@ -9,6 +9,7 @@ import { ApiService } from "@/api/generated";
 import { useCrudMutation } from "@/features/shared/hooks/useCrudMutation";
 import type {
   Area,
+  AreaGroup,
   FreshwaterStation,
   Hall,
   Geography,
@@ -335,6 +336,98 @@ export function useDeleteGeography() {
   });
 }
 
+// ===== AREA GROUP CRUD HOOKS =====
+
+/**
+ * Hook to fetch area groups with optional filtering.
+ * @param filters - Optional filter parameters
+ * @returns Query result with area groups list
+ */
+export function useAreaGroups(filters?: {
+  geography?: number;
+  parent?: number;
+  parent_isnull?: boolean;
+  active?: boolean;
+}) {
+  return useQuery({
+    queryKey: ["area-groups", filters],
+    queryFn: () =>
+      ApiService.apiV1InfrastructureAreaGroupsList(
+        filters?.active,
+        undefined, // code
+        undefined, // codeIcontains
+        filters?.geography,
+        undefined, // geographyIn
+        undefined, // name
+        undefined, // nameIcontains
+        undefined, // ordering
+        undefined, // page
+        filters?.parent,
+        undefined, // parentIn
+        filters?.parent_isnull,
+        undefined // search
+      ),
+  });
+}
+
+/**
+ * Hook to fetch a single area group by ID.
+ * @param id - The area group ID to fetch
+ * @returns Query result with area group data
+ */
+export function useAreaGroup(id: number | undefined) {
+  return useQuery({
+    queryKey: ["area-group", id],
+    queryFn: () => {
+      if (!id) throw new Error("Area group ID is required");
+      return ApiService.apiV1InfrastructureAreaGroupsRetrieve(id);
+    },
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook to create a new area group.
+ * @returns Mutation hook for creating area group
+ */
+export function useCreateAreaGroup() {
+  return useCrudMutation({
+    mutationFn: ApiService.apiV1InfrastructureAreaGroupsCreate,
+    description: "Area group created successfully",
+    invalidateQueries: ["area-groups"],
+  });
+}
+
+/**
+ * Hook to update an existing area group.
+ * @returns Mutation hook for updating area group
+ */
+export function useUpdateAreaGroup() {
+  return useCrudMutation({
+    mutationFn: ({ id, ...data }: AreaGroup) =>
+      ApiService.apiV1InfrastructureAreaGroupsUpdate(id, data as AreaGroup),
+    description: "Area group updated successfully",
+    invalidateQueries: ["area-groups"],
+  });
+}
+
+/**
+ * Hook to delete an area group with audit trail support.
+ * @returns Mutation hook for deleting area group
+ */
+export function useDeleteAreaGroup() {
+  return useCrudMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      ApiService.apiV1InfrastructureAreaGroupsDestroy(id),
+    description: "Area group deleted",
+    invalidateQueries: ["area-groups"],
+    injectAuditReason: (vars, reason) => ({
+      ...vars,
+      change_reason: reason,
+    }),
+  });
+}
+
 // ===== FRESHWATER STATION CRUD HOOKS =====
 
 /**
@@ -578,8 +671,15 @@ export function useDeleteContainerType() {
  */
 export function useContainers(filters?: { 
   hall?: number; 
+  hallIn?: number[];
   area?: number; 
+  areaIn?: number[];
   containerType?: number;
+  containerTypeCategory?: 'TANK' | 'PEN' | 'TRAY' | 'OTHER';
+  parentContainer?: number;
+  parentContainerIn?: number[];
+  parentContainerIsnull?: boolean;
+  hierarchyRole?: 'HOLDING' | 'STRUCTURAL';
   container_type__category?: 'TANK' | 'PEN' | 'TRAY' | 'OTHER';
   active?: boolean;
   exclude_ids?: number[];
@@ -588,16 +688,24 @@ export function useContainers(filters?: {
     queryKey: ["containers", filters],
     queryFn: async () => {
       const response = await ApiService.apiV1InfrastructureContainersList(
-        filters?.active,
-        filters?.area,
-        undefined, // areaIn
-        filters?.containerType,
-        filters?.hall,
-        undefined, // hallIn
+        filters?.active, // active
+        filters?.area, // area
+        filters?.areaIn, // areaIn
+        undefined, // carrier
+        undefined, // carrierCarrierType
+        undefined, // carrierIn
+        filters?.containerType, // containerType
+        filters?.containerTypeCategory ?? filters?.container_type__category, // containerTypeCategory
+        filters?.hall, // hall
+        filters?.hallIn, // hallIn
+        filters?.hierarchyRole, // hierarchyRole
         undefined, // name
         undefined, // ordering
         undefined, // page
-        undefined  // search
+        filters?.parentContainer, // parentContainer
+        filters?.parentContainerIn, // parentContainerIn
+        filters?.parentContainerIsnull, // parentContainerIsnull
+        undefined // search
       );
       
       let filteredResults = response.results || [];
@@ -626,7 +734,13 @@ export function useContainers(filters?: {
         results: filteredResults,
       };
     },
-    enabled: !!filters?.hall || !!filters?.area,
+    enabled:
+      !!filters?.hall ||
+      !!filters?.area ||
+      !!filters?.hallIn?.length ||
+      !!filters?.areaIn?.length ||
+      filters?.parentContainer !== undefined ||
+      filters?.parentContainerIsnull !== undefined,
   });
 }
 
@@ -851,15 +965,25 @@ export function useDeleteFeedContainer() {
  * @param filters - Optional filter parameters
  * @returns Query result with areas list
  */
-export function useAreas(filters?: { geography?: number; active?: boolean }) {
+export function useAreas(filters?: {
+  geography?: number;
+  area_group?: number;
+  active?: boolean;
+}) {
   return useQuery({
     queryKey: ["areas", filters],
     queryFn: () =>
       ApiService.apiV1InfrastructureAreasList(
-        filters?.active,
-        filters?.geography,
+        filters?.active, // active
+        filters?.area_group, // areaGroup
+        undefined, // areaGroupIn
+        filters?.geography, // geography
+        undefined, // geographyIn
+        undefined, // name
+        undefined, // nameIcontains
         undefined, // ordering
-        undefined // page
+        undefined, // page
+        undefined // search
       ),
   });
 }

@@ -74,8 +74,21 @@ export default function HallDetail({ params }: { params: { id: string } }) {
         undefined,        // active filter
         undefined,        // area
         undefined,        // areaIn
+        undefined,        // carrier
+        undefined,        // carrierCarrierType
+        undefined,        // carrierIn
         undefined,        // containerType
-        Number(hallId)    // hall (5th parameter)
+        undefined,        // containerTypeCategory
+        Number(hallId),   // hall
+        undefined,        // hallIn
+        undefined,        // hierarchyRole
+        undefined,        // name
+        undefined,        // ordering
+        undefined,        // page
+        undefined,        // parentContainer
+        undefined,        // parentContainerIn
+        undefined,        // parentContainerIsnull
+        undefined,        // search
       );
 
       const containers = res.results || [];

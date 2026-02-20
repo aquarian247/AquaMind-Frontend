@@ -35,12 +35,13 @@ export type UserCreate = {
      * * `ADMIN` - Administrator
      * * `MGR` - Manager
      * * `OPR` - Operator
+     * * `SHIP_CREW` - Ship Crew
      * * `VET` - Veterinarian
      * * `QA` - Quality Assurance
      * * `FIN` - Finance
      * * `VIEW` - Viewer
      */
-    role?: 'ADMIN' | 'MGR' | 'OPR' | 'VET' | 'QA' | 'FIN' | 'VIEW';
+    role?: 'ADMIN' | 'MGR' | 'OPR' | 'SHIP_CREW' | 'VET' | 'QA' | 'FIN' | 'VIEW';
     password: string;
     /**
      * Designates whether this user should be treated as active. Unselect this instead of deleting accounts.

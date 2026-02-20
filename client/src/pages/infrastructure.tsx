@@ -117,12 +117,21 @@ export default function Infrastructure() {
       undefined, // active
       undefined, // area
       undefined, // areaIn
+      undefined, // carrier
+      undefined, // carrierCarrierType
+      undefined, // carrierIn
       undefined, // containerType
+      undefined, // containerTypeCategory
       undefined, // hall
       undefined, // hallIn
+      undefined, // hierarchyRole
       undefined, // name
       undefined, // ordering
-      1          // page (first page only for sample)
+      1,         // page (first page only for sample)
+      undefined, // parentContainer
+      undefined, // parentContainerIn
+      undefined, // parentContainerIsnull
+      undefined  // search
     ),
   });
 
@@ -543,10 +552,10 @@ export default function Infrastructure() {
                       variant="outline" 
                       size="sm" 
                       className="flex-1"
-                      onClick={() => setLocation(`/infrastructure/areas?geography=${geo.name.toLowerCase().replace(/\s+/g, '-')}`)}
+                      onClick={() => setLocation(`/infrastructure/area-groups?geography=${geo.name.toLowerCase().replace(/\s+/g, '-')}`)}
                     >
                       <Waves className="h-4 w-4 mr-2" />
-                      View Areas
+                      View Area Groups
                     </Button>
                     <Button 
                       variant="outline" 
@@ -595,11 +604,11 @@ export default function Infrastructure() {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => setLocation('/infrastructure/areas')}
+                  onClick={() => setLocation('/infrastructure/area-groups')}
                   className="w-full sm:w-auto"
                 >
                   <Waves className="h-4 w-4 mr-2" />
-                  Browse by Area
+                  Browse by Area Group
                 </Button>
               </div>
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-sm">
@@ -652,11 +661,11 @@ export default function Infrastructure() {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => setLocation('/infrastructure/areas')}
+                  onClick={() => setLocation('/infrastructure/area-groups')}
                   className="w-full sm:w-auto"
                 >
                   <Waves className="h-4 w-4 mr-2" />
-                  Sea Sensors
+                  Sea Area Groups
                 </Button>
               </div>
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 text-sm">

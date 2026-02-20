@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * History serializer for Container model.
+ * History serializer for AreaGroup model.
  */
-export type ContainerHistory = {
+export type AreaGroupHistory = {
     readonly history_id: number;
     /**
      * User who made the change
@@ -25,21 +25,11 @@ export type ContainerHistory = {
     readonly history_change_reason: string;
     id?: number;
     name: string;
-    /**
-     * * `HOLDING` - Holding
-     * * `STRUCTURAL` - Structural
-     */
-    hierarchy_role?: 'HOLDING' | 'STRUCTURAL';
-    volume_m3: string;
-    max_biomass_kg: string;
-    feed_recommendations_enabled?: boolean;
+    code?: string;
     active?: boolean;
     readonly created_at: string;
     readonly updated_at: string;
-    container_type?: number | null;
-    hall?: number | null;
-    area?: number | null;
-    carrier?: number | null;
-    parent_container?: number | null;
+    geography?: number | null;
+    parent?: number | null;
 };
 

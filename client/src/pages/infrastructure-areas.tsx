@@ -141,14 +141,21 @@ export default function InfrastructureAreas() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Parse geography from URL query parameter (e.g., ?geography=faroe-islands)
-  // Note: Wouter's location doesn't include query params, use window.location.search
-  const selectedGeography = useMemo(() => {
-    const queryString = window.location.search.substring(1); // Remove leading '?'
-    const urlParams = new URLSearchParams(queryString);
-    const geo = urlParams.get('geography');
-    return geo || 'all';
-  }, [location]); // Still depend on location to trigger re-render on navigation
+  // Parse query parameters from URL (wouter location excludes query string)
+  const { selectedGeography, selectedAreaGroupId, selectedAreaGroupName } = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const geo = params.get("geography") || "all";
+    const areaGroupRaw = params.get("areaGroup");
+    const parsedAreaGroupId = areaGroupRaw ? Number(areaGroupRaw) : undefined;
+    return {
+      selectedGeography: geo,
+      selectedAreaGroupId:
+        parsedAreaGroupId && Number.isFinite(parsedAreaGroupId)
+          ? parsedAreaGroupId
+          : undefined,
+      selectedAreaGroupName: params.get("areaGroupName") || undefined,
+    };
+  }, [location]);
 
   // ✅ No longer needed - we'll use geography summary instead
   // Removed hardcoded fallback values (70 containers, 3500 biomass)
@@ -175,9 +182,21 @@ export default function InfrastructureAreas() {
     return geo?.id;
   }, [selectedGeography, geographiesData]);
 
+  const { data: selectedAreaGroup } = useQuery({
+    queryKey: ["infrastructure", "area-group", selectedAreaGroupId],
+    queryFn: () => ApiService.apiV1InfrastructureAreaGroupsRetrieve(selectedAreaGroupId!),
+    enabled: !!selectedAreaGroupId,
+  });
+
   // Fetch ALL areas using pagination (handles >20 areas per geography)
   const { data: rawAreasData, isLoading: areasLoading } = useQuery({
-    queryKey: ["infrastructure", "areas", selectedGeography, selectedGeographyId],
+    queryKey: [
+      "infrastructure",
+      "areas",
+      selectedGeography,
+      selectedGeographyId,
+      selectedAreaGroupId,
+    ],
     queryFn: async () => {
       const allAreas: any[] = [];
       let page = 1;
@@ -186,6 +205,8 @@ export default function InfrastructureAreas() {
         // Fetch first page to get total count
         const firstResponse = await ApiService.apiV1InfrastructureAreasList(
           undefined,           // active
+          selectedAreaGroupId, // areaGroup
+          undefined,           // areaGroupIn
           selectedGeographyId, // geography - FILTER BY SELECTED GEOGRAPHY
           undefined,           // geographyIn
           undefined,           // name
@@ -208,6 +229,8 @@ export default function InfrastructureAreas() {
           
           const response = await ApiService.apiV1InfrastructureAreasList(
             undefined,           // active
+            selectedAreaGroupId, // areaGroup
+            undefined,           // areaGroupIn
             selectedGeographyId, // geography - FILTER BY SELECTED GEOGRAPHY
             undefined,           // geographyIn
             undefined,           // name
@@ -292,6 +315,12 @@ export default function InfrastructureAreas() {
     return { results: mapped };
   }, [rawAreasData, areaSummaryMap, selectedGeography]);
 
+  const backHref = selectedAreaGroupId
+    ? selectedGeography === "all"
+      ? "/infrastructure/area-groups"
+      : `/infrastructure/area-groups?geography=${selectedGeography}`
+    : "/infrastructure";
+
   const isLoading = areasLoading || summariesLoading;
 
   // Use geographies data already fetched above for filter dropdown
@@ -340,15 +369,19 @@ export default function InfrastructureAreas() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" onClick={() => setLocation("/infrastructure")} className="flex items-center">
+          <Button variant="ghost" onClick={() => setLocation(backHref)} className="flex items-center">
             <ArrowLeft className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Back to Infrastructure</span>
+            <span className="hidden sm:inline">
+              {selectedAreaGroupId ? "Back to Area Groups" : "Back to Infrastructure"}
+            </span>
           </Button>
           <Waves className="h-8 w-8 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold">Sea Areas</h1>
             <p className="text-muted-foreground">
-              Overview of sea pen areas across geographies
+              {selectedAreaGroupId
+                ? `Areas in ${(selectedAreaGroup as any)?.name || selectedAreaGroupName || "selected area group"}`
+                : "Overview of sea pen areas across geographies"}
             </p>
           </div>
         </div>
@@ -393,7 +426,9 @@ export default function InfrastructureAreas() {
               {filteredAreas.length}
             </div>
             <p className="text-xs text-muted-foreground">
-              Across {selectedGeography === "all" ? "both geographies" : selectedGeography}
+              {selectedAreaGroupId
+                ? `Within ${(selectedAreaGroup as any)?.name || selectedAreaGroupName || "selected group"}`
+                : `Across ${selectedGeography === "all" ? "both geographies" : selectedGeography}`}
             </p>
           </CardContent>
         </Card>

@@ -41,5 +41,6 @@ export type AreaHistory = {
     readonly created_at: string;
     readonly updated_at: string;
     geography?: number | null;
+    area_group?: number | null;
 };
 

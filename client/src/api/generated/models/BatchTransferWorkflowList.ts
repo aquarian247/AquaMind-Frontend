@@ -75,6 +75,11 @@ export type BatchTransferWorkflowList = {
      */
     is_intercompany?: boolean;
     /**
+     * When true, actions are created during execution time by ship crew instead of pre-defined during planning.
+     */
+    is_dynamic_execution?: boolean;
+    readonly is_vessel_transfer: boolean;
+    /**
      * User who created this workflow
      */
     readonly initiated_by: number;

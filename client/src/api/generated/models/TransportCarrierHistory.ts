@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * History serializer for Container model.
+ * History serializer for TransportCarrier model.
  */
-export type ContainerHistory = {
+export type TransportCarrierHistory = {
     readonly history_id: number;
     /**
      * User who made the change
@@ -26,20 +26,17 @@ export type ContainerHistory = {
     id?: number;
     name: string;
     /**
-     * * `HOLDING` - Holding
-     * * `STRUCTURAL` - Structural
+     * * `TRUCK` - Truck
+     * * `VESSEL` - Vessel
      */
-    hierarchy_role?: 'HOLDING' | 'STRUCTURAL';
-    volume_m3: string;
-    max_biomass_kg: string;
-    feed_recommendations_enabled?: boolean;
+    carrier_type: 'TRUCK' | 'VESSEL';
+    capacity_m3: string;
+    license_plate?: string;
+    imo_number?: string;
+    captain_contact?: string;
     active?: boolean;
     readonly created_at: string;
     readonly updated_at: string;
-    container_type?: number | null;
-    hall?: number | null;
-    area?: number | null;
-    carrier?: number | null;
-    parent_container?: number | null;
+    geography?: number | null;
 };
 

@@ -102,12 +102,20 @@ export default function StationDetail({ params }: { params: { id: string } }) {
           undefined, // active
           undefined, // area
           undefined, // areaIn
+          undefined, // carrier
+          undefined, // carrierCarrierType
+          undefined, // carrierIn
           undefined, // containerType
+          undefined, // containerTypeCategory
           undefined, // hall
           hallIds, // hallIn - filter by station's halls
+          undefined, // hierarchyRole
           undefined, // name
           undefined, // ordering
           1, // page
+          undefined, // parentContainer
+          undefined, // parentContainerIn
+          undefined, // parentContainerIsnull
           undefined  // search
         );
 
