@@ -33,11 +33,14 @@ jobs:
         npx vitest run --coverage
       continue-on-error: true
 
-    - name: Fetch Latest API Spec
+    - name: Prepare OpenAPI Spec
       run: |
         mkdir -p tmp/openapi
-        curl -sSfL -o tmp/openapi/openapi.yaml \
-             https://raw.githubusercontent.com/aquarian247/AquaMind/main/api/openapi.yaml
+        if [ ! -f "api/openapi.yaml" ]; then
+          echo "❌ api/openapi.yaml is missing"
+          exit 1
+        fi
+        cp api/openapi.yaml tmp/openapi/openapi.yaml
 
     - name: Regenerate API Client
       run: npm run generate:api
