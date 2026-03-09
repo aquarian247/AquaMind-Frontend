@@ -8,11 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { Fish, TrendingUp, TrendingDown, Activity, Beaker, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Fish, TrendingUp, TrendingDown, Activity, Beaker, AlertTriangle, ChevronLeft, ChevronRight, GitBranch, TableIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ApiService } from "@/api/generated";
 import { api } from "@/lib/api";
 import { API_CONFIG } from "@/lib/config";
+import { BatchContainerFlowGraph } from "@/features/batch-management/components/container-flow/BatchContainerFlowGraph";
+import type { ViewMode } from "@/features/batch-management/components/container-flow/containerFlow.types";
 
 interface LifecycleProgressionStage {
   lifecycle_stage_id: number;
@@ -47,6 +49,7 @@ interface BatchTraceabilityViewProps {
 export function BatchTraceabilityView({ batchId, batchName, stages: propStages, containers: propContainers }: BatchTraceabilityViewProps) {
   const [activeView, setActiveView] = useState("lifecycle");
   const [mortalityPage, setMortalityPage] = useState(1);
+  const [assignmentView, setAssignmentView] = useState<ViewMode>("graph");
   const isMobile = useIsMobile();
   
   console.log('🔍 BatchTraceabilityView INIT:', { batchId, batchName, activeView });
@@ -598,60 +601,86 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
         <TabsContent value="assignments" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Container Assignment History</CardTitle>
-              <CardDescription>Detailed tracking of batch distribution across containers</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Container Assignment History</CardTitle>
+                  <CardDescription>Batch distribution across containers through its lifecycle</CardDescription>
+                </div>
+                <div className="flex items-center border rounded-md overflow-hidden">
+                  <Button
+                    variant={assignmentView === "graph" ? "default" : "ghost"}
+                    size="sm"
+                    className="rounded-none h-8 px-3"
+                    onClick={() => setAssignmentView("graph")}
+                  >
+                    <GitBranch className="w-3.5 h-3.5 mr-1.5" />
+                    Flow
+                  </Button>
+                  <Button
+                    variant={assignmentView === "table" ? "default" : "ghost"}
+                    size="sm"
+                    className="rounded-none h-8 px-3"
+                    onClick={() => setAssignmentView("table")}
+                  >
+                    <TableIcon className="w-3.5 h-3.5 mr-1.5" />
+                    Table
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Container</TableHead>
-                    <TableHead>Stage</TableHead>
-                    <TableHead>Population</TableHead>
-                    <TableHead>Biomass (kg)</TableHead>
-                    <TableHead>Assignment Date</TableHead>
-                    <TableHead>Departure Date</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {batchAssignments
-                    .sort((a: any, b: any) => new Date(a.assignment_date).getTime() - new Date(b.assignment_date).getTime())
-                    .map((assignment: any) => {
-                      // Handle nested container object or ID
-                      const containerObj = typeof assignment.container === 'object' 
-                        ? assignment.container 
-                        : containers.find((c: any) => c.id === assignment.container);
-                      
-                      // Handle nested lifecycle_stage object or ID
-                      const stageObj = typeof assignment.lifecycle_stage === 'object'
-                        ? assignment.lifecycle_stage
-                        : stages.find((s: any) => s.id === assignment.lifecycle_stage);
-                      
-                      return (
-                        <TableRow key={assignment.id}>
-                          <TableCell className="font-medium">
-                            {containerObj?.name || 'Unknown'}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {stageObj?.name || 'Unknown'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{assignment.population_count?.toLocaleString() || '0'}</TableCell>
-                          <TableCell>{parseFloat(assignment.biomass_kg || 0).toFixed(2)}</TableCell>
-                          <TableCell>{assignment.assignment_date}</TableCell>
-                          <TableCell>{assignment.departure_date || '-'}</TableCell>
-                          <TableCell>
-                            <Badge variant={assignment.is_active ? "default" : "secondary"}>
-                              {assignment.is_active ? "Active" : "Departed"}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                </TableBody>
-              </Table>
+              {assignmentView === "graph" ? (
+                <BatchContainerFlowGraph batchId={batchId} />
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Container</TableHead>
+                      <TableHead>Stage</TableHead>
+                      <TableHead>Population</TableHead>
+                      <TableHead>Biomass (kg)</TableHead>
+                      <TableHead>Assignment Date</TableHead>
+                      <TableHead>Departure Date</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {batchAssignments
+                      .sort((a: any, b: any) => new Date(a.assignment_date).getTime() - new Date(b.assignment_date).getTime())
+                      .map((assignment: any) => {
+                        const containerObj = typeof assignment.container === 'object' 
+                          ? assignment.container 
+                          : containers.find((c: any) => c.id === assignment.container);
+                        
+                        const stageObj = typeof assignment.lifecycle_stage === 'object'
+                          ? assignment.lifecycle_stage
+                          : stages.find((s: any) => s.id === assignment.lifecycle_stage);
+                        
+                        return (
+                          <TableRow key={assignment.id}>
+                            <TableCell className="font-medium">
+                              {containerObj?.name || 'Unknown'}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {stageObj?.name || 'Unknown'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{assignment.population_count?.toLocaleString() || '0'}</TableCell>
+                            <TableCell>{parseFloat(assignment.biomass_kg || 0).toFixed(2)}</TableCell>
+                            <TableCell>{assignment.assignment_date}</TableCell>
+                            <TableCell>{assignment.departure_date || '-'}</TableCell>
+                            <TableCell>
+                              <Badge variant={assignment.is_active ? "default" : "secondary"}>
+                                {assignment.is_active ? "Active" : "Departed"}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
