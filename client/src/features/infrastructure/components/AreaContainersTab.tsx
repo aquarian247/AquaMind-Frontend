@@ -27,7 +27,7 @@ import {
   Search,
   Gauge,
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import type { Ring } from "../hooks/useAreaData";
 import type { FormattedAreaKPIs } from "../utils/areaFormatters";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
@@ -291,12 +291,26 @@ export function AreaContainersTab({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span className="flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    Inspected {new Date(ring.lastInspection).toLocaleDateString()}
-                  </span>
-                </div>
+                {ring.activeBatches.length > 0 && (
+                  <div>
+                    <span className="text-xs text-muted-foreground">Active Batches</span>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {ring.activeBatches.map((b) => (
+                        <Link key={b.id} href={`/batch/${b.id}`}>
+                          <Badge
+                            variant="secondary"
+                            className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
+                          >
+                            {b.batchNumber}
+                            {b.lifecycleStage && (
+                              <span className="ml-1 opacity-60">({b.lifecycleStage})</span>
+                            )}
+                          </Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex space-x-2">
                   <Button

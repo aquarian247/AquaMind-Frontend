@@ -16,6 +16,13 @@ import { apiConfig } from "@/config/api.config";
 /**
  * Container/Ring data structure
  */
+export interface RingBatch {
+  id: number;
+  batchNumber: string;
+  populationCount: number;
+  lifecycleStage: string;
+}
+
 export interface Ring {
   id: number;
   name: string;
@@ -31,6 +38,7 @@ export interface Ring {
   lastInspection: string;
   coordinates: { lat: number; lng: number };
   environmentalStatus: string;
+  activeBatches: RingBatch[];
 }
 
 /**
@@ -172,17 +180,16 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
           assignPage++;
         }
 
-        // Create a map of container assignments by container_id
-        // Sum up metrics if multiple batches in same container
+        // Create maps of container metrics and batch info by container_id
         const containerMetrics: Record<number, { 
           biomass: number; 
           fishCount: number; 
           totalWeightG: number; 
           assignmentCount: number;
+          batches: RingBatch[];
         }> = {};
 
         assignments.forEach((assignment: any) => {
-          // Container can be nested object {id, name} or just id
           const containerId = typeof assignment.container === 'object' 
             ? assignment.container.id 
             : assignment.container;
@@ -193,10 +200,10 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
               fishCount: 0,
               totalWeightG: 0,
               assignmentCount: 0,
+              batches: [],
             };
           }
           
-          // Parse string decimals to numbers
           const biomassKg = parseFloat(assignment.biomass_kg) || 0;
           const populationCount = assignment.population_count || 0;
           const avgWeightG = parseFloat(assignment.avg_weight_g) || 0;
@@ -205,6 +212,15 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
           containerMetrics[containerId].fishCount += populationCount;
           containerMetrics[containerId].totalWeightG += populationCount * avgWeightG;
           containerMetrics[containerId].assignmentCount += 1;
+
+          const batchObj = typeof assignment.batch === "object" ? assignment.batch : null;
+          const stageObj = typeof assignment.lifecycle_stage === "object" ? assignment.lifecycle_stage : null;
+          containerMetrics[containerId].batches.push({
+            id: batchObj?.id ?? assignment.batch_id ?? assignment.batch,
+            batchNumber: batchObj?.batch_number ?? `Batch ${assignment.batch_id ?? assignment.batch}`,
+            populationCount,
+            lifecycleStage: stageObj?.name ?? assignment.lifecycle_stage_name ?? "",
+          });
         });
 
         // Transform containers to ring format with real assignment data
@@ -214,6 +230,7 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
             fishCount: 0,
             totalWeightG: 0,
             assignmentCount: 0,
+            batches: [],
           };
 
           // Calculate weighted average weight
@@ -242,7 +259,8 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
               lat: parseFloat(container.latitude) || 0,
               lng: parseFloat(container.longitude) || 0,
             },
-            environmentalStatus: "optimal", // Default (could be enhanced)
+            environmentalStatus: "optimal",
+            activeBatches: metrics.batches,
           };
         });
 
