@@ -23,18 +23,28 @@ import { ApiService, InfrastructureService } from "@/api/generated";
 import { useAreaSummaries } from "@/features/infrastructure/api";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
 
+interface ActiveBatch {
+  id: number;
+  batch_number: string;
+  status: string;
+}
+
 interface Area {
   id: number;
   name: string;
   geography: string;
   type: string;
   rings: number;
+  containerCount: number;
   totalBiomass: number;
   biomassStatus: 'calculated' | 'estimated' | 'unavailable';
   coordinates: { lat: number; lng: number };
   status: string;
   waterDepth: number;
   lastInspection: string;
+  activeBatches: ActiveBatch[];
+  populationCount: number;
+  maxBiomass: number;
 }
 
 // Simple SVG Map Component for Areas
@@ -294,14 +304,18 @@ export default function InfrastructureAreas() {
     const mapped = rawAreasData.results.map((raw: any): Area => {
       const summary = areaSummaryMap.get(raw.id);
 
+      const hasSummary = summary != null;
+      const biomassValue = summary?.active_biomass_kg ?? 0;
+
       return {
         id: raw.id,
         name: raw.name,
         geography: raw.geography_details?.name ?? raw.geography_name ?? raw.geography ?? "Unknown",
         type: raw.area_type_name ?? raw.type ?? "Sea",
-        rings: summary?.ring_count ?? summary?.container_count ?? 0,
-        totalBiomass: summary?.active_biomass_kg ?? 0,
-        biomassStatus: summary?.active_biomass_kg ? 'calculated' as const : 'unavailable' as const,
+        rings: summary?.ring_count ?? 0,
+        containerCount: summary?.container_count ?? 0,
+        totalBiomass: biomassValue,
+        biomassStatus: hasSummary ? 'calculated' as const : 'unavailable' as const,
         coordinates: {
           lat: parseFloat(raw.latitude) || 0,
           lng: parseFloat(raw.longitude) || 0,
@@ -309,6 +323,9 @@ export default function InfrastructureAreas() {
         status: raw.active ? "active" : "inactive",
         waterDepth: 0,
         lastInspection: new Date().toISOString(),
+        activeBatches: summary?.active_batches ?? [],
+        populationCount: summary?.population_count ?? 0,
+        maxBiomass: parseFloat(raw.max_biomass) || 0,
       };
     });
 
@@ -593,31 +610,54 @@ export default function InfrastructureAreas() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Rings</span>
-                  <div className="font-semibold text-lg">{area.rings}</div>
+                  <div className="font-semibold text-lg">
+                    {area.rings}
+                    {area.containerCount > area.rings && (
+                      <span className="text-xs text-muted-foreground font-normal ml-1">
+                        / {area.containerCount} total
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Biomass</span>
                   <div className="font-semibold text-lg">
                     {area.biomassStatus === 'unavailable' ? (
-                      <span className="text-orange-600 text-sm">Data unavailable</span>
-                    ) : area.biomassStatus === 'estimated' ? (
-                      <span className="text-blue-600">
-                        {formatNumber(Math.round(area.totalBiomass))} kg <span className="text-xs text-muted-foreground">(est.)</span>
-                      </span>
+                      <span className="text-orange-600 text-sm">No data</span>
+                    ) : area.totalBiomass === 0 ? (
+                      <span className="text-muted-foreground">0 kg</span>
                     ) : (
                       <span>{formatNumber(Math.round(area.totalBiomass))} kg</span>
                     )}
                   </div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Water Depth</span>
-                  <div className="font-medium">{area.waterDepth}m</div>
+                  <span className="text-muted-foreground">Population</span>
+                  <div className="font-medium">{area.populationCount > 0 ? formatCount(area.populationCount) : "—"}</div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Last Inspection</span>
-                  <div className="font-medium">{new Date(area.lastInspection).toLocaleDateString()}</div>
+                  <span className="text-muted-foreground">Max Capacity</span>
+                  <div className="font-medium">{area.maxBiomass > 0 ? formatWeight(area.maxBiomass) : "—"}</div>
                 </div>
               </div>
+
+              {area.activeBatches.length > 0 && (
+                <div>
+                  <span className="text-xs text-muted-foreground">Active Batches</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {area.activeBatches.map((b) => (
+                      <Link key={b.id} href={`/batch/${b.id}`}>
+                        <Badge
+                          variant="secondary"
+                          className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
+                        >
+                          {b.batch_number}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div className="flex space-x-2">
                 <Button 
