@@ -261,8 +261,9 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
     }) => {
       const sd = item.swimlaneData;
       const width = itemContext.dimensions.width;
+      const hasTransferData = sd.transfers.totalIn > 0 || sd.transfers.totalOut > 0;
       const showEntry = width > 50;
-      const showExit = width > 120;
+      const showExit = width > 120 && hasTransferData;
       const hasBiomass = sd.entryBiomass > 0 || sd.exitBiomass > 0;
       const showBio = width > 180 && hasBiomass;
 
@@ -295,7 +296,9 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
           >
             {showEntry && (
               <span className="swimlane-item-bar__label">
-                {formatPopulation(sd.entryPopulation)}
+                {hasTransferData
+                  ? formatPopulation(sd.entryPopulation)
+                  : formatPopulation(sd.exitPopulation)}
               </span>
             )}
             {showExit && sd.entryPopulation !== sd.exitPopulation && (
@@ -477,52 +480,69 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
             const hasTransfers = tr.totalIn > 0 || tr.totalOut > 0;
             return (
               <>
-                <div className="swimlane-tooltip__section">Population</div>
-                <div className="swimlane-tooltip__row">
-                  <span className="swimlane-tooltip__label">Initial stock</span>
-                  <span className="swimlane-tooltip__value">
-                    {formatPopulation(t.entryPopulation)}
-                  </span>
-                </div>
-                {tr.totalIn > 0 && (
-                  <div className="swimlane-tooltip__row">
-                    <span className="swimlane-tooltip__label">+ Received</span>
-                    <span className="swimlane-tooltip__value" style={{ color: "hsl(142, 71%, 35%)" }}>
-                      +{formatPopulation(tr.totalIn)}
-                    </span>
-                  </div>
-                )}
-                {tr.totalOut > 0 && (
-                  <div className="swimlane-tooltip__row">
-                    <span className="swimlane-tooltip__label">- Transferred out</span>
-                    <span className="swimlane-tooltip__value" style={{ color: "hsl(var(--destructive))" }}>
-                      -{formatPopulation(tr.totalOut)}
-                    </span>
-                  </div>
-                )}
-                {tr.mortalityOut > 0 && (
-                  <div className="swimlane-tooltip__row">
-                    <span className="swimlane-tooltip__label">- Transfer mortality</span>
-                    <span className="swimlane-tooltip__value" style={{ color: "hsl(var(--destructive))" }}>
-                      -{formatPopulation(tr.mortalityOut)}
-                    </span>
-                  </div>
-                )}
-                {hasTransfers && (
-                  <div className="swimlane-tooltip__row" style={{ borderTop: "1px solid hsl(var(--border))", paddingTop: 2, marginTop: 2 }}>
-                    <span className="swimlane-tooltip__label" style={{ fontWeight: 600 }}>
-                      = Current
-                    </span>
-                    <span className="swimlane-tooltip__value" style={{ fontWeight: 600 }}>
-                      {formatPopulation(t.exitPopulation)}
-                    </span>
-                  </div>
+                {hasTransfers ? (
+                  <>
+                    <div className="swimlane-tooltip__section">Population</div>
+                    <div className="swimlane-tooltip__row">
+                      <span className="swimlane-tooltip__label">Initial stock</span>
+                      <span className="swimlane-tooltip__value">
+                        {formatPopulation(t.entryPopulation)}
+                      </span>
+                    </div>
+                    {tr.totalIn > 0 && (
+                      <div className="swimlane-tooltip__row">
+                        <span className="swimlane-tooltip__label">+ Received</span>
+                        <span className="swimlane-tooltip__value" style={{ color: "hsl(142, 71%, 35%)" }}>
+                          +{formatPopulation(tr.totalIn)}
+                        </span>
+                      </div>
+                    )}
+                    {tr.totalOut > 0 && (
+                      <div className="swimlane-tooltip__row">
+                        <span className="swimlane-tooltip__label">- Transferred out</span>
+                        <span className="swimlane-tooltip__value" style={{ color: "hsl(var(--destructive))" }}>
+                          -{formatPopulation(tr.totalOut)}
+                        </span>
+                      </div>
+                    )}
+                    {tr.mortalityOut > 0 && (
+                      <div className="swimlane-tooltip__row">
+                        <span className="swimlane-tooltip__label">- Transfer mortality</span>
+                        <span className="swimlane-tooltip__value" style={{ color: "hsl(var(--destructive))" }}>
+                          -{formatPopulation(tr.mortalityOut)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="swimlane-tooltip__row" style={{ borderTop: "1px solid hsl(var(--border))", paddingTop: 2, marginTop: 2 }}>
+                      <span className="swimlane-tooltip__label" style={{ fontWeight: 600 }}>
+                        = Current
+                      </span>
+                      <span className="swimlane-tooltip__value" style={{ fontWeight: 600 }}>
+                        {formatPopulation(t.exitPopulation)}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="swimlane-tooltip__section">Population</div>
+                    <div className="swimlane-tooltip__row">
+                      <span className="swimlane-tooltip__label">Count</span>
+                      <span className="swimlane-tooltip__value">
+                        {formatPopulation(t.exitPopulation)}
+                      </span>
+                    </div>
+                    <div className="swimlane-tooltip__row">
+                      <span className="swimlane-tooltip__label" style={{ fontSize: 10, opacity: 0.6 }}>
+                        No transfer records found
+                      </span>
+                    </div>
+                  </>
                 )}
 
                 {(t.entryBiomass > 0 || t.exitBiomass > 0) && (
                   <>
                     <div className="swimlane-tooltip__section">Biomass</div>
-                    {t.entryBiomass > 0 && (
+                    {hasTransfers && t.entryBiomass > 0 && (
                       <div className="swimlane-tooltip__row">
                         <span className="swimlane-tooltip__label">At start</span>
                         <span className="swimlane-tooltip__value">
