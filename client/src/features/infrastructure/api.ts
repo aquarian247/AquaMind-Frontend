@@ -101,6 +101,7 @@ export type HallSummaryData = {
   avg_weight_kg: number;
   total_capacity_kg: number;
   utilization_percent: number;
+  active_batches?: Array<{ id: number; batch_number: string; status: string }>;
 };
 
 /**

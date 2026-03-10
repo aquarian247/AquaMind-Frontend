@@ -508,10 +508,34 @@ export default function InfrastructureStations() {
                   </div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Last Inspection</span>
-                  <div className="font-medium">{new Date(station.lastInspection).toLocaleDateString()}</div>
+                  <span className="text-muted-foreground">Population</span>
+                  <div className="font-medium">
+                    {isLoadingDetails ? '...' : formatCount(stationSummaryMap.get(station.id)?.population_count)}
+                  </div>
                 </div>
               </div>
+
+              {(() => {
+                const batches = stationSummaryMap.get(station.id)?.active_batches;
+                if (!batches || batches.length === 0) return null;
+                return (
+                  <div>
+                    <span className="text-xs text-muted-foreground">Active Batches</span>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {batches.map((b: any) => (
+                        <Link key={b.id} href={`/batch/${b.id}`}>
+                          <Badge
+                            variant="secondary"
+                            className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
+                          >
+                            {b.batch_number}
+                          </Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               
               <div className="flex space-x-2">
                 <Button 

@@ -19,7 +19,7 @@ import {
   Activity,
   Eye
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
 import { useHallSummary } from "@/features/infrastructure/api";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
@@ -45,6 +45,7 @@ interface Container {
   systemStatus: string;
   density: number;
   feedingSchedule: string;
+  batches: Array<{ id: number; batchNumber: string; stage: string }>;
 }
 
 export default function HallDetail({ params }: { params: { id: string } }) {
@@ -69,52 +70,50 @@ export default function HallDetail({ params }: { params: { id: string } }) {
   const { data: containersData, isLoading } = useQuery({
     queryKey: ["hall", hallId, "containers"],
     queryFn: async () => {
-      // ✅ Use correct camelCase parameter name from generated API
-      const res = await ApiService.apiV1InfrastructureContainersList(
-        undefined,        // active filter
-        undefined,        // area
-        undefined,        // areaIn
-        undefined,        // carrier
-        undefined,        // carrierCarrierType
-        undefined,        // carrierIn
-        undefined,        // containerType
-        undefined,        // containerTypeCategory
-        Number(hallId),   // hall
-        undefined,        // hallIn
-        undefined,        // hierarchyRole
-        undefined,        // name
-        undefined,        // ordering
-        undefined,        // page
-        undefined,        // parentContainer
-        undefined,        // parentContainerIn
-        undefined,        // parentContainerIsnull
-        undefined,        // search
-      );
-
-      const containers = res.results || [];
-      
-      // Fetch batch assignments for all containers in this hall
       const { authenticatedFetch } = await import("@/services/auth.service");
-      const containerIds = containers.map(c => c.id).join(',');
-      
-      let assignmentsMap = new Map<number, any>();
-      
+      const baseUrl = import.meta.env.VITE_DJANGO_API_URL || "http://localhost:8000";
+
+      // Fetch ALL containers for this hall (paginated)
+      const allContainers: any[] = [];
+      let cPage = 1;
+      let cMore = true;
+      while (cMore) {
+        const resp = await authenticatedFetch(
+          `${baseUrl}/api/v1/infrastructure/containers/?hall=${hallId}&page=${cPage}&page_size=100`
+        );
+        const data = await resp.json();
+        allContainers.push(...(data.results || []));
+        cMore = !!data.next;
+        cPage++;
+      }
+
+      const containers = allContainers;
+
+      // Fetch ALL active batch assignments for these containers (paginated)
+      const containerIds = containers.map((c: any) => c.id).join(",");
+      const assignmentsList: Map<number, any[]> = new Map();
+
       if (containerIds) {
         try {
-          const assignmentsResponse = await authenticatedFetch(
-            `${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/batch/container-assignments/?container__in=${containerIds}&is_active=true&page_size=100`
-          );
-          const assignmentsData = await assignmentsResponse.json();
-          
-          // Map assignments by container ID
-          (assignmentsData.results || []).forEach((assignment: any) => {
-            const containerId = typeof assignment.container === 'object' 
-              ? assignment.container.id 
-              : assignment.container;
-            assignmentsMap.set(containerId, assignment);
-          });
+          let aPage = 1;
+          let aMore = true;
+          while (aMore) {
+            const resp = await authenticatedFetch(
+              `${baseUrl}/api/v1/batch/container-assignments/?container__in=${containerIds}&is_active=true&page=${aPage}&page_size=100`
+            );
+            const data = await resp.json();
+            for (const assignment of data.results || []) {
+              const cid = typeof assignment.container === "object"
+                ? assignment.container.id
+                : assignment.container;
+              if (!assignmentsList.has(cid)) assignmentsList.set(cid, []);
+              assignmentsList.get(cid)!.push(assignment);
+            }
+            aMore = !!data.next;
+            aPage++;
+          }
         } catch (error) {
-          console.warn('Failed to fetch batch assignments:', error);
+          console.warn("Failed to fetch batch assignments:", error);
         }
       }
 
@@ -122,16 +121,30 @@ export default function HallDetail({ params }: { params: { id: string } }) {
       const mapped = containers.map((c: any) => {
         const volumeM3 = parseFloat(c.volume_m3 ?? "0") || 0;
         const maxBiomassKg = parseFloat(c.max_biomass_kg ?? "0") || 0;
-        const assignment = assignmentsMap.get(c.id);
-        
-        const biomassKg = assignment ? parseFloat(assignment.biomass_kg || '0') : 0;
-        const fishCount = assignment ? assignment.population_count : 0;
-        const avgWeightG = assignment ? parseFloat(assignment.avg_weight_g || '0') : 0;
-        const avgWeightKg = avgWeightG / 1000;
-        
-        // Calculate density (kg/m³) - uses volume
+        const cAssignments = assignmentsList.get(c.id) || [];
+        const primary = cAssignments[0];
+
+        let biomassKg = 0;
+        let fishCount = 0;
+        let totalWeightG = 0;
+        for (const a of cAssignments) {
+          biomassKg += parseFloat(a.biomass_kg || "0");
+          fishCount += a.population_count || 0;
+          totalWeightG += (a.population_count || 0) * (parseFloat(a.avg_weight_g || "0"));
+        }
+        const avgWeightKg = fishCount > 0 ? totalWeightG / fishCount / 1000 : 0;
         const density = volumeM3 > 0 ? biomassKg / volumeM3 : 0;
-        
+
+        const batches = cAssignments.map((a: any) => {
+          const bObj = typeof a.batch === "object" ? a.batch : null;
+          const sObj = typeof a.lifecycle_stage === "object" ? a.lifecycle_stage : null;
+          return {
+            id: bObj?.id ?? a.batch_id ?? a.batch,
+            batchNumber: bObj?.batch_number ?? `Batch ${a.batch_id ?? a.batch}`,
+            stage: sObj?.name ?? a.lifecycle_stage_name ?? "",
+          };
+        });
+
         return {
           id: c.id,
           name: c.name,
@@ -140,19 +153,20 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           stationId: hall?.freshwater_station ?? 0,
           stationName: hall?.freshwater_station_name ?? "",
           type: (c.container_type_name as Container["type"]) || "Tank",
-          stage: assignment?.lifecycle_stage?.name || "Unknown",
+          stage: primary?.lifecycle_stage?.name || "Unknown",
           status: c.active ? "active" : "inactive",
           biomass: biomassKg,
-          capacity: maxBiomassKg, // Use max_biomass_kg for capacity utilization
+          capacity: maxBiomassKg,
           fishCount,
           averageWeight: avgWeightKg,
-          temperature: 0, // TODO: Fetch from environmental stats if needed
-          oxygenLevel: 0, // TODO: Fetch from environmental stats if needed
-          flowRate: 0, // Not tracked
+          temperature: 0,
+          oxygenLevel: 0,
+          flowRate: 0,
           lastMaintenance: new Date().toISOString(),
-          systemStatus: assignment ? "active" : "empty",
+          systemStatus: cAssignments.length > 0 ? "active" : "empty",
           density,
           feedingSchedule: "08:00, 12:00, 16:00",
+          batches,
         } as Container;
       });
 
@@ -442,6 +456,25 @@ export default function HallDetail({ params }: { params: { id: string } }) {
                   </div>
                 )}
               </div>
+
+              {container.batches.length > 0 && (
+                <div>
+                  <span className="text-xs text-muted-foreground">Active Batches</span>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {container.batches.map((b) => (
+                      <Link key={b.id} href={`/batch/${b.id}`}>
+                        <Badge
+                          variant="secondary"
+                          className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
+                        >
+                          {b.batchNumber}
+                          {b.stage && <span className="ml-1 opacity-60">({b.stage})</span>}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">

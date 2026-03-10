@@ -17,7 +17,7 @@ import {
   Calendar,
   Activity
 } from "lucide-react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
 import { useHallSummaries, type HallSummaryData } from "@/features/infrastructure/api";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
@@ -310,11 +310,27 @@ export default function StationHalls({ params }: { params: { id: string } }) {
                 </div>
               </div>
               
-              <div className="pt-2 border-t">
-                <div className="text-xs text-muted-foreground">
-                  Server-side aggregation • {summariesLoading ? "Loading..." : "Live data"}
-                </div>
-              </div>
+              {(() => {
+                const batches = summary?.active_batches;
+                if (!batches || batches.length === 0) return null;
+                return (
+                  <div>
+                    <span className="text-xs text-muted-foreground">Active Batches</span>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {batches.map((b) => (
+                        <Link key={b.id} href={`/batch/${b.id}`}>
+                          <Badge
+                            variant="secondary"
+                            className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"
+                          >
+                            {b.batch_number}
+                          </Badge>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               
               <div className="flex space-x-2">
                 <Button 
