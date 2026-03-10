@@ -296,7 +296,7 @@ export function AreaContainersTab({
                     <span className="text-xs text-muted-foreground">Active Batches</span>
                     <div className="flex flex-wrap gap-1.5 mt-1">
                       {ring.activeBatches.map((b) => (
-                        <Link key={b.id} href={`/batch/${b.id}`}>
+                        <Link key={b.id} href={`/batch-details/${b.id}`}>
                           <Badge
                             variant="secondary"
                             className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"

@@ -35,6 +35,7 @@ import BatchDetails from "@/pages/batch-details";
 import BatchSetupPage from "@/features/batch-management/pages/BatchSetupPage";
 import { WorkflowListPage } from "@/features/batch-management/workflows/pages/WorkflowListPage";
 import { WorkflowDetailPage } from "@/features/batch-management/workflows/pages/WorkflowDetailPage";
+import { TransferWorkflowExecutePage } from "@/features/batch-management/workflows/pages/TransferWorkflowExecutePage";
 import { CreationWorkflowListPage } from "@/features/batch-management/batch-creation/pages/CreationWorkflowListPage";
 import { CreationWorkflowDetailPage } from "@/features/batch-management/batch-creation/pages/CreationWorkflowDetailPage";
 import { GrowthSampleDetailPage } from "@/features/batch-management/pages/GrowthSampleDetailPage";
@@ -75,6 +76,7 @@ import MortalityReporting from "@/pages/mortality-reporting";
 import EnvironmentalManagementPage from "@/features/environmental/pages/EnvironmentalManagementPage";
 import UserManagementPage from "@/features/users/pages/UserManagementPage";
 import NotFound from "@/pages/not-found";
+import { ManagerEssentialsTour } from "@/features/onboarding/ManagerEssentialsTour";
 
 const AuditTrailOverview = lazy(() => import("@/features/audit-trail").then(m => ({ default: m.OverviewPage })));
 const AuditTrailDetail = lazy(() => import("@/features/audit-trail").then(m => ({ default: m.RecordDetailPage })));
@@ -299,6 +301,16 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/transfer-workflows/:id/execute">
+        {(params) => (
+          <ProtectedRoute>
+            <AppLayout>
+              <TransferWorkflowExecutePage />
+            </AppLayout>
+          </ProtectedRoute>
+        )}
+      </Route>
+
       <Route path="/transfer-workflows/:id">
         {(params) => (
           <ProtectedRoute>
@@ -546,6 +558,7 @@ function App() {
             <UserProvider>
               <Toaster />
               <Router />
+              <ManagerEssentialsTour />
             </UserProvider>
           </AuthProvider>
         </TooltipProvider>

@@ -11,6 +11,7 @@ import { FacilityList } from './FacilityList';
 import { useExecutiveSummary, useFacilitySummaries } from '../api/api';
 import type { GeographyFilterValue, KPIData } from '../types';
 import { formatKPI } from '../utils/kpiCalculations';
+import { useUser } from '@/contexts/UserContext';
 
 export interface OverviewTabProps {
   geography: GeographyFilterValue;
@@ -28,8 +29,13 @@ export interface OverviewTabProps {
  * ```
  */
 export function OverviewTab({ geography }: OverviewTabProps) {
-  const { data: summary, isLoading: isSummaryLoading } = useExecutiveSummary(geography);
-  const { data: facilities, isLoading: isFacilitiesLoading } = useFacilitySummaries(geography);
+  const { hasHealthAccess } = useUser();
+  const { data: summary, isLoading: isSummaryLoading } = useExecutiveSummary(geography, {
+    includeHealthMetrics: hasHealthAccess,
+  });
+  const { data: facilities, isLoading: isFacilitiesLoading } = useFacilitySummaries(geography, {
+    includeHealthMetrics: hasHealthAccess,
+  });
 
   // Prepare 12 KPI cards
   const kpis: KPIData[] = React.useMemo(() => {
@@ -155,4 +161,3 @@ export function OverviewTab({ geography }: OverviewTabProps) {
     </div>
   );
 }
-

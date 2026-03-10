@@ -58,7 +58,10 @@ export function ProductionPlannerKPIDashboard({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+      data-tour="planner-kpi-cards"
+    >
       {/* Upcoming (Next 7 Days) */}
       <Card
         className="cursor-pointer hover:shadow-lg transition-shadow hover:border-primary"
@@ -129,4 +132,3 @@ export function ProductionPlannerKPIDashboard({
     </div>
   );
 }
-

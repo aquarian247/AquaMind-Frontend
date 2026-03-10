@@ -7,7 +7,7 @@
  * Target personas: CEO, CFO, Executives
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GeographyFilter } from '../components/GeographyFilter';
@@ -18,6 +18,7 @@ import { MarketTab } from '../components/MarketTab';
 import type { GeographyFilterValue, GeographyFilterOption } from '../types';
 import { ApiService } from '@/api/generated';
 import { useQuery } from '@tanstack/react-query';
+import { ONBOARDING_OPEN_EXECUTIVE_STRATEGIC_TAB_EVENT } from '@/features/onboarding/events';
 
 /**
  * Executive Dashboard Page
@@ -31,6 +32,19 @@ export default function ExecutiveDashboardPage() {
   const [, navigate] = useLocation();
   const [geography, setGeography] = useState<GeographyFilterValue>(1); // Default to Faroe Islands
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    const handleOpenStrategicTab = () => setActiveTab('strategic');
+    window.addEventListener(
+      ONBOARDING_OPEN_EXECUTIVE_STRATEGIC_TAB_EVENT,
+      handleOpenStrategicTab
+    );
+    return () =>
+      window.removeEventListener(
+        ONBOARDING_OPEN_EXECUTIVE_STRATEGIC_TAB_EVENT,
+        handleOpenStrategicTab
+      );
+  }, []);
 
   // Fetch available geographies for filter
   const { data: geographiesData } = useQuery({
@@ -103,4 +117,3 @@ export default function ExecutiveDashboardPage() {
     </div>
   );
 }
-

@@ -417,6 +417,7 @@ export function AddActionsDialog({
 
       let hallContainersInStation: any[] = [];
       let areaContainers: any[] = [];
+      let carrierContainers: any[] = [];
 
       if (destLocationScope !== 'sea') {
         // 2. Fetch halls for this station, then containers in those halls
@@ -527,15 +528,72 @@ export function AddActionsDialog({
       areaContainers = areaContainersResults.flatMap(r => r || []);
       }
 
+      if (destLocationScope !== 'freshwater') {
+        // 4. Fetch transport carrier tanks (truck/vessel) for this geography
+        const carriersInGeo = await fetchAllPages((page) =>
+          ApiService.apiV1InfrastructureTransportCarriersList(
+            true, // active
+            undefined, // carrierType
+            geographyId, // geography
+            undefined, // ordering
+            page, // page
+            undefined, // search
+          )
+        );
+        const carrierIds = (carriersInGeo || []).map((carrier: any) => carrier.id).filter(Boolean);
+        console.log('[AddActions] Carriers in geography:', carrierIds.length);
+
+        if (carrierIds.length > 0) {
+          const carrierIdChunks: number[][] = [];
+          const chunkSize = 100;
+          for (let i = 0; i < carrierIds.length; i += chunkSize) {
+            carrierIdChunks.push(carrierIds.slice(i, i + chunkSize));
+          }
+
+          const carrierContainerResponses = await Promise.all(
+            carrierIdChunks.map((carrierChunk) =>
+              fetchAllPages((page) =>
+                ApiService.apiV1InfrastructureContainersList(
+                  true, // active
+                  undefined, // area
+                  undefined, // areaIn
+                  undefined, // carrier
+                  undefined, // carrierCarrierType
+                  carrierChunk, // carrierIn
+                  undefined, // containerType
+                  undefined, // containerTypeCategory
+                  undefined, // hall
+                  undefined, // hallIn
+                  undefined, // hierarchyRole
+                  undefined, // name
+                  undefined, // ordering
+                  page, // page
+                  undefined, // parentContainer
+                  undefined, // parentContainerIn
+                  undefined, // parentContainerIsnull
+                  undefined, // search
+                )
+              )
+            )
+          );
+          carrierContainers = carrierContainerResponses.flatMap((result) => result || []);
+        }
+      }
+
+      const containerById = new Map<number, any>();
+      [...hallContainersInStation, ...areaContainers, ...carrierContainers].forEach((container: any) => {
+        containerById.set(container.id, container);
+      });
       const allContainers = {
-        count: hallContainersInStation.length + areaContainers.length,
-        results: [...hallContainersInStation, ...areaContainers],
+        count: containerById.size,
+        results: Array.from(containerById.values()),
       };
       
       console.log('[AddActions] Total containers (halls + areas):', allContainers.count);
       console.log('[AddActions] Breakdown:', {
         hallContainers: hallContainersInStation.length,
         areaContainers: areaContainers.length,
+        carrierContainers: carrierContainers.length,
         total: allContainers.count,
       });
       console.log('[AddActions] Sample containers:', allContainers.results?.slice(0, 5).map((c: any) => ({

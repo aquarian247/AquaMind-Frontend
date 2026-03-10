@@ -276,7 +276,6 @@ export class AuthService {
    */
   static logout(): void {
     this.clearTokens();
-    window.dispatchEvent(new CustomEvent('auth:logout'));
   }
 
   /**

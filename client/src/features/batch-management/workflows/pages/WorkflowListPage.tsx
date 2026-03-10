@@ -78,10 +78,19 @@ export function WorkflowListPage() {
     setCurrentPage(1);
   };
 
+  const getWorkflowTargetPath = (workflow: any) => {
+    const canOpenExecutionPage =
+      workflow.is_dynamic_execution &&
+      (workflow.status === 'PLANNED' || workflow.status === 'IN_PROGRESS');
+    return canOpenExecutionPage
+      ? `/transfer-workflows/${workflow.id}/execute`
+      : `/transfer-workflows/${workflow.id}`;
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-tour="workflow-header">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Transfer Workflows</h1>
           <p className="text-muted-foreground">
@@ -90,7 +99,7 @@ export function WorkflowListPage() {
         </div>
         <div className="flex gap-2">
           <CreateWorkflowWizard>
-            <Button>
+            <Button data-tour="workflow-create-button">
               <Plus className="mr-2 h-4 w-4" />
               Create Workflow
             </Button>
@@ -103,7 +112,7 @@ export function WorkflowListPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card data-tour="workflow-list-table">
         <CardHeader>
           <CardTitle>Filters</CardTitle>
         </CardHeader>
@@ -188,7 +197,8 @@ export function WorkflowListPage() {
             )}
           </CardTitle>
           <CardDescription>
-            Click any workflow to view details and execute actions
+            Dynamic DRAFT workflows open detail for metadata review and approval.
+            Dynamic PLANNED/IN_PROGRESS workflows open the execution page.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -230,7 +240,7 @@ export function WorkflowListPage() {
                   <TableRow
                     key={workflow.id}
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigate(`/transfer-workflows/${workflow.id}`)}
+                    onClick={() => navigate(getWorkflowTargetPath(workflow))}
                   >
                     <TableCell className="font-medium">
                       {workflow.workflow_number}
@@ -272,10 +282,13 @@ export function WorkflowListPage() {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/transfer-workflows/${workflow.id}`);
+                          navigate(getWorkflowTargetPath(workflow));
                         }}
                       >
-                        View
+                        {workflow.is_dynamic_execution &&
+                        (workflow.status === 'PLANNED' || workflow.status === 'IN_PROGRESS')
+                          ? 'Execute'
+                          : 'View'}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -343,4 +356,3 @@ function StatusBadge({ status }: { status?: WorkflowStatus }) {
     </Badge>
   );
 }
-

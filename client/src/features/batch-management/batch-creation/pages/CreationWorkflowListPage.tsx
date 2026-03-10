@@ -52,7 +52,7 @@ export function CreationWorkflowListPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-tour="batch-creation-header">
         <div>
           <h1 className="text-3xl font-bold">Batch Creation Workflows</h1>
           <p className="text-muted-foreground">Manage egg delivery and batch creation operations</p>
@@ -215,4 +215,3 @@ export function CreationWorkflowListPage() {
     </div>
   );
 }
-

@@ -293,17 +293,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       handleLogout();
     };
 
-    const handleLogoutEvent = () => {
-      console.log('AuthContext: Received logout event');
-      handleLogout();
-    };
-
     window.addEventListener('auth:unauthorized', handleUnauthorized);
-    window.addEventListener('auth:logout', handleLogoutEvent);
 
     return () => {
       window.removeEventListener('auth:unauthorized', handleUnauthorized);
-      window.removeEventListener('auth:logout', handleLogoutEvent);
     };
   }, []);
 
@@ -429,21 +422,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Logout function
   const handleLogout = () => {
-    // Use centralized AuthService for logout
-    AuthService.logout();
+    // Clear persisted tokens without broadcasting logout events to avoid loops.
+    AuthService.clearTokens();
     clearAuthToken();
 
     // Reset auth state
-    setState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-      tokenInfo: {
-        accessToken: null,
-        refreshToken: null,
-        expiresAt: null,
-      },
+    setState((prev) => {
+      const alreadyLoggedOut =
+        prev.user === null &&
+        prev.isAuthenticated === false &&
+        prev.isLoading === false &&
+        prev.error === null &&
+        prev.tokenInfo.accessToken === null &&
+        prev.tokenInfo.refreshToken === null &&
+        prev.tokenInfo.expiresAt === null;
+
+      if (alreadyLoggedOut) {
+        return prev;
+      }
+
+      return {
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+        tokenInfo: {
+          accessToken: null,
+          refreshToken: null,
+          expiresAt: null,
+        },
+      };
     });
   };
 

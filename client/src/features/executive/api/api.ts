@@ -7,6 +7,7 @@
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { ApiService } from '@/api/generated';
+import { ApiError } from '@/api/generated/core/ApiError';
 import { apiRequest } from '@/lib/queryClient';
 import type {
   ExecutiveSummary,
@@ -27,6 +28,52 @@ import {
   calculateCapacityUtilization,
 } from '../utils/kpiCalculations';
 
+interface ExecutiveDataOptions {
+  includeHealthMetrics?: boolean;
+}
+
+async function fetchLiceSummarySafe(
+  endDate: string,
+  geography?: number,
+  startDate?: string
+): Promise<any | null> {
+  try {
+    return await ApiService.apiV1HealthLiceCountsSummaryRetrieve(
+      undefined, // area
+      endDate,
+      geography,
+      startDate
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+async function fetchLiceTrendsSafe(
+  endDate: string,
+  interval: TrendInterval,
+  geography?: number,
+  startDate?: string
+): Promise<any | null> {
+  try {
+    return await ApiService.apiV1HealthLiceCountsTrendsRetrieve(
+      undefined, // area
+      endDate,
+      geography,
+      interval,
+      startDate
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 403) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 /**
  * Hook: useExecutiveSummary
  *
@@ -37,10 +84,13 @@ import {
  * @param geography - Geography ID or 'global' for all geographies
  */
 export function useExecutiveSummary(
-  geography: GeographyFilterValue
+  geography: GeographyFilterValue,
+  options: ExecutiveDataOptions = {}
 ): UseQueryResult<ExecutiveSummary, Error> {
+  const includeHealthMetrics = options.includeHealthMetrics ?? true;
+
   return useQuery({
-    queryKey: ['executive-summary', geography],
+    queryKey: ['executive-summary', geography, includeHealthMetrics],
     queryFn: async (): Promise<ExecutiveSummary> => {
       // Determine if we're querying a specific geography or global
       const geographyId = geography === 'global' ? null : geography;
@@ -59,12 +109,13 @@ export function useExecutiveSummary(
             true, // isActive
             undefined // station
           ),
-          ApiService.apiV1HealthLiceCountsSummaryRetrieve(
-            undefined, // area
-            new Date().toISOString().split('T')[0], // endDate
-            geographyId, // geography
-            new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // startDate (2 weeks)
-          ),
+          includeHealthMetrics
+            ? fetchLiceSummarySafe(
+                new Date().toISOString().split('T')[0],
+                geographyId,
+                new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+              )
+            : Promise.resolve(null),
         ]);
 
         // Map geography summary response to ExecutiveSummary interface
@@ -93,11 +144,11 @@ export function useExecutiveSummary(
           mortality_percentage: geographySummary.mortality_metrics?.avg_mortality_rate_percent || null,
 
           // Lice Management from lice summary
-          mature_lice_average: liceSummary.by_development_stage?.mature || liceSummary.average_per_fish || null,
-          movable_lice_average: liceSummary.by_development_stage?.movable || liceSummary.average_per_fish || null,
+          mature_lice_average: liceSummary?.by_development_stage?.mature || liceSummary?.average_per_fish || null,
+          movable_lice_average: liceSummary?.by_development_stage?.movable || liceSummary?.average_per_fish || null,
           lice_alert_level: getLiceAlertLevel(
-            liceSummary.by_development_stage?.mature || liceSummary.average_per_fish || null,
-            liceSummary.by_development_stage?.movable || liceSummary.average_per_fish || null
+            liceSummary?.by_development_stage?.mature || liceSummary?.average_per_fish || null,
+            liceSummary?.by_development_stage?.movable || liceSummary?.average_per_fish || null
           ),
 
           // Infrastructure from infra summary
@@ -129,12 +180,13 @@ export function useExecutiveSummary(
         ),
 
         // Lice summary (last 7 days, global)
-        ApiService.apiV1HealthLiceCountsSummaryRetrieve(
-          undefined, // area
-          new Date().toISOString().split('T')[0], // endDate
-          undefined, // geography (global)
-          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // startDate
-        ),
+        includeHealthMetrics
+          ? fetchLiceSummarySafe(
+              new Date().toISOString().split('T')[0],
+              undefined,
+              new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            )
+          : Promise.resolve(null),
       ]);
 
       // Calculate derived metrics from API response
@@ -144,8 +196,8 @@ export function useExecutiveSummary(
       const averageWeightG = calculateAverageWeight(totalBiomassKg, totalPopulation);
 
       // Lice data (using average_per_fish and development stage breakdown)
-      const liceAvgPerFish = liceSummary.average_per_fish || null;
-      const liceByStage = liceSummary.by_development_stage || {};
+      const liceAvgPerFish = liceSummary?.average_per_fish || null;
+      const liceByStage = liceSummary?.by_development_stage || {};
       const matureLiceAvg = liceByStage['mature'] || liceAvgPerFish || null;
       const movableLiceAvg = liceByStage['movable'] || liceAvgPerFish || null;
       const liceAlertLevel = getLiceAlertLevel(matureLiceAvg, movableLiceAvg);
@@ -212,10 +264,13 @@ export function useExecutiveSummary(
  * @param geography - Geography ID or 'global'
  */
 export function useFacilitySummaries(
-  geography: GeographyFilterValue
+  geography: GeographyFilterValue,
+  options: ExecutiveDataOptions = {}
 ): UseQueryResult<FacilitySummary[], Error> {
+  const includeHealthMetrics = options.includeHealthMetrics ?? true;
+
   return useQuery({
-    queryKey: ['facility-summaries', geography],
+    queryKey: ['facility-summaries', geography, includeHealthMetrics],
     queryFn: async (): Promise<FacilitySummary[]> => {
       const geographyId = geography === 'global' ? null : geography;
 
@@ -246,20 +301,21 @@ export function useFacilitySummaries(
                 true, // isActive
                 undefined // station
               ),
-              ApiService.apiV1HealthLiceCountsSummaryRetrieve(
-                undefined, // area
-                new Date().toISOString().split('T')[0], // endDate
-                geo.id, // geography
-                new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // startDate
-              ),
+              includeHealthMetrics
+                ? fetchLiceSummarySafe(
+                    new Date().toISOString().split('T')[0],
+                    geo.id ?? undefined,
+                    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                  )
+                : Promise.resolve(null),
             ]);
 
             const biomassKg = geographySummary.growth_metrics?.total_biomass_kg || null;
             const population = batchSummary.total_population || null; // Total fish count
             const averageWeightG = geographySummary.growth_metrics?.avg_weight_g || null;
 
-            const liceAvgPerFish = liceSummary.average_per_fish || null;
-            const liceByStage = liceSummary.by_development_stage || {};
+            const liceAvgPerFish = liceSummary?.average_per_fish || null;
+            const liceByStage = liceSummary?.by_development_stage || {};
             const matureLice = liceByStage['mature'] || liceAvgPerFish || null;
             const movableLice = liceByStage['movable'] || liceAvgPerFish || null;
             const liceAlertLevel = getLiceAlertLevel(matureLice, movableLice);
@@ -357,21 +413,20 @@ export function useLiceTrends(
       const geographyId = geography === 'global' ? undefined : geography;
 
       // Fetch last 90 days of lice trends
-      const trends = await ApiService.apiV1HealthLiceCountsTrendsRetrieve(
-        undefined, // area
-        new Date().toISOString().split('T')[0], // endDate
-        geographyId, // geography
-        interval, // interval
-        new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // startDate
+      const trends = await fetchLiceTrendsSafe(
+        new Date().toISOString().split('T')[0],
+        interval,
+        geographyId,
+        new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       );
 
-      if (!trends.trends || trends.trends.length === 0) {
+      if (!trends?.trends || trends.trends.length === 0) {
         return [];
       }
 
       // Map to LiceTrendPoint format
       // Note: API doesn't provide stage-specific data in trends, only average_per_fish
-      const trendPoints: LiceTrendPoint[] = trends.trends.map((point) => ({
+      const trendPoints: LiceTrendPoint[] = trends.trends.map((point: any) => ({
         date: point.period || '',
         mature_lice_average: point.average_per_fish || null,
         movable_lice_average: point.average_per_fish || null,

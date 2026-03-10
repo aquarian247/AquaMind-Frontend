@@ -7,6 +7,40 @@ import { toast } from 'sonner';
  * API hooks for user management
  */
 
+function formatValidationError(error: any, fallback: string): string {
+  let body = error?.body;
+
+  if (!body) return fallback;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return body;
+    }
+  }
+  if (typeof body?.detail === 'string') return body.detail;
+
+  if (typeof body === 'object') {
+    const messages = Object.entries(body)
+      .flatMap(([field, value]) => {
+        if (Array.isArray(value) && value.length > 0) {
+          return `${field}: ${value.join(', ')}`;
+        }
+        if (typeof value === 'string') {
+          return `${field}: ${value}`;
+        }
+        return [];
+      })
+      .filter(Boolean);
+
+    if (messages.length > 0) {
+      return messages.join(' | ');
+    }
+  }
+
+  return fallback;
+}
+
 export function useUsers() {
   return useQuery({
     queryKey: ['users'],
@@ -33,7 +67,7 @@ export function useCreateUser() {
       toast.success('User created successfully');
     },
     onError: (error: any) => {
-      toast.error(error?.body?.detail || 'Failed to create user');
+      toast.error(formatValidationError(error, 'Failed to create user'));
     },
   });
 }
@@ -50,7 +84,7 @@ export function useUpdateUser(id: number) {
       toast.success('User updated successfully');
     },
     onError: (error: any) => {
-      toast.error(error?.body?.detail || 'Failed to update user');
+      toast.error(formatValidationError(error, 'Failed to update user'));
     },
   });
 }
@@ -66,8 +100,7 @@ export function useDeleteUser() {
       toast.success('User deleted successfully');
     },
     onError: (error: any) => {
-      toast.error(error?.body?.detail || 'Failed to delete user');
+      toast.error(formatValidationError(error, 'Failed to delete user'));
     },
   });
 }
-

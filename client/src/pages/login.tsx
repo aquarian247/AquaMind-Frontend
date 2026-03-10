@@ -20,7 +20,7 @@ import { Loader2 } from 'lucide-react';
 const loginFormSchema = z.object({
   username: z.string().min(1, { message: 'Username is required' }),
   password: z.string().min(1, { message: 'Password is required' }),
-  rememberMe: z.boolean().optional(),
+  rememberMe: z.boolean(),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -167,8 +167,8 @@ const LoginPage: React.FC = () => {
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md p-1">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                          checked={field.value === true}
+                          onCheckedChange={(checked) => field.onChange(checked === true)}
                           disabled={isSubmitting}
                         />
                       </FormControl>

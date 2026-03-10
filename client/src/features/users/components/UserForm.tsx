@@ -1,7 +1,8 @@
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { userFormSchema, userCreateSchema, type UserFormData, type UserCreateData } from '@/lib/validation/users'
+import { userFormSchema, userCreateSchema } from '@/lib/validation/users'
+import { ApiError } from '@/api/generated/core/ApiError'
 
 // Form data type that excludes readonly API fields
 type UserFormInput = {
@@ -16,12 +17,34 @@ type UserFormInput = {
   password_confirm?: string;
   is_active?: boolean;
 }
+
+function normalizeOptionalText(value?: string): string | undefined {
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function buildUserApiPayload(values: UserFormInput): Omit<UserFormInput, 'password_confirm'> {
+  return {
+    username: values.username.trim(),
+    email: values.email.trim(),
+    full_name: normalizeOptionalText(values.full_name),
+    phone: normalizeOptionalText(values.phone),
+    geography: values.geography || undefined,
+    subsidiary: values.subsidiary || undefined,
+    role: values.role || undefined,
+    password: values.password || undefined,
+    is_active: values.is_active ?? true,
+  };
+}
+
 import { FormLayout, FormSection } from '@/features/shared/components/form'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCreateUser, useUpdateUser } from '../api'
 import type { User } from '@/api/generated'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface UserFormProps {
   /** Existing user to edit (undefined for create mode) */
@@ -72,10 +95,108 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   const createMutation = useCreateUser()
   const updateMutation = isEditMode ? useUpdateUser(user.id) : null
 
+  const applyServerValidationErrors = (error: unknown) => {
+    let body =
+      error instanceof ApiError
+        ? error.body
+        : (error as { body?: unknown })?.body;
+
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch {
+        form.setError('root.serverError', {
+          type: 'server',
+          message: body,
+        });
+        return;
+      }
+    }
+
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return;
+    }
+
+    const fieldNames = new Set<keyof UserFormInput>([
+      'username',
+      'email',
+      'full_name',
+      'phone',
+      'geography',
+      'subsidiary',
+      'role',
+      'password',
+      'password_confirm',
+      'is_active',
+    ]);
+    let hasMappedError = false;
+
+    const applyFieldError = (field: string, message: string) => {
+      const normalizedField = field.includes('.') ? field.split('.').pop() || field : field;
+
+      if (fieldNames.has(normalizedField as keyof UserFormInput)) {
+        form.setError(normalizedField as keyof UserFormInput, {
+          type: 'server',
+          message,
+        });
+        hasMappedError = true;
+        return;
+      }
+
+      if (normalizedField === 'detail' || normalizedField === 'non_field_errors') {
+        form.setError('root.serverError', {
+          type: 'server',
+          message,
+        });
+        hasMappedError = true;
+      }
+    };
+
+    for (const [field, value] of Object.entries(body)) {
+      if (Array.isArray(value)) {
+        applyFieldError(field, value.map((v) => String(v)).join(', '));
+        continue;
+      }
+
+      if (typeof value === 'string') {
+        applyFieldError(field, value);
+        continue;
+      }
+
+      if (value && typeof value === 'object') {
+        for (const [nestedField, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+          if (Array.isArray(nestedValue)) {
+            applyFieldError(
+              nestedField === 'non_field_errors' ? field : nestedField,
+              nestedValue.map((v) => String(v)).join(', ')
+            );
+          } else if (typeof nestedValue === 'string') {
+            applyFieldError(nestedField, nestedValue);
+          }
+        }
+      }
+    }
+
+    if (!hasMappedError) {
+      const fallbackMessage = (() => {
+        try {
+          return JSON.stringify(body);
+        } catch {
+          return 'Validation failed. Please review your input and try again.';
+        }
+      })();
+
+      form.setError('root.serverError', {
+        type: 'server',
+        message: fallbackMessage,
+      });
+    }
+  }
+
   const onSubmit = async (values: UserFormInput) => {
     try {
-      // Remove password_confirm from the data before sending to API
-      const { password_confirm, ...apiData } = values
+      form.clearErrors()
+      const apiData = buildUserApiPayload(values)
 
       if (isEditMode && user) {
         await updateMutation!.mutateAsync(apiData as any)
@@ -86,6 +207,10 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
       form.reset()
       onSuccess?.()
     } catch (error) {
+      applyServerValidationErrors(error)
+      if (error instanceof ApiError) {
+        console.error('User form API validation body:', error.body)
+      }
       console.error('User form submission error:', error)
     }
   }
@@ -144,6 +269,14 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         } : undefined,
       }}
     >
+      {form.formState.errors.root?.serverError?.message && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {form.formState.errors.root.serverError.message}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <FormSection
         title="Account Information"
         description="Basic user account details and authentication."

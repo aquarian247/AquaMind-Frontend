@@ -11,13 +11,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocation } from "wouter";
+import { ONBOARDING_REPLAY_MANAGER_TOUR_EVENT } from "@/features/onboarding/events";
 
 export default function Header() {
   const { data: alerts } = useActiveAlerts();
   const alertCount = alerts?.length || 0;
   const { user, isLoading, logout, isAdmin, tokenInfo } = useAuth();
+  const { isManager } = useUser();
   const [, navigate] = useLocation();
 
   const initials = user
@@ -99,6 +102,17 @@ export default function Header() {
                   <DropdownMenuItem onSelect={() => navigate("/settings")}>
                     Settings
                   </DropdownMenuItem>
+                  {isManager && (
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        window.dispatchEvent(
+                          new CustomEvent(ONBOARDING_REPLAY_MANAGER_TOUR_EVENT)
+                        );
+                      }}
+                    >
+                      Replay Manager Tour
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"

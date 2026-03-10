@@ -49,7 +49,6 @@ import { useToast } from '@/hooks/use-toast';
 
 import { useWorkflow, useActions, useCancelWorkflow, usePlanWorkflow } from '../api';
 import { AddActionsDialog } from '../components/AddActionsDialog';
-import { DynamicTransportActionsDialog } from '../components/DynamicTransportActionsDialog';
 import { ExecuteActionDialog } from '../components/ExecuteActionDialog';
 import { FinanceSummaryCard } from '../components/FinanceSummaryCard';
 import {
@@ -124,8 +123,7 @@ export function WorkflowDetailPage() {
   const canExecuteActions = !requiresTransportExecutionRole || hasTransportExecutionAccess;
 
   const canAddActionsInCurrentStatus =
-    workflow.status === 'DRAFT' ||
-    (isDynamicExecution && workflow.status === 'IN_PROGRESS');
+    !isDynamicExecution && workflow.status === 'DRAFT';
   const canAddActions = canAddActionsInCurrentStatus && canExecuteActions;
 
   const canPlanWorkflow =
@@ -229,11 +227,24 @@ export function WorkflowDetailPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+          <div className="flex gap-2">
+          {isDynamicExecution && workflow.status !== 'DRAFT' && (
+            <Button
+              variant="secondary"
+              onClick={() => navigate(`/transfer-workflows/${workflow.id}/execute`)}
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Open Execution Page
+            </Button>
+          )}
           {canPlanWorkflow && (
             <Button onClick={handlePlanWorkflow} disabled={planWorkflow.isPending}>
               <CheckCircle className="mr-2 h-4 w-4" />
-              {planWorkflow.isPending ? 'Planning...' : 'Plan Workflow'}
+              {planWorkflow.isPending
+                ? 'Approving...'
+                : isDynamicExecution
+                ? 'Approve Workflow'
+                : 'Plan Workflow'}
             </Button>
           )}
           {canCancelWorkflow(workflow) && (
@@ -361,12 +372,16 @@ export function WorkflowDetailPage() {
                   ? 'No actions recorded yet for this dynamic workflow'
                   : 'No actions planned for this workflow'}
               </p>
-              {canAddActions && (
+              {isDynamicExecution && (
+                <Button onClick={() => navigate(`/transfer-workflows/${workflow.id}/execute`)}>
+                  <Play className="mr-2 h-4 w-4" />
+                  Open Execution Page
+                </Button>
+              )}
+              {canAddActions && !isDynamicExecution && (
                 <Button onClick={() => setShowAddActionsDialog(true)}>
                   <Plus className="mr-2 h-4 w-4" />
-                  {isDynamicExecution
-                    ? 'Add First Handoff'
-                    : 'Add Actions to Continue'}
+                  Add Actions to Continue
                 </Button>
               )}
             </div>
@@ -409,13 +424,22 @@ export function WorkflowDetailPage() {
                       {formatDate(action.actual_execution_date)}
                     </TableCell>
                     <TableCell>
-                      {action.status === 'PENDING' && canExecuteActions && (
+                      {action.status === 'PENDING' && canExecuteActions && !isDynamicExecution && (
                         <Button
                           size="sm"
                           onClick={() => setSelectedActionId(action.id)}
                         >
                           <Play className="mr-1 h-3 w-3" />
                           Execute
+                        </Button>
+                      )}
+                      {action.status === 'PENDING' && isDynamicExecution && (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => navigate(`/transfer-workflows/${workflow.id}/execute`)}
+                        >
+                          Open Execute
                         </Button>
                       )}
                       {action.status === 'PENDING' && !canExecuteActions && (
@@ -434,31 +458,20 @@ export function WorkflowDetailPage() {
       </Card>
 
       {/* Add Actions Dialog */}
-      {showAddActionsDialog && (
-        isDynamicExecution ? (
-          <DynamicTransportActionsDialog
-            workflow={workflow}
-            open={showAddActionsDialog}
-            onClose={() => setShowAddActionsDialog(false)}
-            onSuccess={() => {
-              setShowAddActionsDialog(false);
-            }}
-          />
-        ) : (
-          <AddActionsDialog
-            workflow={workflow}
-            open={showAddActionsDialog}
-            onClose={() => setShowAddActionsDialog(false)}
-            onSuccess={() => {
-              setShowAddActionsDialog(false);
-              // Refresh is automatic via React Query invalidation
-            }}
-          />
-        )
+      {showAddActionsDialog && !isDynamicExecution && (
+        <AddActionsDialog
+          workflow={workflow}
+          open={showAddActionsDialog}
+          onClose={() => setShowAddActionsDialog(false)}
+          onSuccess={() => {
+            setShowAddActionsDialog(false);
+            // Refresh is automatic via React Query invalidation
+          }}
+        />
       )}
 
       {/* Execute Action Dialog */}
-      {selectedActionId && (
+      {selectedActionId && !isDynamicExecution && (
         <ExecuteActionDialog
           actionId={selectedActionId}
           open={!!selectedActionId}

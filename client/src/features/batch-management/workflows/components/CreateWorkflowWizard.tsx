@@ -71,6 +71,11 @@ const workflowFormSchema = z.object({
   ]),
   source_lifecycle_stage: z.number().int().positive('Source stage is required'),
   dest_lifecycle_stage: z.number().int().positive().optional(),
+  dynamic_route_mode: z
+    .enum(['DIRECT_STATION_TO_VESSEL', 'VIA_TRUCK_TO_VESSEL'])
+    .optional(),
+  estimated_total_count: z.number().int().positive().optional(),
+  estimated_total_biomass_kg: z.string().optional(),
   planned_start_date: z.date(),
   planned_completion_date: z.date().optional(),
   notes: z.string().optional(),
@@ -104,6 +109,9 @@ export function CreateWorkflowWizard({
       workflow_type: 'LIFECYCLE_TRANSITION',
       source_lifecycle_stage: undefined,
       dest_lifecycle_stage: undefined,
+      dynamic_route_mode: 'DIRECT_STATION_TO_VESSEL',
+      estimated_total_count: undefined,
+      estimated_total_biomass_kg: '',
       planned_start_date: new Date(),
       planned_completion_date: undefined,
       notes: '',
@@ -170,10 +178,26 @@ export function CreateWorkflowWizard({
         return;
       }
 
+      if (isDynamicStationToSea && !data.dynamic_route_mode) {
+        toast({
+          title: 'Route mode required',
+          description: 'Select direct or via-truck route mode for dynamic execution.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const payload = {
         batch: data.batch,
         workflow_type: workflowType,
         is_dynamic_execution: isDynamicStationToSea,
+        dynamic_route_mode: isDynamicStationToSea ? data.dynamic_route_mode : undefined,
+        estimated_total_count: isDynamicStationToSea
+          ? data.estimated_total_count || undefined
+          : undefined,
+        estimated_total_biomass_kg: isDynamicStationToSea
+          ? data.estimated_total_biomass_kg || undefined
+          : undefined,
         source_lifecycle_stage: stationToSeaStages
           ? stationToSeaStages.sourceLifecycleStageId
           : data.source_lifecycle_stage,
@@ -194,7 +218,7 @@ export function CreateWorkflowWizard({
       toast({
         title: 'Workflow Created',
         description: isDynamicStationToSea
-          ? 'Dynamic station-to-sea workflow created. Add handoffs during execution.'
+          ? 'Dynamic station-to-sea workflow created in DRAFT. Review and approve workflow before execution.'
           : 'Transfer workflow created successfully. Add actions to continue.',
       });
 
@@ -365,6 +389,85 @@ export function CreateWorkflowWizard({
                   Actions are added as live handoffs by ship crew.
                 </AlertDescription>
               </Alert>
+            )}
+
+            {workflowType === 'STATION_TO_SEA_DYNAMIC' && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="dynamic_route_mode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dynamic Route Mode *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="DIRECT_STATION_TO_VESSEL">
+                            Direct: Station to Vessel
+                          </SelectItem>
+                          <SelectItem value="VIA_TRUCK_TO_VESSEL">
+                            Via Truck: Station to Truck to Vessel
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Choose the allowed live handoff path for execution.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="estimated_total_count"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estimated Total Count</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="1"
+                            placeholder="Optional"
+                            value={field.value ?? ''}
+                            onChange={(event) =>
+                              field.onChange(
+                                event.target.value ? Number(event.target.value) : undefined
+                              )
+                            }
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="estimated_total_biomass_kg"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estimated Total Biomass (kg)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="Optional"
+                            value={field.value ?? ''}
+                            onChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </>
             )}
 
             <div className="grid grid-cols-2 gap-4">

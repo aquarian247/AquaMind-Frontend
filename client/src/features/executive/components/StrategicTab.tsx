@@ -18,6 +18,7 @@ import { KPICard } from './KPICard';
 import { useExecutiveSummary, useTieredHarvestForecast, type TieredHarvestForecast } from '../api/api';
 import type { GeographyFilterValue, KPIData, CapacityUtilization } from '../types';
 import { formatKPI } from '../utils/kpiCalculations';
+import { useUser } from '@/contexts/UserContext';
 
 export interface StrategicTabProps {
   geography: GeographyFilterValue;
@@ -34,7 +35,10 @@ export interface StrategicTabProps {
  * ```
  */
 export function StrategicTab({ geography }: StrategicTabProps) {
-  const { data: summary } = useExecutiveSummary(geography);
+  const { hasHealthAccess } = useUser();
+  const { data: summary } = useExecutiveSummary(geography, {
+    includeHealthMetrics: hasHealthAccess,
+  });
   const { data: forecasts, isLoading: forecastsLoading } = useTieredHarvestForecast(geography, 90);
 
   // Group forecasts by tier
@@ -155,7 +159,7 @@ export function StrategicTab({ geography }: StrategicTabProps) {
 
       {/* Harvest Forecast - Tiered Display */}
       <section aria-label="Harvest Forecast">
-        <Card>
+        <Card data-tour="executive-strategic-forecast">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>

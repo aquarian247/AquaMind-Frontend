@@ -5,7 +5,7 @@
  * and timeline of planned activities grouped by batch.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -66,9 +66,11 @@ export function ProductionPlannerPage() {
   const scenarios = scenariosResponse?.results || [];
 
   // Auto-select first scenario if none selected
-  if (!selectedScenarioId && scenarios.length > 0 && !scenariosLoading) {
-    setSelectedScenarioId(scenarios[0].scenario_id);
-  }
+  useEffect(() => {
+    if (selectedScenarioId === null && scenarios.length > 0 && !scenariosLoading) {
+      setSelectedScenarioId(scenarios[0].scenario_id);
+    }
+  }, [selectedScenarioId, scenarios, scenariosLoading]);
 
   // Fetch activities for selected scenario
   // Note: Using apiRequest with ?all=true because the backend filters scenarios by creator
@@ -153,7 +155,7 @@ export function ProductionPlannerPage() {
     <PermissionGuard require="operational" resource="Production Planner">
       <div className="container mx-auto py-6 space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between" data-tour="planner-header">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Production Planner</h1>
           <p className="text-muted-foreground mt-1">
@@ -163,11 +165,11 @@ export function ProductionPlannerPage() {
         <div className="flex items-center gap-3">
           {/* Scenario Selector */}
           <Select
-            value={selectedScenarioId?.toString()}
+            value={selectedScenarioId !== null ? selectedScenarioId.toString() : ''}
             onValueChange={(value) => setSelectedScenarioId(Number(value))}
             disabled={scenariosLoading}
           >
-            <SelectTrigger className="w-[250px]">
+            <SelectTrigger className="w-[250px]" data-tour="planner-scenario-select">
               <SelectValue placeholder="Select scenario..." />
             </SelectTrigger>
             <SelectContent>
@@ -268,19 +270,21 @@ export function ProductionPlannerPage() {
 
           {/* Timeline / Gantt View */}
           {!activitiesLoading && (
-            viewMode === 'list' ? (
-              <ProductionPlannerTimeline
-                activities={filteredActivities}
-                onActivityClick={handleActivityClick}
-                onCreateActivity={canCreateActivities ? handleCreateActivity : undefined}
-              />
-            ) : (
-              <ProductionPlannerGanttView
-                activities={filteredActivities}
-                onActivityClick={handleActivityClick}
-                onCreateActivity={canCreateActivities ? handleCreateActivity : undefined}
-              />
-            )
+            <div data-tour="planner-timeline">
+              {viewMode === 'list' ? (
+                <ProductionPlannerTimeline
+                  activities={filteredActivities}
+                  onActivityClick={handleActivityClick}
+                  onCreateActivity={canCreateActivities ? handleCreateActivity : undefined}
+                />
+              ) : (
+                <ProductionPlannerGanttView
+                  activities={filteredActivities}
+                  onActivityClick={handleActivityClick}
+                  onCreateActivity={canCreateActivities ? handleCreateActivity : undefined}
+                />
+              )}
+            </div>
           )}
 
           {/* Footer Stats */}
@@ -342,4 +346,3 @@ export function ProductionPlannerPage() {
     </PermissionGuard>
   );
 }
-

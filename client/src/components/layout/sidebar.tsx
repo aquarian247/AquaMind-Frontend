@@ -147,6 +147,7 @@ function NavigationMenu({ onItemClick }: { onItemClick?: () => void }) {
         <Link key={item.id} href={item.path}>
           <div
             onClick={onItemClick}
+            data-tour={item.path === '/executive' ? 'nav-executive' : undefined}
             className={cn(
               "sidebar-nav-item touch-manipulation",
               location === item.path && "active"
@@ -169,7 +170,10 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Header with Hamburger Menu */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b px-4 py-3 flex items-center justify-between">
+      <div
+        className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b px-4 py-3 flex items-center justify-between"
+        data-tour="mobile-sidebar-root"
+      >
         <div className="flex items-center space-x-3">
           <div>
             <img 
@@ -239,7 +243,10 @@ export default function Sidebar() {
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden lg:block bg-card border-r shadow-lg w-64 fixed h-full z-10">
+      <div
+        className="hidden lg:block bg-card border-r shadow-lg w-64 fixed h-full z-10"
+        data-tour="sidebar-root"
+      >
         {/* Sidebar Header */}
         <div className="p-6 border-b">
           <div className="flex items-center space-x-3">
