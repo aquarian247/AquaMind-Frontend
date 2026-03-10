@@ -23,6 +23,20 @@ const baseNavigationItems: NavigationItem[] = [
     path: "/executive",
   },
   {
+    id: 15,
+    label: "Freshwater Operations",
+    icon: "fas fa-water",
+    path: "/freshwater",
+    requiresPermission: 'operational',
+  },
+  {
+    id: 16,
+    label: "Sea Operations",
+    icon: "fas fa-ship",
+    path: "/sea-operations",
+    requiresPermission: 'operational',
+  },
+  {
     id: 2,
     label: "Infrastructure",
     icon: "fas fa-building",

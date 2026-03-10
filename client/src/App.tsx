@@ -70,6 +70,8 @@ import { VarianceReportPage } from "@/features/production-planner/pages/Variance
 
 // Executive & specialized
 import ExecutiveDashboardPage from "@/features/executive/pages/ExecutiveDashboardPage";
+import FreshwaterDashboardPage from "@/features/freshwater/pages/FreshwaterDashboardPage";
+import SeaOperationsDashboardPage from "@/features/sea-operations/pages/SeaOperationsDashboardPage";
 import MortalityReporting from "@/pages/mortality-reporting";
 
 // System
@@ -121,6 +123,22 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <ExecutiveDashboardPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/freshwater">
+        <ProtectedRoute>
+          <AppLayout>
+            <FreshwaterDashboardPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/sea-operations">
+        <ProtectedRoute>
+          <AppLayout>
+            <SeaOperationsDashboardPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>
