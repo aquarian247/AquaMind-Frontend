@@ -139,26 +139,38 @@ export function useAreaData(areaId: number): UseAreaDataReturn {
           return { results: [] };
         }
 
-        // Fetch containers for this area
-        const containersResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${areaId}&page_size=100`
-        );
-
-        const containersData = await containersResponse.json();
-        const containers = containersData.results || [];
+        // Fetch ALL containers for this area (paginated)
+        const containers: any[] = [];
+        let containerPage = 1;
+        let hasMoreContainers = true;
+        while (hasMoreContainers) {
+          const resp = await authenticatedFetch(
+            `${apiConfig.baseUrl}${apiConfig.endpoints.containers}?area=${areaId}&page=${containerPage}&page_size=100`
+          );
+          const data = await resp.json();
+          containers.push(...(data.results || []));
+          hasMoreContainers = !!data.next;
+          containerPage++;
+        }
 
         if (containers.length === 0) {
           return { results: [] };
         }
 
-        // Fetch active batch assignments for these containers
+        // Fetch ALL active batch assignments for these containers (paginated)
         const containerIds = containers.map((c: any) => c.id).join(",");
-        const assignmentsResponse = await authenticatedFetch(
-          `${apiConfig.baseUrl}/api/v1/batch/container-assignments/?container__in=${containerIds}&is_active=true&page_size=100`
-        );
-
-        const assignmentsData = await assignmentsResponse.json();
-        const assignments = assignmentsData.results || [];
+        const assignments: any[] = [];
+        let assignPage = 1;
+        let hasMoreAssignments = true;
+        while (hasMoreAssignments) {
+          const resp = await authenticatedFetch(
+            `${apiConfig.baseUrl}/api/v1/batch/container-assignments/?container__in=${containerIds}&is_active=true&page=${assignPage}&page_size=100`
+          );
+          const data = await resp.json();
+          assignments.push(...(data.results || []));
+          hasMoreAssignments = !!data.next;
+          assignPage++;
+        }
 
         // Create a map of container assignments by container_id
         // Sum up metrics if multiple batches in same container
