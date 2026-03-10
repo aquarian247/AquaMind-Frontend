@@ -370,6 +370,7 @@ export function normalizeTransferAction(raw: any, workflow: WorkflowRecord): Tra
     dest_assignment_id: raw.dest_assignment
       ? (typeof raw.dest_assignment === "object" ? raw.dest_assignment?.id : raw.dest_assignment)
       : null,
+    source_population_before: raw.source_population_before ?? 0,
     transferred_count: raw.transferred_count ?? 0,
     transferred_biomass_kg: parseFloat(raw.transferred_biomass_kg ?? 0),
     mortality_during_transfer: raw.mortality_during_transfer ?? 0,

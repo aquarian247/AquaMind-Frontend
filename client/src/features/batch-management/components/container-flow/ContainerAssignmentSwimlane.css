@@ -1,0 +1,263 @@
+/* ── Container Assignment Swimlane ── */
+
+.assignment-swimlane {
+  --swimlane-border: hsl(var(--border));
+  --swimlane-bg: hsl(var(--background));
+  --swimlane-fg: hsl(var(--foreground));
+  --swimlane-muted: hsl(var(--muted));
+  --swimlane-muted-fg: hsl(var(--muted-foreground));
+
+  position: relative;
+}
+
+/* ── Header ── */
+.assignment-swimlane .rct-header-root {
+  background: var(--swimlane-muted) !important;
+  border-bottom: 1px solid var(--swimlane-border);
+  color: var(--swimlane-muted-fg);
+}
+
+.assignment-swimlane .rct-date-header {
+  background: transparent !important;
+  color: var(--swimlane-muted-fg);
+  border-right: 1px solid var(--swimlane-border);
+  font-size: 11px;
+}
+
+.assignment-swimlane .rct-calendar-header {
+  border: none;
+}
+
+/* ── Sidebar (group labels) ── */
+.assignment-swimlane .rct-sidebar {
+  border-right: 1px solid var(--swimlane-border);
+  background: var(--swimlane-bg);
+}
+
+.assignment-swimlane .rct-sidebar-row {
+  background: transparent !important;
+  border-bottom: 1px solid var(--swimlane-border);
+  color: var(--swimlane-fg);
+  font-size: 12px;
+  overflow: hidden;
+}
+
+.assignment-swimlane .rct-sidebar-row.rct-sidebar-row-even {
+  background: transparent !important;
+}
+
+/* ── Horizontal rows ── */
+.assignment-swimlane .rct-horizontal-lines .rct-hl-even,
+.assignment-swimlane .rct-horizontal-lines .rct-hl-odd {
+  background: transparent;
+  border-bottom: 1px solid var(--swimlane-border);
+}
+
+/* ── Vertical grid lines ── */
+.assignment-swimlane .rct-vertical-lines .rct-vl {
+  border-left: 1px solid var(--swimlane-border);
+  opacity: 0.35;
+}
+
+/* ── Today marker ── */
+.assignment-swimlane .rct-today {
+  background: hsl(var(--primary) / 0.06) !important;
+}
+
+/* ── Items ── */
+.assignment-swimlane .rct-item {
+  border: none !important;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: default;
+}
+
+.assignment-swimlane .rct-item .rct-item-content {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ── Custom group rows ── */
+.swimlane-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  height: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.swimlane-group--stage {
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.swimlane-group--station {
+  font-weight: 500;
+  font-size: 11px;
+  padding-left: 12px;
+}
+
+.swimlane-group--hall {
+  font-size: 11px;
+  padding-left: 24px;
+  color: var(--swimlane-muted-fg);
+}
+
+.swimlane-group--container {
+  font-size: 11px;
+  padding-left: 36px;
+}
+
+.swimlane-group__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.swimlane-group__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Custom item bar ── */
+.swimlane-item-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: white;
+  font-weight: 500;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.swimlane-item-bar__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.swimlane-item-bar__exit {
+  opacity: 0.8;
+  font-size: 9px;
+  flex-shrink: 0;
+}
+
+.swimlane-item-bar__metric {
+  flex-shrink: 0;
+  opacity: 0.75;
+  font-size: 9px;
+  border-left: 1px solid rgba(255,255,255,0.3);
+  padding-left: 4px;
+}
+
+/* Active assignment pulsing right edge */
+.swimlane-item-bar--active::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: white;
+  opacity: 0.7;
+  animation: swimlane-pulse 2s ease-in-out infinite;
+}
+
+@keyframes swimlane-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.9; }
+}
+
+/* ── Tooltip ── */
+.swimlane-tooltip {
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border: 1px solid var(--swimlane-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  box-shadow: 0 4px 12px hsl(0 0% 0% / 0.12);
+  pointer-events: none;
+  position: fixed;
+  z-index: 50;
+  max-width: 280px;
+}
+
+.swimlane-tooltip__header {
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swimlane-tooltip__section {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--swimlane-muted-fg);
+  margin-top: 6px;
+  margin-bottom: 1px;
+  opacity: 0.7;
+}
+
+.swimlane-tooltip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  line-height: 1.6;
+}
+
+.swimlane-tooltip__label {
+  color: var(--swimlane-muted-fg);
+}
+
+.swimlane-tooltip__value {
+  font-weight: 500;
+  text-align: right;
+}
+
+/* ── Toolbar ── */
+.swimlane-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+}
+
+/* ── Transfer overlay ── */
+.swimlane-transfer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.swimlane-transfer-overlay path {
+  pointer-events: stroke;
+}
+
+.swimlane-transfer-overlay path:hover {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+.swimlane-transfer-label {
+  font-size: 9px;
+  font-weight: 600;
+  pointer-events: none;
+}

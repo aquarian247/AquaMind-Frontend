@@ -8,12 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from "recharts";
-import { Fish, TrendingUp, TrendingDown, Activity, Beaker, AlertTriangle, ChevronLeft, ChevronRight, GitBranch, TableIcon } from "lucide-react";
+import { Fish, TrendingUp, TrendingDown, Activity, Beaker, AlertTriangle, ChevronLeft, ChevronRight, GitBranch, TableIcon, GanttChart } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ApiService } from "@/api/generated";
 import { api } from "@/lib/api";
 import { API_CONFIG } from "@/lib/config";
 import { BatchContainerFlowGraph } from "@/features/batch-management/components/container-flow/BatchContainerFlowGraph";
+import { ContainerAssignmentSwimlane } from "@/features/batch-management/components/container-flow/ContainerAssignmentSwimlane";
 import type { ViewMode } from "@/features/batch-management/components/container-flow/containerFlow.types";
 
 interface LifecycleProgressionStage {
@@ -617,6 +618,15 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
                     Flow
                   </Button>
                   <Button
+                    variant={assignmentView === "swimlane" ? "default" : "ghost"}
+                    size="sm"
+                    className="rounded-none h-8 px-3"
+                    onClick={() => setAssignmentView("swimlane")}
+                  >
+                    <GanttChart className="w-3.5 h-3.5 mr-1.5" />
+                    Swimlane
+                  </Button>
+                  <Button
                     variant={assignmentView === "table" ? "default" : "ghost"}
                     size="sm"
                     className="rounded-none h-8 px-3"
@@ -631,6 +641,8 @@ export function BatchTraceabilityView({ batchId, batchName, stages: propStages, 
             <CardContent>
               {assignmentView === "graph" ? (
                 <BatchContainerFlowGraph batchId={batchId} />
+              ) : assignmentView === "swimlane" ? (
+                <ContainerAssignmentSwimlane batchId={batchId} />
               ) : (
                 <Table>
                   <TableHeader>

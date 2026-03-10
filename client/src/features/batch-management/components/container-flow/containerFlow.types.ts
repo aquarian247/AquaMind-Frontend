@@ -32,6 +32,7 @@ export interface TransferActionRecord {
   status: string;
   source_assignment_id: number;
   dest_assignment_id: number | null;
+  source_population_before: number;
   transferred_count: number;
   transferred_biomass_kg: number;
   mortality_during_transfer: number;
@@ -124,5 +125,57 @@ export interface ContainerFlowData {
   error: Error | null;
 }
 
-export type ViewMode = "graph" | "table";
+export type ViewMode = "graph" | "swimlane" | "table";
 export type CollapseMode = "expanded" | "collapsed";
+
+// --- Swimlane types ---
+
+export interface SwimlaneGroup {
+  id: string;
+  title: string;
+  /** Parent group id for tree hierarchy (null = root) */
+  parent: string | null;
+  /** Depth: 0 = stage, 1 = station, 2 = hall, 3 = container */
+  depth: number;
+  stageOrder: number;
+  stageColor: string;
+  isLeaf: boolean;
+}
+
+export interface AssignmentTransferSummary {
+  totalIn: number;
+  totalOut: number;
+  biomassIn: number;
+  biomassOut: number;
+  mortalityOut: number;
+}
+
+export interface SwimlaneItem {
+  id: number;
+  group: string;
+  title: string;
+  start_time: number;
+  end_time: number;
+  assignment: AssignmentRecord;
+  stageColor: string;
+  isActive: boolean;
+  transfers: AssignmentTransferSummary;
+  /** population_count is the recorded value; entryPop is back-computed from transfers */
+  entryPopulation: number;
+  exitPopulation: number;
+  entryBiomass: number;
+  exitBiomass: number;
+}
+
+export interface TransferConnection {
+  id: string;
+  sourceAssignmentId: number;
+  destAssignmentId: number;
+  transferredCount: number;
+  transferredBiomassKg: number;
+  mortalityCount: number;
+  executionDate: string | null;
+  sourceGroupId: string;
+  destGroupId: string;
+  destStageColor: string;
+}
