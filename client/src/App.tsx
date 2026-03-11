@@ -67,6 +67,7 @@ import ScenarioModelManagementPage from "@/features/scenario/pages/ScenarioModel
 import { ProductionPlannerPage } from "@/features/production-planner/pages/ProductionPlannerPage";
 import { ActivityTemplateManagementPage } from "@/features/production-planner/pages/ActivityTemplateManagementPage";
 import { VarianceReportPage } from "@/features/production-planner/pages/VarianceReportPage";
+import FinancialPlanningPage from "@/features/finance-core/pages/FinancialPlanningPage";
 
 // Executive & specialized
 import ExecutiveDashboardPage from "@/features/executive/pages/ExecutiveDashboardPage";
@@ -509,6 +510,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <VarianceReportPage />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/finance/planning">
+        <ProtectedRoute>
+          <AppLayout>
+            <FinancialPlanningPage />
           </AppLayout>
         </ProtectedRoute>
       </Route>

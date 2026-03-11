@@ -78,6 +78,21 @@ export type BatchTransferWorkflowList = {
      * When true, actions are created during execution time by ship crew instead of pre-defined during planning.
      */
     is_dynamic_execution?: boolean;
+    /**
+     * Dynamic route pattern for station-to-sea workflows. Required when is_dynamic_execution is true.
+     *
+     * * `DIRECT_STATION_TO_VESSEL` - Direct Station to Vessel
+     * * `VIA_TRUCK_TO_VESSEL` - Via Truck to Vessel
+     */
+    dynamic_route_mode?: 'DIRECT_STATION_TO_VESSEL' | 'VIA_TRUCK_TO_VESSEL' | '' | null;
+    /**
+     * Optional operator estimate of total count to move.
+     */
+    estimated_total_count?: number | null;
+    /**
+     * Optional operator estimate of total biomass to move.
+     */
+    estimated_total_biomass_kg?: string | null;
     readonly is_vessel_transfer: boolean;
     /**
      * User who created this workflow

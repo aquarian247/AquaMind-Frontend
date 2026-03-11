@@ -17,6 +17,10 @@ export type BatchContainerAssignment = {
     readonly lifecycle_stage: NestedLifeCycleStage;
     lifecycle_stage_id?: number;
     assignment_date?: string;
+    /**
+     * Date when this specific assignment ended (e.g., fish moved out or population became zero)
+     */
+    departure_date?: string | null;
     population_count?: number;
     avg_weight_g?: string;
     readonly biomass_kg: string;

@@ -19,7 +19,7 @@ export type PatchedTransferActionDetail = {
      */
     readonly source_assignment_info?: Record<string, any> | null;
     /**
-     * Get destination assignment information.
+     * Get destination assignment/container information.
      */
     readonly dest_assignment_info?: Record<string, any> | null;
     readonly source_readings_snapshot?: string;
@@ -58,6 +58,22 @@ export type PatchedTransferActionDetail = {
      */
     status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'SKIPPED';
     /**
+     * Explicit transport leg type for dynamic handoffs.
+     *
+     * * `STATION_TO_VESSEL` - Station to Vessel
+     * * `STATION_TO_TRUCK` - Station to Truck
+     * * `TRUCK_TO_VESSEL` - Truck to Vessel
+     * * `VESSEL_TO_RING` - Vessel to Ring
+     */
+    leg_type?: 'STATION_TO_VESSEL' | 'STATION_TO_TRUCK' | 'TRUCK_TO_VESSEL' | 'VESSEL_TO_RING' | '' | null;
+    /**
+     * How this action was created (planned vs live dynamic start).
+     *
+     * * `PLANNED` - Planned
+     * * `DYNAMIC_LIVE` - Dynamic Live
+     */
+    created_via?: 'PLANNED' | 'DYNAMIC_LIVE';
+    /**
      * Planned execution date
      */
     planned_date?: string | null;
@@ -65,6 +81,10 @@ export type PatchedTransferActionDetail = {
      * Actual execution date
      */
     readonly actual_execution_date?: string | null;
+    /**
+     * High-resolution execution timestamp for operational ordering.
+     */
+    executed_at?: string | null;
     /**
      * Method used for transfer
      *
@@ -132,6 +152,10 @@ export type PatchedTransferActionDetail = {
      * Destination batch-container assignment (created during execution)
      */
     dest_assignment?: number | null;
+    /**
+     * Destination container for dynamic live handoffs.
+     */
+    dest_container?: number | null;
     /**
      * User who executed this action
      */

@@ -90,6 +90,13 @@ const baseNavigationItems: NavigationItem[] = [
     requiresPermission: 'operational',
   },
   {
+    id: 17,
+    label: "Financial Planning",
+    icon: "fas fa-coins",
+    path: "/finance/planning",
+    requiresPermission: 'finance',
+  },
+  {
     id: 8,
     label: "Inventory",
     icon: "fas fa-boxes",
