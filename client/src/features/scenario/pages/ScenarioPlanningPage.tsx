@@ -95,7 +95,7 @@ export default function ScenarioPlanningPage() {
   const handleSuccess = () => queryClient.invalidateQueries({ queryKey: ["scenario:scenarios"] });
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="w-full max-w-none py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div className="flex items-center space-x-2">

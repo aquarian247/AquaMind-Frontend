@@ -4,32 +4,15 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
 import { StrategicTab } from './StrategicTab';
 import * as api from '../api/api';
+import { renderWithAppProviders } from '@/test-utils/renderWithAppProviders';
 
 // Mock the API hooks
 vi.mock('../api/api', () => ({
   useExecutiveSummary: vi.fn(),
   useTieredHarvestForecast: vi.fn(),
 }));
-
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
-  });
-
-  const Wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(QueryClientProvider, { client: queryClient }, children);
-  
-  return Wrapper;
-}
 
 describe('StrategicTab', () => {
   beforeEach(() => {
@@ -53,8 +36,7 @@ describe('StrategicTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<StrategicTab geography="global" />, { wrapper });
+    renderWithAppProviders(<StrategicTab geography="global" />);
 
     expect(screen.getByText('Overall Capacity')).toBeInTheDocument();
     expect(screen.getByText('Active Batches')).toBeInTheDocument();
@@ -73,8 +55,7 @@ describe('StrategicTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<StrategicTab geography="global" />, { wrapper });
+    renderWithAppProviders(<StrategicTab geography="global" />);
 
     expect(screen.getByText('Capacity by Facility Type')).toBeInTheDocument();
     expect(screen.getByText('Sea Farms')).toBeInTheDocument();
@@ -107,8 +88,7 @@ describe('StrategicTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<StrategicTab geography="global" />, { wrapper });
+    renderWithAppProviders(<StrategicTab geography="global" />);
 
     expect(screen.getByText('Harvest Forecast')).toBeInTheDocument();
   });
@@ -146,8 +126,7 @@ describe('StrategicTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<StrategicTab geography="global" />, { wrapper });
+    renderWithAppProviders(<StrategicTab geography="global" />);
 
     // Check for tier tabs (text includes count in parentheses)
     expect(screen.getByText(/All \(/)).toBeInTheDocument();
@@ -166,8 +145,7 @@ describe('StrategicTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<StrategicTab geography="global" />, { wrapper });
+    renderWithAppProviders(<StrategicTab geography="global" />);
 
     expect(screen.getByText('Market Timing Indicators')).toBeInTheDocument();
     expect(screen.getByText(/Market timing analysis coming soon/)).toBeInTheDocument();

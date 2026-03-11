@@ -153,7 +153,7 @@ export function ProductionPlannerPage() {
 
   return (
     <PermissionGuard require="operational" resource="Production Planner">
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="w-full max-w-none py-6 space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between" data-tour="planner-header">
         <div>

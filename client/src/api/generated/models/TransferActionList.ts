@@ -25,6 +25,10 @@ export type TransferActionList = {
      * Destination batch-container assignment (created during execution)
      */
     dest_assignment?: number | null;
+    /**
+     * Destination container for dynamic live handoffs.
+     */
+    dest_container?: number | null;
     readonly dest_container_name: string;
     /**
      * Number of fish to transfer
@@ -50,6 +54,22 @@ export type TransferActionList = {
      * * `SKIPPED` - Skipped
      */
     status?: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'SKIPPED';
+    /**
+     * Explicit transport leg type for dynamic handoffs.
+     *
+     * * `STATION_TO_VESSEL` - Station to Vessel
+     * * `STATION_TO_TRUCK` - Station to Truck
+     * * `TRUCK_TO_VESSEL` - Truck to Vessel
+     * * `VESSEL_TO_RING` - Vessel to Ring
+     */
+    leg_type?: 'STATION_TO_VESSEL' | 'STATION_TO_TRUCK' | 'TRUCK_TO_VESSEL' | 'VESSEL_TO_RING' | '' | null;
+    /**
+     * How this action was created (planned vs live dynamic start).
+     *
+     * * `PLANNED` - Planned
+     * * `DYNAMIC_LIVE` - Dynamic Live
+     */
+    created_via?: 'PLANNED' | 'DYNAMIC_LIVE';
     readonly status_display: string;
     /**
      * Planned execution date
@@ -59,6 +79,10 @@ export type TransferActionList = {
      * Actual execution date
      */
     readonly actual_execution_date: string | null;
+    /**
+     * High-resolution execution timestamp for operational ordering.
+     */
+    executed_at?: string | null;
     /**
      * Method used for transfer
      *

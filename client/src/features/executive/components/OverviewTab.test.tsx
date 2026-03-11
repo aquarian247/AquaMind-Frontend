@@ -4,32 +4,15 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
 import { OverviewTab } from './OverviewTab';
 import * as api from '../api/api';
+import { renderWithAppProviders } from '@/test-utils/renderWithAppProviders';
 
 // Mock the API hooks
 vi.mock('../api/api', () => ({
   useExecutiveSummary: vi.fn(),
   useFacilitySummaries: vi.fn(),
 }));
-
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
-  });
-
-  const Wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(QueryClientProvider, { client: queryClient }, children);
-  
-  return Wrapper;
-}
 
 describe('OverviewTab', () => {
   beforeEach(() => {
@@ -47,8 +30,7 @@ describe('OverviewTab', () => {
       isLoading: true,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<OverviewTab geography="global" />, { wrapper });
+    renderWithAppProviders(<OverviewTab geography="global" />);
 
     // Should show loading skeletons
     expect(screen.getByText('Strategic KPIs')).toBeInTheDocument();
@@ -89,8 +71,7 @@ describe('OverviewTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<OverviewTab geography="global" />, { wrapper });
+    renderWithAppProviders(<OverviewTab geography="global" />);
 
     // Check that KPI cards are rendered
     expect(screen.getByText('Total Biomass')).toBeInTheDocument();
@@ -140,8 +121,7 @@ describe('OverviewTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<OverviewTab geography="global" />, { wrapper });
+    renderWithAppProviders(<OverviewTab geography="global" />);
 
     // All values should show N/A (honest fallbacks)
     const naElements = screen.getAllByText('N/A');
@@ -203,8 +183,7 @@ describe('OverviewTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<OverviewTab geography="global" />, { wrapper });
+    renderWithAppProviders(<OverviewTab geography="global" />);
 
     // Check table headers (multiple "Biomass" texts exist - one in KPI, one in table)
     expect(screen.getByText('Facility')).toBeInTheDocument();
@@ -228,8 +207,7 @@ describe('OverviewTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<OverviewTab geography="global" />, { wrapper });
+    renderWithAppProviders(<OverviewTab geography="global" />);
 
     expect(screen.getByText(/No facilities available/)).toBeInTheDocument();
   });

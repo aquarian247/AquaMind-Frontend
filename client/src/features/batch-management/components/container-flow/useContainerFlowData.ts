@@ -24,7 +24,7 @@ async function fetchAllWorkflows(batchId: number): Promise<WorkflowRecord[]> {
       undefined, undefined,
       batchId,
       undefined, undefined, undefined, undefined, undefined, undefined,
-      undefined, undefined, undefined, undefined,
+      undefined, undefined, undefined, undefined, undefined,
       page,
     );
     for (const raw of response.results ?? []) {
