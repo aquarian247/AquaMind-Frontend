@@ -4,31 +4,14 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
 import { MarketTab } from './MarketTab';
 import * as api from '../api/api';
+import { renderWithAppProviders } from '@/test-utils/renderWithAppProviders';
 
 // Mock the API hooks
 vi.mock('../api/api', () => ({
   useMarketPrices: vi.fn(),
 }));
-
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
-  });
-
-  const Wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(QueryClientProvider, { client: queryClient }, children);
-  
-  return Wrapper;
-}
 
 describe('MarketTab', () => {
   beforeEach(() => {
@@ -46,8 +29,7 @@ describe('MarketTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<MarketTab />, { wrapper });
+    renderWithAppProviders(<MarketTab />);
 
     expect(screen.getByText(/Market Data Integration Pending/)).toBeInTheDocument();
     expect(screen.getByText(/Stágri Salmon Index/)).toBeInTheDocument();
@@ -64,8 +46,7 @@ describe('MarketTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<MarketTab />, { wrapper });
+    renderWithAppProviders(<MarketTab />);
 
     expect(screen.getByText('Salmon Price')).toBeInTheDocument();
     expect(screen.getByText('Market Outlook')).toBeInTheDocument();
@@ -82,8 +63,7 @@ describe('MarketTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<MarketTab />, { wrapper });
+    renderWithAppProviders(<MarketTab />);
 
     expect(screen.getByText('Global Market Share')).toBeInTheDocument();
     expect(screen.getByText(/Market share visualization will appear here/)).toBeInTheDocument();
@@ -105,8 +85,7 @@ describe('MarketTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<MarketTab />, { wrapper });
+    renderWithAppProviders(<MarketTab />);
 
     // Should display N/A for missing price data
     const naElements = screen.getAllByText('N/A');

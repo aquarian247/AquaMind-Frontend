@@ -5,11 +5,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
 import ExecutiveDashboardPage from './ExecutiveDashboardPage';
 import * as api from '../api/api';
 import { ApiService } from '@/api/generated';
+import { renderWithAppProviders } from '@/test-utils/renderWithAppProviders';
 
 // Mock all API hooks
 vi.mock('../api/api', () => ({
@@ -25,22 +24,6 @@ vi.mock('@/api/generated', () => ({
     apiV1InfrastructureGeographiesList: vi.fn(),
   },
 }));
-
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
-  });
-
-  const Wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(QueryClientProvider, { client: queryClient }, children);
-  
-  return Wrapper;
-}
 
 describe('ExecutiveDashboardPage', () => {
   beforeEach(() => {
@@ -118,8 +101,7 @@ describe('ExecutiveDashboardPage', () => {
   });
 
   it('should render page header and geography filter', () => {
-    const wrapper = createWrapper();
-    render(<ExecutiveDashboardPage />, { wrapper });
+    renderWithAppProviders(<ExecutiveDashboardPage />);
 
     expect(screen.getByText('Executive Dashboard')).toBeInTheDocument();
     expect(screen.getByText(/Strategic oversight and decision-making/)).toBeInTheDocument();
@@ -127,8 +109,7 @@ describe('ExecutiveDashboardPage', () => {
   });
 
   it('should render all 4 tab triggers', () => {
-    const wrapper = createWrapper();
-    render(<ExecutiveDashboardPage />, { wrapper });
+    renderWithAppProviders(<ExecutiveDashboardPage />);
 
     expect(screen.getByRole('tab', { name: /Overview/i })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /Financial/i })).toBeInTheDocument();
@@ -137,8 +118,7 @@ describe('ExecutiveDashboardPage', () => {
   });
 
   it('should render Overview tab by default', () => {
-    const wrapper = createWrapper();
-    render(<ExecutiveDashboardPage />, { wrapper });
+    renderWithAppProviders(<ExecutiveDashboardPage />);
 
     // Overview tab content should be visible
     expect(screen.getByText('Strategic KPIs')).toBeInTheDocument();
@@ -147,8 +127,7 @@ describe('ExecutiveDashboardPage', () => {
 
   it('should switch tabs when clicked', async () => {
     const user = userEvent.setup();
-    const wrapper = createWrapper();
-    render(<ExecutiveDashboardPage />, { wrapper });
+    renderWithAppProviders(<ExecutiveDashboardPage />);
 
     // Click Financial tab
     const financialTab = screen.getByRole('tab', { name: /Financial/i });
@@ -159,12 +138,17 @@ describe('ExecutiveDashboardPage', () => {
   });
 
   it('should pass geography filter to Overview tab', () => {
-    const wrapper = createWrapper();
-    render(<ExecutiveDashboardPage />, { wrapper });
+    renderWithAppProviders(<ExecutiveDashboardPage />);
 
     // Geography filter is applied to Overview tab hooks (visible by default)
-    expect(api.useExecutiveSummary).toHaveBeenCalledWith(1); // Default to Faroe Islands
-    expect(api.useFacilitySummaries).toHaveBeenCalledWith(1); // Default to Faroe Islands
+    expect(api.useExecutiveSummary).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ includeHealthMetrics: true })
+    );
+    expect(api.useFacilitySummaries).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({ includeHealthMetrics: true })
+    );
     
     // Note: Financial/Strategic/Market hooks only called when tabs are active
   });

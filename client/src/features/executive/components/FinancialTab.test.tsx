@@ -4,31 +4,14 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React from 'react';
 import { FinancialTab } from './FinancialTab';
 import * as api from '../api/api';
+import { renderWithAppProviders } from '@/test-utils/renderWithAppProviders';
 
 // Mock the API hooks
 vi.mock('../api/api', () => ({
   useFinancialSummary: vi.fn(),
 }));
-
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
-  });
-
-  const Wrapper = ({ children }: { children: React.ReactNode }) =>
-    React.createElement(QueryClientProvider, { client: queryClient }, children);
-  
-  return Wrapper;
-}
 
 describe('FinancialTab', () => {
   beforeEach(() => {
@@ -52,8 +35,7 @@ describe('FinancialTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<FinancialTab geography="global" />, { wrapper });
+    renderWithAppProviders(<FinancialTab geography="global" />);
 
     expect(screen.getByText(/Financial Integration Pending/)).toBeInTheDocument();
     expect(screen.getByText(/\/api\/v1\/finance\/summary\//)).toBeInTheDocument();
@@ -76,8 +58,7 @@ describe('FinancialTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<FinancialTab geography="global" />, { wrapper });
+    renderWithAppProviders(<FinancialTab geography="global" />);
 
     expect(screen.getByText('Total Revenue')).toBeInTheDocument();
     expect(screen.getByText('Total Costs')).toBeInTheDocument();
@@ -104,8 +85,7 @@ describe('FinancialTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<FinancialTab geography="global" />, { wrapper });
+    renderWithAppProviders(<FinancialTab geography="global" />);
 
     // All financial metrics should show N/A
     const naElements = screen.getAllByText('N/A');
@@ -129,8 +109,7 @@ describe('FinancialTab', () => {
       isLoading: false,
     } as any);
 
-    const wrapper = createWrapper();
-    render(<FinancialTab geography="global" />, { wrapper });
+    renderWithAppProviders(<FinancialTab geography="global" />);
 
     expect(screen.getByText('Revenue Trends')).toBeInTheDocument();
     expect(screen.getByText('Cost Breakdown')).toBeInTheDocument();
