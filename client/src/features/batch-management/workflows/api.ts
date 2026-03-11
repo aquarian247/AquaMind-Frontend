@@ -80,6 +80,7 @@ export function useWorkflows(filters?: WorkflowFilters) {
         undefined, // completionMin
         undefined, // destLifecycleStage
         undefined, // destSubsidiary
+        undefined, // dynamicRouteMode
         undefined, // initiatedBy
         undefined, // isDynamicExecution
         filters?.is_intercompany, // isIntercompany
