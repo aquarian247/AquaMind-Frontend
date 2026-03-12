@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { useStationSummary } from "@/features/infrastructure/api";
+import { StationHistoryTab } from "@/features/infrastructure/components/StationHistoryTab";
 import { formatWeight, formatCount } from "@/lib/formatFallback";
 import { ApiService } from "@/api/generated";
 import { 
@@ -414,6 +415,7 @@ export default function StationDetail({ params }: { params: { id: string } }) {
                 {activeTab === "infrastructure" && "Infrastructure"}
                 {activeTab === "staff" && "Staff & Compliance"}
                 {activeTab === "maintenance" && "Maintenance"}
+                {activeTab === "history" && "History"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -422,17 +424,19 @@ export default function StationDetail({ params }: { params: { id: string } }) {
               <SelectItem value="infrastructure">Infrastructure</SelectItem>
               <SelectItem value="staff">Staff & Compliance</SelectItem>
               <SelectItem value="maintenance">Maintenance</SelectItem>
+              <SelectItem value="history">History</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Desktop tabs - hidden on mobile */}
-        <TabsList className="hidden md:grid w-full grid-cols-5">
+        <TabsList className="hidden md:grid w-full grid-cols-6">
           <TabsTrigger value="environmental">Environmental</TabsTrigger>
           <TabsTrigger value="operations">Operations</TabsTrigger>
           <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
           <TabsTrigger value="staff">Staff & Compliance</TabsTrigger>
           <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="environmental" className="space-y-4">
@@ -900,6 +904,10 @@ export default function StationDetail({ params }: { params: { id: string } }) {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4">
+          <StationHistoryTab stationId={station.id} stationName={station.name} />
         </TabsContent>
       </Tabs>
     </div>

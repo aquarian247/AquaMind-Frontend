@@ -15,6 +15,10 @@ interface TransferArrowOverlayProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
   sidebarWidth: number;
   renderTick: number;
+  highlightedConnectionIds: Set<string> | null;
+  selectedTransferGroupId: string | null;
+  selectionActive: boolean;
+  onTransferSelect: (transferGroupId: string) => void;
 }
 
 interface TooltipState {
@@ -67,6 +71,10 @@ export function TransferArrowOverlay({
   containerRef,
   sidebarWidth,
   renderTick,
+  highlightedConnectionIds,
+  selectedTransferGroupId,
+  selectionActive,
+  onTransferSelect,
 }: TransferArrowOverlayProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
   const [paths, setPaths] = useState<PathData[]>([]);
@@ -218,18 +226,46 @@ export function TransferArrowOverlay({
           </marker>
         </defs>
         {paths.map(({ conn, d, labelX, labelY, color }) => (
-          <g key={conn.id}>
+          <g
+            key={conn.id}
+            className={`swimlane-transfer-group ${selectedTransferGroupId === conn.transferGroupId ? "swimlane-transfer-group--selected" : ""} ${selectionActive && !(highlightedConnectionIds?.has(conn.id) ?? false) ? "swimlane-transfer-group--dimmed" : ""}`}
+          >
+            <path
+              d={d}
+              fill="none"
+              stroke="transparent"
+              strokeWidth={12}
+              className="swimlane-transfer-hitbox"
+              onMouseEnter={(e) =>
+                setTooltip({ x: e.clientX, y: e.clientY, conn })
+              }
+              onMouseMove={(e) =>
+                setTooltip((prev) =>
+                  prev ? { ...prev, x: e.clientX, y: e.clientY } : null,
+                )
+              }
+              onMouseLeave={() => setTooltip(null)}
+              onClick={() => onTransferSelect(conn.transferGroupId)}
+            />
             <path
               d={d}
               fill="none"
               stroke={color}
-              strokeWidth={1.5}
+              strokeWidth={selectedTransferGroupId === conn.transferGroupId ? 2.5 : 1.5}
               strokeDasharray="6 3"
-              opacity={0.55}
+              opacity={selectionActive
+                ? ((highlightedConnectionIds?.has(conn.id) ?? false) ? 0.9 : 0.14)
+                : 0.55}
               markerEnd="url(#swimlane-arrowhead)"
+              className="swimlane-transfer-path"
               style={{ color }}
               onMouseEnter={(e) =>
                 setTooltip({ x: e.clientX, y: e.clientY, conn })
+              }
+              onMouseMove={(e) =>
+                setTooltip((prev) =>
+                  prev ? { ...prev, x: e.clientX, y: e.clientY } : null,
+                )
               }
               onMouseLeave={() => setTooltip(null)}
             />
@@ -239,7 +275,9 @@ export function TransferArrowOverlay({
               textAnchor="middle"
               className="swimlane-transfer-label"
               fill={color}
-              opacity={0.85}
+              opacity={selectionActive
+                ? ((highlightedConnectionIds?.has(conn.id) ?? false) ? 0.95 : 0.22)
+                : 0.85}
             >
               {formatPopulation(conn.transferredCount)}
             </text>

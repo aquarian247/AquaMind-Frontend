@@ -5,6 +5,8 @@ export type LocationType = "FRESHWATER" | "TRANSPORT_TRUCK" | "TRANSPORT_VESSEL"
 export interface AssignmentRecord {
   id: number;
   batch_id: number;
+  batch_number?: string | null;
+  batch_status?: string | null;
   container_id: number;
   container_name: string;
   lifecycle_stage_id: number;
@@ -160,15 +162,17 @@ export interface SwimlaneItem {
   stageColor: string;
   isActive: boolean;
   transfers: AssignmentTransferSummary;
-  /** population_count is the recorded value; entryPop is back-computed from transfers */
-  entryPopulation: number;
-  exitPopulation: number;
-  entryBiomass: number;
-  exitBiomass: number;
+  /**
+   * Swimlane mirrors the raw assignment snapshot used by the table and flow
+   * views instead of deriving synthetic entry/exit balances from transfers.
+   */
+  populationCount: number;
+  biomassKg: number;
 }
 
 export interface TransferConnection {
   id: string;
+  transferGroupId: string;
   sourceAssignmentId: number;
   destAssignmentId: number;
   transferredCount: number;

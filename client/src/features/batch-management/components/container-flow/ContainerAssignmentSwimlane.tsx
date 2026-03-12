@@ -24,16 +24,24 @@ import {
 
 import { useContainerFlowData } from "./useContainerFlowData";
 import {
+  collectAssignmentHighlightState,
   buildSwimlaneGroups,
   buildSwimlaneItems,
   buildTransferConnections,
+  collectLaneHighlightState,
+  collectTransferHighlightState,
   computeTimeRange,
   formatPopulation,
   formatBiomass,
   formatDuration,
 } from "./swimlaneTransformers";
 import { TransferArrowOverlay } from "./TransferArrowOverlay";
-import type { SwimlaneGroup, SwimlaneItem } from "./containerFlow.types";
+import type {
+  AssignmentRecord,
+  TransferActionRecord,
+  SwimlaneGroup,
+  SwimlaneItem,
+} from "./containerFlow.types";
 
 interface SwimGroup extends TimelineGroupBase {
   id: string;
@@ -53,26 +61,88 @@ interface TooltipData {
   item: SwimlaneItem;
 }
 
+export interface ContainerAssignmentSwimlaneViewProps {
+  assignments: AssignmentRecord[];
+  actions: TransferActionRecord[];
+  isLoading: boolean;
+  error: Error | null;
+  viewKey?: string | number;
+  initialVisibleWindow?: { start: number; end: number } | null;
+  showBatchLabels?: boolean;
+  stackItems?: boolean;
+}
+
 interface ContainerAssignmentSwimlaneProps {
   batchId: number;
 }
+
+type SwimlaneSelection =
+  | { type: "lane"; groupId: string }
+  | { type: "assignment"; assignmentId: number }
+  | { type: "transfer"; transferGroupId: string }
+  | null;
+
+type LaneHighlightState = {
+  groupIds: Set<string>;
+  connectionIds: Set<string>;
+};
+
+type AssignmentHighlightState = LaneHighlightState & {
+  assignmentIds: Set<number>;
+};
+
+type SelectionHighlightState = LaneHighlightState | AssignmentHighlightState | null;
 
 const SIDEBAR_WIDTH = 220;
 const LINE_HEIGHT = 36;
 const DAY_MS = 86_400_000;
 const ZOOM_FACTOR = 0.6;
 
-export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwimlaneProps) {
-  const { assignments, actions, isLoading, error } = useContainerFlowData(batchId);
+interface TimelineResizeListener {
+  resize?: () => void;
+}
 
+interface TimelineResizeDetector {
+  addListener?: (listener: TimelineResizeListener) => void;
+  removeListener: (listener: TimelineResizeListener) => void;
+  notify: () => void;
+}
+
+export function ContainerAssignmentSwimlaneView({
+  assignments,
+  actions,
+  isLoading,
+  error,
+  viewKey,
+  initialVisibleWindow = null,
+  showBatchLabels = false,
+  stackItems = false,
+}: ContainerAssignmentSwimlaneViewProps) {
   const [showTransfers, setShowTransfers] = useState(true);
   const [openGroupIds, setOpenGroupIds] = useState<Set<string> | null>(null);
+  const [selection, setSelection] = useState<SwimlaneSelection>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [visibleTimeStart, setVisibleTimeStart] = useState<number | null>(null);
   const [visibleTimeEnd, setVisibleTimeEnd] = useState<number | null>(null);
   const [renderTick, setRenderTick] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const resizeDetector = useMemo<TimelineResizeDetector>(() => {
+    const listeners = new Set<TimelineResizeListener>();
+    return {
+      addListener: (listener) => {
+        listeners.add(listener);
+      },
+      removeListener: (listener) => {
+        listeners.delete(listener);
+      },
+      notify: () => {
+        listeners.forEach((listener) => {
+          listener.resize?.();
+        });
+      },
+    };
+  }, []);
 
   const swimGroups = useMemo(() => buildSwimlaneGroups(assignments), [assignments]);
   const swimItems = useMemo(
@@ -85,13 +155,74 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
   );
   const timeRange = useMemo(() => computeTimeRange(assignments), [assignments]);
 
-  // Default: expand ALL groups
   useEffect(() => {
-    if (swimGroups.length > 0 && openGroupIds === null) {
-      const all = new Set(swimGroups.filter((g) => !g.isLeaf).map((g) => g.id));
-      setOpenGroupIds(all);
+    setOpenGroupIds(null);
+    setSelection(null);
+    setVisibleTimeStart(null);
+    setVisibleTimeEnd(null);
+    setRenderTick((t) => t + 1);
+  }, [viewKey]);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        resizeDetector.notify();
+        setRenderTick((t) => t + 1);
+      });
+    });
+
+    observer.observe(element);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [resizeDetector]);
+
+  const leafGroupIds = useMemo(
+    () => new Set(swimGroups.filter((g) => g.isLeaf).map((g) => g.id)),
+    [swimGroups],
+  );
+
+  const defaultExpandedGroupIds = useMemo(
+    () => new Set(swimGroups.filter((g) => !g.isLeaf).map((g) => g.id)),
+    [swimGroups],
+  );
+
+  const assignmentGroupById = useMemo(
+    () => new Map(swimItems.map((item) => [item.id, item.group] as const)),
+    [swimItems],
+  );
+
+  const selectionState = useMemo<SelectionHighlightState>(() => {
+    if (!selection) return null;
+    if (selection.type === "lane") {
+      return collectLaneHighlightState(selection.groupId, connections);
     }
-  }, [swimGroups, openGroupIds]);
+    if (selection.type === "assignment") {
+      return collectAssignmentHighlightState(selection.assignmentId, connections, assignmentGroupById);
+    }
+    return collectTransferHighlightState(selection.transferGroupId, connections);
+  }, [selection, connections, assignmentGroupById]);
+
+  const highlightedGroupIds = selectionState?.groupIds ?? null;
+  const highlightedConnectionIds = selectionState?.connectionIds ?? null;
+  const highlightedAssignmentIds = useMemo<Set<number> | null>(() => {
+    if (!selectionState) return null;
+    if ("assignmentIds" in selectionState) return selectionState.assignmentIds;
+    const ids = new Set<number>();
+    for (const item of swimItems) {
+      if (selectionState.groupIds.has(item.group)) {
+        ids.add(item.id);
+      }
+    }
+    return ids;
+  }, [selectionState, swimItems]);
+  const selectionActive = selection !== null;
 
   const isAllExpanded = useMemo(() => {
     if (!openGroupIds) return true;
@@ -109,17 +240,53 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
       }
       return next;
     });
+    setRenderTick((t) => t + 1);
   }, []);
 
   const expandAll = useCallback(() => {
     setOpenGroupIds(new Set(swimGroups.filter((g) => !g.isLeaf).map((g) => g.id)));
+    setRenderTick((t) => t + 1);
   }, [swimGroups]);
 
   const collapseAll = useCallback(() => {
     setOpenGroupIds(new Set());
+    setRenderTick((t) => t + 1);
   }, []);
 
-  const currentOpenIds = openGroupIds ?? new Set<string>();
+  const handleLaneSelect = useCallback((groupId: string) => {
+    if (!leafGroupIds.has(groupId)) return;
+    setSelection((prev) =>
+      prev?.type === "lane" && prev.groupId === groupId
+        ? null
+        : { type: "lane", groupId },
+    );
+  }, [leafGroupIds]);
+
+  const handleTransferSelect = useCallback((transferGroupId: string) => {
+    setSelection((prev) =>
+      prev?.type === "transfer" && prev.transferGroupId === transferGroupId
+        ? null
+        : { type: "transfer", transferGroupId },
+    );
+  }, []);
+
+  const handleAssignmentSelect = useCallback((assignmentId: number) => {
+    setSelection((prev) =>
+      prev?.type === "assignment" && prev.assignmentId === assignmentId
+        ? null
+        : { type: "assignment", assignmentId },
+    );
+  }, []);
+
+  const handleCanvasClick = useCallback((groupId: string) => {
+    if (leafGroupIds.has(groupId)) {
+      handleLaneSelect(groupId);
+      return;
+    }
+    setSelection(null);
+  }, [handleLaneSelect, leafGroupIds]);
+
+  const currentOpenIds = openGroupIds ?? defaultExpandedGroupIds;
 
   const isGroupVisible = useCallback(
     (group: SwimlaneGroup): boolean => {
@@ -177,8 +344,8 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
     return Array.from(seen.entries());
   }, [swimGroups]);
 
-  const defaultTimeStart = visibleTimeStart ?? timeRange.start;
-  const defaultTimeEnd = visibleTimeEnd ?? timeRange.end;
+  const defaultTimeStart = visibleTimeStart ?? initialVisibleWindow?.start ?? timeRange.start;
+  const defaultTimeEnd = visibleTimeEnd ?? initialVisibleWindow?.end ?? timeRange.end;
 
   const handleZoom = useCallback(
     (direction: "in" | "out") => {
@@ -210,8 +377,12 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
   const groupRenderer = useCallback(
     ({ group }: { group: SwimGroup }) => {
       const sg = group.swimlane;
-      const hasChildren = swimGroups.some((g) => g.parent === sg.id);
+      const hasChildren = !sg.isLeaf;
       const isOpen = currentOpenIds.has(sg.id);
+      const isSelectableLane = sg.isLeaf;
+      const isSelectedLane = selection?.type === "lane" && selection.groupId === sg.id;
+      const isHighlightedLane = highlightedGroupIds?.has(sg.id) ?? false;
+      const isDimmedLane = selectionActive && isSelectableLane && !isHighlightedLane;
       const depthClass =
         sg.depth === 0
           ? "swimlane-group--stage"
@@ -223,29 +394,63 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
 
       return (
         <div
-          className={`swimlane-group ${depthClass}`}
-          onClick={hasChildren ? () => toggleGroup(sg.id) : undefined}
-          style={{ cursor: hasChildren ? "pointer" : "default" }}
+          className={`swimlane-group ${depthClass} ${isSelectableLane ? "swimlane-group--clickable" : ""} ${isSelectedLane ? "swimlane-group--selected" : ""} ${!isSelectedLane && isHighlightedLane ? "swimlane-group--highlighted" : ""} ${isDimmedLane ? "swimlane-group--dimmed" : ""}`}
+          onClick={isSelectableLane ? () => handleLaneSelect(sg.id) : undefined}
+          onKeyDown={isSelectableLane
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleLaneSelect(sg.id);
+                }
+              }
+            : undefined}
+          role={isSelectableLane ? "button" : undefined}
+          tabIndex={isSelectableLane ? 0 : undefined}
+          aria-pressed={isSelectableLane ? isSelectedLane : undefined}
+          style={{ cursor: isSelectableLane ? "pointer" : "default" }}
         >
+          {hasChildren && (
+            <button
+              type="button"
+              className="swimlane-group__toggle"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleGroup(sg.id);
+              }}
+              aria-label={isOpen ? `Collapse ${sg.title}` : `Expand ${sg.title}`}
+            >
+              {isOpen ? "▾" : "▸"}
+            </button>
+          )}
           <span
             className="swimlane-group__dot"
             style={{ backgroundColor: sg.stageColor }}
           />
-          {hasChildren && (
-            <span style={{ fontSize: 9, opacity: 0.5, width: 10, textAlign: "center" }}>
-              {isOpen ? "▾" : "▸"}
-            </span>
-          )}
           <span className="swimlane-group__label" title={sg.title}>
             {sg.title}
           </span>
         </div>
       );
     },
-    [swimGroups, currentOpenIds, toggleGroup],
+    [currentOpenIds, handleLaneSelect, highlightedGroupIds, selection, selectionActive, toggleGroup],
   );
 
-  // ── Item renderer: shows entry pop | exit pop + biomass ──
+  const horizontalLineClassNamesForGroup = useCallback((group: SwimGroup) => {
+    if (!group.swimlane.isLeaf) return [];
+    const groupId = group.swimlane.id;
+    const isSelectedLane = selection?.type === "lane" && selection.groupId === groupId;
+    const isHighlightedLane = highlightedGroupIds?.has(groupId) ?? false;
+    const isDimmedLane = selectionActive && !isHighlightedLane;
+
+    return [
+      "swimlane-row",
+      isSelectedLane ? "swimlane-row--selected" : "",
+      !isSelectedLane && isHighlightedLane ? "swimlane-row--highlighted" : "",
+      isDimmedLane ? "swimlane-row--dimmed" : "",
+    ].filter(Boolean);
+  }, [highlightedGroupIds, selection, selectionActive]);
+
+  // ── Item renderer ──
 
   const itemRenderer = useCallback(
     ({
@@ -261,18 +466,32 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
     }) => {
       const sd = item.swimlaneData;
       const width = itemContext.dimensions.width;
-      const hasTransferData = sd.transfers.totalIn > 0 || sd.transfers.totalOut > 0;
-      const showEntry = width > 50;
-      const showExit = width > 120 && hasTransferData;
-      const hasBiomass = sd.entryBiomass > 0 || sd.exitBiomass > 0;
-      const showBio = width > 180 && hasBiomass;
+      const showPopulation = width > 50;
+      const hasBiomass = sd.biomassKg > 0;
+      const showBio = width > 140 && hasBiomass;
+      const showBatch = showBatchLabels && width > 210 && !!sd.assignment.batch_number;
+      const isSelectedLane = selection?.type === "lane" && selection.groupId === item.group;
+      const isSelectedAssignment = selection?.type === "assignment" && selection.assignmentId === item.id;
+      const isSelectedTransferEndpoint =
+        selection?.type === "transfer" && (highlightedAssignmentIds?.has(item.id) ?? false);
+      const isSelectedItem = isSelectedLane || isSelectedAssignment || isSelectedTransferEndpoint;
+      const isHighlightedItem = highlightedAssignmentIds?.has(item.id) ?? false;
+      const isDimmedLane = selectionActive && !isHighlightedItem;
 
       const { key, ...restItemProps } = getItemProps({
         style: {
           background: sd.stageColor,
           border: "none",
           borderRadius: "4px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+          boxShadow: isSelectedItem
+            ? "0 0 0 2px hsl(var(--ring)), 0 3px 10px rgba(0,0,0,0.22)"
+            : isHighlightedItem
+              ? "0 2px 8px rgba(0,0,0,0.18)"
+              : "0 1px 3px rgba(0,0,0,0.15)",
+          cursor: "pointer",
+          opacity: isDimmedLane ? 0.26 : 1,
+          transition: "opacity 160ms ease, box-shadow 160ms ease, transform 160ms ease",
+          transform: isSelectedItem ? "translateY(-1px)" : undefined,
         },
       });
 
@@ -290,32 +509,31 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
             )
           }
           onMouseLeave={() => setTooltip(null)}
+          onClick={() => handleAssignmentSelect(item.id)}
         >
           <div
-            className={`swimlane-item-bar ${sd.isActive ? "swimlane-item-bar--active" : ""}`}
+            className={`swimlane-item-bar ${sd.isActive ? "swimlane-item-bar--active" : ""} ${isSelectedItem ? "swimlane-item-bar--selected" : ""} ${!isSelectedItem && isHighlightedItem ? "swimlane-item-bar--highlighted" : ""} ${isDimmedLane ? "swimlane-item-bar--dimmed" : ""}`}
           >
-            {showEntry && (
-              <span className="swimlane-item-bar__label">
-                {hasTransferData
-                  ? formatPopulation(sd.entryPopulation)
-                  : formatPopulation(sd.exitPopulation)}
+            {showBatch && (
+              <span className="swimlane-item-bar__batch">
+                {sd.assignment.batch_number}
               </span>
             )}
-            {showExit && sd.entryPopulation !== sd.exitPopulation && (
-              <span className="swimlane-item-bar__exit">
-                {formatPopulation(sd.exitPopulation)}
+            {showPopulation && (
+              <span className="swimlane-item-bar__label">
+                {formatPopulation(sd.populationCount)}
               </span>
             )}
             {showBio && (
               <span className="swimlane-item-bar__metric">
-                {formatBiomass(sd.entryBiomass)}
+                {formatBiomass(sd.biomassKg)}
               </span>
             )}
           </div>
         </div>
       );
     },
-    [],
+    [handleAssignmentSelect, highlightedAssignmentIds, selection, selectionActive, showBatchLabels],
   );
 
   // ── Loading / Error / Empty ──
@@ -417,13 +635,16 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
           canResize={false}
           canChangeGroup={false}
           canSelect={false}
-          stackItems={false}
+          stackItems={stackItems}
           minZoom={7 * DAY_MS}
           maxZoom={3 * 365 * DAY_MS}
           onTimeChange={handleTimeChange}
+          onCanvasClick={handleCanvasClick}
           groupRenderer={groupRenderer}
+          horizontalLineClassNamesForGroup={horizontalLineClassNamesForGroup}
           itemRenderer={itemRenderer}
           buffer={1}
+          resizeDetector={resizeDetector}
         >
           <TimelineHeaders className="bg-muted text-muted-foreground">
             <SidebarHeader>
@@ -453,6 +674,10 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
             containerRef={containerRef}
             sidebarWidth={SIDEBAR_WIDTH}
             renderTick={renderTick}
+            highlightedConnectionIds={highlightedConnectionIds}
+            selectedTransferGroupId={selection?.type === "transfer" ? selection.transferGroupId : null}
+            selectionActive={selectionActive}
+            onTransferSelect={handleTransferSelect}
           />
         )}
       </div>
@@ -472,90 +697,84 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
             <span style={{ fontWeight: 400, opacity: 0.7, fontSize: 11 }}>
               ({tooltip.item.assignment.lifecycle_stage_name})
             </span>
+            {showBatchLabels && tooltip.item.assignment.batch_number && (
+              <span className="swimlane-tooltip__pill">
+                {tooltip.item.assignment.batch_number}
+              </span>
+            )}
           </div>
 
           {(() => {
             const t = tooltip.item;
             const tr = t.transfers;
-            const hasTransfers = tr.totalIn > 0 || tr.totalOut > 0;
+            const hasPopulationTransfers = tr.totalIn > 0 || tr.totalOut > 0 || tr.mortalityOut > 0;
+            const hasBiomassTransfers = tr.biomassIn > 0 || tr.biomassOut > 0;
             return (
               <>
-                {hasTransfers ? (
+                <div className="swimlane-tooltip__section">Population</div>
+                <div className="swimlane-tooltip__row">
+                  <span className="swimlane-tooltip__label">Count</span>
+                  <span className="swimlane-tooltip__value">
+                    {formatPopulation(t.populationCount)}
+                  </span>
+                </div>
+                {tr.totalIn > 0 && (
+                  <div className="swimlane-tooltip__row">
+                    <span className="swimlane-tooltip__label">+ Received</span>
+                    <span className="swimlane-tooltip__value" style={{ color: "hsl(142, 71%, 35%)" }}>
+                      +{formatPopulation(tr.totalIn)}
+                    </span>
+                  </div>
+                )}
+                {tr.totalOut > 0 && (
+                  <div className="swimlane-tooltip__row">
+                    <span className="swimlane-tooltip__label">- Transferred out</span>
+                    <span className="swimlane-tooltip__value" style={{ color: "hsl(var(--destructive))" }}>
+                      -{formatPopulation(tr.totalOut)}
+                    </span>
+                  </div>
+                )}
+                {tr.mortalityOut > 0 && (
+                  <div className="swimlane-tooltip__row">
+                    <span className="swimlane-tooltip__label">- Transfer mortality</span>
+                    <span className="swimlane-tooltip__value" style={{ color: "hsl(var(--destructive))" }}>
+                      -{formatPopulation(tr.mortalityOut)}
+                    </span>
+                  </div>
+                )}
+                {!hasPopulationTransfers && (
+                  <div className="swimlane-tooltip__row">
+                    <span className="swimlane-tooltip__label" style={{ fontSize: 10, opacity: 0.6 }}>
+                      No transfer records found
+                    </span>
+                  </div>
+                )}
+
+                {(t.biomassKg > 0 || hasBiomassTransfers) && (
                   <>
-                    <div className="swimlane-tooltip__section">Population</div>
+                    <div className="swimlane-tooltip__section">Biomass</div>
                     <div className="swimlane-tooltip__row">
-                      <span className="swimlane-tooltip__label">Initial stock</span>
+                      <span className="swimlane-tooltip__label">Recorded</span>
                       <span className="swimlane-tooltip__value">
-                        {formatPopulation(t.entryPopulation)}
+                        {formatBiomass(t.biomassKg)}
                       </span>
                     </div>
-                    {tr.totalIn > 0 && (
+                    {tr.biomassIn > 0 && (
                       <div className="swimlane-tooltip__row">
                         <span className="swimlane-tooltip__label">+ Received</span>
                         <span className="swimlane-tooltip__value" style={{ color: "hsl(142, 71%, 35%)" }}>
-                          +{formatPopulation(tr.totalIn)}
+                          +{formatBiomass(tr.biomassIn)}
                         </span>
                       </div>
                     )}
-                    {tr.totalOut > 0 && (
+                    {tr.biomassOut > 0 && (
                       <div className="swimlane-tooltip__row">
                         <span className="swimlane-tooltip__label">- Transferred out</span>
                         <span className="swimlane-tooltip__value" style={{ color: "hsl(var(--destructive))" }}>
-                          -{formatPopulation(tr.totalOut)}
+                          -{formatBiomass(tr.biomassOut)}
                         </span>
                       </div>
                     )}
-                    {tr.mortalityOut > 0 && (
-                      <div className="swimlane-tooltip__row">
-                        <span className="swimlane-tooltip__label">- Transfer mortality</span>
-                        <span className="swimlane-tooltip__value" style={{ color: "hsl(var(--destructive))" }}>
-                          -{formatPopulation(tr.mortalityOut)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="swimlane-tooltip__row" style={{ borderTop: "1px solid hsl(var(--border))", paddingTop: 2, marginTop: 2 }}>
-                      <span className="swimlane-tooltip__label" style={{ fontWeight: 600 }}>
-                        = Current
-                      </span>
-                      <span className="swimlane-tooltip__value" style={{ fontWeight: 600 }}>
-                        {formatPopulation(t.exitPopulation)}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="swimlane-tooltip__section">Population</div>
-                    <div className="swimlane-tooltip__row">
-                      <span className="swimlane-tooltip__label">Count</span>
-                      <span className="swimlane-tooltip__value">
-                        {formatPopulation(t.exitPopulation)}
-                      </span>
-                    </div>
-                    <div className="swimlane-tooltip__row">
-                      <span className="swimlane-tooltip__label" style={{ fontSize: 10, opacity: 0.6 }}>
-                        No transfer records found
-                      </span>
-                    </div>
-                  </>
-                )}
-
-                {(t.entryBiomass > 0 || t.exitBiomass > 0) && (
-                  <>
-                    <div className="swimlane-tooltip__section">Biomass</div>
-                    {hasTransfers && t.entryBiomass > 0 && (
-                      <div className="swimlane-tooltip__row">
-                        <span className="swimlane-tooltip__label">At start</span>
-                        <span className="swimlane-tooltip__value">
-                          {formatBiomass(t.entryBiomass)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="swimlane-tooltip__row">
-                      <span className="swimlane-tooltip__label">Current</span>
-                      <span className="swimlane-tooltip__value">
-                        {formatBiomass(t.exitBiomass)}
-                      </span>
-                    </div>
                   </>
                 )}
 
@@ -603,5 +822,19 @@ export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwim
         </Badge>
       </div>
     </div>
+  );
+}
+
+export function ContainerAssignmentSwimlane({ batchId }: ContainerAssignmentSwimlaneProps) {
+  const { assignments, actions, isLoading, error } = useContainerFlowData(batchId);
+
+  return (
+    <ContainerAssignmentSwimlaneView
+      assignments={assignments}
+      actions={actions}
+      isLoading={isLoading}
+      error={error}
+      viewKey={`batch-${batchId}`}
+    />
   );
 }

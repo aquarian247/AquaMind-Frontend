@@ -77,7 +77,7 @@ async function fetchAllActionsForWorkflows(workflows: WorkflowRecord[]): Promise
   return allActions;
 }
 
-async function fetchContainersForIds(containerIds: number[]): Promise<Map<number, any>> {
+export async function fetchContainersForIds(containerIds: number[]): Promise<Map<number, any>> {
   const lookup = new Map<number, any>();
   const uniqueIds = [...new Set(containerIds)];
 
@@ -96,7 +96,7 @@ async function fetchContainersForIds(containerIds: number[]): Promise<Map<number
   return lookup;
 }
 
-async function fetchHallStationLookup(): Promise<Map<number, string>> {
+export async function fetchHallStationLookup(): Promise<Map<number, string>> {
   const lookup = new Map<number, string>();
   let page = 1;
   let hasMore = true;

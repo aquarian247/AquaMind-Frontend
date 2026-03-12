@@ -60,6 +60,13 @@ export function normalizeAssignment(
   return {
     id: raw.id,
     batch_id: typeof raw.batch === "object" ? raw.batch?.id : raw.batch,
+    batch_number:
+      (typeof raw.batch === "object" ? raw.batch?.batch_number : null)
+      ?? raw.batch_info?.batch_number
+      ?? null,
+    batch_status:
+      (typeof raw.batch === "object" ? raw.batch?.status : null)
+      ?? null,
     container_id: containerId,
     container_name: containerName,
     lifecycle_stage_id: stageId,
@@ -359,11 +366,11 @@ export function buildEdges(
   return edges;
 }
 
-export function normalizeTransferAction(raw: any, workflow: WorkflowRecord): TransferActionRecord {
+export function normalizeTransferAction(raw: any, workflow?: WorkflowRecord): TransferActionRecord {
   return {
     id: raw.id,
     workflow_id: typeof raw.workflow === "object" ? raw.workflow?.id : raw.workflow,
-    workflow_number: workflow.workflow_number,
+    workflow_number: workflow?.workflow_number ?? raw.workflow_number ?? "",
     action_number: raw.action_number,
     status: raw.status,
     source_assignment_id: typeof raw.source_assignment === "object" ? raw.source_assignment?.id : raw.source_assignment,

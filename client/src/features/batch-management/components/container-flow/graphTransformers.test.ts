@@ -76,6 +76,35 @@ describe("classifyLocationType", () => {
   });
 });
 
+describe("normalizeAssignment", () => {
+  it("preserves batch context from nested batch data", () => {
+    const result = normalizeAssignment(
+      {
+        id: 7,
+        batch: { id: 16, batch_number: "BATCH-016", status: "ACTIVE" },
+        container: { id: 100, name: "Tank A1" },
+        lifecycle_stage: { id: 1, name: "Egg&Alevin" },
+        population_count: 300_000,
+        biomass_kg: "30.00",
+        avg_weight_g: "0.10",
+        assignment_date: "2024-05-26",
+        departure_date: "2024-08-24",
+        is_active: false,
+      },
+      new Map([
+        [100, { id: 100, name: "Tank A1", hall: 22, hall_name: "Kleking" }],
+      ]),
+      new Map([[1, { id: 1, name: "Egg&Alevin", order: 1 }]]),
+      new Map([[22, "S03 Nordtoftir"]]),
+    );
+
+    expect(result.batch_id).toBe(16);
+    expect(result.batch_number).toBe("BATCH-016");
+    expect(result.batch_status).toBe("ACTIVE");
+    expect(result.station_name).toBe("S03 Nordtoftir");
+  });
+});
+
 describe("groupByHall", () => {
   it("groups assignments by station + hall + stage", () => {
     const assignments = [
@@ -220,5 +249,30 @@ describe("normalizeTransferAction", () => {
     expect(result.transferred_count).toBe(286671);
     expect(result.transferred_biomass_kg).toBeCloseTo(1720.03);
     expect(result.workflow_number).toBe("TRF-001");
+  });
+
+  it("falls back to list serializer workflow fields when no workflow context is provided", () => {
+    const raw = {
+      id: 102,
+      workflow: 26,
+      workflow_number: "TRF-002",
+      action_number: 2,
+      status: "COMPLETED",
+      source_assignment: 1328,
+      dest_assignment: 1476,
+      transferred_count: 1200,
+      transferred_biomass_kg: "12.50",
+      mortality_during_transfer: 0,
+      leg_type: null,
+      transfer_method: "PUMP",
+      actual_execution_date: "2024-08-25",
+      allow_mixed: false,
+    };
+
+    const result = normalizeTransferAction(raw);
+    expect(result.workflow_id).toBe(26);
+    expect(result.workflow_number).toBe("TRF-002");
+    expect(result.source_assignment_id).toBe(1328);
+    expect(result.dest_assignment_id).toBe(1476);
   });
 });

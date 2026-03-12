@@ -42,6 +42,11 @@ function locationLabel(a: AssignmentRecord): { station: string; hall: string } {
   return { station, hall };
 }
 
+function groupIdForAssignment(a: AssignmentRecord): string {
+  const { station, hall } = locationLabel(a);
+  return `stage-${a.stage_order}/stn-${station}/hall-${hall}/c-${a.container_id}`;
+}
+
 /**
  * Build hierarchical timeline groups from assignment records.
  * Hierarchy: Stage → Station → Hall → Container (leaf rows).
@@ -169,16 +174,44 @@ const EMPTY_TRANSFERS: AssignmentTransferSummary = {
   totalIn: 0, totalOut: 0, biomassIn: 0, biomassOut: 0, mortalityOut: 0,
 };
 
+export function computeTrailingTimeWindow(
+  assignments: AssignmentRecord[],
+  actions: TransferActionRecord[],
+  durationMs: number,
+): { start: number; end: number } | null {
+  if (assignments.length === 0 && actions.length === 0) return null;
+
+  let latest = -Infinity;
+
+  for (const assignment of assignments) {
+    const assignmentStart = new Date(assignment.assignment_date).getTime();
+    const assignmentEnd = assignment.departure_date
+      ? new Date(assignment.departure_date).getTime()
+      : Date.now();
+    latest = Math.max(latest, assignmentStart, assignmentEnd);
+  }
+
+  for (const action of actions) {
+    if (!action.actual_execution_date) continue;
+    latest = Math.max(latest, new Date(action.actual_execution_date).getTime());
+  }
+
+  if (!Number.isFinite(latest)) return null;
+
+  return {
+    start: latest - durationMs,
+    end: latest,
+  };
+}
+
 /**
  * Build timeline items from assignment records.
  * Each assignment becomes one horizontal bar on the swimlane.
  *
- * The API's population_count is the CURRENT value (updated by every completed
- * transfer). So population_count = exit. We reconstruct entry by reversing
- * the transfer deltas: entry = current + totalOut + mortalityOut - totalIn.
- *
- * biomass_kg is recomputed on save as population_count * avg_weight_g / 1000,
- * so it also reflects the current state. Same reconstruction applies.
+ * The swimlane should mirror the same raw assignment values shown in the
+ * flow and table views. Transfer summaries are still attached for arrow
+ * overlays and tooltip context, but we do not derive synthetic entry/exit
+ * balances from them.
  */
 export function buildSwimlaneItems(
   assignments: AssignmentRecord[],
@@ -187,8 +220,7 @@ export function buildSwimlaneItems(
   const summaries = buildTransferSummaries(actions);
 
   return assignments.map((a) => {
-    const { station, hall } = locationLabel(a);
-    const groupId = `stage-${a.stage_order}/stn-${station}/hall-${hall}/c-${a.container_id}`;
+    const groupId = groupIdForAssignment(a);
     const start = new Date(a.assignment_date).getTime();
     const end = a.departure_date
       ? new Date(a.departure_date).getTime()
@@ -196,18 +228,6 @@ export function buildSwimlaneItems(
     const safeEnd = end <= start ? start + DAY_MS : end;
 
     const transfers = summaries.get(a.id) ?? EMPTY_TRANSFERS;
-
-    const exitPop = a.population_count;
-    const entryPop = Math.max(
-      0,
-      a.population_count + transfers.totalOut + transfers.mortalityOut - transfers.totalIn,
-    );
-
-    const exitBio = a.biomass_kg;
-    const entryBio = Math.max(
-      0,
-      a.biomass_kg + transfers.biomassOut - transfers.biomassIn,
-    );
 
     return {
       id: a.id,
@@ -219,12 +239,16 @@ export function buildSwimlaneItems(
       stageColor: getStageColor(a.lifecycle_stage_name),
       isActive: a.is_active,
       transfers,
-      entryPopulation: entryPop,
-      exitPopulation: exitPop,
-      entryBiomass: entryBio,
-      exitBiomass: exitBio,
+      populationCount: a.population_count,
+      biomassKg: a.biomass_kg,
     };
   });
+}
+
+export function makeTransferGroupId(
+  action: Pick<TransferActionRecord, "workflow_id" | "source_assignment_id" | "actual_execution_date">,
+): string {
+  return `${action.workflow_id}:${action.source_assignment_id}:${action.actual_execution_date ?? "unknown"}`;
 }
 
 /**
@@ -247,12 +271,11 @@ export function buildTransferConnections(
     const dst = assignmentMap.get(act.dest_assignment_id);
     if (!src || !dst) continue;
 
-    const srcLoc = locationLabel(src);
-    const dstLoc = locationLabel(dst);
-    const srcGroup = `stage-${src.stage_order}/stn-${srcLoc.station}/hall-${srcLoc.hall}/c-${src.container_id}`;
-    const dstGroup = `stage-${dst.stage_order}/stn-${dstLoc.station}/hall-${dstLoc.hall}/c-${dst.container_id}`;
+    const srcGroup = groupIdForAssignment(src);
+    const dstGroup = groupIdForAssignment(dst);
+    const transferGroupId = makeTransferGroupId(act);
 
-    const key = `${act.source_assignment_id}->${act.dest_assignment_id}`;
+    const key = `${transferGroupId}:${act.source_assignment_id}->${act.dest_assignment_id}`;
     const existing = aggregated.get(key);
     if (existing) {
       existing.transferredCount += act.transferred_count;
@@ -261,6 +284,7 @@ export function buildTransferConnections(
     } else {
       aggregated.set(key, {
         id: key,
+        transferGroupId,
         sourceAssignmentId: act.source_assignment_id,
         destAssignmentId: act.dest_assignment_id,
         transferredCount: act.transferred_count,
@@ -276,6 +300,101 @@ export function buildTransferConnections(
 
   connections.push(...aggregated.values());
   return connections;
+}
+
+export function collectLaneHighlightState(
+  selectedGroupId: string,
+  connections: TransferConnection[],
+): { groupIds: Set<string>; connectionIds: Set<string> } {
+  const groupIds = new Set<string>([selectedGroupId]);
+  const connectionIds = new Set<string>();
+  const outgoing = new Map<string, TransferConnection[]>();
+
+  for (const conn of connections) {
+    const bucket = outgoing.get(conn.sourceGroupId);
+    if (bucket) {
+      bucket.push(conn);
+    } else {
+      outgoing.set(conn.sourceGroupId, [conn]);
+    }
+  }
+
+  const queue = [selectedGroupId];
+  while (queue.length > 0) {
+    const groupId = queue.shift()!;
+    for (const conn of outgoing.get(groupId) ?? []) {
+      connectionIds.add(conn.id);
+      if (!groupIds.has(conn.destGroupId)) {
+        groupIds.add(conn.destGroupId);
+        queue.push(conn.destGroupId);
+      }
+    }
+  }
+
+  return { groupIds, connectionIds };
+}
+
+export function collectTransferHighlightState(
+  transferGroupId: string,
+  connections: TransferConnection[],
+): { groupIds: Set<string>; connectionIds: Set<string>; assignmentIds: Set<number> } {
+  const groupIds = new Set<string>();
+  const connectionIds = new Set<string>();
+  const assignmentIds = new Set<number>();
+
+  for (const conn of connections) {
+    if (conn.transferGroupId !== transferGroupId) continue;
+    connectionIds.add(conn.id);
+    groupIds.add(conn.sourceGroupId);
+    groupIds.add(conn.destGroupId);
+    assignmentIds.add(conn.sourceAssignmentId);
+    assignmentIds.add(conn.destAssignmentId);
+  }
+
+  return { groupIds, connectionIds, assignmentIds };
+}
+
+export function collectAssignmentHighlightState(
+  selectedAssignmentId: number,
+  connections: TransferConnection[],
+  assignmentGroupById: Map<number, string>,
+): { groupIds: Set<string>; connectionIds: Set<string>; assignmentIds: Set<number> } {
+  const assignmentIds = new Set<number>([selectedAssignmentId]);
+  const connectionIds = new Set<string>();
+  const groupIds = new Set<string>();
+  const outgoing = new Map<number, TransferConnection[]>();
+
+  for (const conn of connections) {
+    const bucket = outgoing.get(conn.sourceAssignmentId);
+    if (bucket) {
+      bucket.push(conn);
+    } else {
+      outgoing.set(conn.sourceAssignmentId, [conn]);
+    }
+  }
+
+  const rootGroupId = assignmentGroupById.get(selectedAssignmentId);
+  if (rootGroupId) {
+    groupIds.add(rootGroupId);
+  }
+
+  const queue = [selectedAssignmentId];
+  while (queue.length > 0) {
+    const assignmentId = queue.shift()!;
+    for (const conn of outgoing.get(assignmentId) ?? []) {
+      connectionIds.add(conn.id);
+      if (!assignmentIds.has(conn.destAssignmentId)) {
+        assignmentIds.add(conn.destAssignmentId);
+        queue.push(conn.destAssignmentId);
+      }
+      const destGroupId = assignmentGroupById.get(conn.destAssignmentId);
+      if (destGroupId) {
+        groupIds.add(destGroupId);
+      }
+    }
+  }
+
+  return { groupIds, connectionIds, assignmentIds };
 }
 
 /**
