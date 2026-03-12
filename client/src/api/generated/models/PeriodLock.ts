@@ -14,8 +14,10 @@ export type PeriodLock = {
     readonly version: number;
     lock_reason?: string;
     locked_by?: number | null;
+    readonly locked_by_username: string | null;
     readonly locked_at: string;
     reopened_by?: number | null;
+    readonly reopened_by_username: string | null;
     readonly reopened_at: string | null;
     reopen_reason?: string;
     readonly updated_at: string;

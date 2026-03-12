@@ -284,6 +284,7 @@ import type { PeriodUnlock } from '../models/PeriodUnlock';
 import type { PhotoperiodData } from '../models/PhotoperiodData';
 import type { PinScenario } from '../models/PinScenario';
 import type { PlannedActivity } from '../models/PlannedActivity';
+import type { PreCloseSummaryQuery } from '../models/PreCloseSummaryQuery';
 import type { ProjectionRunDetail } from '../models/ProjectionRunDetail';
 import type { ProjectionRunList } from '../models/ProjectionRunList';
 import type { RingValuationQuery } from '../models/RingValuationQuery';
@@ -9695,6 +9696,21 @@ export class ApiService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/finance-core/reports/nav-export-preview/',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * @returns PreCloseSummaryQuery
+     * @throws ApiError
+     */
+    public static apiV1FinanceCoreReportsPreCloseSummaryRetrieve(): CancelablePromise<PreCloseSummaryQuery> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/finance-core/reports/pre-close-summary/',
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

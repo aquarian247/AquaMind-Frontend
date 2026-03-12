@@ -325,6 +325,7 @@ export type { PeriodUnlock } from './models/PeriodUnlock';
 export type { PhotoperiodData } from './models/PhotoperiodData';
 export type { PinScenario } from './models/PinScenario';
 export type { PlannedActivity } from './models/PlannedActivity';
+export type { PreCloseSummaryQuery } from './models/PreCloseSummaryQuery';
 export type { ProductGradeSummary } from './models/ProductGradeSummary';
 export type { ProjectionRunDetail } from './models/ProjectionRunDetail';
 export type { ProjectionRunList } from './models/ProjectionRunList';

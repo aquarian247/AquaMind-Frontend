@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type MovementReportQuery = {
+    run_id?: number;
     company?: number;
     year?: number;
     month?: number;

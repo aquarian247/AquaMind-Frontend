@@ -15281,6 +15281,27 @@ paths:
           description: Forbidden
         '500':
           description: Internal Server Error
+  /api/v1/finance-core/reports/pre-close-summary/:
+    get:
+      operationId: api_v1_finance_core_reports_pre_close_summary_retrieve
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      - tokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreCloseSummaryQuery'
+          description: ''
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal Server Error
   /api/v1/finance-core/reports/ring-valuation/:
     get:
       operationId: api_v1_finance_core_reports_ring_valuation_retrieve
@@ -43343,6 +43364,10 @@ components:
     MovementReportQuery:
       type: object
       properties:
+        run_id:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
         company:
           type: integer
           maximum: 9223372036854775807
@@ -51419,6 +51444,10 @@ components:
           nullable: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        locked_by_username:
+          type: string
+          readOnly: true
+          nullable: true
         locked_at:
           type: string
           format: date-time
@@ -51428,6 +51457,10 @@ components:
           nullable: true
           maximum: 9223372036854775807
           minimum: -9223372036854775808
+        reopened_by_username:
+          type: string
+          readOnly: true
+          nullable: true
         reopened_at:
           type: string
           format: date-time
@@ -51443,11 +51476,13 @@ components:
       - company
       - company_name
       - locked_at
+      - locked_by_username
       - month
       - operating_unit
       - operating_unit_name
       - period_lock_id
       - reopened_at
+      - reopened_by_username
       - updated_at
       - version
       - year
@@ -51709,6 +51744,34 @@ components:
       - status_display
       - transfer_workflow
       - updated_at
+    PreCloseSummaryQuery:
+      type: object
+      properties:
+        company:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        operating_unit:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+        year:
+          type: integer
+          minimum: 2000
+          maximum: 9223372036854775807
+        month:
+          type: integer
+          maximum: 12
+          minimum: 1
+        budget:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+      required:
+      - company
+      - month
+      - operating_unit
+      - year
     ProductGradeSummary:
       type: object
       description: Compact representation of a harvest product grade.
