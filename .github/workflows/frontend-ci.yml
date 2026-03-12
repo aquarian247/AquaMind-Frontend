@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    env:
+      BACKEND_REPO: aquarian247/AquaMind
     
     steps:
     - name: Checkout code
@@ -33,22 +35,40 @@ jobs:
         npx vitest run --coverage
       continue-on-error: true
 
-    - name: Prepare OpenAPI Spec
+    - name: Fetch backend OpenAPI spec
       run: |
         mkdir -p tmp/openapi
+        BACKEND_SPEC_BRANCH="${GITHUB_BASE_REF:-${GITHUB_REF_NAME}}"
+        BACKEND_SPEC_URL="https://raw.githubusercontent.com/${BACKEND_REPO}/${BACKEND_SPEC_BRANCH}/api/openapi.yaml"
+
+        echo "📥 Fetching backend OpenAPI spec from ${BACKEND_SPEC_URL}"
+        if ! curl -fsSL "${BACKEND_SPEC_URL}" -o tmp/openapi/openapi.yaml; then
+          echo "⚠️ Failed to fetch backend spec for branch ${BACKEND_SPEC_BRANCH}; falling back to main"
+          BACKEND_SPEC_BRANCH="main"
+          BACKEND_SPEC_URL="https://raw.githubusercontent.com/${BACKEND_REPO}/${BACKEND_SPEC_BRANCH}/api/openapi.yaml"
+          curl -fsSL "${BACKEND_SPEC_URL}" -o tmp/openapi/openapi.yaml
+        fi
+
+        echo "BACKEND_SPEC_BRANCH=${BACKEND_SPEC_BRANCH}" >> "$GITHUB_ENV"
+        echo "BACKEND_SPEC_URL=${BACKEND_SPEC_URL}" >> "$GITHUB_ENV"
+
+    - name: Verify checked-in OpenAPI spec is current
+      run: |
         if [ ! -f "api/openapi.yaml" ]; then
           echo "❌ api/openapi.yaml is missing"
           exit 1
         fi
-        cp api/openapi.yaml tmp/openapi/openapi.yaml
+
+        if ! cmp -s api/openapi.yaml tmp/openapi/openapi.yaml; then
+          echo "❌ Frontend OpenAPI spec is out of sync with backend branch ${BACKEND_SPEC_BRANCH}"
+          echo "Run 'npm run sync:openapi' (or branch-specific sync) and commit the regenerated client."
+          echo "Showing the first 200 lines of spec drift:"
+          git diff --no-index -- api/openapi.yaml tmp/openapi/openapi.yaml | sed -n '1,200p' || true
+          exit 1
+        fi
 
     - name: Regenerate API Client
       run: npm run generate:api
-
-    - name: Sync OpenAPI spec for validation
-      run: |
-        mkdir -p api
-        cp tmp/openapi/openapi.yaml api/openapi.yaml
 
     - name: Type check (validate API contract)
       id: type-check
@@ -56,21 +76,21 @@ jobs:
     
     # ------------------------------------------------------------------
     # Contract enforcement – ensure every endpoint used in the codebase
-    # exists in the backend OpenAPI specification.  The spec should have
-    # been copied into ./api/openapi.yaml by the sync-openapi workflow.
+    # exists in the backend OpenAPI specification fetched above.
     # ------------------------------------------------------------------
     # NOTE: During Phase 1 we only WARN on failures so the pipeline keeps
     # moving.  Once legacy endpoints are removed in Phase 2 the guard can
     # be made blocking again (remove `continue-on-error` and `|| true`).
     - name: Validate API endpoints
       run: |
-        # Check if OpenAPI spec exists (it should be copied by regenerate-api-client workflow)
-        if [ -f "api/openapi.yaml" ]; then
+        # Check if the fetched OpenAPI spec exists for endpoint validation
+        if [ -f "tmp/openapi/openapi.yaml" ]; then
           echo "✅ OpenAPI spec found, validating endpoints..."
+          cp tmp/openapi/openapi.yaml api/openapi.yaml
           npm run validate:endpoints
         else
           echo "⚠️ OpenAPI spec not found, skipping endpoint validation"
-          echo "To enable validation, ensure api/openapi.yaml is present"
+          echo "To enable validation, ensure tmp/openapi/openapi.yaml is present"
         fi
 
     - name: Install Complexity Analysis Tools
