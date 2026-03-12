@@ -32,6 +32,72 @@ function countActiveBatches(activeBatches: unknown): number | null {
   return null;
 }
 
+type GrowthMetricPoint = {
+  date: string;
+  avg_weight_g: number;
+  temperature: number | null;
+};
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+async function fetchAllGrowthSamplesForBatch(batchId: number): Promise<any[]> {
+  const allSamples: any[] = [];
+  let page = 1;
+  let hasMore = true;
+  const maxPages = 50;
+
+  while (hasMore && page <= maxPages) {
+    const response = await ApiService.apiV1BatchGrowthSamplesList(
+      batchId, // assignmentBatch
+      undefined, // assignmentBatchIn
+      undefined, // avgLengthMax
+      undefined, // avgLengthMin
+      undefined, // avgWeightMax
+      undefined, // avgWeightMin
+      undefined, // batchNumber
+      undefined, // conditionFactorMax
+      undefined, // conditionFactorMin
+      undefined, // containerName
+      'sample_date', // ordering
+      page, // page
+      undefined, // sampleDate
+      undefined, // sampleDateAfter
+      undefined, // sampleDateBefore
+      undefined, // sampleSizeMax
+      undefined, // sampleSizeMin
+      undefined // search
+    );
+
+    allSamples.push(...(response.results || []));
+    hasMore = !!response.next;
+    page += 1;
+  }
+
+  return allSamples;
+}
+
+function buildGrowthMetricsFromSamples(samples: any[]): GrowthMetricPoint[] {
+  return samples
+    .map((sample) => {
+      const date = sample.sample_date;
+      const avgWeight = toNumber(sample.avg_weight_g);
+      return {
+        date: typeof date === 'string' ? date : '',
+        avg_weight_g: avgWeight ?? NaN,
+        temperature: null,
+      };
+    })
+    .filter((point) => point.date.length > 0 && Number.isFinite(point.avg_weight_g))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
+
 // ============================================================================
 // Station Summaries
 // ============================================================================
@@ -190,12 +256,12 @@ export function useGrowthPerformance(
 
           for (const batchId of batchIds) {
             try {
-              const [growthAnalysis, perfMetrics] = await Promise.all([
-                ApiService.apiV1BatchBatchesGrowthAnalysisRetrieve(batchId) as Promise<any>,
+              const [growthSamples, perfMetrics] = await Promise.all([
+                fetchAllGrowthSamplesForBatch(batchId),
                 ApiService.apiV1BatchBatchesPerformanceMetricsRetrieve(batchId) as Promise<any>,
               ]);
 
-              const metrics = growthAnalysis.growth_metrics || [];
+              const metrics = buildGrowthMetricsFromSamples(growthSamples);
               const primoWeight = metrics.length > 0 ? metrics[0].avg_weight_g : null;
               const currentWeight = metrics.length > 0 ? metrics[metrics.length - 1].avg_weight_g : null;
               const days = metrics.length > 1
@@ -212,7 +278,7 @@ export function useGrowthPerformance(
 
               rows.push({
                 batch_id: batchId,
-                batch_number: growthAnalysis.batch_number || perfMetrics.batch_number || `Batch ${batchId}`,
+                batch_number: perfMetrics.batch_number || `Batch ${batchId}`,
                 station_name: station.name,
                 count: totalPopulation,
                 biomass_kg: totalBiomassKg,
@@ -269,13 +335,13 @@ export function useBatchPerformanceKPIs(
 
           for (const batchId of batchIds) {
             try {
-              const [growthAnalysis, perfMetrics, batchDetail] = await Promise.all([
-                ApiService.apiV1BatchBatchesGrowthAnalysisRetrieve(batchId) as Promise<any>,
+              const [growthSamples, perfMetrics, batchDetail] = await Promise.all([
+                fetchAllGrowthSamplesForBatch(batchId),
                 ApiService.apiV1BatchBatchesPerformanceMetricsRetrieve(batchId) as Promise<any>,
                 ApiService.apiV1BatchBatchesRetrieve(batchId) as Promise<any>,
               ]);
 
-              const metrics = growthAnalysis.growth_metrics || [];
+              const metrics = buildGrowthMetricsFromSamples(growthSamples);
               const currentWeight = metrics.length > 0 ? metrics[metrics.length - 1].avg_weight_g : null;
 
               const containerMetrics = perfMetrics.container_metrics;
