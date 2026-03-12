@@ -418,14 +418,18 @@ export function BatchContainerView({ selectedBatch, onOpenInsights }: BatchConta
           return (
             <Card key={assignment.id} className="relative">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">{containerName}</CardTitle>
-                  <Badge variant="default">Active</Badge>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-lg truncate" title={containerName}>
+                      {containerName}
+                    </CardTitle>
+                  </div>
+                  <Badge variant="default" className="shrink-0">Active</Badge>
                 </div>
                 {locationPath && (
-                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                  <p className="text-sm text-muted-foreground flex items-start gap-1 mt-1 min-w-0 leading-snug">
                     <MapPin className="h-3 w-3 shrink-0" />
-                    <span className="truncate" title={locationPath}>
+                    <span className="min-w-0 break-words" title={locationPath}>
                       {locationPath}
                     </span>
                   </p>

@@ -225,16 +225,18 @@ export function AreaContainersTab({
             return (
             <Card key={ring.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg flex items-center">
-                      <span className="mr-2">🌊</span>
-                      {ring.name}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-lg flex items-center gap-2 min-w-0">
+                      <span className="shrink-0">🌊</span>
+                      <span className="truncate" title={ring.name}>
+                        {ring.name}
+                      </span>
                     </CardTitle>
                     {locationPath && (
-                      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                      <p className="text-sm text-muted-foreground mt-1 flex items-start gap-1 min-w-0 leading-snug">
                         <MapPin className="h-3 w-3 shrink-0" />
-                        <span className="truncate" title={locationPath}>
+                        <span className="min-w-0 break-words" title={locationPath}>
                           {locationPath}
                         </span>
                       </p>
@@ -243,7 +245,7 @@ export function AreaContainersTab({
                       Sea Ring • Depth: {ring.waterDepth}m
                     </p>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 shrink-0">
                     <Badge className={getStatusBadge(ring.status)}>{ring.status}</Badge>
                     <Badge className={getNetConditionBadge(ring.netCondition)}>
                       {ring.netCondition} net
