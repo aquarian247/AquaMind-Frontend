@@ -162,6 +162,8 @@ export default function AreaDetailPage({ params }: AreaDetailPageProps) {
           <AreaContainersTab
             rings={rings}
             filteredRings={filteredContainers}
+            areaName={area.name}
+            areaGroupName={(area as any).area_group_name}
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
             searchQuery={searchQuery}

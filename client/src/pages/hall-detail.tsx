@@ -17,7 +17,8 @@ import {
   Fish,
   Calendar,
   Activity,
-  Eye
+  Eye,
+  MapPin
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
@@ -45,6 +46,7 @@ interface Container {
   systemStatus: string;
   density: number;
   feedingSchedule: string;
+  locationPath: string;
   batches: Array<{ id: number; batchNumber: string; stage: string }>;
 }
 
@@ -72,6 +74,9 @@ export default function HallDetail({ params }: { params: { id: string } }) {
     queryFn: async () => {
       const { authenticatedFetch } = await import("@/services/auth.service");
       const baseUrl = import.meta.env.VITE_DJANGO_API_URL || "http://localhost:8000";
+      const hallMetadata = await ApiService.apiV1InfrastructureHallsRetrieve(Number(hallId)).catch(
+        () => null
+      );
 
       // Fetch ALL containers for this hall (paginated)
       const allContainers: any[] = [];
@@ -88,6 +93,34 @@ export default function HallDetail({ params }: { params: { id: string } }) {
       }
 
       const containers = allContainers;
+      const containerById = new Map<number, any>(
+        containers.map((container: any) => [container.id, container])
+      );
+
+      const getParentContainerPath = (container: any): string[] => {
+        const parentNames: string[] = [];
+        const seen = new Set<number>([container.id]);
+        let parentId = container.parent_container;
+
+        while (typeof parentId === "number") {
+          if (seen.has(parentId)) break;
+          seen.add(parentId);
+
+          const parentContainer = containerById.get(parentId);
+
+          if (!parentContainer) {
+            if (parentNames.length === 0 && container.parent_container_name) {
+              parentNames.unshift(container.parent_container_name);
+            }
+            break;
+          }
+
+          parentNames.unshift(parentContainer.name);
+          parentId = parentContainer.parent_container;
+        }
+
+        return parentNames;
+      };
 
       // Fetch ALL active batch assignments for these containers (paginated)
       const containerIds = containers.map((c: any) => c.id).join(",");
@@ -134,6 +167,18 @@ export default function HallDetail({ params }: { params: { id: string } }) {
         }
         const avgWeightKg = fishCount > 0 ? totalWeightG / fishCount / 1000 : 0;
         const density = volumeM3 > 0 ? biomassKg / volumeM3 : 0;
+        const parentPath = getParentContainerPath(c);
+        const rawLocationPath = [
+          hallMetadata?.freshwater_station_name ?? hall?.freshwater_station_name ?? "",
+          c.hall_name || hallMetadata?.name || hall?.name || `Hall ${hallId}`,
+          ...parentPath,
+          c.name,
+        ]
+          .map((segment) => (typeof segment === "string" ? segment.trim() : ""))
+          .filter((segment) => segment.length > 0);
+        const locationPath = rawLocationPath
+          .filter((segment, index) => index === 0 || segment !== rawLocationPath[index - 1])
+          .join(" • ");
 
         const batches = cAssignments.map((a: any) => {
           const bObj = typeof a.batch === "object" ? a.batch : null;
@@ -149,9 +194,9 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           id: c.id,
           name: c.name,
           hallId: c.hall ?? Number(hallId),
-          hallName: c.hall_name || hall?.name || `Hall ${hallId}`,
-          stationId: hall?.freshwater_station ?? 0,
-          stationName: hall?.freshwater_station_name ?? "",
+          hallName: c.hall_name || hallMetadata?.name || hall?.name || `Hall ${hallId}`,
+          stationId: hallMetadata?.freshwater_station ?? hall?.freshwater_station ?? 0,
+          stationName: hallMetadata?.freshwater_station_name ?? hall?.freshwater_station_name ?? "",
           type: (c.container_type_name as Container["type"]) || "Tank",
           stage: primary?.lifecycle_stage?.name || "Unknown",
           status: c.active ? "active" : "inactive",
@@ -166,6 +211,7 @@ export default function HallDetail({ params }: { params: { id: string } }) {
           systemStatus: cAssignments.length > 0 ? "active" : "empty",
           density,
           feedingSchedule: "08:00, 12:00, 16:00",
+          locationPath,
           batches,
         } as Container;
       });
@@ -394,6 +440,14 @@ export default function HallDetail({ params }: { params: { id: string } }) {
                     <span className="mr-2">{getStageIcon(container.stage)}</span>
                     {container.name}
                   </CardTitle>
+                  {container.locationPath && (
+                    <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span className="truncate" title={container.locationPath}>
+                        {container.locationPath}
+                      </span>
+                    </p>
+                  )}
                   <p className="text-sm text-muted-foreground">
                     {container.stage} Stage
                   </p>

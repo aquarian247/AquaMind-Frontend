@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,9 @@ import { MapPin, Fish, Thermometer, Ruler } from "lucide-react";
 import { api } from "@/lib/api";
 import { ApiService } from "@/api/generated";
 import type { Batch } from "@/api/generated/models/Batch";
-import type { Container } from "@/api/generated/models/Container";
-import type { EnvironmentalReading } from "@/api/generated/models/EnvironmentalReading";
+import type { Container as InfrastructureContainer } from "@/api/generated/models/Container";
+import type { Hall as InfrastructureHall } from "@/api/generated/models/Hall";
+import type { Area as InfrastructureArea } from "@/api/generated/models/Area";
 import { GrowthSampleForm } from "@/features/batch-management/components/GrowthSampleForm";
 
 interface BatchContainerViewProps {
@@ -20,6 +21,112 @@ interface BatchContainerViewProps {
     containerId: number;
     containerName: string;
   }) => void;
+}
+
+type ContainerDetailsById = Record<number, InfrastructureContainer>;
+type HallDetailsById = Record<number, InfrastructureHall>;
+type AreaDetailsById = Record<number, InfrastructureArea>;
+
+function parseNumericId(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+function getAssignmentContainerId(assignment: any): number | null {
+  return (
+    parseNumericId(assignment?.container?.id) ??
+    parseNumericId(assignment?.container_id) ??
+    parseNumericId(assignment?.container)
+  );
+}
+
+function getParentContainerPath(
+  container: InfrastructureContainer,
+  containersById: ContainerDetailsById
+): string[] {
+  const parentNames: string[] = [];
+  const seen = new Set<number>([container.id]);
+  let parentId = container.parent_container;
+
+  while (typeof parentId === "number") {
+    if (seen.has(parentId)) break;
+    seen.add(parentId);
+
+    const parentContainer = containersById[parentId];
+
+    if (!parentContainer) {
+      if (parentNames.length === 0 && container.parent_container_name) {
+        parentNames.unshift(container.parent_container_name);
+      }
+      break;
+    }
+
+    parentNames.unshift(parentContainer.name);
+    parentId = parentContainer.parent_container;
+  }
+
+  return parentNames;
+}
+
+function buildContainerLocationPath({
+  containerId,
+  containerName,
+  containersById,
+  hallsById,
+  areasById,
+}: {
+  containerId: number | null;
+  containerName: string;
+  containersById: ContainerDetailsById;
+  hallsById: HallDetailsById;
+  areasById: AreaDetailsById;
+}): string | null {
+  if (!containerId) return null;
+
+  const detailedContainer = containersById[containerId];
+  if (!detailedContainer) return null;
+
+  const parentNames = getParentContainerPath(detailedContainer, containersById);
+
+  let rawPath: Array<string | null | undefined> = [containerName];
+
+  if (typeof detailedContainer.hall === "number") {
+    const hall = hallsById[detailedContainer.hall];
+    const stationName = hall?.freshwater_station_name;
+    const hallName = detailedContainer.hall_name ?? hall?.name;
+
+    rawPath = [stationName, hallName, ...parentNames, containerName];
+  } else if (typeof detailedContainer.area === "number") {
+    const area = areasById[detailedContainer.area];
+    const areaGroupName = area?.area_group_name;
+    const areaName = detailedContainer.area_name ?? area?.name;
+
+    rawPath = [areaGroupName, areaName, ...parentNames, containerName];
+  } else if (detailedContainer.carrier_name) {
+    rawPath = [detailedContainer.carrier_name, ...parentNames, containerName];
+  } else if (parentNames.length > 0) {
+    rawPath = [...parentNames, containerName];
+  }
+
+  const compactPath = rawPath
+    .map((segment) => (typeof segment === "string" ? segment.trim() : ""))
+    .filter((segment) => segment.length > 0);
+
+  if (compactPath.length === 0) return null;
+
+  const dedupedPath = compactPath.filter(
+    (segment, index) => index === 0 || segment !== compactPath[index - 1]
+  );
+
+  return dedupedPath.join(" • ");
 }
 
 export function BatchContainerView({ selectedBatch, onOpenInsights }: BatchContainerViewProps) {
@@ -106,6 +213,130 @@ export function BatchContainerView({ selectedBatch, onOpenInsights }: BatchConta
 
   const assignments = assignmentsData || [];
 
+  const assignmentContainerIds = useMemo(() => {
+    if (!assignments || assignments.length === 0) return [];
+
+    const ids = assignments
+      .map((assignment: any) => getAssignmentContainerId(assignment))
+      .filter((id: number | null): id is number => id !== null);
+
+    return Array.from(new Set(ids)).sort((a, b) => a - b);
+  }, [assignments]);
+
+  const { data: containerDetailsById = {} } = useQuery<ContainerDetailsById>({
+    queryKey: ["batch/container-view/containers/by-id", assignmentContainerIds],
+    queryFn: async () => {
+      const byId: ContainerDetailsById = {};
+      const fetchedIds = new Set<number>();
+      let idsToFetch = [...assignmentContainerIds];
+
+      while (idsToFetch.length > 0) {
+        const currentBatchIds = Array.from(new Set(idsToFetch)).filter(
+          (id) => !fetchedIds.has(id)
+        );
+        if (currentBatchIds.length === 0) break;
+
+        const containers = await Promise.all(
+          currentBatchIds.map(async (containerId) => {
+            try {
+              return await ApiService.apiV1InfrastructureContainersRetrieve(containerId);
+            } catch (error) {
+              console.warn(`Failed to fetch container ${containerId}`, error);
+              return null;
+            }
+          })
+        );
+
+        const nextParentIds: number[] = [];
+
+        for (const container of containers) {
+          if (!container) continue;
+
+          byId[container.id] = container;
+          fetchedIds.add(container.id);
+
+          if (
+            typeof container.parent_container === "number" &&
+            !fetchedIds.has(container.parent_container)
+          ) {
+            nextParentIds.push(container.parent_container);
+          }
+        }
+
+        idsToFetch = nextParentIds;
+      }
+
+      return byId;
+    },
+    enabled: assignmentContainerIds.length > 0,
+  });
+
+  const hallIds = useMemo(() => {
+    const ids = Object.values(containerDetailsById)
+      .map((container) => container.hall)
+      .filter((id): id is number => typeof id === "number");
+
+    return Array.from(new Set(ids)).sort((a, b) => a - b);
+  }, [containerDetailsById]);
+
+  const areaIds = useMemo(() => {
+    const ids = Object.values(containerDetailsById)
+      .map((container) => container.area)
+      .filter((id): id is number => typeof id === "number");
+
+    return Array.from(new Set(ids)).sort((a, b) => a - b);
+  }, [containerDetailsById]);
+
+  const { data: hallDetailsById = {} } = useQuery<HallDetailsById>({
+    queryKey: ["batch/container-view/halls/by-id", hallIds],
+    queryFn: async () => {
+      const byId: HallDetailsById = {};
+      const halls = await Promise.all(
+        hallIds.map(async (hallId) => {
+          try {
+            return await ApiService.apiV1InfrastructureHallsRetrieve(hallId);
+          } catch (error) {
+            console.warn(`Failed to fetch hall ${hallId}`, error);
+            return null;
+          }
+        })
+      );
+
+      for (const hall of halls) {
+        if (!hall) continue;
+        byId[hall.id] = hall;
+      }
+
+      return byId;
+    },
+    enabled: hallIds.length > 0,
+  });
+
+  const { data: areaDetailsById = {} } = useQuery<AreaDetailsById>({
+    queryKey: ["batch/container-view/areas/by-id", areaIds],
+    queryFn: async () => {
+      const byId: AreaDetailsById = {};
+      const areas = await Promise.all(
+        areaIds.map(async (areaId) => {
+          try {
+            return await ApiService.apiV1InfrastructureAreasRetrieve(areaId);
+          } catch (error) {
+            console.warn(`Failed to fetch area ${areaId}`, error);
+            return null;
+          }
+        })
+      );
+
+      for (const area of areas) {
+        if (!area) continue;
+        byId[area.id] = area;
+      }
+
+      return byId;
+    },
+    enabled: areaIds.length > 0,
+  });
+
   if (!selectedBatch) {
     return (
       <Card>
@@ -167,13 +398,22 @@ export function BatchContainerView({ selectedBatch, onOpenInsights }: BatchConta
           </Card>
         ) : (
           assignments.map((assignment) => {
+          const containerId = getAssignmentContainerId(assignment);
+
           // assignment.container is nested object with container details
           const containerName = typeof assignment.container === 'object' && assignment.container 
-            ? (assignment.container as any).name || `Container ${assignment.container}`
-            : `Container ${assignment.container}`;
+            ? (assignment.container as any).name || `Container ${containerId || assignment.container}`
+            : `Container ${containerId || assignment.container}`;
           const containerType = typeof assignment.container === 'object' && assignment.container
             ? (assignment.container as any).container_type_name || 'Unknown'
             : 'Unknown';
+          const locationPath = buildContainerLocationPath({
+            containerId,
+            containerName,
+            containersById: containerDetailsById,
+            hallsById: hallDetailsById,
+            areasById: areaDetailsById,
+          });
 
           return (
             <Card key={assignment.id} className="relative">
@@ -182,6 +422,14 @@ export function BatchContainerView({ selectedBatch, onOpenInsights }: BatchConta
                   <CardTitle className="text-lg">{containerName}</CardTitle>
                   <Badge variant="default">Active</Badge>
                 </div>
+                {locationPath && (
+                  <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span className="truncate" title={locationPath}>
+                      {locationPath}
+                    </span>
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground">
                   {containerType} • Assigned {assignment.assignment_date ? new Date(assignment.assignment_date).toLocaleDateString() : 'Unknown'}
                 </p>
@@ -217,10 +465,6 @@ export function BatchContainerView({ selectedBatch, onOpenInsights }: BatchConta
                     size="sm" 
                     className="flex-1"
                     onClick={() => {
-                      const containerId = typeof assignment.container === 'object' && assignment.container
-                        ? (assignment.container as any).id
-                        : assignment.container;
-                      
                       if (containerId) {
                         if (onOpenInsights) {
                           onOpenInsights({
@@ -242,10 +486,6 @@ export function BatchContainerView({ selectedBatch, onOpenInsights }: BatchConta
                       size="sm"
                       className="flex-1"
                       onClick={() => {
-                        const containerId = typeof assignment.container === 'object' && assignment.container
-                          ? (assignment.container as any).id
-                          : assignment.container;
-
                         if (containerId) {
                           navigate(`/infrastructure/containers/${containerId}`);
                         }

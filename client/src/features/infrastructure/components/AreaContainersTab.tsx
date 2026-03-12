@@ -26,6 +26,7 @@ import {
   Eye,
   Search,
   Gauge,
+  MapPin,
 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import type { Ring } from "../hooks/useAreaData";
@@ -37,6 +38,8 @@ import type { AreaSummaryData } from "../api";
 interface AreaContainersTabProps {
   rings: Ring[];
   filteredRings: Ring[];
+  areaName: string;
+  areaGroupName?: string | null;
   statusFilter: string;
   setStatusFilter: (status: string) => void;
   searchQuery: string;
@@ -81,6 +84,8 @@ function getNetConditionBadge(condition: string): string {
 export function AreaContainersTab({
   rings,
   filteredRings,
+  areaName,
+  areaGroupName,
   statusFilter,
   setStatusFilter,
   searchQuery,
@@ -208,7 +213,16 @@ export function AreaContainersTab({
         </div>
       ) : filteredRings.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredRings.map((ring) => (
+          {filteredRings.map((ring) => {
+            const resolvedAreaName = ring.areaName || areaName;
+            const locationSegments = [areaGroupName, resolvedAreaName, ring.name]
+              .map((segment) => (typeof segment === "string" ? segment.trim() : ""))
+              .filter((segment) => segment.length > 0);
+            const locationPath = locationSegments
+              .filter((segment, index) => index === 0 || segment !== locationSegments[index - 1])
+              .join(" • ");
+
+            return (
             <Card key={ring.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -217,6 +231,14 @@ export function AreaContainersTab({
                       <span className="mr-2">🌊</span>
                       {ring.name}
                     </CardTitle>
+                    {locationPath && (
+                      <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <span className="truncate" title={locationPath}>
+                          {locationPath}
+                        </span>
+                      </p>
+                    )}
                     <p className="text-sm text-muted-foreground">
                       Sea Ring • Depth: {ring.waterDepth}m
                     </p>
@@ -328,7 +350,8 @@ export function AreaContainersTab({
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <Card>
