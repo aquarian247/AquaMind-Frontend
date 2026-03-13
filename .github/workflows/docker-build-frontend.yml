@@ -4,9 +4,11 @@ on:
   push:
     branches: [ main, develop, test ]
     paths:
+      - '.dockerignore'
       - 'Dockerfile'
       - 'nginx.conf'
       - 'package*.json'
+      - 'api/**'
       - 'client/**'
       - 'server/**'
       - 'vite.config.ts'
@@ -14,9 +16,11 @@ on:
   pull_request:
     branches: [ main, develop, test ]
     paths:
+      - '.dockerignore'
       - 'Dockerfile'
       - 'nginx.conf'
       - 'package*.json'
+      - 'api/**'
       - 'client/**'
       - 'server/**'
       - 'vite.config.ts'
@@ -56,6 +60,15 @@ jobs:
           type=sha,prefix=sha-
           type=raw,value=latest,enable={{is_default_branch}}
 
+    - name: Resolve frontend build args
+      id: build-args
+      run: |
+        api_url="${{ vars.VITE_DJANGO_API_URL }}"
+        if [ -z "$api_url" ]; then
+          api_url="http://localhost:8000"
+        fi
+        echo "api_url=${api_url}" >> "$GITHUB_OUTPUT"
+
     - name: Build and push Docker image
       id: push
       uses: docker/build-push-action@v5
@@ -65,6 +78,9 @@ jobs:
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          VITE_DJANGO_API_URL=${{ steps.build-args.outputs.api_url }}
+          VITE_USE_DJANGO_API=true
 
     - name: Generate artifact attestation (main)
       if: github.ref == 'refs/heads/main'
