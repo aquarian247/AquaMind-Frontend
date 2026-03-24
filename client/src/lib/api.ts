@@ -294,8 +294,9 @@ export const api = {
         let page = 1;
         let hasMore = true;
         let responseCount = 0;
+        const maxPages = 100;
 
-        while (hasMore) {
+        while (hasMore && page <= maxPages) {
           const response = await ApiService.apiV1BatchContainerAssignmentsList(
             undefined, // assignmentDate
             undefined, // assignmentDateAfter
@@ -323,11 +324,10 @@ export const api = {
           responseCount = response.count || 0;
           hasMore = !!response.next;
           page++;
+        }
 
-          if (page > 20) {
-            console.warn('⚠️ Stopped fetching batch assignments after 20 pages');
-            break;
-          }
+        if (hasMore) {
+          console.warn(`⚠️ Stopped fetching batch assignments after ${maxPages} pages`);
         }
 
         console.log(`📦 api.batch.getAssignments: Fetched ${allAssignments.length} assignments for batch ${batchId} (${page - 1} pages)`);

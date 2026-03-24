@@ -137,6 +137,47 @@ describe('API Wrapper', () => {
       await expect(api.getFishGrowthChart()).rejects.toBeDefined();
     });
   });
+
+  describe('batch.getAssignments', () => {
+    it('fetches every assignment page for large batches', async () => {
+      const pageResponses = Array.from({ length: 28 }, (_, index) => {
+        const page = index + 1;
+        const isLastPage = page === 28;
+
+        return {
+          count: 544,
+          next: isLastPage ? null : `http://api/container-assignments?page=${page + 1}`,
+          previous: page === 1 ? null : `http://api/container-assignments?page=${page - 1}`,
+          results: [
+            {
+              id: page,
+              batch: { id: 1352, batch_number: 'Stofnfiskur desembur 2023 - Vár 2024' },
+              container: { id: page, name: `Container-${page}` },
+              lifecycle_stage: { id: 5, name: page >= 22 ? 'Post-Smolt' : 'Smolt' },
+              population_count: 1000 + page,
+              biomass_kg: `${page}.0`,
+              assignment_date: `2025-01-${String(((page - 1) % 28) + 1).padStart(2, '0')}`,
+              departure_date: null,
+              is_active: false,
+            },
+          ],
+        };
+      });
+
+      const listSpy = vi.spyOn(ApiService, 'apiV1BatchContainerAssignmentsList');
+      for (const response of pageResponses) {
+        listSpy.mockResolvedValueOnce(response as any);
+      }
+
+      const result = await api.batch.getAssignments(1352);
+
+      expect(listSpy).toHaveBeenCalledTimes(28);
+      expect(result.count).toBe(544);
+      expect(result.results).toHaveLength(28);
+      expect(result.results.at(-1)?.container?.name).toBe('Container-28');
+      expect(result.results.some((assignment: any) => assignment.lifecycle_stage?.name === 'Post-Smolt')).toBe(true);
+    });
+  });
   
   describe('getWaterQualityChart', () => {
     it('returns correctly structured chart data when API call succeeds', async () => {
