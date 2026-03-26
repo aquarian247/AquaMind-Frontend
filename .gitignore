@@ -91,6 +91,9 @@ jspm_packages/
 # Gatsby files
 .cache/
 public
+# Frontend static assets needed at runtime
+!client/public/
+!client/public/**
 
 # Storybook build outputs
 .out
