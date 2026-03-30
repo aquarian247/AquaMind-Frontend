@@ -655,3 +655,153 @@ export function useUnlockPeriod() {
     onError: (error) => showError(getErrorMessage(error)),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Sea farming specific hooks
+// ---------------------------------------------------------------------------
+
+export interface FallowBucketRow {
+  bucket_id: number;
+  site_name: string;
+  year: number;
+  month: number;
+  cost_group_code: string;
+  amount: string;
+  released: boolean;
+  released_in_run: number | null;
+}
+
+export interface FallowBucketsResponse {
+  buckets: FallowBucketRow[];
+  unreleased_summary: {
+    total: string;
+    by_cost_group: Array<{ cost_group_code: string; amount: string }>;
+    bucket_ids: number[];
+  };
+}
+
+export interface SeaInputOverview {
+  site: string;
+  year: number;
+  month: number;
+  active_projects: Array<{ cost_center_id: number; code: string; name: string }>;
+  imported_cost_lines: Array<{ cost_group_code: string; amount: string; operating_unit_name: string }>;
+  fallow_pending: {
+    total: string;
+    by_cost_group: Array<{ cost_group_code: string; amount: string }>;
+  };
+}
+
+export function useFallowBuckets(siteId?: number, year?: number) {
+  return useQuery({
+    queryKey: ['finance-core', 'fallow-buckets', siteId, year],
+    queryFn: () =>
+      fetchFinanceCoreJson<FallowBucketsResponse>(
+        '/api/v1/finance-core/reports/fallow-buckets/',
+        { site: siteId, year, released: 'false' as any }
+      ),
+    enabled: !!siteId,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useSeaInputOverview(
+  companyId?: number,
+  operatingUnitId?: number,
+  year?: number,
+  month?: number
+) {
+  return useQuery({
+    queryKey: ['finance-core', 'sea-input-overview', companyId, operatingUnitId, year, month],
+    queryFn: () =>
+      fetchFinanceCoreJson<SeaInputOverview>(
+        '/api/v1/finance-core/reports/sea-input-overview/',
+        { company: companyId, operating_unit: operatingUnitId, year, month }
+      ),
+    enabled: !!companyId && !!operatingUnitId && !!year && !!month,
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useUploadSeaCostImport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      budgetId,
+      year,
+      month,
+      file,
+    }: {
+      budgetId: number;
+      year: number;
+      month: number;
+      file: File;
+    }) => {
+      const formData = new FormData();
+      formData.append('year', String(year));
+      formData.append('month', String(month));
+      formData.append('file', file);
+      const response = await authenticatedFetch(
+        financeCoreUrl(`/api/v1/finance-core/budgets/${budgetId}/sea-import/`),
+        { method: 'POST', body: formData }
+      );
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message =
+          payload?.detail ||
+          payload?.rows?.[0]?.error ||
+          `Sea import failed (${response.status})`;
+        throw createMutationError(message, payload);
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      showSuccess(
+        'Sea cost import uploaded',
+        `Imported ${data.imported_row_count} rows${data.filtered_count ? ` (${data.filtered_count} filtered)` : ''}.`
+      );
+      invalidateFinanceCore(queryClient);
+    },
+    onError: (error) => showError(getErrorMessage(error)),
+  });
+}
+
+export function useCreateSeaCostProject() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: {
+      site: number;
+      insert_year: number;
+      batch?: number | null;
+      sequence?: number | null;
+      activate?: boolean;
+    }) => {
+      const response = await authenticatedFetch(
+        financeCoreUrl('/api/v1/finance-core/cost-centers/create-sea-project/'),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!response.ok) {
+        const errPayload = await response.json().catch(() => null);
+        throw createMutationError(
+          errPayload?.detail || errPayload?.[0] || `Failed (${response.status})`,
+          errPayload
+        );
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      showSuccess(
+        'Sea cost project created',
+        `Project ${data.code} is now available.`
+      );
+      invalidateFinanceCore(queryClient);
+    },
+    onError: (error) => showError(getErrorMessage(error)),
+  });
+}

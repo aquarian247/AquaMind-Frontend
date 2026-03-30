@@ -24,6 +24,7 @@ import {
   useCreateAllocationRule,
   useCreateBudget,
   useCreateCostCenter,
+  useCreateSeaCostProject,
   useCreateValuationRun,
   useDeleteBudgetEntry,
   useFinanceCompanies,
@@ -34,7 +35,9 @@ import {
   usePeriodLocks,
   usePreCloseSummary,
   useRingValuation,
+  useSeaInputOverview,
   useUploadCostImport,
+  useUploadSeaCostImport,
   useUnlockPeriod,
   useValuationRuns,
 } from '../api';
@@ -131,13 +134,28 @@ export default function FinancialPlanningPage() {
   const createAccount = useCreateAccount();
   const createCostCenter = useCreateCostCenter();
   const createAllocationRule = useCreateAllocationRule();
+  const createSeaCostProject = useCreateSeaCostProject();
   const bulkImportBudgetEntries = useBulkImportBudgetEntries();
   const deleteBudgetEntry = useDeleteBudgetEntry();
   const uploadCostImport = useUploadCostImport();
+  const uploadSeaCostImport = useUploadSeaCostImport();
   const allocateBudget = useAllocateBudget();
   const createValuationRun = useCreateValuationRun();
   const lockPeriod = useLockPeriod();
   const unlockPeriod = useUnlockPeriod();
+
+  const selectedCompany = useMemo(
+    () => companiesQuery.data?.find((c) => c.company_id === selectedCompanyId),
+    [companiesQuery.data, selectedCompanyId]
+  );
+  const isFarmingCompany = selectedCompany?.subsidiary === 'FM';
+
+  const seaInputOverviewQuery = useSeaInputOverview(
+    eomEnabled && isFarmingCompany ? selectedCompanyId : undefined,
+    eomEnabled && isFarmingCompany ? selectedOperatingUnitId : undefined,
+    eomEnabled && isFarmingCompany ? fiscalYear : undefined,
+    eomEnabled && isFarmingCompany ? Number(selectedMonth) : undefined,
+  );
 
   useEffect(() => {
     if (!selectedCompanyId && companiesQuery.data?.length) {
@@ -445,7 +463,9 @@ export default function FinancialPlanningPage() {
                 accountGroups={accountGroupsQuery.data || []}
                 onCreateCostCenter={(payload) => createCostCenter.mutateAsync(payload)}
                 onCreateAllocationRule={(payload) => createAllocationRule.mutateAsync(payload)}
+                onCreateSeaProject={(payload) => createSeaCostProject.mutateAsync(payload)}
                 isSubmitting={isSubmitting}
+                isFarmingCompany={isFarmingCompany}
               />
             </TabsContent>
 
@@ -488,6 +508,19 @@ export default function FinancialPlanningPage() {
                 preCloseSummary={preCloseSummaryQuery.data}
                 lastActionResult={lastActionResult}
                 onUploadCostImport={handleUploadCostImport}
+                onUploadSeaCostImport={async (payload) => {
+                  try {
+                    await uploadSeaCostImport.mutateAsync(payload);
+                    setLastActionResult({
+                      kind: 'success',
+                      title: 'Sea Cost Import Uploaded',
+                      description: 'Sea farming costs imported with routing rules applied.',
+                    });
+                  } catch (error) {
+                    setLastActionResult(formatActionError(error));
+                    throw error;
+                  }
+                }}
                 onAllocateBudget={handleAllocateBudget}
                 onCreateValuationRun={handleCreateValuationRun}
                 onLockPeriod={handleLockPeriod}
@@ -495,6 +528,8 @@ export default function FinancialPlanningPage() {
                 isSubmitting={isSubmitting}
                 companyId={selectedCompanyId}
                 isAdmin={isAdmin}
+                isFarmingCompany={isFarmingCompany}
+                seaInputOverview={seaInputOverviewQuery.data}
                 loadingState={{
                   preClose: preCloseSummaryQuery.isLoading,
                   imports: costImportsQuery.isLoading,

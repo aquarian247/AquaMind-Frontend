@@ -46,6 +46,7 @@ interface EomWizardTabProps {
   preCloseSummary?: PreCloseSummary;
   lastActionResult?: ActionResultState | null;
   onUploadCostImport: (payload: { year: number; month: number; file: File }) => Promise<unknown>;
+  onUploadSeaCostImport?: (payload: { budgetId: number; year: number; month: number; file: File }) => Promise<unknown>;
   onAllocateBudget: (budgetId: number, operatingUnitId: number, month: number) => Promise<unknown>;
   onCreateValuationRun: (
     budgetId: number,
@@ -64,6 +65,16 @@ interface EomWizardTabProps {
   isSubmitting: boolean;
   companyId?: number;
   isAdmin: boolean;
+  isFarmingCompany?: boolean;
+  seaInputOverview?: {
+    site: string;
+    active_projects: Array<{ cost_center_id: number; code: string; name: string }>;
+    imported_cost_lines: Array<{ cost_group_code: string; amount: string }>;
+    fallow_pending: {
+      total: string;
+      by_cost_group: Array<{ cost_group_code: string; amount: string }>;
+    };
+  };
   loadingState: {
     preClose: boolean;
     imports: boolean;
@@ -104,6 +115,7 @@ export function EomWizardTab({
   preCloseSummary,
   lastActionResult,
   onUploadCostImport,
+  onUploadSeaCostImport,
   onAllocateBudget,
   onCreateValuationRun,
   onLockPeriod,
@@ -111,6 +123,8 @@ export function EomWizardTab({
   isSubmitting,
   companyId,
   isAdmin,
+  isFarmingCompany,
+  seaInputOverview,
   loadingState,
   errorState,
 }: EomWizardTabProps) {
@@ -161,11 +175,20 @@ export function EomWizardTab({
 
   const uploadImport = async () => {
     if (!selectedFile) return;
-    await onUploadCostImport({
-      year: fiscalYear,
-      month: Number(month),
-      file: selectedFile,
-    });
+    if (isFarmingCompany && onUploadSeaCostImport && selectedBudgetId) {
+      await onUploadSeaCostImport({
+        budgetId: selectedBudgetId,
+        year: fiscalYear,
+        month: Number(month),
+        file: selectedFile,
+      });
+    } else {
+      await onUploadCostImport({
+        year: fiscalYear,
+        month: Number(month),
+        file: selectedFile,
+      });
+    }
     setSelectedFile(null);
   };
 
@@ -284,6 +307,71 @@ export function EomWizardTab({
           )}
         </CardContent>
       </Card>
+
+      {isFarmingCompany && seaInputOverview && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Sea Input Overview</CardTitle>
+            <CardDescription>
+              Operational overview for sea site {seaInputOverview.site}.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-lg border p-4">
+                <h3 className="mb-2 text-sm font-medium">Active Cost Projects</h3>
+                {seaInputOverview.active_projects.length > 0 ? (
+                  <ul className="space-y-1 text-sm">
+                    {seaInputOverview.active_projects.map((p) => (
+                      <li key={p.cost_center_id}>
+                        <Badge variant="outline" className="mr-1">{p.code}</Badge>
+                        {p.name}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No active project (fallow site).
+                  </p>
+                )}
+              </div>
+              <div className="rounded-lg border p-4">
+                <h3 className="mb-2 text-sm font-medium">Imported Cost Lines</h3>
+                {seaInputOverview.imported_cost_lines.length > 0 ? (
+                  <ul className="space-y-1 text-sm">
+                    {seaInputOverview.imported_cost_lines.map((line, idx) => (
+                      <li key={idx}>
+                        {line.cost_group_code}: {line.amount}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No costs imported yet.</p>
+                )}
+              </div>
+              <div className="rounded-lg border p-4">
+                <h3 className="mb-2 text-sm font-medium">Fallow Cost Pending</h3>
+                {Number(seaInputOverview.fallow_pending.total) > 0 ? (
+                  <>
+                    <p className="mb-1 text-sm font-semibold">
+                      Total: {seaInputOverview.fallow_pending.total}
+                    </p>
+                    <ul className="space-y-1 text-sm">
+                      {seaInputOverview.fallow_pending.by_cost_group.map((item) => (
+                        <li key={item.cost_group_code}>
+                          {item.cost_group_code}: {item.amount}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No fallow costs pending.</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {lastActionResult && (
         <Card>

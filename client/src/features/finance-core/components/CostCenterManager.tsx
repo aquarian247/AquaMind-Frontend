@@ -16,7 +16,14 @@ interface CostCenterManagerProps {
   accountGroups: AccountGroup[];
   onCreateCostCenter: (payload: Partial<CostCenter>) => Promise<unknown>;
   onCreateAllocationRule: (payload: Partial<AllocationRule>) => Promise<unknown>;
+  onCreateSeaProject?: (payload: {
+    site: number;
+    insert_year: number;
+    batch?: number | null;
+    activate?: boolean;
+  }) => Promise<unknown>;
   isSubmitting: boolean;
+  isFarmingCompany?: boolean;
 }
 
 export function CostCenterManager({
@@ -27,13 +34,19 @@ export function CostCenterManager({
   accountGroups,
   onCreateCostCenter,
   onCreateAllocationRule,
+  onCreateSeaProject,
   isSubmitting,
+  isFarmingCompany,
 }: CostCenterManagerProps) {
   const [costCenterForm, setCostCenterForm] = useState({
     code: '',
     name: '',
     site: '',
     cost_center_type: 'PROJECT',
+  });
+  const [seaProjectForm, setSeaProjectForm] = useState({
+    site: '',
+    insert_year: String(new Date().getFullYear()),
   });
   const [ruleForm, setRuleForm] = useState({
     name: '',
@@ -85,8 +98,78 @@ export function CostCenterManager({
     });
   };
 
+  const submitSeaProject = async () => {
+    if (!onCreateSeaProject || !seaProjectForm.site) return;
+    await onCreateSeaProject({
+      site: Number(seaProjectForm.site),
+      insert_year: Number(seaProjectForm.insert_year),
+      activate: true,
+    });
+    setSeaProjectForm({ site: '', insert_year: String(new Date().getFullYear()) });
+  };
+
+  const activeSeaProjects = costCenters.filter(
+    (cc) => cc.cost_center_type === 'PROJECT' && cc.is_active
+  );
+
   return (
     <div className="space-y-6">
+      {isFarmingCompany && onCreateSeaProject && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Create Sea Cost Project</CardTitle>
+            <CardDescription>
+              Create a cost project following the Bakkafrost naming convention
+              (e.g. A15-25-01). One active project per site is enforced.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="sea-site">Sea Site</Label>
+                <select
+                  id="sea-site"
+                  className="h-10 rounded-md border border-input bg-background px-3"
+                  value={seaProjectForm.site}
+                  onChange={(e) =>
+                    setSeaProjectForm((prev) => ({ ...prev, site: e.target.value }))
+                  }
+                >
+                  <option value="">Select sea site</option>
+                  {sites.map((site) => (
+                    <option key={site.site_id} value={site.site_id}>
+                      {site.site_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="sea-insert-year">Insert Year</Label>
+                <Input
+                  id="sea-insert-year"
+                  type="number"
+                  value={seaProjectForm.insert_year}
+                  onChange={(e) =>
+                    setSeaProjectForm((prev) => ({ ...prev, insert_year: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+            {activeSeaProjects.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                Active projects: {activeSeaProjects.map((p) => p.code).join(', ')}
+              </p>
+            )}
+            <Button
+              disabled={isSubmitting || !seaProjectForm.site}
+              onClick={submitSeaProject}
+            >
+              Create Sea Project
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
