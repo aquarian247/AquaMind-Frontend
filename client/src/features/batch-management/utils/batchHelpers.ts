@@ -55,8 +55,19 @@ export function calculateDaysActive(startDate: string): number {
       return 0;
     }
     
-    const diffTime = now.getTime() - start.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    // Compare on UTC calendar-day boundaries so the result stays stable across
+    // time-of-day and DST transitions.
+    const startDay = Date.UTC(
+      start.getUTCFullYear(),
+      start.getUTCMonth(),
+      start.getUTCDate()
+    );
+    const nowDay = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate()
+    );
+    const diffDays = Math.floor((nowDay - startDay) / (1000 * 60 * 60 * 24));
     
     return Math.max(0, diffDays);
   } catch {

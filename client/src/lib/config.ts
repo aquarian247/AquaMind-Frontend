@@ -26,7 +26,7 @@ export const API_CONFIG = {
 /**
  * Generated-client runtime configuration
  */
-import { OpenAPI } from '../api';
+import { OpenAPI } from '../api/generated/core/OpenAPI';
 
 /**
  * Retrieve the auth token from localStorage.
