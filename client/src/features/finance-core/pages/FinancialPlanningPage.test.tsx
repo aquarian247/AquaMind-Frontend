@@ -27,15 +27,18 @@ vi.mock('../api', () => ({
   useRingValuation: vi.fn(),
   useNavExportPreview: vi.fn(),
   usePreCloseSummary: vi.fn(),
+  useSeaInputOverview: vi.fn(),
   useCreateBudget: vi.fn(),
   useCopyBudget: vi.fn(),
   useCreateAccountGroup: vi.fn(),
   useCreateAccount: vi.fn(),
   useCreateCostCenter: vi.fn(),
   useCreateAllocationRule: vi.fn(),
+  useCreateSeaCostProject: vi.fn(),
   useBulkImportBudgetEntries: vi.fn(),
   useDeleteBudgetEntry: vi.fn(),
   useUploadCostImport: vi.fn(),
+  useUploadSeaCostImport: vi.fn(),
   useAllocateBudget: vi.fn(),
   useCreateValuationRun: vi.fn(),
   useLockPeriod: vi.fn(),
@@ -144,15 +147,19 @@ describe('FinancialPlanningPage', () => {
       isLoading: false,
     } as any);
 
+    vi.mocked(financeCoreApi.useSeaInputOverview).mockReturnValue({ data: undefined, isLoading: false } as any);
+
     vi.mocked(financeCoreApi.useCreateBudget).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useCopyBudget).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useCreateAccountGroup).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useCreateAccount).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useCreateCostCenter).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useCreateAllocationRule).mockReturnValue(mutationStub() as any);
+    vi.mocked(financeCoreApi.useCreateSeaCostProject).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useBulkImportBudgetEntries).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useDeleteBudgetEntry).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useUploadCostImport).mockReturnValue(mutationStub() as any);
+    vi.mocked(financeCoreApi.useUploadSeaCostImport).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useAllocateBudget).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useCreateValuationRun).mockReturnValue(mutationStub() as any);
     vi.mocked(financeCoreApi.useLockPeriod).mockReturnValue(mutationStub() as any);
