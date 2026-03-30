@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState } from "react";
 import { useStationSummary } from "@/features/infrastructure/api";
 import { StationHistoryTab } from "@/features/infrastructure/components/StationHistoryTab";
+import { API_CONFIG } from "@/lib/config";
 import { formatWeight, formatCount } from "@/lib/formatFallback";
 import { ApiService } from "@/api/generated";
 import { 
@@ -127,7 +128,7 @@ export default function StationDetail({ params }: { params: { id: string } }) {
           const sampleContainerIds = containers.slice(0, 10).map(c => c.id!);
           
           const statsPromises = sampleContainerIds.map(containerId =>
-            fetch(`${import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000'}/api/v1/environmental/readings/stats/?container=${containerId}`, {
+            fetch(`${API_CONFIG.DJANGO_API_URL}/api/v1/environmental/readings/stats/?container=${containerId}`, {
               headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` }
             })
               .then(r => r.json())

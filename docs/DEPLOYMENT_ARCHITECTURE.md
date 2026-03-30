@@ -1,219 +1,106 @@
-# AquaMind Deployment Architecture
+# AquaMind Frontend Deployment Architecture
 
-## Production Network Architecture
+This document distinguishes between the **current shared test deployment** and a
+possible **future production network architecture**.
 
-### Overview
-AquaMind follows a secure multi-tier architecture with Django backend in protected VLAN and React frontend in DMZ.
+## Current Shared Test Deployment
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Internet                                 │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-┌─────────────────────────────────────────────────────────────────┐
-│                         DMZ                                     │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              React Frontend                             │    │
-│  │           (AquaMind Web App)                           │    │
-│  │                                                         │    │
-│  │  • Nginx/Apache Static Hosting                        │    │
-│  │  • HTTPS Termination                                   │    │
-│  │  • Load Balancing                                      │    │
-│  │  • CDN Integration                                     │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │ API Calls
-                          │ (Internal Network)
-┌─────────────────────────────────────────────────────────────────┐
-│                   Protected VLAN                               │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              Django Backend                             │    │
-│  │           (AquaMind API Server)                        │    │
-│  │                                                         │    │
-│  │  • Django REST Framework                              │    │
-│  │  • JWT Authentication                                 │    │
-│  │  • API Rate Limiting                                  │    │
-│  │  • CORS Configuration                                 │    │
-│  └─────────────────────────────────────────────────────────┘    │
-│                          │                                      │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │            PostgreSQL Database                          │    │
-│  │          (TimescaleDB Extension)                       │    │
-│  │                                                         │    │
-│  │  • Master/Replica Setup                               │    │
-│  │  • Automated Backups                                  │    │
-│  │  • Connection Pooling                                 │    │
-│  │  • SSL/TLS Encryption                                 │    │
-│  └─────────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────────┘
+The shared test environment is intentionally lightweight:
+
+- one public hostname: `https://test.bakkamind.com`
+- one external ingress: Caddy
+- frontend container serves the SPA on the internal Docker network
+- backend Django container serves API and admin routes on the internal Docker network
+- Caddy routes:
+  - `/` to the frontend container
+  - `/api/*` to Django
+  - `/admin/*` to Django
+  - `/health-check/` to Django
+  - `/static/*` and `/media/*` from shared Docker volumes
+
+```mermaid
+flowchart TD
+    internet[Internet] --> caddy[TestCaddy]
+    caddy --> frontend[FrontendContainer]
+    caddy --> backend[DjangoContainer]
+    backend --> db[TimescaleDB]
+    backend --> redis[Redis]
+    backend --> celery[CeleryWorker]
 ```
 
-## Network Configuration
+### Frontend Runtime Expectations
 
-### DMZ Configuration (Frontend)
-- **Purpose**: Public-facing React application
-- **Security**: Reverse proxy, HTTPS termination, static file serving
-- **Access**: Internet → DMZ (Port 443/80)
-- **Outbound**: DMZ → Protected VLAN (API calls only)
+- the frontend image is built in CI and pulled from GHCR
+- the SPA should behave primarily as a same-origin app behind Caddy
+- the frontend container's internal nginx config still proxies `/api/` to `web:8000`
+- frontend runtime code now falls back to `window.location.origin` when
+  `VITE_DJANGO_API_URL` is not set, which reduces environment-specific image drift
 
-### Protected VLAN Configuration (Backend)
-- **Purpose**: Django API and database services
-- **Security**: No direct internet access, firewall rules
-- **Access**: DMZ → Protected VLAN (Port 8000 for API)
-- **Database**: Internal-only access (Port 5432)
+### Test Deployment Goals
 
-### Firewall Rules
+- no extra nginx layer in front of Caddy
+- no server-side rebuilds for normal deploys
+- rollback by image tag
+- one repeatable deploy checklist
 
-```bash
-# DMZ → Protected VLAN (API Access)
-allow from DMZ_SUBNET to PROTECTED_VLAN_SUBNET port 8000
+## Future Production Architecture
 
-# Protected VLAN → Internet (Updates only)
-allow from PROTECTED_VLAN_SUBNET to any port 443,80 (outbound only)
+Production may later move to a more segmented design, for example:
 
-# Block all other traffic
-deny from any to PROTECTED_VLAN_SUBNET
-deny from PROTECTED_VLAN_SUBNET to any
-```
+- frontend in a DMZ
+- backend on an internal VLAN
+- database managed separately from app containers
+- stricter firewall policy between tiers
 
-## Development & Debugging Strategy
+That remains a valid target architecture, but it is not the current shared test
+deployment and should not be mixed with test runbooks.
 
-### Local Development Setup
+## CI and Image Flow
 
-1. **Full Stack Development**
-   ```bash
-   # Terminal 1: Django Backend
-   cd django-backend/
-   python manage.py runserver 0.0.0.0:8000
-   
-   # Terminal 2: React Frontend  
-   cd react-frontend/
-   VITE_USE_DJANGO_API=true VITE_DJANGO_API_URL=http://localhost:8000 npm run dev
-   ```
+The frontend deployment contract is:
 
-2. **Frontend-Only Development**
-   ```bash
-   # Use Express stubs for rapid UI development
-   VITE_USE_DJANGO_API=false npm run dev
-   ```
+1. `frontend-ci.yml` runs tests and type checking
+2. `docker-build-frontend.yml` builds and publishes `ghcr.io/.../frontend:<tag>`
+3. the test server pulls the chosen tag during deployment
 
-3. **Hybrid Development**
-   ```bash
-   # Test specific features with Django, others with stubs
-   VITE_USE_DJANGO_API=true npm run dev
-   # Switch dynamically in browser console:
-   # DevelopmentTools.switchToExpress()
-   # DevelopmentTools.switchToDjango()
-   ```
+## Environment Notes
 
-### Debugging Production Issues
+### Local development
 
-#### Network Connectivity
-```javascript
-// Browser console diagnostics
-import { NetworkDiagnostics } from './lib/debug';
-
-// Test backend connection
-await NetworkDiagnostics.testConnection();
-
-// Check CORS configuration
-await NetworkDiagnostics.checkCORS();
-```
-
-#### API Request Tracing
-```javascript
-// Enable debug logging
-localStorage.setItem('VITE_DEBUG_MODE', 'true');
-localStorage.setItem('VITE_LOG_LEVEL', 'debug');
-window.location.reload();
-```
-
-#### Environment Verification
-```javascript
-// Check current configuration
-import { DevelopmentTools } from './lib/debug';
-console.log(DevelopmentTools.getEnvironmentInfo());
-```
-
-## Deployment Configurations
-
-> Note: CI/CD regenerates the TypeScript client (`npm run generate:client`) automatically whenever the `openapi.yaml` contract changes in the backend repository. The regenerated code is committed and version-controlled alongside the frontend build.
-
-### Development Environment
 ```env
+VITE_USE_DJANGO_API=true
 VITE_DJANGO_API_URL=http://localhost:8000
-VITE_USE_DJANGO_API=true
-DEBUG_MODE=true
-LOG_LEVEL=debug
-VITE_LOG_LEVEL=debug
+PORT=5001
 ```
 
-### Staging Environment
+### Shared test
+
+The preferred behavior is same-origin via Caddy:
+
 ```env
-VITE_DJANGO_API_URL=https://api-staging.aquamind.internal
 VITE_USE_DJANGO_API=true
-VITE_DEBUG_MODE=true
-VITE_LOG_LEVEL=info
 ```
 
-### Production Environment
+If an explicit API base is needed during image build, use:
+
 ```env
+VITE_DJANGO_API_URL=https://test.bakkamind.com
+```
+
+### Future production example
+
+```env
+VITE_USE_DJANGO_API=true
 VITE_DJANGO_API_URL=https://api.aquamind.internal
-VITE_USE_DJANGO_API=true
-VITE_DEBUG_MODE=false
-VITE_LOG_LEVEL=error
 ```
 
-## Security Considerations
+## Remaining Technical Debt
 
-### API Communication
-- **HTTPS Only**: All API communication encrypted
-- **CORS Policy**: Strict origin restrictions
-- **JWT Tokens**: Secure authentication with refresh tokens
-- **Rate Limiting**: Prevent API abuse
-- **CSRF Protection**: Django CSRF tokens for state-changing operations
+The frontend is much closer to same-origin deployment than before, but keep in
+mind:
 
-### Network Security
-- **No Direct Database Access**: Database only accessible from Django
-- **Firewall Rules**: Strict ingress/egress controls
-- **VPN Access**: Admin access to protected VLAN via VPN
-- **Monitoring**: Network traffic analysis and alerting
-
-### Data Protection
-- **TLS 1.3**: Modern encryption standards
-- **Certificate Management**: Automated cert renewal
-- **Secret Management**: Environment-based configuration
-- **Audit Logging**: All API access logged
-
-## Monitoring & Observability
-
-### Frontend Monitoring
-- **Error Tracking**: JavaScript error reporting
-- **Performance**: Core Web Vitals monitoring
-- **User Analytics**: Usage patterns and flows
-- **Network Health**: API response times and errors
-
-### Backend Monitoring
-- **API Metrics**: Response times, error rates, throughput
-- **Database Performance**: Query performance and connection pooling
-- **Resource Usage**: CPU, memory, disk utilization
-- **Security Events**: Failed authentication attempts, rate limiting
-
-### Alerting
-- **Critical**: API downtime, database connectivity
-- **Warning**: High response times, error rate increases
-- **Info**: Deployment events, configuration changes
-
-## Backup & Recovery
-
-### Database Backups
-- **Automated**: Daily full backups, hourly incrementals
-- **Retention**: 30 days online, 1 year archived
-- **Testing**: Monthly restore verification
-- **Geography**: Multi-region backup storage
-
-### Application Recovery
-- **Blue/Green Deployment**: Zero-downtime updates
-- **Rollback Strategy**: Automated rollback on health check failures
-- **Disaster Recovery**: Multi-region deployment capability
-- **RTO/RPO**: 4-hour recovery time, 1-hour data loss maximum
+- some internal container routing still depends on `web:8000`
+- the frontend deployment story should stay aligned with the backend test
+  environment docs
+- if production diverges into DMZ/VLAN, document that as a separate target-state
+  design rather than reusing the shared test runbook

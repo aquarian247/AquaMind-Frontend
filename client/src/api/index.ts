@@ -22,10 +22,6 @@ export interface FeedingEventsSummaryResponse {
 // Re-export all types and services from the generated client
 export * from './generated';
 
-// Configure the OpenAPI client with the backend URL
-// Note: OpenAPI.BASE is already set in config.ts, don't override it here
-const DJANGO_API_URL = import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000';
-
 // Authentication helpers
 export const setAuthToken = (token: string | null) => {
   if (token) {

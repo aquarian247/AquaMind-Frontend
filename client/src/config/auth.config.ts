@@ -5,9 +5,14 @@
  * token management, and API endpoints.
  */
 
+const runtimeOrigin =
+  typeof window !== 'undefined' ? window.location.origin : '';
+const configuredBaseUrl = import.meta.env.VITE_DJANGO_API_URL?.trim() || '';
+const baseUrl = configuredBaseUrl || runtimeOrigin || 'http://localhost:8000';
+
 export const authConfig = {
   // API Configuration
-  baseUrl: import.meta.env.VITE_DJANGO_API_URL || 'http://localhost:8000',
+  baseUrl,
   apiVersion: 'v1',
 
   // Token Configuration

@@ -23,6 +23,7 @@ import {
 import { useLocation, Link } from "wouter";
 import { ApiService } from "@/api/generated";
 import { useHallSummary } from "@/features/infrastructure/api";
+import { API_CONFIG } from "@/lib/config";
 import { formatCount, formatWeight } from "@/lib/formatFallback";
 
 interface Container {
@@ -73,7 +74,7 @@ export default function HallDetail({ params }: { params: { id: string } }) {
     queryKey: ["hall", hallId, "containers"],
     queryFn: async () => {
       const { authenticatedFetch } = await import("@/services/auth.service");
-      const baseUrl = import.meta.env.VITE_DJANGO_API_URL || "http://localhost:8000";
+      const baseUrl = API_CONFIG.DJANGO_API_URL;
       const hallMetadata = await ApiService.apiV1InfrastructureHallsRetrieve(Number(hallId)).catch(
         () => null
       );

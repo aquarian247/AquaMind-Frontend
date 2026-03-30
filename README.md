@@ -74,7 +74,7 @@ npm install
 npm run dev
 ```
 
-The application will be available at `http://localhost:5000`
+The application will be available at `http://localhost:5001`
 
 ### Environment Configuration
 
@@ -84,7 +84,7 @@ Create a `.env` file:
 # Backend Configuration
 VITE_USE_DJANGO_API=false          # Set to true for Django backend
 VITE_DJANGO_API_URL=http://localhost:8000  # Django API URL
-VITE_EXPRESS_API_URL=http://localhost:5000  # Express mock API URL
+PORT=5001  # Combined Express + Vite dev server port
 
 # Debug Settings
 VITE_DEBUG_MODE=true
@@ -180,14 +180,21 @@ _For contributors: see `docs/CONTRIBUTING.md` and `docs/code_organization_guidel
 ```
 
 ## 🏢 Deployment Architecture
-*(content unchanged)*
+
+The current shared test deployment is a lightweight Caddy-fronted stack on
+`srv-docker1`, not the future DMZ/VLAN target-state architecture.
+
+Use:
+
+- `docs/DEPLOYMENT_ARCHITECTURE.md` for frontend deployment expectations
+- `aquamind/docs/deployment/bakkamind_test_environment.md` in the backend repo for the canonical shared test setup
 
 ## 🔌 Backend Integration
 *(content unchanged)*
 
 ## 📚 Documentation
 
-- `docs/DEPLOYMENT_ARCHITECTURE.md` - Production deployment guide
+- `docs/DEPLOYMENT_ARCHITECTURE.md` - Current test deployment plus future production architecture notes
 - `docs/CONTRIBUTING.md` - Development best practices
 - `docs/DJANGO_INTEGRATION_GUIDE.md` - Backend integration details
 - `docs/LOCAL_VLAN_SETUP.md` - Local testing with virtualization
